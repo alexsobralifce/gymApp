@@ -1,0 +1,5 @@
+"ID","Nome","Descrição resumida"
+"UC-05","Cadastrar academia","Academia envia dados (nome, CNPJ) para aprovação do Root"
+"UC-06","Autorizar professor","Academia aprova professor dentro do limite configurado, enviando para segunda aprovação do Root"
+"UC-07","Remover professor","Academia revoga vínculo ativo de um professor"
+"UC-08","Visualizar alunos da academia","Academia acessa dashboard agregado dos alunos vinculados aos seus professores"

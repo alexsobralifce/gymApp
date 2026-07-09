@@ -1,0 +1,210 @@
+import { TreinoStatus, TreinoAtor } from '@prisma/client'
+import { prisma } from '../../../infrastructure/database/prisma.js'
+import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
+import { assertTransicaoValida } from '../../../domain/entities/TreinoStateMachine.js'
+
+// ─── UC-11: Criar ficha de treino ─────────────────────────────────────────────
+
+export async function criarTreino(professorId: string, input: {
+  alunoId: string
+  nome: string
+  diasSemana: number[]
+  exercicios: Array<{
+    exercicioId: string
+    ordem: number
+    series: number
+    repeticoes: number
+    cargaSugeridaKg?: number
+  }>
+}) {
+  // Verifica que o aluno pertence ao professor (isolamento de tenant)
+  const aluno = await prisma.aluno.findUnique({ where: { id: input.alunoId } })
+  if (!aluno) throw new NotFoundError('Aluno')
+  if (aluno.professor_id !== professorId) throw new TenantAccessError()
+
+  return prisma.treino.create({
+    data: {
+      aluno_id: input.alunoId,
+      nome: input.nome,
+      dias_semana: input.diasSemana,
+      status: TreinoStatus.CADASTRADO,
+      exercicios: {
+        create: input.exercicios.map((e) => ({
+          exercicio_id: e.exercicioId,
+          ordem: e.ordem,
+          series: e.series,
+          repeticoes: e.repeticoes,
+          carga_sugerida_kg: e.cargaSugeridaKg,
+        })),
+      },
+      historico: {
+        create: {
+          status_anterior: TreinoStatus.CADASTRADO,
+          status_novo: TreinoStatus.CADASTRADO,
+          ator_id: professorId,
+          ator_tipo: TreinoAtor.PROFESSOR,
+        },
+      },
+    },
+    include: { exercicios: true },
+  })
+}
+
+// ─── UC-13: Enviar treino para aceite ────────────────────────────────────────
+
+export async function enviarTreinoParaAceite(treinoId: string, professorId: string) {
+  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  if (!treino) throw new NotFoundError('Treino')
+
+  // Garante que o professor tem acesso ao aluno
+  const aluno = await prisma.aluno.findUnique({ where: { id: treino.aluno_id } })
+  if (aluno?.professor_id !== professorId) throw new TenantAccessError()
+
+  assertTransicaoValida(treino.status, TreinoStatus.ENVIADO, TreinoAtor.PROFESSOR)
+
+  return prisma.$transaction(async (tx) => {
+    const atualizado = await tx.treino.update({
+      where: { id: treinoId },
+      data: { status: TreinoStatus.ENVIADO },
+    })
+    await tx.treinoHistorico.create({
+      data: {
+        treino_id: treinoId,
+        status_anterior: treino.status,
+        status_novo: TreinoStatus.ENVIADO,
+        ator_id: professorId,
+        ator_tipo: TreinoAtor.PROFESSOR,
+      },
+    })
+    return atualizado
+  })
+}
+
+// ─── UC-19: Aceitar / Recusar treino (Aluno) ────────────────────────────────
+
+export async function responderTreino(treinoId: string, alunoId: string, acao: 'ACEITAR' | 'RECUSAR') {
+  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  if (!treino) throw new NotFoundError('Treino')
+  if (treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  const novoStatus = acao === 'ACEITAR' ? TreinoStatus.ACEITO : TreinoStatus.RECUSADO
+  assertTransicaoValida(treino.status, novoStatus, TreinoAtor.ALUNO)
+
+  return prisma.$transaction(async (tx) => {
+    const atualizado = await tx.treino.update({
+      where: { id: treinoId },
+      data: { status: novoStatus },
+    })
+    await tx.treinoHistorico.create({
+      data: {
+        treino_id: treinoId,
+        status_anterior: treino.status,
+        status_novo: novoStatus,
+        ator_id: alunoId,
+        ator_tipo: TreinoAtor.ALUNO,
+      },
+    })
+    return atualizado
+  })
+}
+
+// ─── UC-20: Iniciar treino ────────────────────────────────────────────────────
+
+export async function iniciarTreino(treinoId: string, alunoId: string) {
+  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  if (!treino) throw new NotFoundError('Treino')
+  if (treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  assertTransicaoValida(treino.status, TreinoStatus.EM_EXECUCAO, TreinoAtor.ALUNO)
+
+  return prisma.$transaction(async (tx) => {
+    const atualizado = await tx.treino.update({
+      where: { id: treinoId },
+      data: { status: TreinoStatus.EM_EXECUCAO, iniciado_em: new Date() },
+    })
+    await tx.treinoHistorico.create({
+      data: {
+        treino_id: treinoId,
+        status_anterior: treino.status,
+        status_novo: TreinoStatus.EM_EXECUCAO,
+        ator_id: alunoId,
+        ator_tipo: TreinoAtor.ALUNO,
+      },
+    })
+    return atualizado
+  })
+}
+
+// ─── UC-22: Registrar carga/repetições ───────────────────────────────────────
+
+export async function registrarExecucao(treinoId: string, alunoId: string, input: {
+  exercicioId: string
+  serieNumero: number
+  repeticoes: number
+  cargaKg: number
+}) {
+  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  if (!treino) throw new NotFoundError('Treino')
+  if (treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  return prisma.execucaoExercicio.create({
+    data: {
+      treino_id: treinoId,
+      exercicio_id: input.exercicioId,
+      serie_numero: input.serieNumero,
+      repeticoes: input.repeticoes,
+      carga_kg: input.cargaKg,
+    },
+  })
+}
+
+// ─── UC-23: Finalizar treino ──────────────────────────────────────────────────
+
+export async function finalizarTreino(treinoId: string, alunoId: string) {
+  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  if (!treino) throw new NotFoundError('Treino')
+  if (treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  assertTransicaoValida(treino.status, TreinoStatus.CONCLUIDO, TreinoAtor.ALUNO)
+
+  return prisma.$transaction(async (tx) => {
+    const atualizado = await tx.treino.update({
+      where: { id: treinoId },
+      data: { status: TreinoStatus.CONCLUIDO, finalizado_em: new Date() },
+    })
+    await tx.treinoHistorico.create({
+      data: {
+        treino_id: treinoId,
+        status_anterior: treino.status,
+        status_novo: TreinoStatus.CONCLUIDO,
+        ator_id: alunoId,
+        ator_tipo: TreinoAtor.ALUNO,
+      },
+    })
+    return atualizado
+  })
+}
+
+// ─── UC-14: Dashboard professor ───────────────────────────────────────────────
+
+export async function dashboardProfessor(professorId: string) {
+  return prisma.aluno.findMany({
+    where: { professor_id: professorId },
+    select: {
+      id: true,
+      usuario: { select: { nome: true, email: true } },
+      treinos: {
+        orderBy: { atualizado_em: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          nome: true,
+          status: true,
+          iniciado_em: true,
+          finalizado_em: true,
+          atualizado_em: true,
+        },
+      },
+    },
+  })
+}

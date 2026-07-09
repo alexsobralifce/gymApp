@@ -1,0 +1,7 @@
+"ID","Nome","Descrição resumida"
+"UC-28","Disparar mensagem motivacional","Worker seleciona mensagem não repetida do banco de 30+ e envia push no dia de treino"
+"UC-29","Monitorar inatividade (30 min)","Worker verifica treinos ""em execução"" sem conclusão após 30 minutos e dispara alerta ao aluno"
+"UC-30","Notificar professor sobre inatividade","Sistema envia alerta ao professor quando aluno fica inativo durante execução"
+"UC-31","Marcar treino como ""em aberto""","Sistema identifica treinos aceitos não iniciados até o fim do dia programado"
+"UC-32","Calcular correlações de desempenho","Sistema processa dados de medidas corporais x carga/volume para gerar gráficos científicos"
+"UC-33","Resetar ciclo de mensagens","Sistema reinicia rotação quando todas as mensagens motivacionais já foram enviadas ao aluno"

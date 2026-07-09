@@ -1,0 +1,288 @@
+// This is your Prisma schema file
+// GymApp — Multi-tenant Gym Management Platform
+// https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ROOT
+  ACADEMIA
+  PROFESSOR
+  ALUNO
+}
+
+enum AcademiaStatus {
+  PENDENTE
+  ATIVO
+  REJEITADO
+}
+
+/// Aprovação em duas camadas: Academia → Root
+enum VinculoStatus {
+  PENDENTE_ACADEMIA // aguarda academia aprovar
+  PENDENTE_ROOT     // academia aprovou, aguarda Root
+  ATIVO
+  REJEITADO
+  REMOVIDO
+}
+
+enum TreinoStatus {
+  CADASTRADO   // professor cadastrou, não enviado
+  ENVIADO      // notificação disparada para aluno
+  ACEITO       // aluno aceitou
+  RECUSADO     // aluno recusou
+  EM_ABERTO    // aceito mas não iniciado no dia
+  EM_EXECUCAO  // aluno iniciou
+  CONCLUIDO    // aluno finalizou
+}
+
+enum TreinoAtor {
+  ALUNO
+  PROFESSOR
+  SISTEMA
+}
+
+// ─── Usuário base ─────────────────────────────────────────────────────────────
+
+model Usuario {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  senha_hash   String
+  nome         String
+  role         Role
+  foto_url     String?
+  fcm_token    String?  // token FCM para push notifications
+  criado_em    DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  academia   Academia?  // se role = ACADEMIA
+  professor  Professor? // se role = PROFESSOR
+  aluno      Aluno?     // se role = ALUNO
+
+  refreshTokens RefreshToken[]
+
+  @@map("usuarios")
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  usuario_id String
+  expira_em  DateTime
+  criado_em  DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ─── Academia (tenant) ────────────────────────────────────────────────────────
+
+model Academia {
+  id              String         @id @default(cuid())
+  usuario_id      String         @unique
+  nome            String
+  cnpj            String         @unique
+  status          AcademiaStatus @default(PENDENTE)
+  max_professores Int            @default(20)
+  rejeitado_motivo String?
+  criado_em       DateTime       @default(now())
+  atualizado_em   DateTime       @updatedAt
+
+  usuario    Usuario              @relation(fields: [usuario_id], references: [id])
+  professores ProfessorAcademia[]
+  alunos     Aluno[]
+
+  @@map("academias")
+}
+
+// ─── Professor ────────────────────────────────────────────────────────────────
+
+model Professor {
+  id            String   @id @default(cuid())
+  usuario_id    String   @unique
+  cref          String?
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  usuario    Usuario              @relation(fields: [usuario_id], references: [id])
+  academias  ProfessorAcademia[]
+  alunos     Aluno[]
+
+  @@map("professores")
+}
+
+/// Vínculo M:N com aprovação em duas camadas
+model ProfessorAcademia {
+  id             String       @id @default(cuid())
+  professor_id   String
+  academia_id    String
+  status         VinculoStatus @default(PENDENTE_ACADEMIA)
+  criado_em      DateTime     @default(now())
+  atualizado_em  DateTime     @updatedAt
+
+  professor Professor @relation(fields: [professor_id], references: [id])
+  academia  Academia  @relation(fields: [academia_id], references: [id])
+
+  @@unique([professor_id, academia_id])
+  @@map("professor_academia")
+}
+
+// ─── Aluno ────────────────────────────────────────────────────────────────────
+
+model Aluno {
+  id            String   @id @default(cuid())
+  usuario_id    String   @unique
+  professor_id  String?  // null = modo autogestão
+  academia_id   String?
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  usuario    Usuario          @relation(fields: [usuario_id], references: [id])
+  professor  Professor?       @relation(fields: [professor_id], references: [id])
+  academia   Academia?        @relation(fields: [academia_id], references: [id])
+  treinos    Treino[]
+  medidas    MedidaCorporal[]
+  mensagensEnviadas MensagemMotivacionalEnviada[]
+
+  @@map("alunos")
+}
+
+// ─── Treino ───────────────────────────────────────────────────────────────────
+
+model Treino {
+  id            String       @id @default(cuid())
+  aluno_id      String
+  nome          String       // ex.: "Treino A — Peito e Tríceps"
+  dias_semana   Int[]        // 0=Dom, 1=Seg, ..., 6=Sáb
+  status        TreinoStatus @default(CADASTRADO)
+  iniciado_em   DateTime?
+  finalizado_em DateTime?
+  criado_em     DateTime     @default(now())
+  atualizado_em DateTime     @updatedAt
+
+  aluno      Aluno               @relation(fields: [aluno_id], references: [id])
+  exercicios TreinoExercicio[]
+  historico  TreinoHistorico[]
+  execucoes  ExecucaoExercicio[]
+
+  @@map("treinos")
+}
+
+/// Log imutável de transições de estado — append-only
+model TreinoHistorico {
+  id              String       @id @default(cuid())
+  treino_id       String
+  status_anterior TreinoStatus
+  status_novo     TreinoStatus
+  ator_id         String       // usuario_id de quem acionou (ou "SISTEMA")
+  ator_tipo       TreinoAtor
+  timestamp       DateTime     @default(now())
+
+  treino Treino @relation(fields: [treino_id], references: [id])
+
+  @@map("treino_historico")
+}
+
+// ─── Exercício ────────────────────────────────────────────────────────────────
+
+model Exercicio {
+  id            String   @id @default(cuid())
+  nome          String
+  maquina       String?
+  dica          String?  @db.Text
+  imagem_url    String?
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  treinos   TreinoExercicio[]
+  execucoes ExecucaoExercicio[]
+
+  @@map("exercicios")
+}
+
+/// Associação Treino ↔ Exercício com ordem, séries e reps prescritas
+model TreinoExercicio {
+  id            String @id @default(cuid())
+  treino_id     String
+  exercicio_id  String
+  ordem         Int
+  series        Int    @default(3)
+  repeticoes    Int    @default(12)
+  carga_sugerida_kg Float?
+
+  treino    Treino    @relation(fields: [treino_id], references: [id])
+  exercicio Exercicio @relation(fields: [exercicio_id], references: [id])
+
+  @@unique([treino_id, ordem])
+  @@map("treino_exercicios")
+}
+
+/// Registro de execução real pelo aluno (carga e reps realizadas)
+model ExecucaoExercicio {
+  id            String   @id @default(cuid())
+  treino_id     String
+  exercicio_id  String
+  serie_numero  Int
+  repeticoes    Int
+  carga_kg      Float
+  registrado_em DateTime @default(now())
+
+  treino    Treino    @relation(fields: [treino_id], references: [id])
+  exercicio Exercicio @relation(fields: [exercicio_id], references: [id])
+
+  @@map("execucao_exercicios")
+}
+
+// ─── Medidas Corporais ────────────────────────────────────────────────────────
+
+model MedidaCorporal {
+  id              String   @id @default(cuid())
+  aluno_id        String
+  peso_kg         Float?
+  altura_cm       Float?
+  percentual_bf   Float?
+  massa_magra_kg  Float?
+  data            DateTime @default(now())
+  observacao      String?
+
+  aluno Aluno @relation(fields: [aluno_id], references: [id])
+
+  @@map("medidas_corporais")
+}
+
+// ─── Mensagens Motivacionais ──────────────────────────────────────────────────
+
+model MensagemMotivacional {
+  id         String   @id @default(cuid())
+  titulo     String
+  resumo     String   @db.Text
+  url_estudo String
+  criado_em  DateTime @default(now())
+
+  enviadas MensagemMotivacionalEnviada[]
+
+  @@map("mensagens_motivacionais")
+}
+
+/// Controle de rotação circular por aluno (UC-28 / UC-33)
+model MensagemMotivacionalEnviada {
+  id            String   @id @default(cuid())
+  aluno_id      String
+  mensagem_id   String
+  enviada_em    DateTime @default(now())
+
+  aluno    Aluno                @relation(fields: [aluno_id], references: [id])
+  mensagem MensagemMotivacional @relation(fields: [mensagem_id], references: [id])
+
+  @@map("mensagens_motivacionais_enviadas")
+}

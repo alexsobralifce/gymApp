@@ -1,0 +1,5 @@
+"ID","Nome","Descrição resumida"
+"UC-01","Aprovar cadastro de academia","Root revisa solicitação de nova academia e aprova ou rejeita"
+"UC-02","Definir limite de professores","Root configura max_professores por academia (padrão 20)"
+"UC-03","Aprovar vínculo professor-academia","Root confirma segunda camada de aprovação após academia autorizar professor"
+"UC-04","Monitorar tenants ativos","Root visualiza painel global de academias, professores e alunos cadastrados"

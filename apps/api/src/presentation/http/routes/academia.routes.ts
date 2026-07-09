@@ -1,0 +1,49 @@
+import { FastifyInstance } from 'fastify'
+import { z } from 'zod'
+import { Role } from '@prisma/client'
+import {
+  cadastrarAcademia,
+  autorizarProfessorPrimeiraEtapa,
+  removerProfessor,
+  dashboardAlunosAcademia,
+} from '../../../application/usecases/academia/AcademiaService.js'
+
+export async function academiaRoutes(app: FastifyInstance) {
+  const preHandler = [app.authenticate, app.requireRole(Role.ACADEMIA)]
+
+  /** POST /academias — UC-05 (aberto para usuário com role ACADEMIA recém-criado) */
+  app.post('/', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const body = z.object({
+      nome: z.string().min(2),
+      cnpj: z.string().regex(/^\d{14}$/, 'CNPJ deve conter 14 dígitos'),
+    }).parse(request.body)
+
+    const academia = await cadastrarAcademia(request.currentUser.sub, body)
+    return reply.status(201).send(academia)
+  })
+
+  /** POST /academias/professores/:professorId/autorizar — UC-06 */
+  app.post('/professores/:professorId/autorizar', { preHandler }, async (request, reply) => {
+    const { professorId } = z.object({ professorId: z.string() }).parse(request.params)
+    const academiaId = request.currentUser.tenantId!
+
+    const vinculo = await autorizarProfessorPrimeiraEtapa(academiaId, professorId)
+    return reply.status(200).send(vinculo)
+  })
+
+  /** DELETE /academias/professores/:professorId — UC-07 */
+  app.delete('/professores/:professorId', { preHandler }, async (request, reply) => {
+    const { professorId } = z.object({ professorId: z.string() }).parse(request.params)
+    const academiaId = request.currentUser.tenantId!
+
+    await removerProfessor(academiaId, professorId)
+    return reply.status(204).send()
+  })
+
+  /** GET /academias/alunos — UC-08 */
+  app.get('/alunos', { preHandler }, async (request, reply) => {
+    const academiaId = request.currentUser.tenantId!
+    const alunos = await dashboardAlunosAcademia(academiaId)
+    return reply.status(200).send(alunos)
+  })
+}
