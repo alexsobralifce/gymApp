@@ -69,9 +69,17 @@ export async function authRoutes(app: FastifyInstance) {
     const { sub: id, role, tenantId } = request.currentUser
     const usuario = await prisma.usuario.findUnique({
       where: { id },
-      select: { expo_push_token: true },
+      select: { nome: true, email: true, expo_push_token: true },
     })
-    return reply.status(200).send({ id, role, tenantId, expoPushToken: usuario?.expo_push_token ?? null })
+    if (!usuario) return reply.status(404).send({ message: 'Usuário não encontrado' })
+    return reply.status(200).send({
+      id,
+      nome: usuario.nome,
+      email: usuario.email,
+      role,
+      tenantId,
+      expoPushToken: usuario.expo_push_token ?? null,
+    })
   })
 
   /**

@@ -38,6 +38,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await api.register(nome, email, senha, role)
       await get().login(email, senha)
+      if (role === 'ALUNO') {
+        await api.criarPerfilAluno()
+      }
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
       throw err

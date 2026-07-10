@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { Treino } from '../../types/api'
+import { useAuthStore } from '../../stores/auth'
+import type { Treino, PerfilAluno } from '../../types/api'
 
 export default function AlunoDashboard() {
   const [treinos, setTreinos] = useState<Treino[]>([])
+  const [perfil, setPerfil] = useState<PerfilAluno | null>(null)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
 
   useEffect(() => {
-    api.getAlunoTreinos().then(setTreinos).finally(() => setLoading(false))
+    Promise.all([
+      api.getAlunoTreinos().then(setTreinos),
+      api.getPerfilAluno().then(setPerfil),
+    ]).finally(() => setLoading(false))
   }, [])
 
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
@@ -20,6 +26,20 @@ export default function AlunoDashboard() {
 
   return (
     <div className="px-4 py-6">
+      {user && (
+        <div className="mb-4 rounded-lg bg-surface-card p-4">
+          <h2 className="text-lg font-semibold text-text">Olá, {user.nome}</h2>
+          <div className="mt-1 space-y-0.5 text-sm text-text-muted">
+            {perfil?.professor ? (
+              <p>Professor: {perfil.professor.usuario.nome}</p>
+            ) : (
+              <p>Modo: Autogestão</p>
+            )}
+            {perfil?.academia && <p>Academia: {perfil.academia.nome}</p>}
+          </div>
+        </div>
+      )}
+
       <h1 className="mb-4 text-xl font-bold text-text">Seus Treinos</h1>
 
       {disponiveis.length === 0 && (

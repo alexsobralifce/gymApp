@@ -99,6 +99,11 @@ export const api = {
   updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null }) =>
     api.patch<{ id: string }>('/auth/me', data),
 
+  // ─── Aluno ─────────────────────────────────────────
+  criarPerfilAluno: () => api.post('/alunos/perfil'),
+
+  getPerfilAluno: () => api.get<import('../types/api').PerfilAluno>('/alunos/perfil'),
+
   // ─── Treinos ───────────────────────────────────────
   getAlunoTreinos: () => api.get<Treino[]>('/alunos/treinos'),
 

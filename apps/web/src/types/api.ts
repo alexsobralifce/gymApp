@@ -1,5 +1,7 @@
 export interface User {
   id: string
+  nome: string
+  email: string
   role: 'ROOT' | 'ACADEMIA' | 'PROFESSOR' | 'ALUNO'
   tenantId?: string | null
   expoPushToken?: string | null
@@ -120,6 +122,16 @@ export interface Aluno {
   professor_id?: string | null
   academia_id?: string | null
   usuario?: { nome: string; email: string }
+}
+
+export interface PerfilAluno {
+  id: string
+  usuario_id: string
+  professor_id?: string | null
+  academia_id?: string | null
+  criado_em: string
+  professor?: { usuario: { nome: string } } | null
+  academia?: { nome: string } | null
 }
 
 export interface ProfessorDashboard {

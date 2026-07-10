@@ -18,6 +18,20 @@ export async function alunoRoutes(app: FastifyInstance) {
     return reply.status(201).send(aluno)
   })
 
+  /** GET /alunos/perfil — Retorna perfil do aluno com professor e academia */
+  app.get('/perfil', { preHandler }, async (request, reply) => {
+    const aluno = await prisma.aluno.findUnique({
+      where: { usuario_id: request.currentUser.sub },
+      include: {
+        professor: { select: { usuario: { select: { nome: true } } } },
+        academia: { select: { nome: true } },
+      },
+    })
+    if (!aluno) throw new NotFoundError('Aluno')
+
+    return reply.status(200).send(aluno)
+  })
+
   /** GET /alunos/treinos — lista treinos do aluno */
   app.get('/treinos', { preHandler }, async (request, reply) => {
     const aluno = await prisma.aluno.findUnique({
