@@ -8,7 +8,7 @@ export interface AuthState {
   error: string | null
 
   login: (email: string, senha: string) => Promise<void>
-  register: (nome: string, email: string, senha: string, role: string) => Promise<void>
+  register: (nome: string, email: string, senha: string, role: string, academiaId?: string) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
   updatePushSubscription: (subscription: PushSubscriptionJSON | null) => Promise<void>
@@ -33,13 +33,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (nome, email, senha, role) => {
+  register: async (nome, email, senha, role, academiaId) => {
     set({ loading: true, error: null })
     try {
       await api.register(nome, email, senha, role)
       await get().login(email, senha)
       if (role === 'ALUNO') {
         await api.criarPerfilAluno()
+        if (academiaId) {
+          await api.vincularAcademiaAluno(academiaId)
+        }
       }
     } catch (err) {
       set({ error: (err as Error).message, loading: false })

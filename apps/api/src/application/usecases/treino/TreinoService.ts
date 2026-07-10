@@ -240,6 +240,7 @@ export async function dashboardProfessor(professorId: string) {
     select: {
       id: true,
       usuario: { select: { nome: true, email: true } },
+      academia: { select: { nome: true } },
       treinos: {
         orderBy: { atualizado_em: 'desc' },
         take: 5,

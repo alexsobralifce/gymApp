@@ -1,18 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
+import { api } from '../../api/client'
+import type { Academia } from '../../types/api'
 
 export default function Register() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [role, setRole] = useState('ALUNO')
+  const [academias, setAcademias] = useState<Academia[]>([])
+  const [academiaId, setAcademiaId] = useState('')
   const { register, loading, error } = useAuthStore()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (role === 'ALUNO') {
+      api.getAcademias().then(setAcademias).catch(() => {})
+    }
+  }, [role])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await register(nome, email, senha, role)
+    await register(nome, email, senha, role, role === 'ALUNO' ? academiaId : undefined)
     navigate('/')
   }
 
@@ -46,6 +56,26 @@ export default function Register() {
           <option value="PROFESSOR">Professor</option>
           <option value="ACADEMIA">Academia</option>
         </select>
+
+        {role === 'ALUNO' && (
+          <div>
+            <label className="block text-xs text-text-muted mb-1">Academia</label>
+            <select
+              value={academiaId}
+              onChange={(e) => setAcademiaId(e.target.value)}
+              className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+              required
+            >
+              <option value="">Selecionar academia...</option>
+              {academias.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <button
           type="submit" disabled={loading}
           className="w-full rounded bg-primary py-2 text-sm font-medium text-white disabled:opacity-50"

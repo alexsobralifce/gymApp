@@ -104,6 +104,8 @@ export const api = {
   // ─── Aluno ─────────────────────────────────────────
   criarPerfilAluno: () => api.post('/alunos/perfil'),
 
+  vincularAcademiaAluno: (academiaId: string) => api.patch('/alunos/academia', { academiaId }),
+
   getPerfilAluno: () => api.get<import('../types/api').PerfilAluno>('/alunos/perfil'),
 
   // ─── Treinos ───────────────────────────────────────
@@ -236,4 +238,13 @@ export const api = {
     api.delete(`/academias/professores/${professorId}`),
 
   getAlunosAcademia: () => api.get('/academias/alunos'),
+
+  getProfessoresAcademia: () => api.get<any[]>('/academias/professores'),
+
+  vincularProfessorAluno: (alunoId: string, professorId: string | null) =>
+    api.patch(`/academias/alunos/${alunoId}/professor`, { professorId }),
+
+  // ─── WorkoutX ──────────────────────────────────────
+  getWorkoutXExercicios: (bodyPart?: string) =>
+    api.get<any[]>(bodyPart ? `/professores/workoutx/exercicios?bodyPart=${bodyPart}` : '/professores/workoutx/exercicios'),
 }

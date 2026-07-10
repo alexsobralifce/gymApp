@@ -162,7 +162,7 @@ export async function dashboardAlunosAcademia(academiaId: string) {
     select: {
       id: true,
       usuario: { select: { nome: true, email: true } },
-      professor: { select: { usuario: { select: { nome: true } } } },
+      professor: { select: { id: true, usuario: { select: { nome: true } } } },
       treinos: {
         orderBy: { atualizado_em: 'desc' },
         take: 1,

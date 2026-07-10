@@ -111,6 +111,39 @@ export async function professorRoutes(app: FastifyInstance) {
     return reply.status(200).send(resultado)
   })
 
+  /** GET /professores/workoutx/exercicios — Busca exercícios da API WorkoutX */
+  app.get('/workoutx/exercicios', { preHandler }, async (request, reply) => {
+    const { bodyPart } = z.object({
+      bodyPart: z.string().optional(),
+    }).parse(request.query)
+
+    const url = bodyPart
+      ? `https://api.workoutxapp.com/v1/exercises?bodyPart=${bodyPart}`
+      : 'https://api.workoutxapp.com/v1/exercises'
+
+    const apiKey = process.env.WORKOUTX_API_KEY || 'wx_9faec54a147c8ee816f823b3f2ed03ccae2c65b1cea70ee8a7d37887'
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-WorkoutX-Key': apiKey,
+          'Accept': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro na API WorkoutX: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      return reply.status(200).send(data)
+    } catch (error) {
+      request.log.error(error)
+      return reply.status(500).send({ error: 'Falha ao buscar dados na API WorkoutX' })
+    }
+  })
+
   /** GET /professores/exercicios — lista exercícios com filtros opcionais */
   app.get('/exercicios', { preHandler }, async (request, reply) => {
     const { grupo_muscular, equipamento, busca } = z.object({
@@ -150,6 +183,11 @@ export async function professorRoutes(app: FastifyInstance) {
         diasSemana: z.array(z.number().min(0).max(6)),
         exercicios: z.array(z.object({
           exercicioId: z.string(),
+          nome: z.string().optional(),
+          grupo_muscular: z.string().optional(),
+          equipamento: z.string().optional(),
+          imagemUrl: z.string().optional(),
+          dica: z.string().optional(),
           ordem: z.number(),
           series: z.number().min(1),
           repeticoes: z.number().min(1),
@@ -168,6 +206,30 @@ export async function professorRoutes(app: FastifyInstance) {
       const treinos = []
 
       for (const ficha of body.fichas) {
+        // Garantir que todos os exercícios da WorkoutX sejam inseridos localmente
+        for (const ex of ficha.exercicios) {
+          if (ex.nome) {
+            await tx.exercicio.upsert({
+              where: { id: ex.exercicioId },
+              create: {
+                id: ex.exercicioId,
+                nome: ex.nome,
+                grupo_muscular: ex.grupo_muscular || null,
+                equipamento: ex.equipamento || null,
+                imagem_url: ex.imagemUrl || null,
+                dica: ex.dica || null,
+              },
+              update: {
+                nome: ex.nome,
+                grupo_muscular: ex.grupo_muscular || null,
+                equipamento: ex.equipamento || null,
+                imagem_url: ex.imagemUrl || null,
+                dica: ex.dica || null,
+              },
+            })
+          }
+        }
+
         const treino = await tx.treino.create({
           data: {
             aluno_id: body.alunoId,

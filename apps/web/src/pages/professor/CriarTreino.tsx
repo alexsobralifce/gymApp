@@ -36,7 +36,10 @@ export default function ProfessorCriarTreino() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  const [alunoId, setAlunoId] = useState('')
+  const searchParams = new URLSearchParams(window.location.search)
+  const queryAlunoId = searchParams.get('alunoId')
+
+  const [alunoId, setAlunoId] = useState(queryAlunoId || '')
   const [fichas, setFichas] = useState<FichaTreino[]>([
     { nome: 'Treino A', diasSemana: [1, 3, 5], exercicios: [] },
   ])
@@ -48,27 +51,55 @@ export default function ProfessorCriarTreino() {
   const [busca, setBusca] = useState('')
 
   useEffect(() => {
-    Promise.all([api.getDashboard(), api.getExercicios()])
+    Promise.all([
+      api.getDashboard(),
+      api.getWorkoutXExercicios()
+    ])
       .then(([a, e]) => {
         setAlunos(a)
-        setExercicios(e as Exercicio[])
+        const mapped = (e as any[]).map((ex) => ({
+          id: ex.id || ex.exerciseId,
+          nome: ex.name,
+          grupo_muscular: ex.bodyPart,
+          equipamento: ex.equipment,
+          imagem_url: ex.gifUrl,
+          dica: Array.isArray(ex.instructions) ? ex.instructions.join(' ') : ex.instructions
+        }))
+        setExercicios(mapped)
       })
+      .catch((err) => console.error(err))
       .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
-    if (filtroGrupo || busca) {
-      api.getExercicios({ grupo_muscular: filtroGrupo || undefined, busca: busca || undefined })
-        .then((data) => setExercicios(data as Exercicio[]))
-    } else {
-      api.getExercicios().then((data) => setExercicios(data as Exercicio[]))
-    }
-  }, [filtroGrupo, busca])
+    if (loading) return
+    
+    api.getWorkoutXExercicios(filtroGrupo || undefined)
+      .then((data) => {
+        let mapped = (data as any[]).map((ex) => ({
+          id: ex.id || ex.exerciseId,
+          nome: ex.name,
+          grupo_muscular: ex.bodyPart,
+          equipamento: ex.equipment,
+          imagem_url: ex.gifUrl,
+          dica: Array.isArray(ex.instructions) ? ex.instructions.join(' ') : ex.instructions
+        }))
+        
+        if (busca) {
+          mapped = mapped.filter((ex) =>
+            ex.nome.toLowerCase().includes(busca.toLowerCase())
+          )
+        }
+        
+        setExercicios(mapped)
+      })
+      .catch((err) => console.error(err))
+  }, [filtroGrupo, busca, loading])
 
   function adicionarFicha() {
     const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     const novaFicha: FichaTreino = {
-      nome: `Treino ${letras[fichas.length]}`,
+      nome: `Treino ${letras[fichas.length] || 'X'}`,
       diasSemana: [],
       exercicios: [],
     }
@@ -140,19 +171,28 @@ export default function ProfessorCriarTreino() {
         fichas: fichasValidas.map((f) => ({
           nome: f.nome,
           diasSemana: f.diasSemana,
-          exercicios: f.exercicios.map((e) => ({
-            exercicioId: e.exercicioId,
-            ordem: e.ordem,
-            series: e.series,
-            repeticoes: e.repeticoes,
-            cargaSugeridaKg: e.cargaSugeridaKg,
-          })),
+          exercicios: f.exercicios.map((e) => {
+            const exData = exercicios.find((ex) => ex.id === e.exercicioId)
+            return {
+              exercicioId: e.exercicioId,
+              nome: exData?.nome,
+              grupo_muscular: exData?.grupo_muscular || undefined,
+              equipamento: exData?.equipamento || undefined,
+              imagemUrl: exData?.imagem_url || undefined,
+              dica: exData?.dica || undefined,
+              ordem: e.ordem,
+              series: e.series,
+              repeticoes: e.repeticoes,
+              cargaSugeridaKg: e.cargaSugeridaKg,
+            }
+          }),
         })),
       })
 
       setFeedback(`${treinos.length} ficha(s) criada(s) com sucesso!`)
       setTimeout(() => navigate('/'), 2000)
-    } catch {
+    } catch (err) {
+      console.error(err)
       setFeedback('Erro ao criar fichas.')
     } finally {
       setEnviando(false)
@@ -165,7 +205,7 @@ export default function ProfessorCriarTreino() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Criar Fichas de Treino</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">Criar Fichas de Treino (WorkoutX)</h1>
 
       {feedback && (
         <div className="mb-4 rounded bg-surface-card p-3 text-sm text-success">{feedback}</div>
@@ -216,7 +256,7 @@ export default function ProfessorCriarTreino() {
             <button
               type="button"
               onClick={adicionarFicha}
-              className="rounded border border-surface-input px-3 py-2 text-sm text-text-muted"
+              className="rounded border border-surface-input px-3 py-2 text-sm text-text-muted cursor-pointer"
             >
               + Nova Ficha
             </button>
@@ -242,7 +282,7 @@ export default function ProfessorCriarTreino() {
                     key={i}
                     type="button"
                     onClick={() => toggleDia(i)}
-                    className={`rounded px-3 py-1 text-xs font-medium ${
+                    className={`rounded px-3 py-1 text-xs font-medium cursor-pointer ${
                       ficha.diasSemana.includes(i) ? 'bg-primary text-white' : 'bg-surface text-text-muted'
                     }`}
                   >
@@ -253,7 +293,7 @@ export default function ProfessorCriarTreino() {
             </div>
 
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-text-muted">Filtrar Exercícios</label>
+              <label className="mb-1 block text-xs text-text-muted">Filtrar Exercícios (WorkoutX API)</label>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
@@ -267,7 +307,7 @@ export default function ProfessorCriarTreino() {
                 <button
                   type="button"
                   onClick={() => setFiltroGrupo('')}
-                  className={`rounded px-2 py-1 text-xs ${
+                  className={`rounded px-2 py-1 text-xs cursor-pointer ${
                     !filtroGrupo ? 'bg-primary text-white' : 'bg-surface text-text-muted'
                   }`}
                 >
@@ -278,7 +318,7 @@ export default function ProfessorCriarTreino() {
                     key={g.value}
                     type="button"
                     onClick={() => setFiltroGrupo(filtroGrupo === g.value ? '' : g.value)}
-                    className={`rounded px-2 py-1 text-xs ${
+                    className={`rounded px-2 py-1 text-xs cursor-pointer ${
                       filtroGrupo === g.value ? 'bg-primary text-white' : 'bg-surface text-text-muted'
                     }`}
                   >
@@ -295,7 +335,7 @@ export default function ProfessorCriarTreino() {
                 onChange={(e) => {
                   if (e.target.value) adicionarExercicio(e.target.value)
                 }}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text-muted focus:border-primary focus:outline-none"
+                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text-muted focus:border-primary focus:outline-none cursor-pointer"
               >
                 <option value="">+ Selecionar exercício...</option>
                 {exercicios.map((e) => (
@@ -317,7 +357,7 @@ export default function ProfessorCriarTreino() {
                   {ficha.exercicios.map((ex, idx) => {
                     const exData = exercicios.find((e) => e.id === ex.exercicioId)
                     return (
-                      <div key={idx} className="rounded bg-surface p-3">
+                      <div key={idx} className="rounded bg-surface p-3 border border-surface-input">
                         <div className="flex items-center justify-between mb-2">
                           <div>
                             <span className="text-sm font-medium text-text">
@@ -345,7 +385,7 @@ export default function ProfessorCriarTreino() {
                               min={1}
                               value={ex.series}
                               onChange={(e) => atualizarExercicio(idx, 'series', Number(e.target.value))}
-                              className="w-full rounded border border-surface-input bg-surface px-2 py-1 text-sm text-text"
+                              className="w-full rounded border border-surface-input bg-surface px-2 py-1 text-sm text-text focus:outline-none"
                             />
                           </div>
                           <div className="flex-1">
@@ -355,7 +395,7 @@ export default function ProfessorCriarTreino() {
                               min={1}
                               value={ex.repeticoes}
                               onChange={(e) => atualizarExercicio(idx, 'repeticoes', Number(e.target.value))}
-                              className="w-full rounded border border-surface-input bg-surface px-2 py-1 text-sm text-text"
+                              className="w-full rounded border border-surface-input bg-surface px-2 py-1 text-sm text-text focus:outline-none"
                             />
                           </div>
                           <div className="flex-1">
@@ -369,7 +409,7 @@ export default function ProfessorCriarTreino() {
                               onChange={(e) =>
                                 atualizarExercicio(idx, 'cargaSugeridaKg', Number(e.target.value) || 0)
                               }
-                              className="w-full rounded border border-surface-input bg-surface px-2 py-1 text-sm text-text"
+                              className="w-full rounded border border-surface-input bg-surface px-2 py-1 text-sm text-text focus:outline-none"
                             />
                           </div>
                         </div>
@@ -385,7 +425,7 @@ export default function ProfessorCriarTreino() {
             type="button"
             onClick={handleSalvar}
             disabled={!alunoId || enviando || fichas.every((f) => f.exercicios.length === 0)}
-            className="w-full rounded bg-primary py-3 text-sm font-medium text-white disabled:opacity-40"
+            className="w-full rounded bg-primary py-3 text-sm font-medium text-white disabled:opacity-40 cursor-pointer"
           >
             {enviando ? 'Salvando...' : 'Salvar Fichas'}
           </button>

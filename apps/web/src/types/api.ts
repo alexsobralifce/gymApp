@@ -139,6 +139,7 @@ export interface PerfilAluno {
 export interface ProfessorDashboard {
   id: string
   usuario: { nome: string; email: string }
+  academia?: { nome: string } | null
   treinos: Array<{
     id: string
     nome: string

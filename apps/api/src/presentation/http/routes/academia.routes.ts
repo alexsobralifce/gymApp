@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role, AcademiaStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
+import { NotFoundError } from '../../../domain/errors/AppError.js'
 import {
   cadastrarAcademia,
   autorizarProfessorPrimeiraEtapa,
@@ -55,5 +56,63 @@ export async function academiaRoutes(app: FastifyInstance) {
     const academiaId = request.currentUser.tenantId!
     const alunos = await dashboardAlunosAcademia(academiaId)
     return reply.status(200).send(alunos)
+  })
+
+  /** GET /academias/professores — Retorna todos os professores ativos da academia logada */
+  app.get('/professores', { preHandler }, async (request, reply) => {
+    const academiaId = request.currentUser.tenantId!
+    const professorLinks = await prisma.professorAcademia.findMany({
+      where: {
+        academia_id: academiaId,
+        status: 'ATIVO',
+      },
+      include: {
+        professor: {
+          include: {
+            usuario: { select: { nome: true } },
+          },
+        },
+      },
+      orderBy: { professor: { usuario: { nome: 'asc' } } },
+    })
+
+    const professores = professorLinks.map((link) => ({
+      id: link.professor.id,
+      nome: link.professor.usuario.nome,
+    }))
+
+    return reply.status(200).send(professores)
+  })
+
+  /** PATCH /academias/alunos/:alunoId/professor — Vincula um professor a um aluno da academia */
+  app.patch('/alunos/:alunoId/professor', { preHandler }, async (request, reply) => {
+    const { alunoId } = z.object({ alunoId: z.string() }).parse(request.params)
+    const { professorId } = z.object({ professorId: z.string().nullable() }).parse(request.body)
+    const academiaId = request.currentUser.tenantId!
+
+    // Garantir que o aluno pertence à academia logada
+    const aluno = await prisma.aluno.findFirst({
+      where: { id: alunoId, academia_id: academiaId },
+    })
+    if (!aluno) {
+      throw new NotFoundError('Aluno não encontrado nesta academia')
+    }
+
+    // Se professorId for informado, garantir que o professor pertence e está ativo na academia logada
+    if (professorId) {
+      const professorVinculo = await prisma.professorAcademia.findFirst({
+        where: { professor_id: professorId, academia_id: academiaId, status: 'ATIVO' },
+      })
+      if (!professorVinculo) {
+        throw new NotFoundError('Professor não está ativo nesta academia')
+      }
+    }
+
+    const updated = await prisma.aluno.update({
+      where: { id: alunoId },
+      data: { professor_id: professorId },
+    })
+
+    return reply.status(200).send(updated)
   })
 }

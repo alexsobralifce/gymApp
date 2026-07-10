@@ -26,6 +26,17 @@ export async function alunoRoutes(app: FastifyInstance) {
     return reply.status(201).send(aluno)
   })
 
+  /** PATCH /alunos/academia — Vincula o aluno logado a uma academia */
+  app.patch('/academia', { preHandler }, async (request, reply) => {
+    const { academiaId } = z.object({ academiaId: z.string() }).parse(request.body)
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const updated = await prisma.aluno.update({
+      where: { id: aluno.id },
+      data: { academia_id: academiaId },
+    })
+    return reply.status(200).send(updated)
+  })
+
   /** GET /alunos/perfil — Retorna perfil do aluno com professor e academia */
   app.get('/perfil', { preHandler }, async (request, reply) => {
     await resolveAluno(request.currentUser.sub)
