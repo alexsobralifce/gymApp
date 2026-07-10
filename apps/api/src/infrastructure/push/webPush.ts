@@ -2,11 +2,13 @@ import webpush from 'web-push'
 import { env } from '../../shared/env.js'
 
 const VAPID_KEYS: webpush.VapidKeys = {
-  publicKey: env.VAPID_PUBLIC_KEY,
-  privateKey: env.VAPID_PRIVATE_KEY,
+  publicKey: env.VAPID_PUBLIC_KEY || '',
+  privateKey: env.VAPID_PRIVATE_KEY || '',
 }
 
-webpush.setVapidDetails(env.VAPID_SUBJECT, VAPID_KEYS.publicKey, VAPID_KEYS.privateKey)
+if (VAPID_KEYS.publicKey && VAPID_KEYS.privateKey) {
+  webpush.setVapidDetails(env.VAPID_SUBJECT || 'mailto:admin@gymapp.com', VAPID_KEYS.publicKey, VAPID_KEYS.privateKey)
+}
 
 export async function sendWebPush(
   subscription: webpush.PushSubscription,
@@ -14,6 +16,10 @@ export async function sendWebPush(
   body: string,
   data?: Record<string, unknown>,
 ): Promise<void> {
+  if (!VAPID_KEYS.publicKey || !VAPID_KEYS.privateKey) {
+    console.warn('[WebPush] Chaves VAPID não configuradas. Pulando envio de push.')
+    return
+  }
   try {
     await webpush.sendNotification(
       subscription,
