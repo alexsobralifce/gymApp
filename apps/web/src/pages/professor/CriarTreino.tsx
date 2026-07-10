@@ -183,6 +183,7 @@ interface FichaTreino {
 export default function ProfessorCriarTreino() {
   const [alunos, setAlunos] = useState<ProfessorDashboard[]>([])
   const [exercicios, setExercicios] = useState<Exercicio[]>([])
+  const [exerciciosMap, setExerciciosMap] = useState<Record<string, Exercicio>>({})
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -217,6 +218,13 @@ export default function ProfessorCriarTreino() {
           dica: Array.isArray(ex.instructions) ? ex.instructions.join(' ') : ex.instructions
         }))
         setExercicios(mapped)
+        setExerciciosMap((prev) => {
+          const next = { ...prev }
+          mapped.forEach((ex: any) => {
+            next[ex.id] = ex
+          })
+          return next
+        })
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
@@ -244,6 +252,13 @@ export default function ProfessorCriarTreino() {
         }
         
         setExercicios(mapped)
+        setExerciciosMap((prev) => {
+          const next = { ...prev }
+          mapped.forEach((ex: any) => {
+            next[ex.id] = ex
+          })
+          return next
+        })
       })
       .catch((err) => console.error(err))
   }, [filtroGrupo, busca, loading])
@@ -281,6 +296,12 @@ export default function ProfessorCriarTreino() {
   function adicionarExercicio(exercicioId: string) {
     const ficha = fichas[fichaAtiva]
     if (ficha.exercicios.find((e) => e.exercicioId === exercicioId)) return
+    
+    const exData = exercicios.find((ex) => ex.id === exercicioId)
+    if (exData) {
+      setExerciciosMap((prev) => ({ ...prev, [exercicioId]: exData }))
+    }
+
     const novoExercicio: ExercicioTreino = {
       exercicioId,
       ordem: ficha.exercicios.length + 1,
@@ -324,7 +345,7 @@ export default function ProfessorCriarTreino() {
           nome: f.nome,
           diasSemana: f.diasSemana,
           exercicios: f.exercicios.map((e) => {
-            const exData = exercicios.find((ex) => ex.id === e.exercicioId)
+            const exData = exerciciosMap[e.exercicioId] || exercicios.find((ex) => ex.id === e.exercicioId)
             return {
               exercicioId: e.exercicioId,
               nome: exData?.nome,
