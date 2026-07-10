@@ -5,6 +5,7 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import {
   criarTreino,
+  criarTreinoAutogestao,
   enviarTreinoParaAceite,
   responderTreino,
   iniciarTreino,
@@ -40,7 +41,38 @@ export async function treinoRoutes(app: FastifyInstance) {
     return reply.status(201).send(treino)
   })
 
-  /** POST /treinos/:id/exercicios — UC-12 (cria e vincula exercício) */
+  /** POST /treinos/autogestao — UC-18 (aluno cadastra próprio treino) */
+  app.post('/autogestao', { preHandler: prehandlerAluno }, async (request, reply) => {
+    const aluno = await prisma.aluno.findUnique({
+      where: { usuario_id: request.currentUser.sub },
+    })
+    if (!aluno) throw new NotFoundError('Aluno')
+
+    const body = z.object({
+      nome: z.string().min(2),
+      diasSemana: z.array(z.number().int().min(0).max(6)).min(1),
+      exercicios: z.array(z.object({
+        exercicioId: z.string(),
+        ordem: z.number().int().min(1),
+        series: z.number().int().min(1).default(3),
+        repeticoes: z.number().int().min(1).default(12),
+        cargaSugeridaKg: z.number().optional(),
+      })).min(1),
+    }).parse(request.body)
+
+    const treino = await criarTreinoAutogestao(aluno.id, body)
+    return reply.status(201).send(treino)
+  })
+
+  /** GET /treinos/exercicios — lista todos os exercícios */
+  app.get('/exercicios', { preHandler: [app.authenticate] }, async (_request, reply) => {
+    const exercicios = await prisma.exercicio.findMany({
+      orderBy: { nome: 'asc' },
+    })
+    return reply.status(200).send(exercicios)
+  })
+
+  /** POST /treinos/exercicios — UC-12 (cria e vincula exercício) */
   app.post('/exercicios', { preHandler: prehandlerProfessor }, async (request, reply) => {
     const body = z.object({
       nome: z.string().min(2),

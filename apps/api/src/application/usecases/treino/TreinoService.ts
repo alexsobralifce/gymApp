@@ -50,6 +50,53 @@ export async function criarTreino(professorId: string, input: {
   })
 }
 
+// ─── UC-18: Autogerenciar treino (aluno sem professor) ──────────────────────
+
+export async function criarTreinoAutogestao(alunoId: string, input: {
+  nome: string
+  diasSemana: number[]
+  exercicios: Array<{
+    exercicioId: string
+    ordem: number
+    series: number
+    repeticoes: number
+    cargaSugeridaKg?: number
+  }>
+}) {
+  const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
+  if (!aluno) throw new NotFoundError('Aluno')
+  if (aluno.professor_id !== null) throw new TenantAccessError()
+
+  assertTransicaoValida(TreinoStatus.CADASTRADO, TreinoStatus.ACEITO, TreinoAtor.ALUNO)
+
+  return prisma.treino.create({
+    data: {
+      aluno_id: alunoId,
+      nome: input.nome,
+      dias_semana: input.diasSemana,
+      status: TreinoStatus.ACEITO,
+      exercicios: {
+        create: input.exercicios.map((e) => ({
+          exercicio_id: e.exercicioId,
+          ordem: e.ordem,
+          series: e.series,
+          repeticoes: e.repeticoes,
+          carga_sugerida_kg: e.cargaSugeridaKg,
+        })),
+      },
+      historico: {
+        create: {
+          status_anterior: TreinoStatus.CADASTRADO,
+          status_novo: TreinoStatus.ACEITO,
+          ator_id: alunoId,
+          ator_tipo: TreinoAtor.ALUNO,
+        },
+      },
+    },
+    include: { exercicios: true },
+  })
+}
+
 // ─── UC-13: Enviar treino para aceite ────────────────────────────────────────
 
 export async function enviarTreinoParaAceite(treinoId: string, professorId: string) {

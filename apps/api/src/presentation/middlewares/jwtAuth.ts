@@ -10,6 +10,10 @@ export type JwtPayload = {
 }
 
 declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
+    requireRole: (...roles: Role[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>
+  }
   interface FastifyRequest {
     currentUser: JwtPayload
   }

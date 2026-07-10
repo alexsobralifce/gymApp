@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { dashboardProfessor } from '../../../application/usecases/treino/TreinoService.js'
 import { prisma } from '../../../infrastructure/database/prisma.js'
+import { obterCorrelacoes } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 
 export async function professorRoutes(app: FastifyInstance) {
@@ -71,5 +72,22 @@ export async function professorRoutes(app: FastifyInstance) {
 
     const data = await dashboardProfessor(professor.id)
     return reply.status(200).send(data)
+  })
+
+  /** GET /professores/alunos/:alunoId/correlacoes — UC-16 + UC-32 */
+  app.get('/alunos/:alunoId/correlacoes', { preHandler }, async (request, reply) => {
+    const { alunoId } = z.object({ alunoId: z.string() }).parse(request.params)
+
+    const professor = await prisma.professor.findUnique({
+      where: { usuario_id: request.currentUser.sub },
+    })
+    if (!professor) throw new NotFoundError('Perfil professor')
+
+    const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
+    if (!aluno) throw new NotFoundError('Aluno')
+    if (aluno.professor_id !== professor.id) throw new TenantAccessError()
+
+    const resultado = await obterCorrelacoes(alunoId)
+    return reply.status(200).send(resultado)
   })
 }

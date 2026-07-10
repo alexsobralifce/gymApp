@@ -18,6 +18,11 @@ const TRANSICOES: TransicaoConfig[] = [
     atoresPermitidos: [TreinoAtor.PROFESSOR, TreinoAtor.SISTEMA],
   },
   {
+    de: TreinoStatus.CADASTRADO,
+    para: [TreinoStatus.ACEITO],
+    atoresPermitidos: [TreinoAtor.ALUNO],
+  },
+  {
     de: TreinoStatus.ENVIADO,
     para: [TreinoStatus.ACEITO, TreinoStatus.RECUSADO],
     atoresPermitidos: [TreinoAtor.ALUNO],
@@ -50,13 +55,13 @@ export function assertTransicaoValida(
   statusNovo: TreinoStatus,
   ator: TreinoAtor,
 ): void {
-  const config = TRANSICOES.find((t) => t.de === statusAtual)
+  const configs = TRANSICOES.filter((t) => t.de === statusAtual)
 
-  if (!config || !config.para.includes(statusNovo)) {
-    throw new InvalidStateTransitionError(statusAtual, statusNovo)
-  }
+  const permitida = configs.some(
+    (c) => c.para.includes(statusNovo) && c.atoresPermitidos.includes(ator),
+  )
 
-  if (!config.atoresPermitidos.includes(ator)) {
+  if (!permitida) {
     throw new InvalidStateTransitionError(statusAtual, statusNovo)
   }
 }
@@ -65,7 +70,7 @@ export function assertTransicaoValida(
  * Retorna os próximos status possíveis a partir do status atual
  */
 export function proximosStatusPossiveis(statusAtual: TreinoStatus): TreinoStatus[] {
-  return TRANSICOES.find((t) => t.de === statusAtual)?.para ?? []
+  return [...new Set(TRANSICOES.filter((t) => t.de === statusAtual).flatMap((t) => t.para))]
 }
 
 /**

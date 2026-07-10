@@ -1,167 +1,246 @@
 import { Queue, Worker, Job } from 'bullmq'
 import { TreinoStatus, TreinoAtor } from '@prisma/client'
-import { prisma } from '../../../infrastructure/database/prisma.js'
-import { assertTransicaoValida } from '../../../domain/entities/TreinoStateMachine.js'
-import { env } from '../../../shared/env.js'
+import { prisma } from '../../infrastructure/database/prisma.js'
+import { assertTransicaoValida } from '../../domain/entities/TreinoStateMachine.js'
+import { sendPushNotification } from '../../infrastructure/push/expoPush.js'
+import { sendWebPush } from '../../infrastructure/push/webPush.js'
+import { calcularEAtualizar } from '../../application/usecases/correlacao/CorrelacaoService.js'
+import { env } from '../../shared/env.js'
+import type { PushSubscription } from 'web-push'
 
-const connection = { url: env.REDIS_URL }
+let connection: { url: string } | null = null
 
-// ─── Filas ────────────────────────────────────────────────────────────────────
+let inatividade30minQueue: Queue | null = null
+let treinoEmAbertoQueue: Queue | null = null
+let mensagemMotivaicionalQueue: Queue | null = null
+let correlacaoQueue: Queue | null = null
 
-export const inatividade30minQueue = new Queue('inatividade-30min', { connection })
-export const treinoEmAbertoQueue = new Queue('treino-em-aberto', { connection })
-export const mensagemMotivaicionalQueue = new Queue('mensagem-motivacional', { connection })
-export const correlacaoQueue = new Queue('correlacao-desempenho', { connection })
+let inatividade30minWorker: Worker | null = null
+let treinoEmAbertoWorker: Worker | null = null
+let mensagemMotivacionalWorker: Worker | null = null
+let correlacaoWorker: Worker | null = null
 
-// ─── UC-29 + UC-30: Worker de inatividade 30 min ─────────────────────────────
-// Job roda a cada 5 minutos verificando treinos EM_EXECUCAO sem conclusão após 30min
+let started = false
 
-export const inatividade30minWorker = new Worker(
-  'inatividade-30min',
-  async (_job: Job) => {
-    const limite = new Date(Date.now() - 30 * 60 * 1000)
+// ─── Push dual-channel helper ──────────────────────────────────────────────────
 
-    const treinosInativos = await prisma.treino.findMany({
-      where: {
-        status: TreinoStatus.EM_EXECUCAO,
-        iniciado_em: { lte: limite },
-        finalizado_em: null,
-      },
-      include: {
-        aluno: {
-          include: {
-            usuario: { select: { fcm_token: true, nome: true } },
-            professor: { include: { usuario: { select: { fcm_token: true } } } },
-          },
+async function sendDualPush(
+  expoToken: string | null | undefined,
+  webSubscription: PushSubscription | null,
+  title: string,
+  body: string,
+  data?: Record<string, unknown>,
+) {
+  const promises: Promise<void>[] = []
+  if (expoToken) promises.push(sendPushNotification(expoToken, title, body, data))
+  if (webSubscription) promises.push(sendWebPush(webSubscription, title, body, data))
+  await Promise.allSettled(promises)
+}
+
+// ─── Work handlers ────────────────────────────────────────────────────────────
+
+async function handleInatividade30min(_job: Job) {
+  const limite = new Date(Date.now() - 30 * 60 * 1000)
+
+  const treinosInativos = await prisma.treino.findMany({
+    where: {
+      status: TreinoStatus.EM_EXECUCAO,
+      iniciado_em: { lte: limite },
+      finalizado_em: null,
+    },
+    include: {
+      aluno: {
+        include: {
+          usuario: { select: { expo_push_token: true, web_push_subscription: true, nome: true } },
+          professor: { include: { usuario: { select: { expo_push_token: true, web_push_subscription: true } } } },
         },
       },
-    })
+    },
+  })
 
-    for (const treino of treinosInativos) {
-      console.log(`[Worker] Treino inativo: ${treino.id} — aluno: ${treino.aluno.usuario.nome}`)
-      // TODO: disparar push via FCM para aluno e professor
-      // await sendPushNotification(treino.aluno.usuario.fcm_token, ...)
-      // await sendPushNotification(treino.aluno.professor?.usuario.fcm_token, ...)
+  for (const treino of treinosInativos) {
+    const nomeAluno = treino.aluno.usuario.nome
+    console.log(`[Worker] Inatividade 30min detectada: ${treino.id} — aluno: ${nomeAluno}`)
+
+    await sendDualPush(
+      treino.aluno.usuario.expo_push_token,
+      treino.aluno.usuario.web_push_subscription as PushSubscription | null,
+      'Treino parado',
+      'Seu treino está parado há mais de 30 minutos. Retome as atividades!',
+    )
+
+    const professorToken = treino.aluno.professor?.usuario.expo_push_token
+    const professorWeb = treino.aluno.professor?.usuario.web_push_subscription as PushSubscription | null
+    if (professorToken || professorWeb) {
+      await sendDualPush(
+        professorToken,
+        professorWeb,
+        'Aluno inativo',
+        `${nomeAluno} está com o treino parado há mais de 30 minutos.`,
+      )
     }
-  },
-  { connection },
-)
+  }
+}
 
-// ─── UC-31: Marcar treino como "em aberto" ao fim do dia ─────────────────────
+async function handleTreinoEmAberto(_job: Job) {
+  const hoje = new Date()
+  const diaSemanaHoje = hoje.getDay()
 
-export const treinoEmAbertoWorker = new Worker(
-  'treino-em-aberto',
-  async (_job: Job) => {
-    const hoje = new Date()
-    const diaSemanaHoje = hoje.getDay() // 0=Dom...6=Sáb
-
-    // Treinos ACEITOS que deveriam ter sido iniciados hoje e não foram
-    const treinos = await prisma.treino.findMany({
-      where: {
-        status: TreinoStatus.ACEITO,
-        dias_semana: { has: diaSemanaHoje },
-        iniciado_em: null,
+  const treinos = await prisma.treino.findMany({
+    where: {
+      status: TreinoStatus.ACEITO,
+      dias_semana: { has: diaSemanaHoje },
+      iniciado_em: null,
+    },
+    include: {
+      aluno: {
+        include: {
+          usuario: { select: { nome: true } },
+          professor: { include: { usuario: { select: { expo_push_token: true, web_push_subscription: true } } } },
+        },
       },
+    },
+  })
+
+  for (const treino of treinos) {
+    assertTransicaoValida(treino.status, TreinoStatus.EM_ABERTO, TreinoAtor.SISTEMA)
+
+    await prisma.$transaction(async (tx) => {
+      await tx.treino.update({
+        where: { id: treino.id },
+        data: { status: TreinoStatus.EM_ABERTO },
+      })
+      await tx.treinoHistorico.create({
+        data: {
+          treino_id: treino.id,
+          status_anterior: TreinoStatus.ACEITO,
+          status_novo: TreinoStatus.EM_ABERTO,
+          ator_id: 'SISTEMA',
+          ator_tipo: TreinoAtor.SISTEMA,
+        },
+      })
     })
 
-    for (const treino of treinos) {
-      assertTransicaoValida(treino.status, TreinoStatus.EM_ABERTO, TreinoAtor.SISTEMA)
-
-      await prisma.$transaction(async (tx) => {
-        await tx.treino.update({
-          where: { id: treino.id },
-          data: { status: TreinoStatus.EM_ABERTO },
-        })
-        await tx.treinoHistorico.create({
-          data: {
-            treino_id: treino.id,
-            status_anterior: TreinoStatus.ACEITO,
-            status_novo: TreinoStatus.EM_ABERTO,
-            ator_id: 'SISTEMA',
-            ator_tipo: TreinoAtor.SISTEMA,
-          },
-        })
-      })
+    const nomeAluno = treino.aluno.usuario.nome
+    const p = treino.aluno.professor
+    if (p) {
+      await sendDualPush(
+        p.usuario.expo_push_token,
+        p.usuario.web_push_subscription as PushSubscription | null,
+        'Treino em aberto',
+        `${nomeAluno} não iniciou o treino programado para hoje.`,
+      )
     }
+  }
 
-    console.log(`[Worker] ${treinos.length} treinos marcados como EM_ABERTO`)
-  },
-  { connection },
-)
+  console.log(`[Worker] ${treinos.length} treinos marcados como EM_ABERTO`)
+}
 
-// ─── UC-28 + UC-33: Worker de mensagem motivacional ──────────────────────────
+async function handleMensagemMotivacional(job: Job<{ alunoId: string }>) {
+  const { alunoId } = job.data
 
-export const mensagemMotivacionalWorker = new Worker(
-  'mensagem-motivacional',
-  async (job: Job<{ alunoId: string }>) => {
-    const { alunoId } = job.data
-
-    const todasMensagens = await prisma.mensagemMotivacional.findMany()
-    const mensagensEnviadas = await prisma.mensagemMotivacionalEnviada.findMany({
+  const [todasMensagens, mensagensEnviadas, aluno] = await Promise.all([
+    prisma.mensagemMotivacional.findMany(),
+    prisma.mensagemMotivacionalEnviada.findMany({
       where: { aluno_id: alunoId },
       select: { mensagem_id: true },
-    })
+    }),
+    prisma.aluno.findUnique({
+      where: { id: alunoId },
+      include: { usuario: { select: { expo_push_token: true, web_push_subscription: true } } },
+    }),
+  ])
 
-    const idsEnviados = new Set(mensagensEnviadas.map((m) => m.mensagem_id))
-    let disponiveis = todasMensagens.filter((m) => !idsEnviados.has(m.id))
+  const idsEnviados = new Set(mensagensEnviadas.map((m) => m.mensagem_id))
+  let disponiveis = todasMensagens.filter((m) => !idsEnviados.has(m.id))
 
-    // UC-33: resetar ciclo se todas foram enviadas
-    if (disponiveis.length === 0) {
-      await prisma.mensagemMotivacionalEnviada.deleteMany({ where: { aluno_id: alunoId } })
-      disponiveis = todasMensagens
-    }
+  if (disponiveis.length === 0) {
+    await prisma.mensagemMotivacionalEnviada.deleteMany({ where: { aluno_id: alunoId } })
+    disponiveis = todasMensagens
+  }
 
-    const mensagem = disponiveis[Math.floor(Math.random() * disponiveis.length)]
-    if (!mensagem) return
+  const mensagem = disponiveis[Math.floor(Math.random() * disponiveis.length)]
+  if (!mensagem) return
 
-    await prisma.mensagemMotivacionalEnviada.create({
-      data: { aluno_id: alunoId, mensagem_id: mensagem.id },
-    })
+  await prisma.mensagemMotivacionalEnviada.create({
+    data: { aluno_id: alunoId, mensagem_id: mensagem.id },
+  })
 
-    console.log(`[Worker] Mensagem motivacional enviada para aluno ${alunoId}: "${mensagem.titulo}"`)
-    // TODO: push FCM com mensagem.titulo + mensagem.url_estudo
-  },
-  { connection },
-)
+  console.log(`[Worker] Mensagem motivacional: "${mensagem.titulo}" → aluno ${alunoId}`)
 
-// ─── UC-32: Worker de correlações de desempenho ───────────────────────────────
+  if (aluno) {
+    await sendDualPush(
+      aluno.usuario.expo_push_token,
+      aluno.usuario.web_push_subscription as PushSubscription | null,
+      mensagem.titulo,
+      mensagem.resumo,
+      { url_estudo: mensagem.url_estudo },
+    )
+  }
+}
 
-export const correlacaoWorker = new Worker(
-  'correlacao-desempenho',
-  async (job: Job<{ alunoId: string }>) => {
-    const { alunoId } = job.data
+async function handleCorrelacaoDesempenho(job: Job<{ alunoId: string }>) {
+  const { alunoId } = job.data
 
-    const medidas = await prisma.medidaCorporal.findMany({
-      where: { aluno_id: alunoId },
-      orderBy: { data: 'asc' },
-    })
+  const resultado = await calcularEAtualizar(alunoId)
 
-    const execucoes = await prisma.execucaoExercicio.findMany({
-      where: { treino: { aluno_id: alunoId } },
-      orderBy: { registrado_em: 'asc' },
-    })
+  if (resultado) {
+    console.log(`[Worker] Correlações calculadas para aluno ${alunoId}: r(peso) = ${resultado.peso_volume_r}, r(bf) = ${resultado.bf_volume_r}, r(massa magra) = ${resultado.massa_magra_volume_r}`)
+  } else {
+    console.log(`[Worker] Correlações insuficientes para aluno ${alunoId} — dados insuficientes`)
+  }
+}
 
-    // Dados processados disponíveis para o frontend via endpoint /alunos/correlacoes
-    console.log(`[Worker] Correlações calculadas: ${medidas.length} medidas, ${execucoes.length} execuções`)
-    // Persistir resultado calculado em tabela de cache (futuro)
-  },
-  { connection },
-)
+// ─── Agendamento de jobs recorrentes ─────────────────────────────────────────
 
-// ─── Agendamento dos jobs periódicos ─────────────────────────────────────────
+async function scheduleRecurringJobs() {
+  if (!inatividade30minQueue || !treinoEmAbertoQueue) return
 
-export async function scheduleRecurringJobs() {
-  // Verificar inatividade a cada 5 minutos
   await inatividade30minQueue.add('check-inatividade', {}, {
     repeat: { every: 5 * 60 * 1000 },
     removeOnComplete: true,
   })
 
-  // Marcar treinos em aberto às 23:30 todos os dias
   await treinoEmAbertoQueue.add('mark-em-aberto', {}, {
-    repeat: { cron: '30 23 * * *' },
+    repeat: { pattern: '30 23 * * *' },
     removeOnComplete: true,
   })
 
   console.log('✅ Workers agendados')
+}
+
+// ─── Start / Stop ─────────────────────────────────────────────────────────────
+
+export async function startWorkers() {
+  if (started) return
+  started = true
+
+  connection = { url: env.REDIS_URL }
+
+  inatividade30minQueue = new Queue('inatividade-30min', { connection })
+  treinoEmAbertoQueue = new Queue('treino-em-aberto', { connection })
+  mensagemMotivaicionalQueue = new Queue('mensagem-motivacional', { connection })
+  correlacaoQueue = new Queue('correlacao-desempenho', { connection })
+
+  inatividade30minWorker = new Worker('inatividade-30min', handleInatividade30min, { connection })
+  treinoEmAbertoWorker = new Worker('treino-em-aberto', handleTreinoEmAberto, { connection })
+  mensagemMotivacionalWorker = new Worker('mensagem-motivacional', handleMensagemMotivacional, { connection })
+  correlacaoWorker = new Worker('correlacao-desempenho', handleCorrelacaoDesempenho, { connection })
+
+  await scheduleRecurringJobs()
+}
+
+export async function stopWorkers() {
+  if (!started) return
+  started = false
+
+  const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker]
+  const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue]
+
+  await Promise.all([
+    ...workers.map((w) => w?.close()),
+    ...queues.map((q) => q?.close()),
+  ])
+
+  console.log('✅ Workers finalizados')
 }

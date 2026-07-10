@@ -24,6 +24,12 @@ describe('TreinoStateMachine', () => {
     ).not.toThrow()
   })
 
+  it('aluno pode autoaceitar treino CADASTRADO (autogestão)', () => {
+    expect(() =>
+      assertTransicaoValida(TreinoStatus.CADASTRADO, TreinoStatus.ACEITO, TreinoAtor.ALUNO)
+    ).not.toThrow()
+  })
+
   it('aluno pode iniciar treino ACEITO', () => {
     expect(() =>
       assertTransicaoValida(TreinoStatus.ACEITO, TreinoStatus.EM_EXECUCAO, TreinoAtor.ALUNO)
@@ -53,6 +59,18 @@ describe('TreinoStateMachine', () => {
   it('aluno NÃO pode enviar treino CADASTRADO', () => {
     expect(() =>
       assertTransicaoValida(TreinoStatus.CADASTRADO, TreinoStatus.ENVIADO, TreinoAtor.ALUNO)
+    ).toThrow(InvalidStateTransitionError)
+  })
+
+  it('professor NÃO pode autoaceitar treino CADASTRADO', () => {
+    expect(() =>
+      assertTransicaoValida(TreinoStatus.CADASTRADO, TreinoStatus.ACEITO, TreinoAtor.PROFESSOR)
+    ).toThrow(InvalidStateTransitionError)
+  })
+
+  it('sistema NÃO pode autoaceitar treino CADASTRADO', () => {
+    expect(() =>
+      assertTransicaoValida(TreinoStatus.CADASTRADO, TreinoStatus.ACEITO, TreinoAtor.SISTEMA)
     ).toThrow(InvalidStateTransitionError)
   })
 
@@ -87,6 +105,12 @@ describe('TreinoStateMachine', () => {
   })
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  it('proximosStatusPossiveis retorna status corretos para CADASTRADO', () => {
+    const proximos = proximosStatusPossiveis(TreinoStatus.CADASTRADO)
+    expect(proximos).toContain(TreinoStatus.ENVIADO)
+    expect(proximos).toContain(TreinoStatus.ACEITO)
+  })
 
   it('proximosStatusPossiveis retorna status corretos para ACEITO', () => {
     const proximos = proximosStatusPossiveis(TreinoStatus.ACEITO)

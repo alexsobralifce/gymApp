@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role } from '@prisma/client'
+import { Role, VinculoStatus } from '@prisma/client'
+import { prisma } from '../../../infrastructure/database/prisma.js'
 import {
   painelGlobal,
   aprovacaoAcademia,
@@ -9,13 +10,25 @@ import {
 } from '../../../application/usecases/academia/AcademiaService.js'
 
 export async function rootRoutes(app: FastifyInstance) {
-  // Todos os endpoints exigem autenticação + role ROOT
   const preHandler = [app.authenticate, app.requireRole(Role.ROOT)]
 
   /** GET /root/painel — UC-04 */
   app.get('/painel', { preHandler }, async (_request, reply) => {
     const data = await painelGlobal()
     return reply.status(200).send(data)
+  })
+
+  /** GET /root/vinculos — lista vínculos pendentes (2ª camada) */
+  app.get('/vinculos', { preHandler }, async (_request, reply) => {
+    const vinculos = await prisma.professorAcademia.findMany({
+      where: { status: VinculoStatus.PENDENTE_ROOT },
+      include: {
+        professor: { include: { usuario: { select: { nome: true, email: true } } } },
+        academia: { select: { id: true, nome: true } },
+      },
+      orderBy: { criado_em: 'asc' },
+    })
+    return reply.status(200).send(vinculos)
   })
 
   /** PATCH /root/academias/:id/aprovacao — UC-01 */

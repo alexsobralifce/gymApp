@@ -60,7 +60,8 @@ model Usuario {
   nome         String
   role         Role
   foto_url     String?
-  fcm_token    String?  // token FCM para push notifications
+  expo_push_token       String?  // token Expo para push notifications
+  web_push_subscription  Json?    // PushSubscription JSON (Web Push API)
   criado_em    DateTime @default(now())
   atualizado_em DateTime @updatedAt
 
@@ -153,6 +154,7 @@ model Aluno {
   treinos    Treino[]
   medidas    MedidaCorporal[]
   mensagensEnviadas MensagemMotivacionalEnviada[]
+  correlacao  CorrelacaoDesempenho?
 
   @@map("alunos")
 }
@@ -285,4 +287,23 @@ model MensagemMotivacionalEnviada {
   mensagem MensagemMotivacional @relation(fields: [mensagem_id], references: [id])
 
   @@map("mensagens_motivacionais_enviadas")
+}
+
+// ─── Correlações de Desempenho ──────────────────────────────────────────────
+
+/// Cache de correlações (UC-32) — worker recalcula, endpoint lê
+/// Sugere atualização quando calculado_em > 30 dias
+model CorrelacaoDesempenho {
+  id                     String   @id @default(cuid())
+  aluno_id               String   @unique
+  peso_volume_r          Float?   // Pearson r: variação de peso vs volume de carga
+  bf_volume_r            Float?   // Pearson r: variação de %BF vs volume de carga
+  massa_magra_volume_r   Float?   // Pearson r: variação de massa magra vs volume
+  volume_semanal         Json     // [{ semana, volumeTotalKg, treinos }]
+  pontos                 Json     // [{ data, deltaPesoKg, deltaBf, deltaMassaMagraKg, volumeAcumuladoKg }]
+  calculado_em           DateTime @default(now())
+
+  aluno Aluno @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+
+  @@map("correlacoes_desempenho")
 }

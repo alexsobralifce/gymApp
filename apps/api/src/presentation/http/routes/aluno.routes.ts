@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
+import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 
 export async function alunoRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
@@ -72,5 +73,33 @@ export async function alunoRoutes(app: FastifyInstance) {
       orderBy: { data: 'asc' },
     })
     return reply.status(200).send(medidas)
+  })
+
+  /** GET /alunos/correlacoes — UC-32 (lê cache, sugere atualização após 30d) */
+  app.get('/correlacoes', { preHandler }, async (request, reply) => {
+    const aluno = await prisma.aluno.findUnique({
+      where: { usuario_id: request.currentUser.sub },
+    })
+    if (!aluno) throw new NotFoundError('Aluno')
+
+    const resultado = await obterCorrelacoes(aluno.id)
+    return reply.status(200).send(resultado)
+  })
+
+  /** POST /alunos/correlacoes — Força recálculo das correlações */
+  app.post('/correlacoes', { preHandler }, async (request, reply) => {
+    const aluno = await prisma.aluno.findUnique({
+      where: { usuario_id: request.currentUser.sub },
+    })
+    if (!aluno) throw new NotFoundError('Aluno')
+
+    const calculado = await calcularEAtualizar(aluno.id)
+    if (!calculado) {
+      const cache = await obterCorrelacoes(aluno.id)
+      return reply.status(200).send({ ...cache, mensagem: 'Dados insuficientes para calcular correlações.' })
+    }
+
+    const resultado = await obterCorrelacoes(aluno.id)
+    return reply.status(200).send(resultado)
   })
 }

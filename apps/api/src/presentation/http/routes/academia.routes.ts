@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role } from '@prisma/client'
+import { Role, AcademiaStatus } from '@prisma/client'
+import { prisma } from '../../../infrastructure/database/prisma.js'
 import {
   cadastrarAcademia,
   autorizarProfessorPrimeiraEtapa,
@@ -10,6 +11,15 @@ import {
 
 export async function academiaRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ACADEMIA)]
+
+  /** GET /academias — lista academias ativas (qualquer usuário autenticado) */
+  app.get('/', { preHandler: [app.authenticate] }, async (_request, reply) => {
+    const academias = await prisma.academia.findMany({
+      where: { status: AcademiaStatus.ATIVO },
+      select: { id: true, nome: true, cnpj: true, status: true },
+    })
+    return reply.status(200).send(academias)
+  })
 
   /** POST /academias — UC-05 (aberto para usuário com role ACADEMIA recém-criado) */
   app.post('/', { preHandler: [app.authenticate] }, async (request, reply) => {

@@ -18,6 +18,9 @@ import { rootRoutes } from './presentation/http/routes/root.routes.js'
 import { jwtAuthPlugin } from './presentation/middlewares/jwtAuth.js'
 import { errorHandlerPlugin } from './presentation/middlewares/errorHandler.js'
 
+// Workers
+import { startWorkers, stopWorkers } from './application/workers/gymWorkers.js'
+
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
     logger: {
@@ -73,6 +76,10 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // ─── Health check ────────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }))
+
+  // ─── Workers ─────────────────────────────────────────────────────────────
+  await startWorkers()
+  app.addHook('onClose', async () => { await stopWorkers() })
 
   return app
 }
