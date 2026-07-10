@@ -5,6 +5,14 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 
+async function resolveAluno(usuarioId: string) {
+  return prisma.aluno.upsert({
+    where: { usuario_id: usuarioId },
+    create: { usuario_id: usuarioId },
+    update: {},
+  })
+}
+
 export async function alunoRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
 
@@ -20,6 +28,7 @@ export async function alunoRoutes(app: FastifyInstance) {
 
   /** GET /alunos/perfil — Retorna perfil do aluno com professor e academia */
   app.get('/perfil', { preHandler }, async (request, reply) => {
+    await resolveAluno(request.currentUser.sub)
     const aluno = await prisma.aluno.findUnique({
       where: { usuario_id: request.currentUser.sub },
       include: {
@@ -34,10 +43,7 @@ export async function alunoRoutes(app: FastifyInstance) {
 
   /** GET /alunos/treinos — lista treinos do aluno */
   app.get('/treinos', { preHandler }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const treinos = await prisma.treino.findMany({
       where: { aluno_id: aluno.id },
@@ -49,10 +55,7 @@ export async function alunoRoutes(app: FastifyInstance) {
 
   /** POST /alunos/medidas — UC-24 */
   app.post('/medidas', { preHandler }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const body = z.object({
       pesoKg: z.number().positive().optional(),
@@ -77,10 +80,7 @@ export async function alunoRoutes(app: FastifyInstance) {
 
   /** GET /alunos/medidas — UC-25 */
   app.get('/medidas', { preHandler }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const medidas = await prisma.medidaCorporal.findMany({
       where: { aluno_id: aluno.id },
@@ -91,10 +91,7 @@ export async function alunoRoutes(app: FastifyInstance) {
 
   /** GET /alunos/correlacoes — UC-32 (lê cache, sugere atualização após 30d) */
   app.get('/correlacoes', { preHandler }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const resultado = await obterCorrelacoes(aluno.id)
     return reply.status(200).send(resultado)
@@ -102,10 +99,7 @@ export async function alunoRoutes(app: FastifyInstance) {
 
   /** POST /alunos/correlacoes — Força recálculo das correlações */
   app.post('/correlacoes', { preHandler }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const calculado = await calcularEAtualizar(aluno.id)
     if (!calculado) {
