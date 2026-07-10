@@ -22,7 +22,7 @@ import ProfessorAcademias from './pages/professor/Academias'
 import ProfessorVincularAluno from './pages/professor/VincularAluno'
 import RootPainel from './pages/root/Painel'
 import RootVinculos from './pages/root/Vinculos'
-import RootUsuarios from './pages/root/Usuarios'
+import RootUsuarios from './pages/root/Usuarios' // Componente de controle de usuários
 import AcademiaDashboard from './pages/academia/Dashboard'
 import AcademiaProfessores from './pages/academia/Professores'
 import AcademiaAlunos from './pages/academia/Alunos'
