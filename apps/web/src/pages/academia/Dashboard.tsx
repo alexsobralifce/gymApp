@@ -18,6 +18,19 @@ export default function AcademiaDashboard() {
     }
   }
 
+  const formatCNPJ = (value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+  }
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCnpj(formatCNPJ(e.target.value))
+  }
+
   return (
     <div className="p-4 md:p-6 max-w-md">
       <h1 className="mb-6 text-xl font-bold text-text">Cadastrar Academia</h1>
@@ -35,9 +48,9 @@ export default function AcademiaDashboard() {
             className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" required />
         </div>
         <div>
-          <label className="block text-xs text-text-muted mb-1">CNPJ (apenas números)</label>
-          <input type="text" placeholder="00000000000000" value={cnpj} onChange={(e) => setCnpj(e.target.value)}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" required maxLength={14} />
+          <label className="block text-xs text-text-muted mb-1">CNPJ</label>
+          <input type="text" placeholder="00.000.000/0000-00" value={cnpj} onChange={handleCnpjChange}
+            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" required maxLength={18} />
         </div>
         <button type="submit" disabled={!nome || cnpj.replace(/\D/g, '').length !== 14}
           className="w-full rounded bg-primary py-2 text-sm font-medium text-white disabled:opacity-40">
