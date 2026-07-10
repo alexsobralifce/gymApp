@@ -193,6 +193,9 @@ export const api = {
 
   enviarTreino: (id: string) => api.post<Treino>(`/treinos/${id}/enviar`),
 
+  responderTreino: (id: string, acao: 'ACEITAR' | 'RECUSAR') =>
+    api.patch<Treino>(`/treinos/${id}/responder`, { acao }),
+
   // ─── Root ──────────────────────────────────────────
   getPainel: () => api.get<RootPainel>('/root/painel'),
 
