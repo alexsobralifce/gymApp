@@ -17,12 +17,17 @@ export async function treinoRoutes(app: FastifyInstance) {
   const prehandlerProfessor = [app.authenticate, app.requireRole(Role.PROFESSOR)]
   const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO)]
 
+  async function resolveProfessor(usuarioId: string) {
+    return prisma.professor.upsert({
+      where: { usuario_id: usuarioId },
+      create: { usuario_id: usuarioId },
+      update: {},
+    })
+  }
+
   /** POST /treinos — UC-11 */
   app.post('/', { preHandler: prehandlerProfessor }, async (request, reply) => {
-    const professor = await prisma.professor.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!professor) throw new NotFoundError('Perfil professor')
+    const professor = await resolveProfessor(request.currentUser.sub)
 
     const body = z.object({
       alunoId: z.string(),
@@ -95,10 +100,7 @@ export async function treinoRoutes(app: FastifyInstance) {
   /** POST /treinos/:id/enviar — UC-13 */
   app.post('/:id/enviar', { preHandler: prehandlerProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const professor = await prisma.professor.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!professor) throw new NotFoundError('Perfil professor')
+    const professor = await resolveProfessor(request.currentUser.sub)
 
     const treino = await enviarTreinoParaAceite(id, professor.id)
     return reply.status(200).send(treino)
