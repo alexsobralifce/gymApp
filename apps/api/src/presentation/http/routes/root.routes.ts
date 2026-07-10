@@ -314,7 +314,7 @@ export async function rootRoutes(app: FastifyInstance) {
     })
     if (!aluno) throw new NotFoundError('Aluno')
 
-    const { email, ...alunoData } = body
+    const { email, nome, ...alunoData } = body
 
     if (email && email !== aluno.usuario.email) {
       const exists = await prisma.usuario.findUnique({ where: { email } })
@@ -322,9 +322,9 @@ export async function rootRoutes(app: FastifyInstance) {
     }
 
     const updated = await prisma.$transaction(async (tx) => {
-      if (body.nome || email) {
+      if (nome || email) {
         const usuarioData: Record<string, string> = {}
-        if (body.nome) usuarioData.nome = body.nome
+        if (nome) usuarioData.nome = nome
         if (email) usuarioData.email = email
         await tx.usuario.update({
           where: { id: aluno.usuario_id },
