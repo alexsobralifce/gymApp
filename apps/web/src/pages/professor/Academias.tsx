@@ -44,7 +44,9 @@ export default function ProfessorAcademias() {
     try {
       const result = await api.vincularAcademia(academiaId)
       if (result.jaVinculado) {
-        const vinculo = getVinculo(academiaId)
+        const fresh = await api.getVinculos()
+        setVinculos(fresh)
+        const vinculo = fresh.find((v) => v.academia_id === academiaId)
         setFeedback(`Já vinculado. Status: ${STATUS_BADGE[vinculo?.status ?? ''] ?? vinculo?.status}`)
       } else {
         setFeedback('Solicitação enviada! Aguardando aprovação da academia e do Root.')
@@ -53,7 +55,18 @@ export default function ProfessorAcademias() {
       }
       setTimeout(() => setFeedback(null), 5000)
     } catch (err) {
-      setFeedback(err instanceof ApiError ? err.message : 'Erro ao solicitar vínculo.')
+      try {
+        const fresh = await api.getVinculos()
+        setVinculos(fresh)
+        const vinculo = fresh.find((v) => v.academia_id === academiaId)
+        if (vinculo) {
+          setFeedback(`Já vinculado. Status: ${STATUS_BADGE[vinculo.status] ?? vinculo.status}`)
+        } else {
+          setFeedback(err instanceof ApiError ? err.message : 'Erro ao solicitar vínculo.')
+        }
+      } catch {
+        setFeedback(err instanceof ApiError ? err.message : 'Erro ao solicitar vínculo.')
+      }
       setTimeout(() => setFeedback(null), 5000)
     }
   }
