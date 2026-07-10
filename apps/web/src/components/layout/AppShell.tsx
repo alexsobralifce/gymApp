@@ -22,6 +22,7 @@ function getNavItems(role: string): NavItem[] {
         { to: '/', label: 'Dashboard', end: true },
         { to: '/alunos/vincular', label: 'Vincular Aluno' },
         { to: '/treinos/criar', label: 'Criar Treino' },
+        { to: '/fichas', label: 'Fichas' },
         { to: '/exercicios/criar', label: 'Exercícios' },
         { to: '/academias', label: 'Academias' },
       ]

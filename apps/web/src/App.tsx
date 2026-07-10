@@ -18,6 +18,7 @@ import ProfessorCriarTreino from './pages/professor/CriarTreino'
 import ProfessorCriarExercicio from './pages/professor/CriarExercicio'
 import ProfessorAcademias from './pages/professor/Academias'
 import ProfessorVincularAluno from './pages/professor/VincularAluno'
+import ProfessorFichas from './pages/professor/Fichas'
 import RootPainel from './pages/root/Painel'
 import RootVinculos from './pages/root/Vinculos'
 import RootUsuarios from './pages/root/Usuarios' // Componente de gerenciamento de usuários
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="exercicios/criar" element={<ProfessorCriarExercicio />} />
           <Route path="academias" element={<ProfessorAcademias />} />
           <Route path="alunos/vincular" element={<ProfessorVincularAluno />} />
+          <Route path="fichas" element={<ProfessorFichas />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}

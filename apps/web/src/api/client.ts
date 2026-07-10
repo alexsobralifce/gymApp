@@ -187,6 +187,8 @@ export const api = {
     }>
   }) => api.post<Treino[]>('/professores/fichas', data),
 
+  getFichas: () => api.get<any[]>('/professores/fichas'),
+
   enviarTreino: (id: string) => api.post<Treino>(`/treinos/${id}/enviar`),
 
   // ─── Root ──────────────────────────────────────────

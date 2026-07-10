@@ -198,4 +198,28 @@ export async function professorRoutes(app: FastifyInstance) {
 
     return reply.status(201).send(treinosCriados)
   })
+
+  /** GET /professores/fichas — lista todas as fichas de treino do professor */
+  app.get('/fichas', { preHandler }, async (request, reply) => {
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    const alunos = await prisma.aluno.findMany({
+      where: { professor_id: professor.id },
+      include: {
+        usuario: { select: { nome: true, email: true } },
+        treinos: {
+          include: {
+            exercicios: {
+              include: {
+                exercicio: { select: { nome: true, grupo_muscular: true } },
+              },
+            },
+          },
+          orderBy: { criado_em: 'desc' },
+        },
+      },
+    })
+
+    return reply.status(200).send(alunos)
+  })
 }
