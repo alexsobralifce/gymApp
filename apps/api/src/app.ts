@@ -34,8 +34,14 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // ─── Security ───────────────────────────────────────────────────────────
   await app.register(fastifyHelmet)
+
+  const origins: string[] = [env.API_BASE_URL]
+  if (env.WEB_BASE_URL) {
+    origins.push(env.WEB_BASE_URL)
+  }
+
   await app.register(fastifyCors, {
-    origin: env.NODE_ENV === 'development' ? true : [env.API_BASE_URL],
+    origin: env.NODE_ENV === 'development' ? true : origins,
     credentials: true,
   })
 
