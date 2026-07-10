@@ -77,18 +77,21 @@ describe('UC-09 — Professor vincular a academia', () => {
       method: 'POST', url: `/professores/vincular/${academiaId}`,
       headers: { authorization: `Bearer ${professorToken}` },
     })
-    expect(res.statusCode).toBe(200)
+    expect(res.statusCode).toBe(201)
     const vinculo = JSON.parse(res.body)
     expect(vinculo.professor_id).toBeTruthy()
     expect(vinculo.academia_id).toBe(academiaId)
+    expect(vinculo.jaVinculado).toBe(false)
     expect(vinculo.status).toBe('PENDENTE_ACADEMIA')
   })
 
-  it('vincular novamente a mesma academia é idempotente', async () => {
+  it('vincular novamente a mesma academia retorna jaVinculado', async () => {
     const res = await app.inject({
       method: 'POST', url: `/professores/vincular/${academiaId}`,
       headers: { authorization: `Bearer ${professorToken}` },
     })
     expect(res.statusCode).toBe(200)
+    const vinculo = JSON.parse(res.body)
+    expect(vinculo.jaVinculado).toBe(true)
   })
 })

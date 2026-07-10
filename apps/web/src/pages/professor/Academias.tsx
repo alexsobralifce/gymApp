@@ -23,13 +23,17 @@ export default function ProfessorAcademias() {
 
   async function vincular(academiaId: string) {
     try {
-      await api.vincularAcademia(academiaId)
-      setFeedback('Solicitação enviada! Aguardando aprovação da academia e do Root.')
-      setTimeout(() => setFeedback(null), 4000)
+      const result = await api.vincularAcademia(academiaId) as { jaVinculado?: boolean; status?: string }
+      if (result.jaVinculado) {
+        setFeedback(`Você já está vinculado a esta academia. Status: ${result.status === 'PENDENTE_ACADEMIA' ? 'Aguardando aprovação da academia' : result.status === 'PENDENTE_ROOT' ? 'Aguardando aprovação do Root' : result.status === 'ATIVO' ? 'Ativo' : result.status}`)
+      } else {
+        setFeedback('Solicitação enviada! Aguardando aprovação da academia e do Root.')
+      }
+      setTimeout(() => setFeedback(null), 5000)
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : 'Erro ao solicitar vínculo.'
       setFeedback(msg)
-      setTimeout(() => setFeedback(null), 4000)
+      setTimeout(() => setFeedback(null), 5000)
     }
   }
 

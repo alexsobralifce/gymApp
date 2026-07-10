@@ -33,12 +33,18 @@ export async function professorRoutes(app: FastifyInstance) {
     const { academiaId } = z.object({ academiaId: z.string() }).parse(request.params)
     const professor = await resolveProfessor(request.currentUser.sub)
 
-    const vinculo = await prisma.professorAcademia.upsert({
+    const existente = await prisma.professorAcademia.findUnique({
       where: { professor_id_academia_id: { professor_id: professor.id, academia_id: academiaId } },
-      create: { professor_id: professor.id, academia_id: academiaId },
-      update: {},
     })
-    return reply.status(200).send(vinculo)
+
+    if (existente) {
+      return reply.status(200).send({ ...existente, jaVinculado: true })
+    }
+
+    const vinculo = await prisma.professorAcademia.create({
+      data: { professor_id: professor.id, academia_id: academiaId },
+    })
+    return reply.status(201).send({ ...vinculo, jaVinculado: false })
   })
 
   /** POST /professores/alunos — UC-10 */
