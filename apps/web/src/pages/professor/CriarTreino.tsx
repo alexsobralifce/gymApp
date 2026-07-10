@@ -57,7 +57,8 @@ export default function ProfessorCriarTreino() {
     ])
       .then(([a, e]) => {
         setAlunos(a)
-        const mapped = (e as any[]).map((ex) => ({
+        const list = Array.isArray(e) ? e : (e as any)?.data || []
+        const mapped = list.map((ex: any) => ({
           id: ex.id || ex.exerciseId,
           nome: ex.name,
           grupo_muscular: ex.bodyPart,
@@ -76,7 +77,8 @@ export default function ProfessorCriarTreino() {
     
     api.getWorkoutXExercicios(filtroGrupo || undefined)
       .then((data) => {
-        let mapped = (data as any[]).map((ex) => ({
+        const list = Array.isArray(data) ? data : (data as any)?.data || []
+        let mapped = list.map((ex: any) => ({
           id: ex.id || ex.exerciseId,
           nome: ex.name,
           grupo_muscular: ex.bodyPart,
@@ -86,7 +88,7 @@ export default function ProfessorCriarTreino() {
         }))
         
         if (busca) {
-          mapped = mapped.filter((ex) =>
+          mapped = mapped.filter((ex: any) =>
             ex.nome.toLowerCase().includes(busca.toLowerCase())
           )
         }
