@@ -168,3 +168,13 @@ export async function dashboardAlunosAcademia(academiaId: string) {
     },
   })
 }
+
+export async function alterarStatusAcademia(academiaId: string, status: AcademiaStatus) {
+  const academia = await prisma.academia.findUnique({ where: { id: academiaId } })
+  if (!academia) throw new NotFoundError('Academia')
+
+  return prisma.academia.update({
+    where: { id: academiaId },
+    data: { status },
+  })
+}

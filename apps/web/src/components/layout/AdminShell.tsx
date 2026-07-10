@@ -17,9 +17,14 @@ export default function AdminShell() {
             {isRoot ? 'Painel Global' : 'Dashboard'}
           </NavLink>
           {isRoot && (
-            <NavLink to="/vinculos" className={({ isActive }: { isActive: boolean }) => `rounded px-3 py-2 text-sm ${isActive ? 'bg-surface-input text-text' : 'text-text-muted'}`}>
-              Vínculos Pendentes
-            </NavLink>
+            <>
+              <NavLink to="/vinculos" className={({ isActive }: { isActive: boolean }) => `rounded px-3 py-2 text-sm ${isActive ? 'bg-surface-input text-text' : 'text-text-muted'}`}>
+                Vínculos Pendentes
+              </NavLink>
+              <NavLink to="/usuarios" className={({ isActive }: { isActive: boolean }) => `rounded px-3 py-2 text-sm ${isActive ? 'bg-surface-input text-text' : 'text-text-muted'}`}>
+                Gerenciar Usuários
+              </NavLink>
+            </>
           )}
           {!isRoot && (
             <>

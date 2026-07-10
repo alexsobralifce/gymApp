@@ -22,6 +22,7 @@ import ProfessorAcademias from './pages/professor/Academias'
 import ProfessorVincularAluno from './pages/professor/VincularAluno'
 import RootPainel from './pages/root/Painel'
 import RootVinculos from './pages/root/Vinculos'
+import RootUsuarios from './pages/root/Usuarios'
 import AcademiaDashboard from './pages/academia/Dashboard'
 import AcademiaProfessores from './pages/academia/Professores'
 import AcademiaAlunos from './pages/academia/Alunos'
@@ -71,6 +72,7 @@ export default function App() {
         <Route element={<AdminShell />}>
           <Route index element={<RootPainel />} />
           <Route path="vinculos" element={<RootVinculos />} />
+          <Route path="usuarios" element={<RootUsuarios />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}

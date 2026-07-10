@@ -1,12 +1,15 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role, VinculoStatus } from '@prisma/client'
+import { Role, VinculoStatus, AcademiaStatus } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import { prisma } from '../../../infrastructure/database/prisma.js'
+import { NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
 import {
   painelGlobal,
   aprovacaoAcademia,
   definirLimiteProfessores,
   aprovacaoVinculoProfessor,
+  alterarStatusAcademia,
 } from '../../../application/usecases/academia/AcademiaService.js'
 
 export async function rootRoutes(app: FastifyInstance) {
@@ -59,5 +62,45 @@ export async function rootRoutes(app: FastifyInstance) {
 
     const vinculo = await aprovacaoVinculoProfessor(id, acao)
     return reply.status(200).send(vinculo)
+  })
+
+  /** PATCH /root/academias/:id/status */
+  app.patch('/academias/:id/status', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { status } = z.object({ status: z.enum([AcademiaStatus.ATIVO, AcademiaStatus.REJEITADO]) }).parse(request.body)
+
+    const academia = await alterarStatusAcademia(id, status)
+    return reply.status(200).send(academia)
+  })
+
+  /** GET /root/usuarios — lista todos os usuários */
+  app.get('/usuarios', { preHandler }, async (_request, reply) => {
+    const usuarios = await prisma.usuario.findMany({
+      include: {
+        academia: true,
+        professor: true,
+        aluno: true,
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(usuarios)
+  })
+
+  /** POST /root/usuarios/:id/reset-password — reseta senha */
+  app.post('/usuarios/:id/reset-password', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { senha } = z.object({ senha: z.string().min(8) }).parse(request.body)
+
+    const usuario = await prisma.usuario.findUnique({ where: { id } })
+    if (!usuario) throw new NotFoundError('Usuário não encontrado')
+    if (usuario.role === Role.ROOT) throw new ForbiddenError('Não é permitido resetar a senha de outro administrador ROOT')
+
+    const senhaHash = await bcrypt.hash(senha, 12)
+    await prisma.usuario.update({
+      where: { id },
+      data: { senha_hash: senhaHash },
+    })
+
+    return reply.status(200).send({ message: 'Senha resetada com sucesso!' })
   })
 }

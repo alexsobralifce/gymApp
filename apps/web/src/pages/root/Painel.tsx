@@ -27,6 +27,14 @@ export default function RootPainel() {
     setTimeout(() => setFeedback(null), 3000)
   }
 
+  async function handleStatus(id: string, status: 'ATIVO' | 'REJEITADO') {
+    await api.alterarStatusAcademia(id, status)
+    setFeedback('Status da academia atualizado com sucesso!')
+    const fresh = await api.getPainel()
+    setData(fresh)
+    setTimeout(() => setFeedback(null), 3000)
+  }
+
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
   if (!data) return <div className="p-4 text-text-muted">Sem dados.</div>
 
@@ -74,7 +82,7 @@ export default function RootPainel() {
                   <span className="text-text-muted">Limite: {a.max_professores}</span>
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
                 {a.status === 'PENDENTE' && (
                   <>
                     <button onClick={() => handleAcademia(a.id, 'APROVAR')} className="rounded bg-green-500/10 px-2 py-1 text-xs text-green-400">Aprovar</button>
@@ -82,15 +90,21 @@ export default function RootPainel() {
                   </>
                 )}
                 {a.status === 'ATIVO' && (
-                  <select
-                    value={a.max_professores}
-                    onChange={(e) => handleLimite(a.id, Number(e.target.value))}
-                    className="rounded border border-surface-input bg-surface px-2 py-1 text-xs text-text"
-                  >
-                    {[5, 10, 20, 30, 50, 100].map((v) => (
-                      <option key={v} value={v}>{v} profs</option>
-                    ))}
-                  </select>
+                  <>
+                    <button onClick={() => handleStatus(a.id, 'REJEITADO')} className="rounded bg-red-500/10 px-2 py-1 text-xs text-red-400">Desabilitar</button>
+                    <select
+                      value={a.max_professores}
+                      onChange={(e) => handleLimite(a.id, Number(e.target.value))}
+                      className="rounded border border-surface-input bg-surface px-2 py-1 text-xs text-text"
+                    >
+                      {[5, 10, 20, 30, 50, 100].map((v) => (
+                        <option key={v} value={v}>{v} profs</option>
+                      ))}
+                    </select>
+                  </>
+                )}
+                {a.status === 'REJEITADO' && (
+                  <button onClick={() => handleStatus(a.id, 'ATIVO')} className="rounded bg-green-500/10 px-2 py-1 text-xs text-green-400">Habilitar</button>
                 )}
               </div>
             </div>

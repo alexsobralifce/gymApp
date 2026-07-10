@@ -170,6 +170,14 @@ export const api = {
   aprovarVinculo: (id: string, acao: 'APROVAR' | 'REJEITAR') =>
     api.patch(`/root/vinculos/${id}/aprovacao`, { acao }),
 
+  alterarStatusAcademia: (id: string, status: 'ATIVO' | 'REJEITADO') =>
+    api.patch(`/root/academias/${id}/status`, { status }),
+
+  getUsuarios: () => api.get<any[]>('/root/usuarios'),
+
+  resetPassword: (id: string, senha: string) =>
+    api.post(`/root/usuarios/${id}/reset-password`, { senha }),
+
   // ─── Academia ──────────────────────────────────────
   cadastrarAcademia: (data: { nome: string; cnpj: string }) =>
     api.post<Academia>('/academias', data),
