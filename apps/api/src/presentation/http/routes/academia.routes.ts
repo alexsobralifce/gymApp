@@ -13,8 +13,8 @@ import {
 export async function academiaRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ACADEMIA)]
 
-  /** GET /academias — lista academias ativas (qualquer usuário autenticado) */
-  app.get('/', { preHandler: [app.authenticate] }, async (_request, reply) => {
+  /** GET /academias — lista academias ativas (público) */
+  app.get('/', async (_request, reply) => {
     const academias = await prisma.academia.findMany({
       where: { status: AcademiaStatus.ATIVO },
       select: { id: true, nome: true, cnpj: true, status: true },
