@@ -51,6 +51,8 @@ export interface Exercicio {
   maquina?: string | null
   dica?: string | null
   imagem_url?: string | null
+  grupo_muscular?: string | null
+  equipamento?: string | null
 }
 
 export interface ExecucaoExercicio {

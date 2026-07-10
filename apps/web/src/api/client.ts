@@ -158,7 +158,14 @@ export const api = {
     api.get<CorrelacaoResponse>(`/professores/alunos/${alunoId}/correlacoes`),
 
   // ─── Exercícios ────────────────────────────────────
-  getExercicios: () => api.get<Exercicio[]>('/treinos/exercicios'),
+  getExercicios: (params?: { grupo_muscular?: string; equipamento?: string; busca?: string }) => {
+    const query = new URLSearchParams()
+    if (params?.grupo_muscular) query.set('grupo_muscular', params.grupo_muscular)
+    if (params?.equipamento) query.set('equipamento', params.equipamento)
+    if (params?.busca) query.set('busca', params.busca)
+    const qs = query.toString()
+    return api.get<Exercicio[]>(`/professores/exercicios${qs ? `?${qs}` : ''}`)
+  },
 
   criarExercicio: (data: { nome: string; maquina?: string; dica?: string; imagemUrl?: string }) =>
     api.post<Exercicio>('/treinos/exercicios', data),
@@ -170,6 +177,15 @@ export const api = {
     diasSemana: number[]
     exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }>
   }) => api.post<Treino>('/treinos', data),
+
+  criarFichas: (data: {
+    alunoId: string
+    fichas: Array<{
+      nome: string
+      diasSemana: number[]
+      exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }>
+    }>
+  }) => api.post<Treino[]>('/professores/fichas', data),
 
   enviarTreino: (id: string) => api.post<Treino>(`/treinos/${id}/enviar`),
 

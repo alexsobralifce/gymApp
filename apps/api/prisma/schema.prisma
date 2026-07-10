@@ -203,6 +203,8 @@ model Exercicio {
   maquina       String?
   dica          String?  @db.Text
   imagem_url    String?
+  grupo_muscular String?
+  equipamento   String?
   criado_em     DateTime @default(now())
   atualizado_em DateTime @updatedAt
 

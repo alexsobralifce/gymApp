@@ -1,5 +1,6 @@
 import { PrismaClient, Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { exerciseDB } from './exercises-data.js'
 
 const prisma = new PrismaClient()
 
@@ -83,6 +84,31 @@ async function main() {
   }
 
   console.log(`✅ ${mensagens.length} mensagens motivacionais inseridas`)
+
+  // ─── Exercícios (ExerciseDB) ──────────────────────────────────────────────
+  console.log('📚 Inserindo exercícios do ExerciseDB...')
+  let exerciciosCount = 0
+
+  for (const ex of exerciseDB) {
+    const existingExercise = await prisma.exercicio.findFirst({
+      where: { nome: ex.name },
+    })
+
+    if (!existingExercise) {
+      await prisma.exercicio.create({
+        data: {
+          nome: ex.name,
+          grupo_muscular: ex.bodyPart,
+          equipamento: ex.equipment,
+          dica: ex.instructions.join(' '),
+          imagem_url: ex.gifUrl || null,
+        },
+      })
+      exerciciosCount++
+    }
+  }
+
+  console.log(`✅ ${exerciciosCount} exercícios inseridos (${exerciseDB.length} disponíveis)`)
   console.log('✅ Seed concluído!')
 }
 

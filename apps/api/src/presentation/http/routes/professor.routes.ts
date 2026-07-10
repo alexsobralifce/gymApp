@@ -110,4 +110,92 @@ export async function professorRoutes(app: FastifyInstance) {
     const resultado = await obterCorrelacoes(alunoId)
     return reply.status(200).send(resultado)
   })
+
+  /** GET /professores/exercicios — lista exercícios com filtros opcionais */
+  app.get('/exercicios', { preHandler }, async (request, reply) => {
+    const { grupo_muscular, equipamento, busca } = z.object({
+      grupo_muscular: z.string().optional(),
+      equipamento: z.string().optional(),
+      busca: z.string().optional(),
+    }).parse(request.query)
+
+    const where: Record<string, unknown> = {}
+
+    if (grupo_muscular) {
+      where.grupo_muscular = grupo_muscular
+    }
+
+    if (equipamento) {
+      where.equipamento = equipamento
+    }
+
+    if (busca) {
+      where.nome = { contains: busca, mode: 'insensitive' }
+    }
+
+    const exercicios = await prisma.exercicio.findMany({
+      where,
+      orderBy: { nome: 'asc' },
+    })
+
+    return reply.status(200).send(exercicios)
+  })
+
+  /** POST /professores/fichas — cria múltiplas fichas de treino (A/B/C) para um aluno */
+  app.post('/fichas', { preHandler }, async (request, reply) => {
+    const body = z.object({
+      alunoId: z.string(),
+      fichas: z.array(z.object({
+        nome: z.string(),
+        diasSemana: z.array(z.number().min(0).max(6)),
+        exercicios: z.array(z.object({
+          exercicioId: z.string(),
+          ordem: z.number(),
+          series: z.number().min(1),
+          repeticoes: z.number().min(1),
+          cargaSugeridaKg: z.number().optional(),
+        })),
+      })),
+    }).parse(request.body)
+
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    const aluno = await prisma.aluno.findUnique({ where: { id: body.alunoId } })
+    if (!aluno) throw new NotFoundError('Aluno')
+    if (aluno.professor_id !== professor.id) throw new TenantAccessError()
+
+    const treinosCriados = await prisma.$transaction(async (tx) => {
+      const treinos = []
+
+      for (const ficha of body.fichas) {
+        const treino = await tx.treino.create({
+          data: {
+            aluno_id: body.alunoId,
+            nome: ficha.nome,
+            dias_semana: ficha.diasSemana,
+            status: 'CADASTRADO',
+            exercicios: {
+              create: ficha.exercicios.map((ex) => ({
+                exercicio_id: ex.exercicioId,
+                ordem: ex.ordem,
+                series: ex.series,
+                repeticoes: ex.repeticoes,
+                carga_sugerida_kg: ex.cargaSugeridaKg,
+              })),
+            },
+          },
+          include: {
+            exercicios: {
+              include: { exercicio: true },
+            },
+          },
+        })
+        treinos.push(treino)
+      }
+
+      return treinos
+    })
+
+    return reply.status(201).send(treinosCriados)
+  })
 }
