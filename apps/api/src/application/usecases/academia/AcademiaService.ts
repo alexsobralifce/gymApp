@@ -13,6 +13,9 @@ export async function cadastrarAcademia(usuarioId: string, input: {
   nome: string
   cnpj: string
 }) {
+  const academiaExistente = await prisma.academia.findUnique({ where: { usuario_id: usuarioId } })
+  if (academiaExistente) throw new ConflictError('Este usuário já possui uma academia cadastrada')
+
   const cnpjExistente = await prisma.academia.findUnique({ where: { cnpj: input.cnpj } })
   if (cnpjExistente) throw new ConflictError('CNPJ já cadastrado')
 

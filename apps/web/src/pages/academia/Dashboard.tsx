@@ -13,8 +13,8 @@ export default function AcademiaDashboard() {
       const a = await api.cadastrarAcademia({ nome, cnpj: cnpj.replace(/\D/g, '') })
       setFeedback(`Academia "${a.nome}" cadastrada! Aguardando aprovação do Root.`)
       setCadastrada(true)
-    } catch {
-      setFeedback('Erro ao cadastrar. Verifique o CNPJ (14 dígitos).')
+    } catch (err: any) {
+      setFeedback(err.message || 'Erro ao cadastrar. Verifique o CNPJ (14 dígitos).')
     }
   }
 
