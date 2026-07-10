@@ -129,6 +129,8 @@ export const api = {
   getAcademias: () => api.get<Academia[]>('/academias'),
 
   // ─── Professor ─────────────────────────────────────
+  criarPerfilProfessor: (cref?: string) => api.post('/professores/perfil', { cref }),
+
   getDashboard: () => api.get<ProfessorDashboard[]>('/professores/dashboard'),
 
   vincularAcademia: (academiaId: string) =>

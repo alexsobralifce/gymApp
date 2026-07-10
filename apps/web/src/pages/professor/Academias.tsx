@@ -1,14 +1,24 @@
 import { useEffect, useState } from 'react'
-import { api } from '../../api/client'
+import { api, ApiError } from '../../api/client'
 import type { Academia } from '../../types/api'
 
 export default function ProfessorAcademias() {
   const [academias, setAcademias] = useState<Academia[]>([])
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [perfilOk, setPerfilOk] = useState(true)
 
   useEffect(() => {
-    api.getAcademias().then(setAcademias).finally(() => setLoading(false))
+    async function init() {
+      try {
+        await api.criarPerfilProfessor()
+        setPerfilOk(true)
+      } catch {
+        setPerfilOk(false)
+      }
+      api.getAcademias().then(setAcademias).finally(() => setLoading(false))
+    }
+    init()
   }, [])
 
   async function vincular(academiaId: string) {
@@ -16,8 +26,10 @@ export default function ProfessorAcademias() {
       await api.vincularAcademia(academiaId)
       setFeedback('Solicitação enviada! Aguardando aprovação da academia e do Root.')
       setTimeout(() => setFeedback(null), 4000)
-    } catch {
-      setFeedback('Erro ao solicitar vínculo.')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Erro ao solicitar vínculo.'
+      setFeedback(msg)
+      setTimeout(() => setFeedback(null), 4000)
     }
   }
 
@@ -27,8 +39,16 @@ export default function ProfessorAcademias() {
     <div className="p-4 md:p-6">
       <h1 className="mb-6 text-xl font-bold text-text">Academias</h1>
 
+      {!perfilOk && (
+        <div className="mb-4 rounded border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-400">
+          Perfil de professor não encontrado. Tente recarregar a página para criar automaticamente.
+        </div>
+      )}
+
       {feedback && (
-        <div className="mb-4 rounded bg-surface-card p-3 text-sm text-success">{feedback}</div>
+        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') || feedback.includes('não encontrado') ? 'bg-red-500/10 text-red-400' : 'bg-surface-card text-success'}`}>
+          {feedback}
+        </div>
       )}
 
       {academias.length === 0 && <p className="text-text-muted">Nenhuma academia disponível.</p>}
@@ -42,7 +62,8 @@ export default function ProfessorAcademias() {
             </div>
             <button
               onClick={() => vincular(a.id)}
-              className="rounded bg-primary px-3 py-1 text-sm font-medium text-white"
+              disabled={!perfilOk}
+              className="rounded bg-primary px-3 py-1 text-sm font-medium text-white disabled:opacity-40"
             >
               Vincular
             </button>
