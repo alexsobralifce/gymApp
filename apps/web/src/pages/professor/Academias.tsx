@@ -115,16 +115,16 @@ export default function ProfessorAcademias() {
                   <button
                     onClick={() => vincular(a.id)}
                     disabled={!perfilOk}
-                    className="rounded bg-primary px-3 py-1 text-sm font-medium text-white disabled:opacity-40"
+                    className="rounded bg-success px-3 py-1 text-sm font-medium text-white disabled:opacity-40"
                   >
                     Vincular
                   </button>
                 ) : (
                   <button
                     onClick={() => desvincular(a.id)}
-                    className="rounded bg-red-500/10 px-3 py-1 text-sm font-medium text-red-400 hover:bg-red-500/20"
+                    className="rounded bg-primary px-3 py-1 text-sm font-medium text-white"
                   >
-                    Desvincular
+                    Vinculado
                   </button>
                 )}
               </div>
