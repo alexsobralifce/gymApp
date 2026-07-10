@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo } from '../types/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -134,7 +134,12 @@ export const api = {
   getDashboard: () => api.get<ProfessorDashboard[]>('/professores/dashboard'),
 
   vincularAcademia: (academiaId: string) =>
-    api.post(`/professores/vincular/${academiaId}`),
+    api.post<{ jaVinculado?: boolean; status?: string }>(`/professores/vincular/${academiaId}`),
+
+  getVinculos: () => api.get<Vinculo[]>('/professores/vinculos'),
+
+  desvincularAcademia: (academiaId: string) =>
+    api.delete(`/professores/vinculos/${academiaId}`),
 
   vincularAluno: (usuarioId: string, academiaId?: string) =>
     api.post('/professores/alunos', { usuarioId, academiaId }),

@@ -151,6 +151,15 @@ export interface RootPainel {
   }>
 }
 
+export interface Vinculo {
+  id: string
+  professor_id: string
+  academia_id: string
+  status: string
+  criado_em: string
+  academia: { id: string; nome: string; cnpj: string }
+}
+
 export interface VinculoPendente {
   id: string
   professor_id: string

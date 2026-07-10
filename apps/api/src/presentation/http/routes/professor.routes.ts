@@ -47,6 +47,29 @@ export async function professorRoutes(app: FastifyInstance) {
     return reply.status(201).send({ ...vinculo, jaVinculado: false })
   })
 
+  /** GET /professores/vinculos — lista vínculos do professor logado */
+  app.get('/vinculos', { preHandler }, async (request, reply) => {
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    const vinculos = await prisma.professorAcademia.findMany({
+      where: { professor_id: professor.id },
+      include: { academia: { select: { id: true, nome: true, cnpj: true } } },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(vinculos)
+  })
+
+  /** DELETE /professores/vinculos/:academiaId — professor se desvincula de uma academia */
+  app.delete('/vinculos/:academiaId', { preHandler }, async (request, reply) => {
+    const { academiaId } = z.object({ academiaId: z.string() }).parse(request.params)
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    await prisma.professorAcademia.deleteMany({
+      where: { professor_id: professor.id, academia_id: academiaId },
+    })
+    return reply.status(204).send()
+  })
+
   /** POST /professores/alunos — UC-10 */
   app.post('/alunos', { preHandler }, async (request, reply) => {
     const body = z.object({
