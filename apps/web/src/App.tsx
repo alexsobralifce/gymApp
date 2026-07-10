@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/auth'
 import { useNotifications } from './hooks/useNotifications'
-import AlunoShell from './components/layout/AlunoShell'
-import ProfessorShell from './components/layout/ProfessorShell'
-import AdminShell from './components/layout/AdminShell'
+import AppShell from './components/layout/AppShell'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import AlunoDashboard from './pages/aluno/Dashboard'
@@ -44,7 +42,7 @@ export default function App() {
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
 
       {user?.role === 'ALUNO' && (
-        <Route element={<AlunoShell />}>
+        <Route element={<AppShell />}>
           <Route index element={<AlunoDashboard />} />
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
           <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />
@@ -57,7 +55,7 @@ export default function App() {
       )}
 
       {user?.role === 'PROFESSOR' && (
-        <Route element={<ProfessorShell />}>
+        <Route element={<AppShell />}>
           <Route index element={<ProfessorDashboard />} />
           <Route path="alunos/:alunoId/correlacoes" element={<ProfessorAlunoCorrelacoes />} />
           <Route path="treinos/criar" element={<ProfessorCriarTreino />} />
@@ -69,7 +67,7 @@ export default function App() {
       )}
 
       {user?.role === 'ROOT' && (
-        <Route element={<AdminShell />}>
+        <Route element={<AppShell />}>
           <Route index element={<RootPainel />} />
           <Route path="vinculos" element={<RootVinculos />} />
           <Route path="usuarios" element={<RootUsuarios />} />
@@ -78,7 +76,7 @@ export default function App() {
       )}
 
       {user?.role === 'ACADEMIA' && (
-        <Route element={<AdminShell />}>
+        <Route element={<AppShell />}>
           <Route index element={<AcademiaDashboard />} />
           <Route path="professores" element={<AcademiaProfessores />} />
           <Route path="alunos" element={<AcademiaAlunos />} />
