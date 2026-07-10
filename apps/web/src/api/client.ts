@@ -85,6 +85,8 @@ export const api = {
     request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
+  put: <T>(path: string, body?: unknown) =>
+    request<T>(path, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 
   // ─── Auth ──────────────────────────────────────────
@@ -192,6 +194,18 @@ export const api = {
 
   resetPassword: (id: string, senha: string) =>
     api.post(`/root/usuarios/${id}/reset-password`, { senha }),
+
+  getRootAcademias: () => api.get<any[]>('/root/academias'),
+  updateRootAcademia: (id: string, data: any) => api.put(`/root/academias/${id}`, data),
+  deleteRootAcademia: (id: string) => api.delete(`/root/academias/${id}`),
+
+  getRootProfessores: () => api.get<any[]>('/root/professores'),
+  updateRootProfessor: (id: string, data: any) => api.put(`/root/professores/${id}`, data),
+  deleteRootProfessor: (id: string) => api.delete(`/root/professores/${id}`),
+
+  getRootAlunos: () => api.get<any[]>('/root/alunos'),
+  updateRootAluno: (id: string, data: any) => api.put(`/root/alunos/${id}`, data),
+  deleteRootAluno: (id: string) => api.delete(`/root/alunos/${id}`),
 
   // ─── Academia ──────────────────────────────────────
   cadastrarAcademia: (data: { nome: string; cnpj: string }) =>

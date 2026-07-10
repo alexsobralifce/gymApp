@@ -22,7 +22,7 @@ export default function AdminShell() {
                 Vínculos Pendentes
               </NavLink>
               <NavLink to="/usuarios" className={({ isActive }: { isActive: boolean }) => `rounded px-3 py-2 text-sm ${isActive ? 'bg-surface-input text-text' : 'text-text-muted'}`}>
-                Gerenciar Usuários
+                Gerenciar Plataforma
               </NavLink>
             </>
           )}

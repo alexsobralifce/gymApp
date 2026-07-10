@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { Role, VinculoStatus, AcademiaStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
+import { NotFoundError, ForbiddenError, ConflictError } from '../../../domain/errors/AppError.js'
 import {
   painelGlobal,
   aprovacaoAcademia,
@@ -102,5 +102,283 @@ export async function rootRoutes(app: FastifyInstance) {
     })
 
     return reply.status(200).send({ message: 'Senha resetada com sucesso!' })
+  })
+
+  /** GET /root/academias — lista todas as academias */
+  app.get('/academias', { preHandler }, async (_request, reply) => {
+    const academias = await prisma.academia.findMany({
+      include: {
+        usuario: { select: { id: true, email: true, nome: true } },
+        _count: { select: { professores: true, alunos: true } },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(academias)
+  })
+
+  /** PUT /root/academias/:id — atualiza academia */
+  app.put('/academias/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const body = z.object({
+      nome: z.string().min(1).optional(),
+      cnpj: z.string().min(1).optional(),
+      max_professores: z.number().int().min(1).max(500).optional(),
+      status: z.enum([AcademiaStatus.ATIVO, AcademiaStatus.PENDENTE, AcademiaStatus.REJEITADO]).optional(),
+      email: z.string().email().optional(),
+    }).parse(request.body)
+
+    const academia = await prisma.academia.findUnique({
+      where: { id },
+      include: { usuario: { select: { email: true } } },
+    })
+    if (!academia) throw new NotFoundError('Academia')
+
+    const { email, ...academiaData } = body
+
+    if (body.cnpj && body.cnpj !== academia.cnpj) {
+      const exists = await prisma.academia.findUnique({ where: { cnpj: body.cnpj } })
+      if (exists) throw new ConflictError('CNPJ já cadastrado')
+    }
+
+    if (email && email !== academia.usuario.email) {
+      const exists = await prisma.usuario.findUnique({ where: { email } })
+      if (exists) throw new ConflictError('E-mail já cadastrado')
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const acad = await tx.academia.update({
+        where: { id },
+        data: academiaData,
+      })
+
+      if (email) {
+        await tx.usuario.update({
+          where: { id: academia.usuario_id },
+          data: { email },
+        })
+      }
+
+      return acad
+    })
+
+    return reply.status(200).send(updated)
+  })
+
+  /** DELETE /root/academias/:id — exclui academia e seus vínculos */
+  app.delete('/academias/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+
+    const academia = await prisma.academia.findUnique({
+      where: { id },
+      include: { _count: { select: { professores: true, alunos: true } } },
+    })
+    if (!academia) throw new NotFoundError('Academia')
+
+    await prisma.$transaction(async (tx) => {
+      await tx.professorAcademia.deleteMany({ where: { academia_id: id } })
+      await tx.aluno.updateMany({ where: { academia_id: id }, data: { academia_id: null } })
+      await tx.academia.delete({ where: { id } })
+      await tx.usuario.delete({ where: { id: academia.usuario_id } })
+    })
+
+    return reply.status(200).send({ message: 'Academia excluída com sucesso!' })
+  })
+
+  /** GET /root/professores — lista todos os professores */
+  app.get('/professores', { preHandler }, async (_request, reply) => {
+    const professores = await prisma.professor.findMany({
+      include: {
+        usuario: { select: { id: true, email: true, nome: true } },
+        academias: {
+          include: { academia: { select: { id: true, nome: true } } },
+        },
+        _count: { select: { alunos: true } },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(professores)
+  })
+
+  /** PUT /root/professores/:id — atualiza professor */
+  app.put('/professores/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const body = z.object({
+      nome: z.string().min(1).optional(),
+      email: z.string().email().optional(),
+      cref: z.string().nullable().optional(),
+      academias_ids: z.array(z.string()).optional(),
+    }).parse(request.body)
+
+    const professor = await prisma.professor.findUnique({
+      where: { id },
+      include: { academias: true, usuario: { select: { email: true } } },
+    })
+    if (!professor) throw new NotFoundError('Professor')
+
+    const { email, academias_ids, ...professorData } = body
+
+    if (email && email !== professor.usuario.email) {
+      const exists = await prisma.usuario.findUnique({ where: { email } })
+      if (exists) throw new ConflictError('E-mail já cadastrado')
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      if (body.nome || email) {
+        const usuarioData: Record<string, string> = {}
+        if (body.nome) usuarioData.nome = body.nome
+        if (email) usuarioData.email = email
+        await tx.usuario.update({
+          where: { id: professor.usuario_id },
+          data: usuarioData,
+        })
+      }
+
+      if (body.cref !== undefined) {
+        await tx.professor.update({
+          where: { id },
+          data: { cref: body.cref },
+        })
+      }
+
+      if (academias_ids !== undefined) {
+        await tx.professorAcademia.deleteMany({ where: { professor_id: id } })
+
+        if (academias_ids.length > 0) {
+          await tx.professorAcademia.createMany({
+            data: academias_ids.map((academia_id) => ({
+              professor_id: id,
+              academia_id,
+              status: VinculoStatus.ATIVO,
+            })),
+          })
+        }
+      }
+
+      return tx.professor.findUnique({
+        where: { id },
+        include: {
+          usuario: { select: { id: true, email: true, nome: true } },
+          academias: {
+            include: { academia: { select: { id: true, nome: true } } },
+          },
+        },
+      })
+    })
+
+    return reply.status(200).send(updated)
+  })
+
+  /** DELETE /root/professores/:id — exclui professor e seus vínculos */
+  app.delete('/professores/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+
+    const professor = await prisma.professor.findUnique({ where: { id } })
+    if (!professor) throw new NotFoundError('Professor')
+
+    await prisma.$transaction(async (tx) => {
+      await tx.aluno.updateMany({ where: { professor_id: id }, data: { professor_id: null } })
+      await tx.professorAcademia.deleteMany({ where: { professor_id: id } })
+      await tx.professor.delete({ where: { id } })
+      await tx.usuario.delete({ where: { id: professor.usuario_id } })
+    })
+
+    return reply.status(200).send({ message: 'Professor excluído com sucesso!' })
+  })
+
+  /** GET /root/alunos — lista todos os alunos */
+  app.get('/alunos', { preHandler }, async (_request, reply) => {
+    const alunos = await prisma.aluno.findMany({
+      include: {
+        usuario: { select: { id: true, email: true, nome: true } },
+        academia: { select: { id: true, nome: true } },
+        professor: { select: { id: true, usuario: { select: { nome: true } } } },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(alunos)
+  })
+
+  /** PUT /root/alunos/:id — atualiza aluno */
+  app.put('/alunos/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const body = z.object({
+      nome: z.string().min(1).optional(),
+      email: z.string().email().optional(),
+      academia_id: z.string().nullable().optional(),
+      professor_id: z.string().nullable().optional(),
+    }).parse(request.body)
+
+    const aluno = await prisma.aluno.findUnique({
+      where: { id },
+      include: { usuario: { select: { email: true } } },
+    })
+    if (!aluno) throw new NotFoundError('Aluno')
+
+    const { email, ...alunoData } = body
+
+    if (email && email !== aluno.usuario.email) {
+      const exists = await prisma.usuario.findUnique({ where: { email } })
+      if (exists) throw new ConflictError('E-mail já cadastrado')
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      if (body.nome || email) {
+        const usuarioData: Record<string, string> = {}
+        if (body.nome) usuarioData.nome = body.nome
+        if (email) usuarioData.email = email
+        await tx.usuario.update({
+          where: { id: aluno.usuario_id },
+          data: usuarioData,
+        })
+      }
+
+      await tx.aluno.update({
+        where: { id },
+        data: alunoData,
+      })
+
+      return tx.aluno.findUnique({
+        where: { id },
+        include: {
+          usuario: { select: { id: true, email: true, nome: true } },
+          academia: { select: { id: true, nome: true } },
+          professor: { select: { id: true, usuario: { select: { nome: true } } } },
+        },
+      })
+    })
+
+    return reply.status(200).send(updated)
+  })
+
+  /** DELETE /root/alunos/:id — exclui aluno e todos os seus dados */
+  app.delete('/alunos/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+
+    const aluno = await prisma.aluno.findUnique({
+      where: { id },
+      include: {
+        treinos: { select: { id: true } },
+      },
+    })
+    if (!aluno) throw new NotFoundError('Aluno')
+
+    const treinoIds = aluno.treinos.map((t) => t.id)
+
+    await prisma.$transaction(async (tx) => {
+      if (treinoIds.length > 0) {
+        await tx.execucaoExercicio.deleteMany({ where: { treino_id: { in: treinoIds } } })
+        await tx.treinoExercicio.deleteMany({ where: { treino_id: { in: treinoIds } } })
+        await tx.treinoHistorico.deleteMany({ where: { treino_id: { in: treinoIds } } })
+        await tx.treino.deleteMany({ where: { id: { in: treinoIds } } })
+      }
+
+      await tx.medidaCorporal.deleteMany({ where: { aluno_id: id } })
+      await tx.mensagemMotivacionalEnviada.deleteMany({ where: { aluno_id: id } })
+      await tx.correlacaoDesempenho.deleteMany({ where: { aluno_id: id } })
+      await tx.aluno.delete({ where: { id } })
+      await tx.usuario.delete({ where: { id: aluno.usuario_id } })
+    })
+
+    return reply.status(200).send({ message: 'Aluno excluído com sucesso!' })
   })
 }
