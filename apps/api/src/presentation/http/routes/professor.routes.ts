@@ -16,6 +16,7 @@ async function resolveProfessor(usuarioId: string) {
 
 export async function professorRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.PROFESSOR)]
+  const preHandlerExercicios = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)]
 
   /** POST /professores/perfil — cria perfil professor após registro */
   app.post('/perfil', { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -112,7 +113,7 @@ export async function professorRoutes(app: FastifyInstance) {
   })
 
   /** GET /professores/workoutx/exercicios — Busca exercícios locais simulando API WorkoutX */
-  app.get('/workoutx/exercicios', { preHandler }, async (request, reply) => {
+  app.get('/workoutx/exercicios', { preHandler: preHandlerExercicios }, async (request, reply) => {
     const { bodyPart } = z.object({
       bodyPart: z.string().optional(),
     }).parse(request.query)
@@ -161,7 +162,7 @@ export async function professorRoutes(app: FastifyInstance) {
   })
 
   /** GET /professores/exercicios — lista exercícios com filtros opcionais */
-  app.get('/exercicios', { preHandler }, async (request, reply) => {
+  app.get('/exercicios', { preHandler: preHandlerExercicios }, async (request, reply) => {
     const { grupo_muscular, equipamento, nivel, busca } = z.object({
       grupo_muscular: z.string().optional(),
       equipamento: z.string().optional(),
