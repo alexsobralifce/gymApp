@@ -101,6 +101,9 @@ export const api = {
   updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null }) =>
     api.patch<{ id: string }>('/auth/me', data),
 
+  alterarSenha: (senhaAtual: string, novaSenha: string) =>
+    api.post('/auth/change-password', { senhaAtual, novaSenha }),
+
   // ─── Aluno ─────────────────────────────────────────
   criarPerfilAluno: () => api.post('/alunos/perfil'),
 

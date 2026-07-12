@@ -27,6 +27,7 @@ import AcademiaProfessores from './pages/academia/Professores'
 import AcademiaAlunos from './pages/academia/Alunos'
 import AcademiaCriarTreino from './pages/academia/CriarTreinoAcademia'
 import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
+import AlterarSenha from './pages/auth/AlterarSenha'
 
 export default function App() {
   useNotifications()
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="medidas" element={<AlunoMedidas />} />
           <Route path="evolucao" element={<AlunoEvolucao />} />
           <Route path="estudo" element={<AlunoEstudo />} />
+          <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}
@@ -67,6 +69,7 @@ export default function App() {
           <Route path="academias" element={<ProfessorAcademias />} />
           <Route path="alunos/vincular" element={<ProfessorVincularAluno />} />
           <Route path="fichas" element={<ProfessorFichas />} />
+          <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}
@@ -86,6 +89,7 @@ export default function App() {
           <Route path="professores" element={<AcademiaProfessores />} />
           <Route path="alunos" element={<AcademiaAlunos />} />
           <Route path="treinos/criar" element={<AcademiaCriarTreino />} />
+          <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}

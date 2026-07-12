@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import { AuthService } from '../../../application/usecases/auth/AuthService.js'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 
@@ -102,5 +103,33 @@ export async function authRoutes(app: FastifyInstance) {
     })
 
     return reply.status(200).send(usuario)
+  })
+
+  /**
+   * POST /auth/change-password — Permite ao usuário logado alterar sua própria senha
+   */
+  app.post('/change-password', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { senhaAtual, novaSenha } = z.object({
+      senhaAtual: z.string().min(1),
+      novaSenha: z.string().min(8),
+    }).parse(request.body)
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: request.currentUser.sub },
+    })
+    if (!usuario) return reply.status(404).send({ message: 'Usuário não encontrado' })
+
+    const senhaCorreta = await bcrypt.compare(senhaAtual, usuario.senha_hash)
+    if (!senhaCorreta) {
+      return reply.status(400).send({ message: 'Senha atual incorreta' })
+    }
+
+    const novaSenhaHash = await bcrypt.hash(novaSenha, 12)
+    await prisma.usuario.update({
+      where: { id: request.currentUser.sub },
+      data: { senha_hash: novaSenhaHash },
+    })
+
+    return reply.status(200).send({ message: 'Senha alterada com sucesso!' })
   })
 }

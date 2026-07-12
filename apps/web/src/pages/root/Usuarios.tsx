@@ -388,6 +388,20 @@ function EditAcademiaModal({
   const [maxProfessores, setMaxProfessores] = useState(academia.max_professores)
   const [status, setStatus] = useState(academia.status)
   const [saving, setSaving] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetMsg, setResetMsg] = useState('')
+
+  async function handleResetPassword() {
+    if (newPassword.length < 8) return
+    try {
+      await api.resetPassword(academia.usuario.id, newPassword)
+      setResetMsg('Senha redefinida com sucesso!')
+      setNewPassword('')
+      setTimeout(() => setResetMsg(''), 3000)
+    } catch {
+      setResetMsg('Erro ao redefinir senha.')
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -429,6 +443,27 @@ function EditAcademiaModal({
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
+      <div className="border-t border-surface-input pt-4 mt-4 space-y-2">
+        <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Redefinir Senha do Usuário</h4>
+        <div className="flex gap-2">
+          <input
+            type="password"
+            placeholder="Nova senha (mín. 8 caracteres)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className={inputClass}
+          />
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            disabled={newPassword.length < 8}
+            className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap disabled:opacity-40"
+          >
+            Resetar
+          </button>
+        </div>
+        {resetMsg && <p className="text-xs font-medium text-success mt-1">{resetMsg}</p>}
+      </div>
     </Modal>
   )
 }
@@ -451,6 +486,20 @@ function EditProfessorModal({
     new Set(professor.academias.map((v) => v.academia.id)),
   )
   const [saving, setSaving] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetMsg, setResetMsg] = useState('')
+
+  async function handleResetPassword() {
+    if (newPassword.length < 8) return
+    try {
+      await api.resetPassword(professor.usuario.id, newPassword)
+      setResetMsg('Senha redefinida com sucesso!')
+      setNewPassword('')
+      setTimeout(() => setResetMsg(''), 3000)
+    } catch {
+      setResetMsg('Erro ao redefinir senha.')
+    }
+  }
 
   function toggleAcademia(id: string) {
     setSelectedAcademias((prev) => {
@@ -511,6 +560,27 @@ function EditProfessorModal({
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
+      <div className="border-t border-surface-input pt-4 mt-4 space-y-2">
+        <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Redefinir Senha do Usuário</h4>
+        <div className="flex gap-2">
+          <input
+            type="password"
+            placeholder="Nova senha (mín. 8 caracteres)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className={inputClass}
+          />
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            disabled={newPassword.length < 8}
+            className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap disabled:opacity-40"
+          >
+            Resetar
+          </button>
+        </div>
+        {resetMsg && <p className="text-xs font-medium text-success mt-1">{resetMsg}</p>}
+      </div>
     </Modal>
   )
 }
@@ -533,6 +603,20 @@ function EditAlunoModal({
   const [academiaId, setAcademiaId] = useState(aluno.academia_id || '')
   const [professorId, setProfessorId] = useState(aluno.professor_id || '')
   const [saving, setSaving] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetMsg, setResetMsg] = useState('')
+
+  async function handleResetPassword() {
+    if (newPassword.length < 8) return
+    try {
+      await api.resetPassword(aluno.usuario.id, newPassword)
+      setResetMsg('Senha redefinida com sucesso!')
+      setNewPassword('')
+      setTimeout(() => setResetMsg(''), 3000)
+    } catch {
+      setResetMsg('Erro ao redefinir senha.')
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -581,6 +665,27 @@ function EditAlunoModal({
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
+      <div className="border-t border-surface-input pt-4 mt-4 space-y-2">
+        <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Redefinir Senha do Usuário</h4>
+        <div className="flex gap-2">
+          <input
+            type="password"
+            placeholder="Nova senha (mín. 8 caracteres)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className={inputClass}
+          />
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            disabled={newPassword.length < 8}
+            className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap disabled:opacity-40"
+          >
+            Resetar
+          </button>
+        </div>
+        {resetMsg && <p className="text-xs font-medium text-success mt-1">{resetMsg}</p>}
+      </div>
     </Modal>
   )
 }

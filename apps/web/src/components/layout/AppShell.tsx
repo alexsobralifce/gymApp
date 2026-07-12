@@ -11,13 +11,14 @@ interface NavItem {
 function getNavItems(role: string): NavItem[] {
   switch (role) {
     case 'ALUNO':
-      return [
-        { to: '/', label: 'Dashboard', end: true },
-        { to: '/meus-treinos', label: 'Meus Treinos' },
-        { to: '/medidas', label: 'Medidas' },
-        { to: '/evolucao', label: 'Evolução' },
-        { to: '/estudo', label: 'Estudo' },
-      ]
+        return [
+          { to: '/', label: 'Dashboard', end: true },
+          { to: '/meus-treinos', label: 'Meus Treinos' },
+          { to: '/medidas', label: 'Medidas' },
+          { to: '/evolucao', label: 'Evolução' },
+          { to: '/estudo', label: 'Estudo' },
+          { to: '/alterar-senha', label: 'Alterar Senha' },
+        ]
     case 'PROFESSOR':
       return [
         { to: '/', label: 'Dashboard', end: true },
@@ -26,6 +27,7 @@ function getNavItems(role: string): NavItem[] {
         { to: '/fichas', label: 'Fichas' },
         { to: '/exercicios/criar', label: 'Exercícios' },
         { to: '/academias', label: 'Academias' },
+        { to: '/alterar-senha', label: 'Alterar Senha' },
       ]
     case 'ACADEMIA':
       return [
@@ -33,6 +35,7 @@ function getNavItems(role: string): NavItem[] {
         { to: '/professores', label: 'Professores' },
         { to: '/alunos', label: 'Alunos' },
         { to: '/treinos/criar', label: 'Criar Treino' },
+        { to: '/alterar-senha', label: 'Alterar Senha' },
       ]
     case 'ROOT':
       return [
