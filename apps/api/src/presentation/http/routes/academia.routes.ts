@@ -115,4 +115,91 @@ export async function academiaRoutes(app: FastifyInstance) {
 
     return reply.status(200).send(updated)
   })
+
+  /** POST /academias/fichas — cria múltiplas fichas de treino (A/B/C) para um aluno pela Academia */
+  app.post('/fichas', { preHandler }, async (request, reply) => {
+    const body = z.object({
+      alunoId: z.string(),
+      fichas: z.array(z.object({
+        nome: z.string(),
+        diasSemana: z.array(z.number().min(0).max(6)),
+        exercicios: z.array(z.object({
+          exercicioId: z.string(),
+          nome: z.string().optional(),
+          grupo_muscular: z.string().optional(),
+          equipamento: z.string().optional(),
+          imagemUrl: z.string().optional(),
+          dica: z.string().optional(),
+          ordem: z.number(),
+          series: z.number().min(1),
+          repeticoes: z.number().min(1),
+          cargaSugeridaKg: z.number().optional(),
+        })),
+      })),
+    }).parse(request.body)
+
+    const academiaId = request.currentUser.tenantId!
+
+    const aluno = await prisma.aluno.findUnique({ where: { id: body.alunoId } })
+    if (!aluno) throw new NotFoundError('Aluno')
+    if (aluno.academia_id !== academiaId) throw new NotFoundError('Aluno não pertence a esta academia')
+
+    const treinosCriados = await prisma.$transaction(async (tx) => {
+      const treinos = []
+
+      for (const ficha of body.fichas) {
+        // Garantir que os exercícios estejam inseridos
+        for (const ex of ficha.exercicios) {
+          if (ex.nome) {
+            await tx.exercicio.upsert({
+              where: { id: ex.exercicioId },
+              create: {
+                id: ex.exercicioId,
+                nome: ex.nome,
+                grupo_muscular: ex.grupo_muscular || null,
+                equipamento: ex.equipamento || null,
+                imagem_url: ex.imagemUrl || null,
+                dica: ex.dica || null,
+              },
+              update: {
+                nome: ex.nome,
+                grupo_muscular: ex.grupo_muscular || null,
+                equipamento: ex.equipamento || null,
+                imagem_url: ex.imagemUrl || null,
+                dica: ex.dica || null,
+              },
+            })
+          }
+        }
+
+        const treino = await tx.treino.create({
+          data: {
+            aluno_id: body.alunoId,
+            nome: ficha.nome,
+            dias_semana: ficha.diasSemana,
+            status: 'CADASTRADO',
+            exercicios: {
+              create: ficha.exercicios.map((ex) => ({
+                exercicio_id: ex.exercicioId,
+                ordem: ex.ordem,
+                series: ex.series,
+                repeticoes: ex.repeticoes,
+                carga_sugerida_kg: ex.cargaSugeridaKg,
+              })),
+            },
+          },
+          include: {
+            exercicios: {
+              include: { exercicio: true },
+            },
+          },
+        })
+        treinos.push(treino)
+      }
+
+      return treinos
+    })
+
+    return reply.status(201).send(treinosCriados)
+  })
 }

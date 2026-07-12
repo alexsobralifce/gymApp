@@ -111,55 +111,76 @@ export async function professorRoutes(app: FastifyInstance) {
     return reply.status(200).send(resultado)
   })
 
-  /** GET /professores/workoutx/exercicios — Busca exercícios da API WorkoutX */
+  /** GET /professores/workoutx/exercicios — Busca exercícios locais simulando API WorkoutX */
   app.get('/workoutx/exercicios', { preHandler }, async (request, reply) => {
     const { bodyPart } = z.object({
       bodyPart: z.string().optional(),
     }).parse(request.query)
 
-    const url = bodyPart
-      ? `https://api.workoutxapp.com/v1/exercises?bodyPart=${bodyPart}`
-      : 'https://api.workoutxapp.com/v1/exercises'
+    const where: Record<string, any> = {}
 
-    const apiKey = process.env.WORKOUTX_API_KEY || 'wx_9faec54a147c8ee816f823b3f2ed03ccae2c65b1cea70ee8a7d37887'
+    if (bodyPart) {
+      const bodyPartTranslations: Record<string, string> = {
+        'chest': 'Peito',
+        'back': 'Costas',
+        'shoulders': 'Ombros',
+        'upper arms': 'Braços',
+        'upper legs': 'Pernas',
+        'lower legs': 'Panturrilhas',
+        'waist': 'Abdômen',
+        'cardio': 'Cardio',
+        'neck': 'Pescoço',
+        'lower arms': 'Antebraços'
+      }
+      const ptPart = bodyPartTranslations[bodyPart.toLowerCase()] || bodyPart
+      where.grupo_muscular = { contains: ptPart, mode: 'insensitive' }
+    }
 
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-WorkoutX-Key': apiKey,
-          'Accept': 'application/json',
-        },
+      const exercicios = await prisma.exercicio.findMany({
+        where,
+        orderBy: { nome: 'asc' },
       })
-
-      if (!response.ok) {
-        throw new Error(`Erro na API WorkoutX: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      return reply.status(200).send(data)
+      // Simular a estrutura de resposta da WorkoutX
+      return reply.status(200).send({
+        count: exercicios.length,
+        total: exercicios.length,
+        data: exercicios.map((ex) => ({
+          id: ex.id,
+          name: ex.nome,
+          bodyPart: ex.grupo_muscular,
+          equipment: ex.equipamento,
+          gifUrl: ex.imagem_url, // 0.jpg
+          instructions: ex.dica ? ex.dica.split('\n') : []
+        }))
+      })
     } catch (error) {
       request.log.error(error)
-      return reply.status(500).send({ error: 'Falha ao buscar dados na API WorkoutX' })
+      return reply.status(500).send({ error: 'Falha ao buscar dados de exercícios' })
     }
   })
 
   /** GET /professores/exercicios — lista exercícios com filtros opcionais */
   app.get('/exercicios', { preHandler }, async (request, reply) => {
-    const { grupo_muscular, equipamento, busca } = z.object({
+    const { grupo_muscular, equipamento, nivel, busca } = z.object({
       grupo_muscular: z.string().optional(),
       equipamento: z.string().optional(),
+      nivel: z.string().optional(),
       busca: z.string().optional(),
     }).parse(request.query)
 
-    const where: Record<string, unknown> = {}
+    const where: Record<string, any> = {}
 
     if (grupo_muscular) {
-      where.grupo_muscular = grupo_muscular
+      where.grupo_muscular = { equals: grupo_muscular, mode: 'insensitive' }
     }
 
     if (equipamento) {
-      where.equipamento = equipamento
+      where.equipamento = { equals: equipamento, mode: 'insensitive' }
+    }
+
+    if (nivel) {
+      where.nivel = { equals: nivel, mode: 'insensitive' }
     }
 
     if (busca) {

@@ -2,6 +2,41 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTrainingStore } from '../../stores/training'
 
+function ExerciseAnimatedImage({
+  src,
+  srcFinal,
+  alt,
+  className,
+  onClick
+}: {
+  src?: string | null
+  srcFinal?: string | null
+  alt: string
+  className: string
+  onClick?: () => void
+}) {
+  const [frame, setFrame] = useState(0)
+
+  useEffect(() => {
+    if (!srcFinal) return
+    const interval = setInterval(() => {
+      setFrame((f) => (f === 0 ? 1 : 0))
+    }, 1500)
+    return () => clearInterval(interval)
+  }, [srcFinal])
+
+  const activeSrc = frame === 0 || !srcFinal ? src : srcFinal
+
+  return (
+    <img
+      src={activeSrc || undefined}
+      alt={alt}
+      onClick={onClick}
+      className={className}
+    />
+  )
+}
+
 export default function AlunoTreinoExecucao() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -119,15 +154,16 @@ export default function AlunoTreinoExecucao() {
               {/* Exercise Header */}
               <div className="flex items-center gap-3 p-4 bg-surface-input/30 border-b border-surface-input">
                 {exDetail.imagem_url ? (
-                  <img
+                  <ExerciseAnimatedImage
                     src={exDetail.imagem_url}
+                    srcFinal={exDetail.imagem_url_final}
                     alt={exDetail.nome}
                     onClick={() => setPreviewExercicio(exDetail)}
                     className="h-14 w-14 rounded-lg object-cover cursor-pointer border border-surface-input shadow-sm transition-transform hover:scale-105 active:scale-95"
                   />
                 ) : (
                   <div className="h-14 w-14 rounded-lg bg-surface-input flex items-center justify-center text-text-muted text-xs">
-                    Sem GIF
+                    Sem Imagem
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -252,10 +288,11 @@ export default function AlunoTreinoExecucao() {
 
             {previewExercicio.imagem_url && (
               <div className="mb-4 rounded-xl border border-surface-input bg-black/20 overflow-hidden flex items-center justify-center max-h-64 shadow-inner">
-                <img
+                <ExerciseAnimatedImage
                   src={previewExercicio.imagem_url}
+                  srcFinal={previewExercicio.imagem_url_final}
                   alt={previewExercicio.nome}
-                  className="w-full h-auto max-h-60 object-contain"
+                  className="w-full h-auto max-h-60 object-contain bg-black"
                 />
               </div>
             )}

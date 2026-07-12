@@ -1,10 +1,26 @@
 import { PrismaClient } from '@prisma/client'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 const prisma = new PrismaClient()
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Resolver pasta exercises.json-master independente de onde for rodado
+let exercisesDir = path.join(process.cwd(), 'exercises.json-master', 'exercises')
+if (!fs.existsSync(exercisesDir)) {
+  exercisesDir = path.join(process.cwd(), '..', '..', 'exercises.json-master', 'exercises')
+}
+if (!fs.existsSync(exercisesDir)) {
+  // Tentar resolver a partir de apps/api/prisma
+  exercisesDir = path.resolve(__dirname, '..', '..', '..', 'exercises.json-master', 'exercises')
+}
+
+console.log(`📁 Buscando exercicios em: ${exercisesDir}`)
+
 const exerciseTranslations: Record<string, string> = {
-  'cable lateral raise': 'Elevação Lateral na Polia',
-  'dumbbell lateral raise': 'Elevação Lateral com Halteres',
   'barbell curl': 'Rosca Direta com Barra',
   'dumbbell curl': 'Rosca Bíceps com Halteres',
   'hammer curl': 'Rosca Martelo',
@@ -17,74 +33,61 @@ const exerciseTranslations: Record<string, string> = {
   'decline barbell bench press': 'Supino Declinado com Barra',
   'decline dumbbell bench press': 'Supino Declinado com Halteres',
   'pushups': 'Flexões de Braço',
-  'push-up': 'Flexão de Braço',
+  'pushups - close triceps position': 'Flexões de Braço Fechada (Tríceps)',
+  'pushups with feet elevated': 'Flexões com Pés Elevados',
   'pullups': 'Barra Fixa',
   'pull-up': 'Barra Fixa',
   'chinups': 'Barra Fixa Supinada',
-  'chin-up': 'Barra Fixa Supinada',
   'dips': 'Paralelas',
-  'chest dip': 'Paralelas para Peito',
-  'tricep dip': 'Paralelas para Tríceps',
+  'bench dips': 'Paralelas no Banco',
+  'dips - chest version': 'Paralelas para Peito',
+  'dips - triceps version': 'Paralelas para Tríceps',
   'leg press': 'Leg Press',
   'barbell squat': 'Agachamento Livre com Barra',
+  'dumbbell squat': 'Agachamento com Halteres',
   'goblet squat': 'Agachamento Goblet',
   'bulgarian split squat': 'Agachamento Búlgaro',
-  'romanian deadlift': 'Levantamento Terra Romeno (RDL)',
-  'stiff-legged deadlift': 'Stiff com Barra',
   'deadlift': 'Levantamento Terra',
-  'lying leg curl': 'Mesa Flexora',
+  'barbell deadlift': 'Levantamento Terra com Barra',
+  'lying leg curls': 'Mesa Flexora',
   'seated leg curl': 'Cadeira Flexora',
-  'leg extension': 'Cadeira Extensora',
-  'calf raise': 'Elevação de Panturrilha',
-  'standing calf raise': 'Panturrilha em Pé',
+  'leg extensions': 'Cadeira Extensora',
+  'standing calf raises': 'Panturrilha em Pé',
   'seated calf raise': 'Panturrilha Sentado',
   'cable crossover': 'Crossover na Polia',
-  'pec deck': 'Voador / Pec Deck',
-  'chest fly': 'Crucifixo',
-  'dumbbell fly': 'Crucifixo com Halteres',
   'cable fly': 'Crucifixo na Polia',
-  'barbell row': 'Remada Curvada com Barra',
-  'dumbbell row': 'Remada Unilateral (Serrote)',
-  'one arm dumbbell row': 'Remada Unilateral (Serrote)',
+  'dumbbell flyes': 'Crucifixo com Halteres',
+  'bent over barbell row': 'Remada Curvada com Barra',
+  'one-arm dumbbell row': 'Remada Unilateral (Serrote)',
   't-bar row': 'Remada Cavalinho',
-  'seated cable row': 'Remada Baixa na Polia',
+  'seated cable rows': 'Remada Baixa na Polia',
   'lat pulldown': 'Puxada Aberta no Pulley',
   'cable pulldown': 'Puxada na Polia',
   'face pull': 'Face Pull',
   'dumbbell shoulder press': 'Desenvolvimento com Halteres',
   'barbell shoulder press': 'Desenvolvimento com Barra',
   'overhead press': 'Desenvolvimento Militar',
-  'military press': 'Desenvolvimento Militar',
-  'arnold press': 'Desenvolvimento Arnold',
+  'arnold dumbbell press': 'Desenvolvimento Arnold',
+  'lateral raise': 'Elevação Lateral',
   'front raise': 'Elevação Frontal',
-  'dumbbell front raise': 'Elevação Frontal com Halteres',
-  'cable front raise': 'Elevação Frontal na Polia',
   'shrugs': 'Encolhimento de Ombros',
   'barbell shrug': 'Encolhimento com Barra',
   'dumbbell shrug': 'Encolhimento com Halteres',
   'tricep extension': 'Extensão de Tríceps',
-  'overhead tricep extension': 'Tríceps Testa',
+  'overhead triceps extension': 'Tríceps Testa',
   'french press': 'Tríceps Francês',
   'cable pushdown': 'Tríceps Pulley',
   'rope pushdown': 'Tríceps Corda',
-  'skull crusher': 'Tríceps Testa',
   'plank': 'Prancha Abdominal',
   'side plank': 'Prancha Lateral',
   'crunches': 'Abdominal Crunch',
-  'crunch': 'Abdominal Crunch',
-  'sit-ups': 'Abdominal Remador',
-  'sit-up': 'Abdominal Remador',
-  'hanging knee raise': 'Elevação de Joelhos Suspenso',
   'hanging leg raise': 'Elevação de Pernas Suspenso',
   'russian twist': 'Giro Russo',
-  'mountain climbers': 'Corrida Estacionária (Alpinista)',
   'lunges': 'Avanço / Passada',
-  'dumbbell lunge': 'Avanço com Halteres',
+  'dumbbell lunges': 'Avanço com Halteres',
   'barbell lunge': 'Avanço com Barra',
-  'step-up': 'Subida no Banco',
-  'thrusters': 'Thruster',
+  'step-ups': 'Subida no Banco',
   'burpees': 'Burpee',
-  'burpee': 'Burpee',
   'jumping jacks': 'Polichinelos',
   'jumping jack': 'Polichinelo',
 }
@@ -112,9 +115,8 @@ const wordReplacements: [RegExp, string][] = [
   [/\bextension\b/gi, 'Extensão'],
   [/\bextensions\b/gi, 'Extensão'],
   [/\bfly\b/gi, 'Crucifixo'],
-  [/\bflyer\b/gi, 'Crucifixo'],
+  [/\bflyes\b/gi, 'Crucifixo'],
   [/\bshrug\b/gi, 'Encolhimento'],
-  [/\bshrugs\b/gi, 'Encolhimento'],
   [/\bshrugs\b/gi, 'Encolhimento'],
   [/\blunge\b/gi, 'Avanço'],
   [/\blunges\b/gi, 'Avanço'],
@@ -128,21 +130,50 @@ const wordReplacements: [RegExp, string][] = [
   [/\bpush-ups\b/gi, 'Flexão de Braço'],
   [/\bpull-up\b/gi, 'Barra Fixa'],
   [/\bpull-ups\b/gi, 'Barra Fixa'],
-  [/\bchin-up\b/gi, 'Barra Fixa Supinada'],
-  [/\bchin-ups\b/gi, 'Barra Fixa Supinada'],
 ]
 
-const muscleGroupTranslations: Record<string, string> = {
+const muscleTranslations: Record<string, string> = {
   'chest': 'Peito',
   'back': 'Costas',
+  'lats': 'Costas (Dorsais)',
+  'middle back': 'Costas (Terso Médio)',
+  'lower back': 'Lombar',
   'shoulders': 'Ombros',
-  'upper arms': 'Braços',
-  'upper legs': 'Pernas',
-  'lower legs': 'Panturrilha',
-  'waist': 'Abdômen',
-  'cardio': 'Cardio',
+  'traps': 'Trapézio',
+  'biceps': 'Bíceps',
+  'triceps': 'Tríceps',
+  'forearms': 'Antebraços',
+  'quadriceps': 'Quadríceps (Coxas)',
+  'hamstrings': 'Posterior de Coxa',
+  'glutes': 'Glúteos',
+  'calves': 'Panturrilhas',
+  'abductors': 'Abdutores',
+  'adductors': 'Adutores',
+  'abs': 'Abdômen',
   'neck': 'Pescoço',
-  'lower arms': 'Antebraços'
+  'quads': 'Quadríceps',
+  'cardio': 'Cardio'
+}
+
+const equipmentTranslations: Record<string, string> = {
+  'barbell': 'Barra',
+  'dumbbell': 'Halteres',
+  'cable': 'Polia',
+  'machine': 'Máquina',
+  'kettlebell': 'Kettlebell',
+  'body only': 'Peso Corporal',
+  'body': 'Peso Corporal',
+  'exercise ball': 'Bola de Pilates',
+  'bands': 'Elásticos',
+  'foam roll': 'Rolo de Liberação',
+  'other': 'Outro',
+  'e-z curl bar': 'Barra W'
+}
+
+const levelTranslations: Record<string, string> = {
+  'beginner': 'Iniciante',
+  'intermediate': 'Intermediário',
+  'expert': 'Avançado'
 }
 
 function translateExerciseName(englishName: string): string {
@@ -166,74 +197,86 @@ function translateExerciseName(englishName: string): string {
 }
 
 async function sync() {
-  console.log('🔄 Iniciando sincronização de exercícios da API WorkoutX...')
-  const apiKey = 'wx_9faec54a147c8ee816f823b3f2ed03ccae2c65b1cea70ee8a7d37887'
-  
-  let offset = 0
-  const limit = 10
-  let total = 1327 // Inicialmente assumido, mas será atualizado
-  let synced = 0
+  if (!fs.existsSync(exercisesDir)) {
+    console.error('❌ Pasta de exercicios nao encontrada!')
+    process.exit(1)
+  }
 
-  while (offset < total) {
-    const url = `https://api.workoutxapp.com/v1/exercises?limit=${limit}&offset=${offset}`
-    
+  const items = fs.readdirSync(exercisesDir)
+  console.log(`📚 Encontrados ${items.length} exercicios para processamento.`)
+
+  let count = 0
+
+  for (const itemName of items) {
+    const itemPath = path.join(exercisesDir, itemName)
+    if (!fs.statSync(itemPath).isDirectory()) continue
+
+    const jsonPath = path.join(itemPath, 'exercise.json')
+    if (!fs.existsSync(jsonPath)) continue
+
     try {
-      const res = await fetch(url, {
-        headers: { 'X-WorkoutX-Key': apiKey }
+      const fileData = fs.readFileSync(jsonPath, 'utf-8')
+      const data = JSON.parse(fileData)
+
+      const englishName = data.name || itemName.replace(/_/g, ' ')
+      const translatedName = translateExerciseName(englishName)
+
+      // Determinar músculos principais
+      const rawMuscle = data.primaryMuscles?.[0] || 'cardio'
+      const translatedMuscle = muscleTranslations[rawMuscle.toLowerCase()] || rawMuscle
+
+      // Determinar equipamento
+      const rawEquip = data.equipment || 'body'
+      const translatedEquip = equipmentTranslations[rawEquip.toLowerCase()] || rawEquip
+
+      // Determinar nível
+      const rawLevel = data.level || 'beginner'
+      const translatedLevel = levelTranslations[rawLevel.toLowerCase()] || 'Iniciante'
+
+      // Links das imagens usando Github Raw URL (gratuito)
+      const folderUrlName = itemName // ex.: Barbell_Curl
+      const imgUrl0 = `https://raw.githubusercontent.com/wrkout/exercises.json/master/exercises/${folderUrlName}/images/0.jpg`
+      const imgUrl1 = `https://raw.githubusercontent.com/wrkout/exercises.json/master/exercises/${folderUrlName}/images/1.jpg`
+
+      // Juntar instruções
+      const instructionsText = Array.isArray(data.instructions)
+        ? data.instructions.join('\n')
+        : (data.instructions || '')
+
+      await prisma.exercicio.upsert({
+        where: { id: folderUrlName },
+        create: {
+          id: folderUrlName,
+          nome: translatedName,
+          grupo_muscular: translatedMuscle,
+          equipamento: translatedEquip,
+          dica: instructionsText,
+          imagem_url: imgUrl0,
+          imagem_url_final: imgUrl1,
+          nivel: translatedLevel
+        },
+        update: {
+          nome: translatedName,
+          grupo_muscular: translatedMuscle,
+          equipamento: translatedEquip,
+          dica: instructionsText,
+          imagem_url: imgUrl0,
+          imagem_url_final: imgUrl1,
+          nivel: translatedLevel
+        }
       })
 
-      if (!res.ok) {
-        throw new Error(`Erro na API WorkoutX: ${res.status} ${res.statusText}`)
+      count++
+      if (count % 50 === 0) {
+        console.log(`✅ Progresso: ${count}/${items.length} exercicios sincronizados no banco.`)
       }
-
-      const body = await res.json()
-      total = body.total || total
-      const list = body.data || []
-
-      if (list.length === 0) {
-        console.log('⚠️ Nenhum exercício retornado nesta página, encerrando...')
-        break
-      }
-
-      for (const ex of list) {
-        const translatedName = translateExerciseName(ex.name)
-        const translatedGroup = muscleGroupTranslations[ex.bodyPart.toLowerCase()] || ex.bodyPart
-
-        await prisma.exercicio.upsert({
-          where: { id: ex.id },
-          create: {
-            id: ex.id,
-            nome: translatedName,
-            grupo_muscular: translatedGroup,
-            equipamento: ex.equipment,
-            imagem_url: ex.gifUrl,
-            dica: Array.isArray(ex.instructions) ? ex.instructions.join(' ') : ex.instructions
-          },
-          update: {
-            nome: translatedName,
-            grupo_muscular: translatedGroup,
-            equipamento: ex.equipment,
-            imagem_url: ex.gifUrl,
-            dica: Array.isArray(ex.instructions) ? ex.instructions.join(' ') : ex.instructions
-          }
-        })
-        synced++
-      }
-
-      console.log(`✅ Progresso: ${synced}/${total} exercícios sincronizados...`)
-      
-      // Delay curto para evitar sobrecarga ou rate limits
-      await new Promise(resolve => setTimeout(resolve, 250))
-      offset += limit
 
     } catch (err) {
-      console.error(`❌ Erro no offset ${offset}:`, err)
-      // Pausa maior em caso de erro e tenta continuar (sem pular offset)
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      console.error(`❌ Erro ao sincronizar exercicio em ${itemName}:`, err)
     }
   }
 
-  console.log(`🎉 Sincronização concluída! Total de ${synced} exercícios inseridos/atualizados no banco.`)
+  console.log(`🎉 Sincronizacao concluida com sucesso! ${count} exercicios importados/atualizados.`)
 }
 
 sync()

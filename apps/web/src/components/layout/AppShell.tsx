@@ -13,6 +13,7 @@ function getNavItems(role: string): NavItem[] {
     case 'ALUNO':
       return [
         { to: '/', label: 'Dashboard', end: true },
+        { to: '/meus-treinos', label: 'Meus Treinos' },
         { to: '/medidas', label: 'Medidas' },
         { to: '/evolucao', label: 'Evolução' },
         { to: '/estudo', label: 'Estudo' },
@@ -31,6 +32,7 @@ function getNavItems(role: string): NavItem[] {
         { to: '/', label: 'Dashboard', end: true },
         { to: '/professores', label: 'Professores' },
         { to: '/alunos', label: 'Alunos' },
+        { to: '/treinos/criar', label: 'Criar Treino' },
       ]
     case 'ROOT':
       return [
@@ -44,7 +46,8 @@ function getNavItems(role: string): NavItem[] {
 }
 
 const alunoBottomTabs = [
-  { to: '/', label: 'Treino', icon: '🏋️', end: true },
+  { to: '/', label: 'Início', icon: '🏠', end: true },
+  { to: '/meus-treinos', label: 'Treinos', icon: '🏋️' },
   { to: '/medidas', label: 'Medidas', icon: '📏' },
   { to: '/evolucao', label: 'Evolução', icon: '📈' },
 ]
