@@ -52,6 +52,65 @@ interface AlunoAcademia {
   usuario: { nome: string; email: string }
 }
 
+function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  const [frame, setFrame] = useState(0)
+
+  useEffect(() => {
+    if (!hovered || !ex.imagem_url_final) return
+    const interval = setInterval(() => {
+      setFrame((f) => (f === 0 ? 1 : 0))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [hovered, ex.imagem_url_final])
+
+  const activeSrc = frame === 0 || !hovered || !ex.imagem_url_final ? ex.imagem_url : ex.imagem_url_final
+
+  return (
+    <div
+      className="flex items-center justify-between p-3 bg-surface rounded-xl border border-surface-input gap-3 hover:border-primary/50 transition-all hover:shadow-sm"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => {
+        setHovered(false)
+        setFrame(0)
+      }}
+    >
+      <div className="flex items-center gap-3">
+        {ex.imagem_url && (
+          <img
+            src={activeSrc || undefined}
+            alt={ex.nome}
+            className="w-20 h-20 rounded-lg object-cover bg-surface-input border border-surface-input transition-all duration-300 shadow-sm"
+          />
+        )}
+        <div>
+          <p className="text-xs font-bold text-text leading-tight">{ex.nome}</p>
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {ex.grupo_muscular && (
+              <span className="text-[9px] text-text-muted font-semibold bg-surface-input px-1.5 py-0.5 rounded border border-surface-input uppercase">
+                {ex.grupo_muscular}
+              </span>
+            )}
+            {ex.nivel && (
+              <span className="text-[9px] text-text-muted font-semibold bg-surface-input px-1.5 py-0.5 rounded border border-surface-input uppercase">
+                {ex.nivel}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onAdd}
+        className="rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
+      >
+        + Add
+      </button>
+    </div>
+  )
+}
+
 export default function AcademiaCriarTreino() {
   const [alunos, setAlunos] = useState<AlunoAcademia[]>([])
   const [exercicios, setExercicios] = useState<Exercicio[]>([])
@@ -503,35 +562,11 @@ export default function AcademiaCriarTreino() {
                 <p className="text-xs text-text-muted py-6 text-center">Nenhum exercício correspondente.</p>
               ) : (
                 exercicios.map((ex) => (
-                  <div key={ex.id} className="flex items-center justify-between py-2.5 gap-2 group">
-                    <div className="flex items-center gap-2.5">
-                      {ex.imagem_url && (
-                        <img
-                          src={ex.imagem_url}
-                          alt={ex.nome}
-                          className="w-10 h-10 rounded-lg object-cover bg-surface-input border border-surface-input"
-                        />
-                      )}
-                      <div>
-                        <p className="text-xs font-bold text-text group-hover:text-primary transition-colors leading-tight">{ex.nome}</p>
-                        <div className="flex gap-1 mt-0.5">
-                          {ex.grupo_muscular && (
-                            <span className="text-[9px] text-text-muted font-semibold bg-surface px-1 py-0.5 rounded border border-surface-input">
-                              {ex.grupo_muscular}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <button
-                      type="button"
-                      onClick={() => adicionarExercicio(ex)}
-                      className="rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
-                    >
-                      + Add
-                    </button>
-                  </div>
+                  <BuilderExerciseRow
+                    key={ex.id}
+                    ex={ex}
+                    onAdd={() => adicionarExercicio(ex)}
+                  />
                 ))
               )}
             </div>

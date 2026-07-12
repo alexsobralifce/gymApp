@@ -79,6 +79,16 @@ export default function AlunoMeusTreinos() {
 
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6 pb-20">
+      <style>{`
+        @keyframes modal-pop {
+          0% { transform: scale(0.9) translateY(12px); opacity: 0; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .animate-modal-pop {
+          animation: modal-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+      `}</style>
+
       <div>
         <h1 className="text-2xl font-bold text-text">Meus Treinos</h1>
         <p className="text-xs text-text-muted">Veja as fichas montadas pelo seu treinador</p>
@@ -118,7 +128,11 @@ export default function AlunoMeusTreinos() {
         {/* Lista de Exercícios em ordem sequencial */}
         <div className="space-y-3.5">
           {treino.exercicios?.map((ex: TreinoExercicio) => (
-            <div key={ex.id} className="flex gap-4 p-3 bg-surface rounded-xl border border-surface-input items-center">
+            <div
+              key={ex.id}
+              onClick={() => setSelectedExercicio(ex.exercicio)}
+              className="flex gap-4 p-3.5 bg-surface rounded-2xl border border-surface-input items-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] select-none group"
+            >
               {/* Animação flip do frame inicial/final */}
               <ExerciseAnimatedImage
                 src={ex.exercicio.imagem_url}
@@ -128,7 +142,7 @@ export default function AlunoMeusTreinos() {
               />
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-text leading-tight truncate">
+                <p className="text-sm font-bold text-text leading-tight truncate group-hover:text-primary transition-colors">
                   {ex.ordem}. {ex.exercicio.nome}
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -149,13 +163,12 @@ export default function AlunoMeusTreinos() {
                 </p>
               </div>
 
-              <button
-                onClick={() => setSelectedExercicio(ex.exercicio)}
-                className="rounded-lg bg-surface-input hover:bg-surface-input/80 text-text-muted p-2 transition-all shrink-0"
+              <div
+                className="rounded-lg bg-surface-input text-text-muted p-2.5 transition-colors group-hover:bg-primary/10 group-hover:text-primary shrink-0"
                 title="Ver Instruções"
               >
                 📖
-              </button>
+              </div>
             </div>
           ))}
         </div>
@@ -163,7 +176,7 @@ export default function AlunoMeusTreinos() {
         {/* Botão de Iniciar Execução */}
         <button
           onClick={() => navigate(`/treino/${treino.id}/inicio`)}
-          className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all"
+          className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
         >
           Iniciar Ficha de Treino
         </button>
@@ -171,8 +184,15 @@ export default function AlunoMeusTreinos() {
 
       {/* Modal de Instruções */}
       {selectedExercicio && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-surface-card border border-surface-input p-5 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Sibling backdrop clique fecha */}
+          <div
+            className="absolute inset-0 bg-black/75 cursor-pointer"
+            onClick={() => setSelectedExercicio(null)}
+          />
+
+          {/* Container Modal com Bounce Pop */}
+          <div className="relative w-full max-w-md rounded-3xl bg-surface-card border border-surface-input p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto z-10 animate-modal-pop">
             <div className="flex items-start justify-between border-b border-surface-input pb-3">
               <div>
                 <h3 className="text-base font-bold text-text leading-tight">{selectedExercicio.nome}</h3>
@@ -192,7 +212,7 @@ export default function AlunoMeusTreinos() {
                 src={selectedExercicio.imagem_url}
                 srcFinal={selectedExercicio.imagem_url_final}
                 alt={selectedExercicio.nome}
-                className="w-full max-h-56 rounded-xl object-contain border border-surface-input bg-black"
+                className="w-full max-h-56 rounded-xl object-contain border border-surface-input bg-black shadow-sm"
               />
             </div>
 
@@ -211,7 +231,7 @@ export default function AlunoMeusTreinos() {
 
             <button
               onClick={() => setSelectedExercicio(null)}
-              className="w-full rounded-xl bg-surface-input py-2.5 text-sm font-bold text-text hover:brightness-95 transition-all"
+              className="w-full rounded-xl bg-surface-input py-2.5 text-sm font-bold text-text hover:brightness-95 transition-all cursor-pointer"
             >
               Fechar
             </button>
