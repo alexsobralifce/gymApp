@@ -2,34 +2,35 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTrainingStore } from '../../stores/training'
 
-function ExerciseAnimatedImage({
+function ExerciseGif({
   src,
-  srcFinal,
+  gifSrc,
   alt,
   className,
   onClick
 }: {
   src?: string | null
-  srcFinal?: string | null
+  gifSrc?: string | null
   alt: string
   className: string
   onClick?: () => void
 }) {
-  const [frame, setFrame] = useState(0)
+  const imgSrc = gifSrc || src
 
-  useEffect(() => {
-    if (!srcFinal) return
-    const interval = setInterval(() => {
-      setFrame((f) => (f === 0 ? 1 : 0))
-    }, 1500)
-    return () => clearInterval(interval)
-  }, [srcFinal])
-
-  const activeSrc = frame === 0 || !srcFinal ? src : srcFinal
+  if (!imgSrc) {
+    return (
+      <div
+        className={`rounded-lg bg-surface-input flex items-center justify-center text-text-muted text-xs ${className}`}
+        onClick={onClick}
+      >
+        Sem Imagem
+      </div>
+    )
+  }
 
   return (
     <img
-      src={activeSrc || undefined}
+      src={imgSrc}
       alt={alt}
       onClick={onClick}
       className={className}
@@ -153,19 +154,13 @@ export default function AlunoTreinoExecucao() {
             <div key={ex.id} className="rounded-xl border border-surface-input bg-surface-card overflow-hidden shadow-sm transition-all hover:shadow-md">
               {/* Exercise Header */}
               <div className="flex items-center gap-3 p-4 bg-surface-input/30 border-b border-surface-input">
-                {exDetail.imagem_url ? (
-                  <ExerciseAnimatedImage
-                    src={exDetail.imagem_url}
-                    srcFinal={exDetail.imagem_url_final}
-                    alt={exDetail.nome}
-                    onClick={() => setPreviewExercicio(exDetail)}
-                    className="h-14 w-14 rounded-lg object-cover cursor-pointer border border-surface-input shadow-sm transition-transform hover:scale-105 active:scale-95"
-                  />
-                ) : (
-                  <div className="h-14 w-14 rounded-lg bg-surface-input flex items-center justify-center text-text-muted text-xs">
-                    Sem Imagem
-                  </div>
-                )}
+                <ExerciseGif
+                  src={exDetail.imagem_url}
+                  gifSrc={exDetail.gif_url}
+                  alt={exDetail.nome}
+                  onClick={() => setPreviewExercicio(exDetail)}
+                  className="h-14 w-14 rounded-lg object-cover cursor-pointer border border-surface-input shadow-sm transition-transform hover:scale-105 active:scale-95"
+                />
                 <div className="flex-1 min-w-0">
                   <h3
                     onClick={() => setPreviewExercicio(exDetail)}
@@ -286,11 +281,10 @@ export default function AlunoTreinoExecucao() {
               {previewExercicio.grupo_muscular || 'Geral'} · {previewExercicio.equipamento || 'Peso Corporal'}
             </p>
 
-            {previewExercicio.imagem_url && (
+            {(previewExercicio.gif_url || previewExercicio.imagem_url) && (
               <div className="mb-4 rounded-xl border border-surface-input bg-black/20 overflow-hidden flex items-center justify-center max-h-64 shadow-inner">
-                <ExerciseAnimatedImage
-                  src={previewExercicio.imagem_url}
-                  srcFinal={previewExercicio.imagem_url_final}
+                <img
+                  src={previewExercicio.gif_url || previewExercicio.imagem_url}
                   alt={previewExercicio.nome}
                   className="w-full h-auto max-h-60 object-contain bg-black"
                 />

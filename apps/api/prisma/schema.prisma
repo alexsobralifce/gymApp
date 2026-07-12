@@ -198,17 +198,21 @@ model TreinoHistorico {
 // ─── Exercício ────────────────────────────────────────────────────────────────
 
 model Exercicio {
-  id            String   @id @default(cuid())
-  nome          String
-  maquina       String?
-  dica          String?  @db.Text
-  imagem_url    String?
-  imagem_url_final String?
-  nivel         String?
-  grupo_muscular String?
-  equipamento   String?
-  criado_em     DateTime @default(now())
-  atualizado_em DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  nome                 String
+  maquina              String?
+  dica                 String?  @db.Text
+  imagem_url           String?
+  gif_url              String?           // URL do GIF animado
+  descricao_pt         String?  @db.Text // descrição completa em português
+  passos_pt            String[]           // passos de execução em português
+  musculo_alvo         String?            // músculo alvo principal
+  musculos_secundarios String[]           // músculos secundários
+  nivel                String?
+  grupo_muscular       String?
+  equipamento          String?
+  criado_em            DateTime @default(now())
+  atualizado_em        DateTime @updatedAt
 
   treinos   TreinoExercicio[]
   execucoes ExecucaoExercicio[]

@@ -51,7 +51,11 @@ export interface Exercicio {
   maquina?: string | null
   dica?: string | null
   imagem_url?: string | null
-  imagem_url_final?: string | null
+  gif_url?: string | null
+  descricao_pt?: string | null
+  passos_pt?: string[]
+  musculo_alvo?: string | null
+  musculos_secundarios?: string[]
   nivel?: string | null
   grupo_muscular?: string | null
   equipamento?: string | null

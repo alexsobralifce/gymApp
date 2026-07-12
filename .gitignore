@@ -36,3 +36,7 @@ yarn-error.log*
 .idea/
 *.swp
 *.swo
+
+# ─── Raw Datasets ─────────────────────────────────────────────────────────────
+exercises-dataset-main/
+exercises.json-master/

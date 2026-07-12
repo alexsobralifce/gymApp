@@ -54,34 +54,26 @@ interface AlunoAcademia {
 
 function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void }) {
   const [hovered, setHovered] = useState(false)
-  const [frame, setFrame] = useState(0)
 
-  useEffect(() => {
-    if (!hovered || !ex.imagem_url_final) return
-    const interval = setInterval(() => {
-      setFrame((f) => (f === 0 ? 1 : 0))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [hovered, ex.imagem_url_final])
-
-  const activeSrc = frame === 0 || !hovered || !ex.imagem_url_final ? ex.imagem_url : ex.imagem_url_final
+  const imgSrc = ex.gif_url || ex.imagem_url
 
   return (
     <div
       className="flex items-center justify-between p-3 bg-surface rounded-xl border border-surface-input gap-3 hover:border-primary/50 transition-all hover:shadow-sm"
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false)
-        setFrame(0)
-      }}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className="flex items-center gap-3">
-        {ex.imagem_url && (
+        {imgSrc ? (
           <img
-            src={activeSrc || undefined}
+            src={imgSrc}
             alt={ex.nome}
-            className="w-20 h-20 rounded-lg object-cover bg-surface-input border border-surface-input transition-all duration-300 shadow-sm"
+            className={`rounded-lg object-cover bg-surface-input border border-surface-input transition-all duration-300 shadow-sm ${hovered ? 'w-32 h-32' : 'w-20 h-20'}`}
           />
+        ) : (
+          <div className="w-20 h-20 rounded-lg bg-surface-input border border-surface-input flex items-center justify-center text-2xl">
+            💪
+          </div>
         )}
         <div>
           <p className="text-xs font-bold text-text leading-tight">{ex.nome}</p>
@@ -509,7 +501,7 @@ export default function AcademiaCriarTreino() {
           <div className="lg:col-span-5 bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-4">
             <div>
               <h2 className="text-base font-bold text-text">Biblioteca de Exercícios</h2>
-              <p className="text-xs text-text-muted">Adicione exercícios da base local com 873 opções</p>
+              <p className="text-xs text-text-muted">Adicione exercícios da base local com 1.324 opções</p>
             </div>
 
             <div className="space-y-2">

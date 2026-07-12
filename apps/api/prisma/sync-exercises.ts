@@ -252,7 +252,6 @@ async function sync() {
           equipamento: translatedEquip,
           dica: instructionsText,
           imagem_url: imgUrl0,
-          imagem_url_final: imgUrl1,
           nivel: translatedLevel
         },
         update: {
@@ -261,7 +260,6 @@ async function sync() {
           equipamento: translatedEquip,
           dica: instructionsText,
           imagem_url: imgUrl0,
-          imagem_url_final: imgUrl1,
           nivel: translatedLevel
         }
       })
