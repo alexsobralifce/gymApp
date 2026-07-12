@@ -251,11 +251,12 @@ export default function RootUsuarios() {
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-lg rounded-lg bg-surface-card p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop de fundo */}
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      
+      {/* Container do Modal */}
+      <div className="relative w-full max-w-lg rounded-lg bg-surface-card p-6 z-10 shadow-2xl">
         {children}
       </div>
     </div>
