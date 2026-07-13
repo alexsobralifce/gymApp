@@ -115,6 +115,9 @@ export const api = {
   // ─── Treinos ───────────────────────────────────────
   getAlunoTreinos: () => api.get<Treino[]>('/alunos/treinos'),
 
+  getHistoricoDias: (mes: string) =>
+    api.get<import('../types/api').HistoricoDia[]>(`/alunos/treinos/historico-dias?mes=${mes}`),
+
   getTreino: (id: string) =>
     api.get<Treino & { execucoes: ExecucaoExercicio[] }>(`/treinos/${id}`),
 

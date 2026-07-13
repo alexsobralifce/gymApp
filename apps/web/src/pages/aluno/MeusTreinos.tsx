@@ -1,7 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { Treino, Exercicio, TreinoExercicio } from '../../types/api'
+import type { Treino, Exercicio, TreinoExercicio, HistoricoDia } from '../../types/api'
+
+function formatMes(ano: number, mes: number) {
+  return `${ano}-${String(mes + 1).padStart(2, '0')}`
+}
+
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 export default function AlunoMeusTreinos() {
   const [treinos, setTreinos] = useState<Treino[]>([])
@@ -10,6 +17,11 @@ export default function AlunoMeusTreinos() {
   const [selectedExercicio, setSelectedExercicio] = useState<Exercicio | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  const hoje = useMemo(() => new Date(), [])
+  const [mesCalendario, setMesCalendario] = useState({ ano: hoje.getFullYear(), mes: hoje.getMonth() })
+  const [historicoDias, setHistoricoDias] = useState<HistoricoDia[]>([])
+  const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null)
 
   const carregarTreinos = useCallback(async () => {
     try {
@@ -27,6 +39,68 @@ export default function AlunoMeusTreinos() {
     }
   }, [])
 
+  const carregarHistorico = useCallback(async (ano: number, mes: number) => {
+    try {
+      const dias = await api.getHistoricoDias(formatMes(ano, mes))
+      setHistoricoDias(dias)
+    } catch {
+      setHistoricoDias([])
+    }
+  }, [])
+
+  useEffect(() => {
+    carregarTreinos()
+    carregarHistorico(mesCalendario.ano, mesCalendario.mes)
+  }, [carregarTreinos, carregarHistorico, mesCalendario])
+
+  const diasComTreino = useMemo(() => {
+    const set = new Set<string>()
+    for (const d of historicoDias) set.add(d.data)
+    return set
+  }, [historicoDias])
+
+  const diaAtualStr = useMemo(() => hoje.toISOString().slice(0, 10), [hoje])
+
+  const diasDoMes = useMemo(() => {
+    const { ano, mes } = mesCalendario
+    const primeiro = new Date(ano, mes, 1)
+    const ultimo = new Date(ano, mes + 1, 0)
+    const dias: (number | null)[] = []
+
+    for (let i = 0; i < primeiro.getDay(); i++) dias.push(null)
+
+    for (let d = 1; d <= ultimo.getDate(); d++) dias.push(d)
+
+    return dias
+  }, [mesCalendario])
+
+  function mudarMes(delta: number) {
+    setDiaSelecionado(null)
+    setMesCalendario((prev) => {
+      const novoMes = prev.mes + delta
+      if (novoMes < 0) return { ano: prev.ano - 1, mes: 11 }
+      if (novoMes > 11) return { ano: prev.ano + 1, mes: 0 }
+      return { ano: prev.ano, mes: novoMes }
+    })
+  }
+
+  function dataDoDia(dia: number) {
+    return `${mesCalendario.ano}-${String(mesCalendario.mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+  }
+
+  function handleClickDia(dia: number) {
+    const data = dataDoDia(dia)
+    if (!diasComTreino.has(data)) return
+    setDiaSelecionado(diaSelecionado === data ? null : data)
+  }
+
+  const infoDiaSelecionado = useMemo(() => {
+    if (!diaSelecionado) return null
+    return historicoDias.find((d) => d.data === diaSelecionado)
+  }, [diaSelecionado, historicoDias])
+
+  const treino = treinos[fichaAtiva] || treinos[0]
+
   async function handleResponder(treinoId: string, acao: 'ACEITAR' | 'RECUSAR') {
     try {
       await api.responderTreino(treinoId, acao)
@@ -37,10 +111,6 @@ export default function AlunoMeusTreinos() {
       setFeedback('Erro ao responder ao treino.')
     }
   }
-
-  useEffect(() => {
-    carregarTreinos()
-  }, [carregarTreinos])
 
   if (loading) return <div className="p-4 text-text-muted">Carregando seus treinos...</div>
 
@@ -60,8 +130,6 @@ export default function AlunoMeusTreinos() {
       </div>
     )
   }
-
-  const treino = treinos[fichaAtiva] || treinos[0]
 
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6 pb-20">
@@ -90,6 +158,69 @@ export default function AlunoMeusTreinos() {
           {feedback}
         </div>
       )}
+
+      {/* Calendário de Treinos */}
+      <div className="bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <button onClick={() => mudarMes(-1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors">
+            ◀
+          </button>
+          <span className="text-sm font-bold text-text">
+            {MESES[mesCalendario.mes]} {mesCalendario.ano}
+          </span>
+          <button onClick={() => mudarMes(1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors">
+            ▶
+          </button>
+        </div>
+
+        <div className="grid grid-cols-7 text-center gap-1">
+          {DIAS_SEMANA.map((d) => (
+            <span key={d} className="text-[10px] font-bold text-text-muted uppercase">{d}</span>
+          ))}
+          {diasDoMes.map((dia, i) => (
+            <div key={i} className="aspect-square flex items-center justify-center">
+              {dia !== null ? (
+                <button
+                  onClick={() => handleClickDia(dia)}
+                  className={`w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center transition-all relative
+                    ${diasComTreino.has(dataDoDia(dia))
+                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 cursor-pointer'
+                      : 'text-text-muted cursor-default'}
+                    ${dataDoDia(dia) === diaAtualStr ? 'ring-2 ring-primary ring-offset-1 ring-offset-surface-card' : ''}
+                    ${diaSelecionado === dataDoDia(dia) ? 'bg-green-500 text-white' : ''}
+                  `}
+                >
+                  {dia}
+                </button>
+              ) : (
+                <span className="w-8 h-8" />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {infoDiaSelecionado && (
+          <div className="rounded-xl bg-surface border border-surface-input p-3 space-y-2">
+            <p className="text-xs font-bold text-text-muted uppercase tracking-wider">
+              {new Date(diaSelecionado + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+            {infoDiaSelecionado.treinos.map((t) => (
+              <div key={t.id} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-text">{t.nome}</p>
+                  <p className="text-xs text-text-muted">{t.grupos.join(' · ')}</p>
+                </div>
+                <button
+                  onClick={() => navigate(`/treino/${t.id}/inicio`)}
+                  className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  Iniciar
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Tabs para selecionar treino */}
       <div className="flex gap-2 bg-surface-card p-1.5 rounded-2xl border border-surface-input overflow-x-auto">

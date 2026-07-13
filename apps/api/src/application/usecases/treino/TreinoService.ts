@@ -305,3 +305,45 @@ export async function dashboardProfessor(professorId: string, academiaId?: strin
     },
   })
 }
+
+export async function historicoDiasTreino(alunoId: string, mes: string) {
+  const [ano, mesNum] = mes.split('-').map(Number)
+  const inicio = new Date(Date.UTC(ano, mesNum - 1, 1))
+  const fim = new Date(Date.UTC(ano, mesNum, 0, 23, 59, 59, 999))
+
+  const execucoes = await prisma.execucaoExercicio.findMany({
+    where: {
+      treino: { aluno_id: alunoId },
+      registrado_em: { gte: inicio, lte: fim },
+    },
+    include: {
+      treino: { select: { id: true, nome: true } },
+      exercicio: { select: { id: true, nome: true, grupo_muscular: true } },
+    },
+    orderBy: { registrado_em: 'asc' },
+  })
+
+  const mapa: Record<string, Record<string, { nome: string; grupos: string[] }>> = {}
+
+  for (const exec of execucoes) {
+    const data = exec.registrado_em.toISOString().slice(0, 10)
+    if (!mapa[data]) mapa[data] = {}
+
+    const t = mapa[data]
+    if (!t[exec.treino.id]) {
+      t[exec.treino.id] = { nome: exec.treino.nome, grupos: [] }
+    }
+    if (exec.exercicio.grupo_muscular && !t[exec.treino.id].grupos.includes(exec.exercicio.grupo_muscular)) {
+      t[exec.treino.id].grupos.push(exec.exercicio.grupo_muscular)
+    }
+  }
+
+  return Object.entries(mapa).map(([data, treinos]) => ({
+    data,
+    treinos: Object.entries(treinos).map(([id, info]) => ({
+      id,
+      nome: info.nome,
+      grupos: info.grupos,
+    })),
+  }))
+}

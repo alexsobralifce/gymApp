@@ -4,6 +4,7 @@ import { Role, AcademiaStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
+import { historicoDiasTreino } from '../../../application/usecases/treino/TreinoService.js'
 
 function calcularIMC(pesoKg: number, alturaCm: number): number | null {
   if (!pesoKg || !alturaCm || alturaCm <= 0) return null
@@ -136,6 +137,14 @@ export async function alunoRoutes(app: FastifyInstance) {
       orderBy: { atualizado_em: 'desc' },
     })
     return reply.status(200).send(treinos)
+  })
+
+  /** GET /alunos/treinos/historico-dias — calendário de dias treinados no mês */
+  app.get('/treinos/historico-dias', { preHandler }, async (request, reply) => {
+    const { mes } = z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/) }).parse(request.query)
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const dias = await historicoDiasTreino(aluno.id, mes)
+    return reply.status(200).send(dias)
   })
 
   /** POST /alunos/medidas — UC-24 */

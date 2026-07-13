@@ -228,3 +228,14 @@ export interface VinculoPendente {
   professor: { usuario: { nome: string; email: string } }
   academia: { id: string; nome: string }
 }
+
+export interface DiaTreino {
+  id: string
+  nome: string
+  grupos: string[]
+}
+
+export interface HistoricoDia {
+  data: string
+  treinos: DiaTreino[]
+}
