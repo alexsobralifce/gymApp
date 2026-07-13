@@ -993,6 +993,16 @@ function translateName(name: string): string {
 }
 
 async function sync() {
+  // Verificar se já foi sincronizado
+  const existingCount = await prisma.exercicio.count({
+    where: { id: { startsWith: 'ds-' } }
+  })
+  
+  if (existingCount >= 1300) {
+    console.log(`Sync já executado anteriormente (${existingCount} exercícios encontrados). Pulando...`)
+    return
+  }
+  
   console.log('Limpando exercicios antigos...')
   const deleted = await prisma.exercicio.deleteMany({
     where: { id: { not: { startsWith: 'ds-' } } }
