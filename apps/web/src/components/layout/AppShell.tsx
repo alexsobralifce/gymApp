@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
@@ -24,16 +24,6 @@ function getInitials(nome: string): string {
   const parts = nome.trim().split(/\s+/)
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   return nome.slice(0, 2).toUpperCase()
-}
-
-function roleLabel(role: string): string {
-  const map: Record<string, string> = {
-    ROOT: 'Administrador',
-    ACADEMIA: 'Academia',
-    PROFESSOR: 'Professor',
-    ALUNO: 'Aluno',
-  }
-  return map[role] || role
 }
 
 function getNavItems(role: string): NavEntry[] {
@@ -138,6 +128,21 @@ export default function AppShell() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [menuOpen])
+
   const role = user?.role || 'ALUNO'
   const isAluno = role === 'ALUNO'
   const hideNav = location.pathname.includes('/execucao')
@@ -147,8 +152,16 @@ export default function AppShell() {
     `rounded px-3 py-2 text-sm ${isActive ? 'bg-surface-input text-text' : 'text-text-muted'}`
 
   function handleLogout() {
+    setMenuOpen(false)
     logout()
     navigate('/login')
+  }
+
+  function handleDados() {
+    setMenuOpen(false)
+    if (isAluno) {
+      navigate('/medidas')
+    }
   }
 
   return (
@@ -172,25 +185,45 @@ export default function AppShell() {
       <div className="flex flex-1 flex-col min-w-0">
         {/* Top bar — todas as telas */}
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-surface-input bg-surface px-4 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-              {user ? getInitials(user.nome) : '?'}
-            </div>
-            <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-semibold text-text">{user?.nome || 'Usuário'}</p>
-              <p className="truncate text-xs text-text-muted">{user?.email || ''}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="hidden rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted sm:inline-block">
-              {roleLabel(role)}
-            </span>
+          <span className="text-sm font-bold text-primary md:hidden">GymApp</span>
+          <span className="hidden md:block" />
+
+          <div className="relative" ref={menuRef}>
             <button
-              onClick={handleLogout}
-              className="rounded px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-surface-input hover:text-text transition-colors cursor-pointer"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-white hover:brightness-110 transition-all cursor-pointer"
             >
-              Sair
+              {user ? getInitials(user.nome) : '?'}
             </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-surface-input bg-surface-card shadow-xl z-30 overflow-hidden">
+                <div className="flex flex-col items-center gap-1 px-4 py-4 border-b border-surface-input">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                    {user ? getInitials(user.nome) : '?'}
+                  </div>
+                  <p className="text-sm font-semibold text-text text-center">{user?.nome || 'Usuário'}</p>
+                  <p className="text-xs text-text-muted text-center truncate max-w-full">{user?.email || ''}</p>
+                </div>
+
+                <div className="py-1">
+                  <button
+                    onClick={handleDados}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                  >
+                    <span className="text-base">👤</span>
+                    Dados do Aluno
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text-muted hover:bg-surface-input transition-colors cursor-pointer"
+                  >
+                    <span className="text-base">🚪</span>
+                    Sair
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </header>
 
