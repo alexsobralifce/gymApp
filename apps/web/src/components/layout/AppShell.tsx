@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
@@ -8,7 +9,18 @@ interface NavItem {
   end?: boolean
 }
 
-function getNavItems(role: string): NavItem[] {
+interface NavSection {
+  label: string
+  children: NavItem[]
+}
+
+type NavEntry = NavItem | NavSection
+
+function isSection(entry: NavEntry): entry is NavSection {
+  return 'children' in entry
+}
+
+function getNavItems(role: string): NavEntry[] {
   switch (role) {
     case 'ALUNO':
         return [
@@ -22,8 +34,13 @@ function getNavItems(role: string): NavItem[] {
     case 'PROFESSOR':
       return [
         { to: '/', label: 'Dashboard', end: true },
-        { to: '/treinos', label: 'Treino' },
-        { to: '/treinos/criar', label: 'Criar Treino' },
+        {
+          label: 'Treino',
+          children: [
+            { to: '/treinos', label: 'Listar Treinos' },
+            { to: '/treinos/criar', label: 'Criar Treino' },
+          ],
+        },
         { to: '/alunos/vincular', label: 'Vincular Aluno' },
         { to: '/fichas', label: 'Fichas' },
         { to: '/exercicios/criar', label: 'Exercícios' },
@@ -33,10 +50,15 @@ function getNavItems(role: string): NavItem[] {
     case 'ACADEMIA':
       return [
         { to: '/', label: 'Dashboard', end: true },
-        { to: '/treinos', label: 'Treino' },
+        {
+          label: 'Treino',
+          children: [
+            { to: '/treinos', label: 'Listar Treinos' },
+            { to: '/treinos/criar', label: 'Criar Treino' },
+          ],
+        },
         { to: '/professores', label: 'Professores' },
         { to: '/alunos', label: 'Alunos' },
-        { to: '/treinos/criar', label: 'Criar Treino' },
         { to: '/alterar-senha', label: 'Alterar Senha' },
       ]
     case 'ROOT':
@@ -57,6 +79,44 @@ const alunoBottomTabs = [
   { to: '/evolucao', label: 'Evolução', icon: '📈' },
 ]
 
+function NavSectionComponent({ section }: { section: NavSection }) {
+  const location = useLocation()
+  const isChildActive = section.children.some((c) =>
+    c.end ? location.pathname === c.to : location.pathname.startsWith(c.to)
+  )
+  const [open, setOpen] = useState(isChildActive)
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex w-full items-center justify-between rounded px-3 py-2 text-sm cursor-pointer ${
+          isChildActive ? 'text-text' : 'text-text-muted'
+        } hover:bg-surface-input`}
+      >
+        <span>{section.label}</span>
+        <span className={`text-xs transition-transform ${open ? 'rotate-90' : ''}`}>▶</span>
+      </button>
+      {open && (
+        <div className="ml-3 flex flex-col gap-1 border-l border-surface-input pl-2">
+          {section.children.map((child) => (
+            <NavLink
+              key={child.to}
+              to={child.to}
+              end={child.end}
+              className={({ isActive }: { isActive: boolean }) =>
+                `rounded px-3 py-1.5 text-sm ${isActive ? 'bg-surface-input text-text' : 'text-text-muted'}`
+              }
+            >
+              {child.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AppShell() {
   const logout = useAuthStore((s: AuthState) => s.logout)
   const user = useAuthStore((s: AuthState) => s.user)
@@ -76,11 +136,15 @@ export default function AppShell() {
       <aside className="hidden w-56 flex-col border-r border-surface-input p-4 md:flex">
         <h2 className="mb-6 text-lg font-bold text-primary">GymApp</h2>
         <nav className="flex flex-col gap-1">
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
-              {item.label}
-            </NavLink>
-          ))}
+          {navItems.map((entry, i) =>
+            isSection(entry) ? (
+              <NavSectionComponent key={i} section={entry} />
+            ) : (
+              <NavLink key={entry.to} to={entry.to} end={entry.end} className={linkClass}>
+                {entry.label}
+              </NavLink>
+            )
+          )}
         </nav>
         <div className="mt-auto">
           <button
