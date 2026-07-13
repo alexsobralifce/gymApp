@@ -408,4 +408,27 @@ export async function rootRoutes(app: FastifyInstance) {
       })
     }
   })
+
+  /** POST /root/fix-exercise-urls — corrige URLs de exercícios para relativas */
+  app.post('/fix-exercise-urls', { preHandler }, async (_request, reply) => {
+    try {
+      const result = await prisma.$executeRaw`
+        UPDATE exercicios 
+        SET imagem_url = REPLACE(imagem_url, 'http://localhost:3333', ''),
+            gif_url = REPLACE(gif_url, 'http://localhost:3333', '')
+        WHERE imagem_url LIKE 'http://localhost:3333%' 
+           OR gif_url LIKE 'http://localhost:3333%'
+      `
+      
+      return reply.status(200).send({
+        message: 'URLs corrigidas com sucesso!',
+        updated: result,
+      })
+    } catch (error: any) {
+      return reply.status(500).send({
+        message: 'Erro ao corrigir URLs',
+        error: error.message,
+      })
+    }
+  })
 }

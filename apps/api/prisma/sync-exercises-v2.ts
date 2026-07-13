@@ -1049,8 +1049,8 @@ async function sync() {
     await Promise.all(batch.map(async (ex) => {
       try {
         const nomePT = translateName(ex.name)
-        const imagemUrl = ex.image ? `${API_BASE_URL}/exercises/${ex.image}` : null
-        const gifUrl = ex.gif_url ? `${API_BASE_URL}/exercises/${ex.gif_url}` : null
+        const imagemUrl = ex.image ? `/exercises/${ex.image}` : null
+        const gifUrl = ex.gif_url ? `/exercises/${ex.gif_url}` : null
         const grupoMuscular = muscleGroupPT[ex.body_part?.toLowerCase()] || muscleGroupPT[ex.muscle_group?.toLowerCase()] || ex.body_part || ex.muscle_group || ''
         const equipamento = equipmentPT[ex.equipment?.toLowerCase()] || ex.equipment || 'Peso Corporal'
         const musculoAlvo = muscleGroupPT[ex.target?.toLowerCase()] || muscleGroupPT[ex.muscle_group?.toLowerCase()] || ex.target || ex.muscle_group || ''
