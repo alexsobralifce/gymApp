@@ -186,4 +186,95 @@ export async function treinoRoutes(app: FastifyInstance) {
 
     return reply.status(200).send(treino)
   })
+
+  /** PATCH /treinos/:id — Editar treino (nome, dias_semana, exercícios) */
+  app.patch('/:id', { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)] }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const body = z.object({
+      nome: z.string().min(2).optional(),
+      diasSemana: z.array(z.number().int().min(0).max(6)).min(1).optional(),
+      exercicios: z.array(z.object({
+        exercicioId: z.string(),
+        ordem: z.number().int().min(1),
+        series: z.number().int().min(1).default(3),
+        repeticoes: z.number().int().min(1).default(12),
+        cargaSugeridaKg: z.number().optional(),
+      })).min(1).optional(),
+    }).parse(request.body)
+
+    const treino = await prisma.treino.findUnique({
+      where: { id },
+      include: { aluno: { select: { professor_id: true, academia_id: true } } },
+    })
+    if (!treino) throw new NotFoundError('Treino')
+
+    const { sub, role, tenantId } = request.currentUser
+    if (role === Role.PROFESSOR) {
+      const professor = await resolveProfessor(sub)
+      if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
+    } else if (role === Role.ACADEMIA) {
+      if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      if (body.nome !== undefined || body.diasSemana !== undefined) {
+        await tx.treino.update({
+          where: { id },
+          data: {
+            ...(body.nome !== undefined && { nome: body.nome }),
+            ...(body.diasSemana !== undefined && { dias_semana: body.diasSemana }),
+          },
+        })
+      }
+
+      if (body.exercicios) {
+        await tx.treinoExercicio.deleteMany({ where: { treino_id: id } })
+        await tx.treinoExercicio.createMany({
+          data: body.exercicios.map((e) => ({
+            treino_id: id,
+            exercicio_id: e.exercicioId,
+            ordem: e.ordem,
+            series: e.series,
+            repeticoes: e.repeticoes,
+            carga_sugerida_kg: e.cargaSugeridaKg,
+          })),
+        })
+      }
+
+      return tx.treino.findUnique({
+        where: { id },
+        include: { exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } } },
+      })
+    })
+
+    return reply.status(200).send(updated)
+  })
+
+  /** DELETE /treinos/:id — Remove treino e dados relacionados */
+  app.delete('/:id', { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)] }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+
+    const treino = await prisma.treino.findUnique({
+      where: { id },
+      include: { aluno: { select: { professor_id: true, academia_id: true } } },
+    })
+    if (!treino) throw new NotFoundError('Treino')
+
+    const { sub, role, tenantId } = request.currentUser
+    if (role === Role.PROFESSOR) {
+      const professor = await resolveProfessor(sub)
+      if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
+    } else if (role === Role.ACADEMIA) {
+      if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
+    }
+
+    await prisma.$transaction([
+      prisma.execucaoExercicio.deleteMany({ where: { treino_id: id } }),
+      prisma.treinoHistorico.deleteMany({ where: { treino_id: id } }),
+      prisma.treinoExercicio.deleteMany({ where: { treino_id: id } }),
+      prisma.treino.delete({ where: { id } }),
+    ])
+
+    return reply.status(204).send()
+  })
 }

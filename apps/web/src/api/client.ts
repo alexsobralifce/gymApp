@@ -207,6 +207,14 @@ export const api = {
 
   enviarTreino: (id: string) => api.post<Treino>(`/treinos/${id}/enviar`),
 
+  updateTreino: (id: string, data: {
+    nome?: string
+    diasSemana?: number[]
+    exercicios?: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }>
+  }) => api.patch<Treino>(`/treinos/${id}`, data),
+
+  deleteTreino: (id: string) => api.delete(`/treinos/${id}`),
+
   responderTreino: (id: string, acao: 'ACEITAR' | 'RECUSAR') =>
     api.patch<Treino>(`/treinos/${id}/responder`, { acao }),
 

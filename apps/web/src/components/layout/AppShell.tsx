@@ -22,8 +22,9 @@ function getNavItems(role: string): NavItem[] {
     case 'PROFESSOR':
       return [
         { to: '/', label: 'Dashboard', end: true },
-        { to: '/alunos/vincular', label: 'Vincular Aluno' },
+        { to: '/treinos', label: 'Treino' },
         { to: '/treinos/criar', label: 'Criar Treino' },
+        { to: '/alunos/vincular', label: 'Vincular Aluno' },
         { to: '/fichas', label: 'Fichas' },
         { to: '/exercicios/criar', label: 'Exercícios' },
         { to: '/academias', label: 'Academias' },
@@ -32,6 +33,7 @@ function getNavItems(role: string): NavItem[] {
     case 'ACADEMIA':
       return [
         { to: '/', label: 'Dashboard', end: true },
+        { to: '/treinos', label: 'Treino' },
         { to: '/professores', label: 'Professores' },
         { to: '/alunos', label: 'Alunos' },
         { to: '/treinos/criar', label: 'Criar Treino' },

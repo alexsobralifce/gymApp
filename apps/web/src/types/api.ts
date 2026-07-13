@@ -153,14 +153,28 @@ export interface PerfilAluno {
 
 export interface ProfessorDashboard {
   id: string
-  usuario: { nome: string; email: string }
-  academia?: { nome: string } | null
+  usuario: { nome: string; email: string; telefone: string | null }
+  academia?: { nome: string; id: string } | null
   treinos: Array<{
     id: string
     nome: string
     status: TreinoStatus
+    dias_semana: number[]
     iniciado_em?: string | null
     finalizado_em?: string | null
+    atualizado_em: string
+  }>
+}
+
+export interface AlunoAcademia {
+  id: string
+  usuario: { nome: string; email: string; telefone: string | null }
+  professor?: { id: string; usuario: { nome: string } } | null
+  treinos: Array<{
+    id: string
+    nome: string
+    status: TreinoStatus
+    dias_semana: number[]
     atualizado_em: string
   }>
 }

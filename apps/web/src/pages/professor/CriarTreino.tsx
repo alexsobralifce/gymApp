@@ -266,7 +266,7 @@ export default function ProfessorCriarTreino() {
       })
 
       setFeedback(`${treinos.length} ficha(s) criada(s) com sucesso!`)
-      setTimeout(() => navigate('/'), 2000)
+      setTimeout(() => navigate('/treinos'), 2000)
     } catch (err) {
       console.error(err)
       setFeedback('Erro ao criar fichas.')

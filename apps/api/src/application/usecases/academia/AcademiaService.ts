@@ -167,12 +167,11 @@ export async function dashboardAlunosAcademia(academiaId: string) {
     where: { academia_id: academiaId },
     select: {
       id: true,
-      usuario: { select: { nome: true, email: true } },
+      usuario: { select: { nome: true, email: true, telefone: true } },
       professor: { select: { id: true, usuario: { select: { nome: true } } } },
       treinos: {
         orderBy: { atualizado_em: 'desc' },
-        take: 1,
-        select: { status: true, atualizado_em: true },
+        select: { id: true, nome: true, status: true, dias_semana: true, atualizado_em: true },
       },
     },
   })

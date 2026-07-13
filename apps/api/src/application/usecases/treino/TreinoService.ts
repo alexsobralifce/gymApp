@@ -242,15 +242,15 @@ export async function dashboardProfessor(professorId: string, academiaId?: strin
     where,
     select: {
       id: true,
-      usuario: { select: { nome: true, email: true } },
+      usuario: { select: { nome: true, email: true, telefone: true } },
       academia: { select: { nome: true, id: true } },
       treinos: {
         orderBy: { atualizado_em: 'desc' },
-        take: 5,
         select: {
           id: true,
           nome: true,
           status: true,
+          dias_semana: true,
           iniciado_em: true,
           finalizado_em: true,
           atualizado_em: true,

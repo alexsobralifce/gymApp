@@ -15,6 +15,7 @@ import AlunoEstudo from './pages/aluno/Estudo'
 import ProfessorDashboard from './pages/professor/Dashboard'
 import ProfessorAlunoCorrelacoes from './pages/professor/AlunoCorrelacoes'
 import ProfessorCriarTreino from './pages/professor/CriarTreino'
+import ProfessorTreinos from './pages/professor/Treinos'
 import ProfessorCriarExercicio from './pages/professor/CriarExercicio'
 import ProfessorAcademias from './pages/professor/Academias'
 import ProfessorVincularAluno from './pages/professor/VincularAluno'
@@ -26,6 +27,7 @@ import AcademiaDashboard from './pages/academia/Dashboard'
 import AcademiaProfessores from './pages/academia/Professores'
 import AcademiaAlunos from './pages/academia/Alunos'
 import AcademiaCriarTreino from './pages/academia/CriarTreinoAcademia'
+import AcademiaTreinos from './pages/academia/Treinos'
 import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
 import AlterarSenha from './pages/auth/AlterarSenha'
 
@@ -63,6 +65,7 @@ export default function App() {
       {user?.role === 'PROFESSOR' && (
         <Route element={<AppShell />}>
           <Route index element={<ProfessorDashboard />} />
+          <Route path="treinos" element={<ProfessorTreinos />} />
           <Route path="alunos/:alunoId/correlacoes" element={<ProfessorAlunoCorrelacoes />} />
           <Route path="treinos/criar" element={<ProfessorCriarTreino />} />
           <Route path="exercicios/criar" element={<ProfessorCriarExercicio />} />
@@ -86,6 +89,7 @@ export default function App() {
       {user?.role === 'ACADEMIA' && (
         <Route element={<AppShell />}>
           <Route index element={<AcademiaDashboard />} />
+          <Route path="treinos" element={<AcademiaTreinos />} />
           <Route path="professores" element={<AcademiaProfessores />} />
           <Route path="alunos" element={<AcademiaAlunos />} />
           <Route path="treinos/criar" element={<AcademiaCriarTreino />} />
