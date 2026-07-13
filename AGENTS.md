@@ -33,6 +33,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 `id (cuid), usuario_id (unique FK), professor_id? (FK), academia_id? (FK), data_nascimento? (DateTime), peso_kg? (Float), altura_cm? (Float), criado_em, atualizado_em`
 - `usuario` (FK), `professor?` (FK), `academia?` (FK), `treinos[]`, `medidas[]`, `mensagensEnviadas[]`, `correlacao?`
 - `professor_id = null` → modo autogestão
+- `academia_id = null` → aluno sem vínculo com academia (autogestão)
 
 ### ProfessorAcademia (`professor_academia`) — Vínculo M:N
 `id (cuid), professor_id (FK), academia_id (FK), status (VinculoStatus), criado_em, atualizado_em`
@@ -53,8 +54,8 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 ### ExecucaoExercicio
 `id (cuid), treino_id (FK), exercicio_id (FK), serie_numero, repeticoes, carga_kg, registrado_em`
 
-### MedidaCorporal
-`id (cuid), aluno_id (FK), peso_kg?, altura_cm?, percentual_bf?, massa_magra_kg?, data, observacao?`
+### MedidaCorporal (`medidas_corporais`)
+`id (cuid), aluno_id (FK), peso_kg?, altura_cm?, percentual_bf?, massa_magra_kg?, imc? (Float, calculado automaticamente), data, observacao?`
 
 ### CorrelacaoDesempenho
 `id (cuid), aluno_id (unique FK), dados (Json), calculado_em`
@@ -73,6 +74,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 - **UC-02** Configurar limite de professores
 - **UC-03** Aprovar vínculo professor-academia (2ª camada)
 - **UC-04** Painel global
+- **UC-04b** Gerenciar alunos (editar nome, email, telefone, data nascimento, peso, altura, academia, professor)
 
 ### Usuário Academia
 - **UC-05** Cadastrar academia (nome + CNPJ)
@@ -93,15 +95,15 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 - **UC-16** Correlações de desempenho
 
 ### Usuário Aluno
-- **UC-17** Cadastro (cria Usuario + Aluno via register)
+- **UC-17** Cadastro (cria Usuario + Aluno via register, com peso e altura obrigatórios, academia ou autogestão)
 - **UC-18** Autogestão de treinos
 - **UC-19** Aceitar/recusar treino do professor
 - **UC-20** Iniciar execução do treino
 - **UC-21** Ver instruções do exercício
 - **UC-22** Registrar execução por série
 - **UC-23** Finalizar treino
-- **UC-24** Registrar medidas corporais (peso, altura, %BF, massa magra) com cálculo automático do IMC
-- **UC-24b** Visualizar classificação IMC (OMS) com barra de escala e destaque da categoria atual do aluno
+- **UC-24** Registrar medidas corporais (peso, altura, %BF, massa magra) com cálculo automático do IMC e preenchimento automático do peso/altura do perfil
+- **UC-24b** Visualizar classificação IMC (OMS) com barra de escala colorida e destaque da categoria atual do aluno
 - **UC-25** Gráficos de evolução
 - **UC-26** Push notifications motivacionais
 - **UC-27** Ler resumos científicos
@@ -132,11 +134,12 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 ### Aluno (`/alunos`) — role ALUNO
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| POST | `/alunos/perfil` | Criar ou retornar perfil Aluno (body: dataNascimento?, pesoKg?, alturaCm?) |
+| POST | `/alunos/perfil` | Criar/atualizar perfil Aluno (body: dataNascimento?, pesoKg?, alturaCm?). Update parcial permitido. |
 | GET | `/alunos/perfil` | Perfil do aluno com professor e academia |
 | GET | `/alunos/treinos` | Listar treinos do aluno |
-| GET | `/alunos/medidas` | Listar medidas |
-| POST | `/alunos/medidas` | Registrar medida |
+| GET | `/alunos/medidas` | Listar medidas (auto-backfill do perfil se nenhuma existir) |
+| POST | `/alunos/medidas` | Registrar medida com cálculo automático de IMC |
+| PATCH | `/alunos/medidas/:id` | Editar medida existente (recalcula IMC) |
 | GET | `/alunos/correlacoes` | Correlações em cache |
 | POST | `/alunos/correlacoes` | Recalcular correlações |
 | PATCH | `/alunos/academia` | Vincular aluno a academia |
@@ -182,8 +185,8 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | POST | `/treinos/:id/execucoes` | Registrar execução | ALUNO |
 | POST | `/treinos/:id/finalizar` | Finalizar treino | ALUNO |
 | GET | `/treinos/:id` | Detalhe do treino | auth |
-| **PATCH** | `/treinos/:id` | Editar treino (nome, dias_semana, exercicios) | PROFESSOR/ACADEMIA |
-| **DELETE** | `/treinos/:id` | Remover treino + execuções + histórico | PROFESSOR/ACADEMIA |
+| PATCH | `/treinos/:id` | Editar treino (nome, dias_semana, exercicios) | PROFESSOR/ACADEMIA |
+| DELETE | `/treinos/:id` | Remover treino + execuções + histórico | PROFESSOR/ACADEMIA |
 
 ### Root (`/root`) — role ROOT
 | Método | Rota | Descrição |
@@ -196,6 +199,9 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | PATCH | `/root/vinculos/:id/aprovacao` | Aprovar/rejeitar vínculo |
 | GET | `/root/usuarios` | Listar usuários |
 | POST | `/root/usuarios/:id/reset-password` | Resetar senha |
+| GET | `/root/alunos` | Listar todos os alunos (inclui telefone, data_nascimento, peso_kg, altura_cm) |
+| PUT | `/root/alunos/:id` | Atualizar aluno (nome, email, telefone, data_nascimento, peso_kg, altura_cm, academia_id, professor_id) |
+| DELETE | `/root/alunos/:id` | Excluir aluno e todos os dados relacionados (cascade) |
 
 ---
 
@@ -215,19 +221,37 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 1. **API Client**: Centralizado em `src/api/client.ts` — objeto `api` com métodos nomeados, auto-refresh em 401
 2. **Estado**: Zustand stores em `src/stores/`
 3. **Tipos**: `src/types/api.ts` — interfaces para todas as respostas da API
-4. **Layout**: `AppShell.tsx` — sidebar desktop + navbar mobile por role, com seções colapsáveis (ex: Treino)
-5. **Estilos**: TailwindCSS v4 com design system (cores: surface, surface-card, surface-input, primary, text, text-muted, success)
-6. **Navegação**: React Router v7 com rotas aninhadas por role
-7. **Confirmação**: Use `ConfirmModal` para ações destrutivas (delete)
-8. **Toast**: Use `useToast()` hook para feedback de sucesso/erro
-9. **Phone mask**: Use `formatPhone()` helper (mascara (XX) XXXXX-XXXX)
+4. **Layout**: `AppShell.tsx` — sidebar desktop com seções colapsáveis + barra superior com avatar dropdown (Dados do Aluno + Sair) + bottom tabs mobile para ALUNO
+5. **Avatar dropdown**: Avatar no canto direito da barra superior com menu contendo nome, email, "Dados do Aluno" e "Sair". Fecha ao clicar fora.
+6. **Estilos**: TailwindCSS v4 com design system (cores: surface, surface-card, surface-input, primary, text, text-muted, success)
+7. **Navegação**: React Router v7 com rotas aninhadas por role
+8. **Confirmação**: Use `ConfirmModal` para ações destrutivas (delete)
+9. **Toast**: Use `useToast()` hook para feedback de sucesso/erro
+10. **Phone mask**: Use `formatPhone()` de `src/lib/phone.ts` (máscara (XX) XXXXX-XXXX). Aplicar em todo input de telefone.
+11. **Utilitários compartilhados**: `src/lib/` — helpers reutilizáveis (ex: formatPhone)
 
 ### Registro de Usuário (Fluxo)
 1. `POST /auth/register` → cria Usuario (base)
 2. `POST /auth/login` → obtém tokens
-3. Se role=ALUNO: `POST /alunos/perfil` com dados opcionais (dataNascimento, pesoKg, alturaCm)
+3. Se role=ALUNO:
+   - `POST /alunos/perfil` com **pesoKg e alturaCm obrigatórios** + dataNascimento opcional
+   - Se `academiaId` !== `'AUTOGESTAO'`: `PATCH /alunos/academia` para vincular à academia
+   - Opções de academia no cadastro: lista de academias ativas + "Autogestão (sem academia)"
 4. Se role=PROFESSOR: `POST /professores/perfil`
 5. Se role=ACADEMIA: usuário cadastra academia via formulário separado
+
+### IMC (Índice de Massa Corporal)
+- Cálculo automático no backend sempre que peso e altura são fornecidos: `imc = peso / (altura/100)²`
+- Classificação OMS exibida no frontend com 6 faixas:
+  - Abaixo do peso: < 18.5 (azul)
+  - Peso normal: 18.5 – 24.9 (verde)
+  - Sobrepeso: 25 – 29.9 (amarelo)
+  - Obesidade grau I: 30 – 34.9 (laranja)
+  - Obesidade grau II: 35 – 39.9 (vermelho)
+  - Obesidade grau III: ≥ 40 (vermelho escuro)
+- Barra de escala visual com indicador da posição atual do aluno
+- Badges coloridos por categoria em cada registro da tabela de medidas
+- Card de resumo exibindo IMC, peso, altura e classificação atual
 
 ---
 
