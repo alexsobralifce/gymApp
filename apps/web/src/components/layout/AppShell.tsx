@@ -20,6 +20,22 @@ function isSection(entry: NavEntry): entry is NavSection {
   return 'children' in entry
 }
 
+function getInitials(nome: string): string {
+  const parts = nome.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  return nome.slice(0, 2).toUpperCase()
+}
+
+function roleLabel(role: string): string {
+  const map: Record<string, string> = {
+    ROOT: 'Administrador',
+    ACADEMIA: 'Academia',
+    PROFESSOR: 'Professor',
+    ALUNO: 'Aluno',
+  }
+  return map[role] || role
+}
+
 function getNavItems(role: string): NavEntry[] {
   switch (role) {
     case 'ALUNO':
@@ -130,9 +146,15 @@ export default function AppShell() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `rounded px-3 py-2 text-sm ${isActive ? 'bg-surface-input text-text' : 'text-text-muted'}`
 
+  function handleLogout() {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <div className="flex min-h-screen bg-surface">
-      <aside className="hidden w-56 flex-col border-r border-surface-input p-4 md:flex">
+      {/* Sidebar — desktop */}
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-surface-input p-4 md:flex">
         <h2 className="mb-6 text-lg font-bold text-primary">GymApp</h2>
         <nav className="flex flex-col gap-1">
           {navItems.map((entry, i) =>
@@ -145,39 +167,40 @@ export default function AppShell() {
             )
           )}
         </nav>
-        <div className="mt-auto">
-          <button
-            onClick={() => {
-              logout()
-              navigate('/login')
-            }}
-            className="w-full rounded px-3 py-2 text-left text-sm text-text-muted hover:bg-surface-input"
-          >
-            Sair
-          </button>
-        </div>
       </aside>
 
-      <main className="flex-1">
-        {!isAluno && (
-          <div className="sticky top-0 z-10 flex h-12 items-center justify-between border-b border-surface-input bg-surface px-4 md:hidden">
-            <h2 className="font-bold text-primary">GymApp</h2>
+      <div className="flex flex-1 flex-col min-w-0">
+        {/* Top bar — todas as telas */}
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-surface-input bg-surface px-4 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+              {user ? getInitials(user.nome) : '?'}
+            </div>
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-sm font-semibold text-text">{user?.nome || 'Usuário'}</p>
+              <p className="truncate text-xs text-text-muted">{user?.email || ''}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="hidden rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted sm:inline-block">
+              {roleLabel(role)}
+            </span>
             <button
-              onClick={() => {
-                logout()
-                navigate('/login')
-              }}
-              className="text-sm text-text-muted"
+              onClick={handleLogout}
+              className="rounded px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-surface-input hover:text-text transition-colors cursor-pointer"
             >
               Sair
             </button>
           </div>
-        )}
+        </header>
 
-        <Outlet />
+        <main className="flex-1 pb-14 md:pb-0">
+          <Outlet />
+        </main>
 
+        {/* Bottom tabs — mobile ALUNO */}
         {isAluno && !hideNav && (
-          <nav className="fixed bottom-0 left-0 right-0 flex h-14 items-center justify-around border-t border-surface-input bg-surface-card md:hidden">
+          <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-14 items-center justify-around border-t border-surface-input bg-surface-card md:hidden">
             {alunoBottomTabs.map((t) => (
               <NavLink
                 key={t.to}
@@ -193,7 +216,7 @@ export default function AppShell() {
             ))}
           </nav>
         )}
-      </main>
+      </div>
     </div>
   )
 }
