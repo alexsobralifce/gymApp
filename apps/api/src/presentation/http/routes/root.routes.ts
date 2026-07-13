@@ -390,7 +390,7 @@ export async function rootRoutes(app: FastifyInstance) {
   app.post('/sync-exercises', { preHandler }, async (_request, reply) => {
     try {
       const { stdout, stderr } = await execAsync('npx tsx prisma/sync-exercises-v2.ts', {
-        cwd: process.cwd(),
+        cwd: '/app/apps/api',
         timeout: 300000,
       })
       
