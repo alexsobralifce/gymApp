@@ -42,6 +42,11 @@ const TRANSICOES: TransicaoConfig[] = [
     para: [TreinoStatus.CONCLUIDO],
     atoresPermitidos: [TreinoAtor.ALUNO],
   },
+  {
+    de: TreinoStatus.CONCLUIDO,
+    para: [TreinoStatus.ACEITO],
+    atoresPermitidos: [TreinoAtor.SISTEMA],
+  },
 ]
 
 // ─── Funções públicas da state machine ───────────────────────────────────────

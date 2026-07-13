@@ -15,7 +15,7 @@ export default function AlunoMeusTreinos() {
     try {
       const data = await api.getAlunoTreinos()
       const disponiveis = data.filter(
-        (t) => t.status === 'ENVIADO' || t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO' || t.status === 'CADASTRADO'
+        (t) => t.status === 'ENVIADO' || t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO' || t.status === 'CADASTRADO' || t.status === 'CONCLUIDO'
       )
       setTreinos(disponiveis)
     } catch (err) {
@@ -118,9 +118,11 @@ export default function AlunoMeusTreinos() {
               ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
               : treino.status === 'CADASTRADO'
               ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+              : treino.status === 'CONCLUIDO'
+              ? 'bg-green-500/10 border-green-500/20 text-green-400'
               : 'bg-primary/10 border-primary/20 text-primary'
           }`}>
-            {treino.status === 'ENVIADO' ? 'Pendente' : treino.status === 'CADASTRADO' ? 'Em preparação' : 'Ativo'}
+            {treino.status === 'ENVIADO' ? 'Pendente' : treino.status === 'CADASTRADO' ? 'Em preparação' : treino.status === 'CONCLUIDO' ? 'Concluído' : 'Ativo'}
           </span>
         </div>
 
@@ -198,7 +200,7 @@ export default function AlunoMeusTreinos() {
             onClick={() => navigate(`/treino/${treino.id}/inicio`)}
             className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            Iniciar Ficha de Treino
+            {treino.status === 'CONCLUIDO' ? 'Fazer Novamente' : 'Iniciar Ficha de Treino'}
           </button>
         )}
       </div>

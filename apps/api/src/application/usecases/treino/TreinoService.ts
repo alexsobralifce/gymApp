@@ -215,7 +215,7 @@ export async function finalizarTreino(treinoId: string, alunoId: string) {
   assertTransicaoValida(treino.status, TreinoStatus.CONCLUIDO, TreinoAtor.ALUNO)
 
   return prisma.$transaction(async (tx) => {
-    const atualizado = await tx.treino.update({
+    await tx.treino.update({
       where: { id: treinoId },
       data: { status: TreinoStatus.CONCLUIDO, finalizado_em: new Date() },
     })
@@ -228,7 +228,25 @@ export async function finalizarTreino(treinoId: string, alunoId: string) {
         ator_tipo: TreinoAtor.ALUNO,
       },
     })
-    return atualizado
+
+    await tx.treino.update({
+      where: { id: treinoId },
+      data: { status: TreinoStatus.ACEITO, iniciado_em: null, finalizado_em: null },
+    })
+    await tx.treinoHistorico.create({
+      data: {
+        treino_id: treinoId,
+        status_anterior: TreinoStatus.CONCLUIDO,
+        status_novo: TreinoStatus.ACEITO,
+        ator_id: 'SISTEMA',
+        ator_tipo: TreinoAtor.SISTEMA,
+      },
+    })
+
+    return tx.treino.findUnique({
+      where: { id: treinoId },
+      include: { exercicios: { include: { exercicio: true } } },
+    })
   })
 }
 

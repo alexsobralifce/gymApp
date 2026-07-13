@@ -59,6 +59,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
   | `ACEITO` | `EM_EXECUCAO`, `EM_ABERTO` | `ALUNO`, `SISTEMA` |
   | `EM_ABERTO` | `EM_EXECUCAO` | `ALUNO` |
   | `EM_EXECUCAO` | `CONCLUIDO` | `ALUNO` |
+  | `CONCLUIDO` | `ACEITO` | `SISTEMA` |
 - Toda transição inválida lança `InvalidStateTransitionError`
 - `exercicios[]` (TreinoExercicio), `historico[]`, `execucoes[]`
 
