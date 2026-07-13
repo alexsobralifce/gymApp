@@ -13,6 +13,29 @@ import {
 export async function academiaRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ACADEMIA)]
 
+  /** GET /academias/dashboard — dados da academia logada */
+  app.get('/dashboard', { preHandler }, async (request, reply) => {
+    const academiaId = request.currentUser.tenantId!
+    const academia = await prisma.academia.findUnique({
+      where: { id: academiaId },
+      select: { nome: true, cnpj: true, status: true },
+    })
+    if (!academia) throw new NotFoundError('Academia')
+
+    const [totalProfessores, totalAlunos] = await Promise.all([
+      prisma.professorAcademia.count({ where: { academia_id: academiaId, status: 'ATIVO' } }),
+      prisma.aluno.count({ where: { academia_id: academiaId } }),
+    ])
+
+    return reply.status(200).send({
+      nome: academia.nome,
+      cnpj: academia.cnpj,
+      status: academia.status,
+      totalProfessores,
+      totalAlunos,
+    })
+  })
+
   /** GET /academias — lista academias ativas (público) */
   app.get('/', async (_request, reply) => {
     const academias = await prisma.academia.findMany({

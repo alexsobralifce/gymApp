@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard } from '../types/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -244,6 +244,9 @@ export const api = {
   deleteRootAluno: (id: string) => api.delete(`/root/alunos/${id}`),
 
   // ─── Academia ──────────────────────────────────────
+  getDashboardAcademia: () =>
+    api.get<AcademiaDashboard>('/academias/dashboard'),
+
   cadastrarAcademia: (data: { nome: string; cnpj: string }) =>
     api.post<Academia>('/academias', data),
 

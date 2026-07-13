@@ -124,6 +124,14 @@ export interface Academia {
   status: string
 }
 
+export interface AcademiaDashboard {
+  nome: string
+  cnpj: string
+  status: string
+  totalProfessores: number
+  totalAlunos: number
+}
+
 export interface Aluno {
   id: string
   usuario_id: string

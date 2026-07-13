@@ -1,11 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
+import type { AcademiaDashboard as AcademiaDashboardType } from '../../types/api'
+
+function formatCNPJ(value: string) {
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+    .substring(0, 18)
+}
 
 export default function AcademiaDashboard() {
+  const [data, setData] = useState<AcademiaDashboardType | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [cadastrada, setCadastrada] = useState(false)
+
+  // cadastro
   const [nome, setNome] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
-  const [cadastrada, setCadastrada] = useState(false)
+
+  useEffect(() => {
+    api.getDashboardAcademia()
+      .then((d) => {
+        setData(d)
+        setCadastrada(true)
+      })
+      .catch(() => { /* academia ainda não cadastrada */ })
+      .finally(() => setLoading(false))
+  }, [])
 
   async function handleCadastrar(e: React.FormEvent) {
     e.preventDefault()
@@ -13,24 +38,42 @@ export default function AcademiaDashboard() {
       const a = await api.cadastrarAcademia({ nome, cnpj: cnpj.replace(/\D/g, '') })
       setFeedback(`Academia "${a.nome}" cadastrada! Aguardando aprovação do Root.`)
       setCadastrada(true)
+      setData({ nome: a.nome, cnpj: a.cnpj, status: a.status, totalProfessores: 0, totalAlunos: 0 })
     } catch (err: any) {
       setFeedback(err.message || 'Erro ao cadastrar. Verifique o CNPJ (14 dígitos).')
     }
   }
 
-  const formatCNPJ = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{2})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1/$2')
-      .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+  if (loading) {
+    return <div className="p-4 md:p-6 text-text-muted">Carregando...</div>
   }
 
-  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCnpj(formatCNPJ(e.target.value))
+  // ─── Dashboard ──────────────────────────────────────
+  if (data) {
+    return (
+      <div className="p-4 md:p-6 max-w-2xl space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-text">{data.nome}</h1>
+          <p className="text-sm text-text-muted mt-1">
+            CNPJ: {formatCNPJ(data.cnpj)} · Status: <span className={`font-semibold ${data.status === 'ATIVO' ? 'text-green-400' : 'text-yellow-400'}`}>{data.status}</span>
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
+            <p className="text-sm text-text-muted font-semibold uppercase tracking-wider">Professores</p>
+            <p className="text-3xl font-bold text-text mt-1">{data.totalProfessores}</p>
+          </div>
+          <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
+            <p className="text-sm text-text-muted font-semibold uppercase tracking-wider">Alunos</p>
+            <p className="text-3xl font-bold text-text mt-1">{data.totalAlunos}</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
+  // ─── Cadastro ───────────────────────────────────────
   return (
     <div className="p-4 md:p-6 max-w-md">
       <h1 className="mb-6 text-xl font-bold text-text">Cadastrar Academia</h1>
@@ -49,7 +92,7 @@ export default function AcademiaDashboard() {
         </div>
         <div>
           <label className="block text-xs text-text-muted mb-1">CNPJ</label>
-          <input type="text" placeholder="00.000.000/0000-00" value={cnpj} onChange={handleCnpjChange}
+          <input type="text" placeholder="00.000.000/0000-00" value={cnpj} onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
             className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" required maxLength={18} />
         </div>
         <button type="submit" disabled={!nome || cnpj.replace(/\D/g, '').length !== 14}
