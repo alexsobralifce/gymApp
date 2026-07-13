@@ -22,9 +22,10 @@ export async function academiaRoutes(app: FastifyInstance) {
     })
     if (!academia) throw new NotFoundError('Academia')
 
-    const [totalProfessores, totalAlunos] = await Promise.all([
+    const [totalProfessores, totalAlunos, professoresPendentes] = await Promise.all([
       prisma.professorAcademia.count({ where: { academia_id: academiaId, status: 'ATIVO' } }),
       prisma.aluno.count({ where: { academia_id: academiaId } }),
+      prisma.professorAcademia.count({ where: { academia_id: academiaId, status: 'PENDENTE_ACADEMIA' } }),
     ])
 
     return reply.status(200).send({
@@ -33,6 +34,7 @@ export async function academiaRoutes(app: FastifyInstance) {
       status: academia.status,
       totalProfessores,
       totalAlunos,
+      professoresPendentes,
     })
   })
 
@@ -81,27 +83,27 @@ export async function academiaRoutes(app: FastifyInstance) {
     return reply.status(200).send(alunos)
   })
 
-  /** GET /academias/professores — Retorna todos os professores ativos da academia logada */
+  /** GET /academias/professores — Retorna todos os professores vinculados à academia logada */
   app.get('/professores', { preHandler }, async (request, reply) => {
     const academiaId = request.currentUser.tenantId!
     const professorLinks = await prisma.professorAcademia.findMany({
-      where: {
-        academia_id: academiaId,
-        status: 'ATIVO',
-      },
+      where: { academia_id: academiaId },
       include: {
         professor: {
           include: {
-            usuario: { select: { nome: true } },
+            usuario: { select: { nome: true, email: true } },
           },
         },
       },
-      orderBy: { professor: { usuario: { nome: 'asc' } } },
+      orderBy: [{ status: 'asc' }, { professor: { usuario: { nome: 'asc' } } }],
     })
 
     const professores = professorLinks.map((link) => ({
       id: link.professor.id,
       nome: link.professor.usuario.nome,
+      email: link.professor.usuario.email,
+      status: link.status,
+      vinculoId: link.id,
     }))
 
     return reply.status(200).send(professores)

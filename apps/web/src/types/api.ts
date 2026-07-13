@@ -130,6 +130,7 @@ export interface AcademiaDashboard {
   status: string
   totalProfessores: number
   totalAlunos: number
+  professoresPendentes: number
 }
 
 export interface Aluno {

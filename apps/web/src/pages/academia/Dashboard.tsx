@@ -38,7 +38,7 @@ export default function AcademiaDashboard() {
       const a = await api.cadastrarAcademia({ nome, cnpj: cnpj.replace(/\D/g, '') })
       setFeedback(`Academia "${a.nome}" cadastrada! Aguardando aprovação do Root.`)
       setCadastrada(true)
-      setData({ nome: a.nome, cnpj: a.cnpj, status: a.status, totalProfessores: 0, totalAlunos: 0 })
+      setData({ nome: a.nome, cnpj: a.cnpj, status: a.status, totalProfessores: 0, totalAlunos: 0, professoresPendentes: 0 })
     } catch (err: any) {
       setFeedback(err.message || 'Erro ao cadastrar. Verifique o CNPJ (14 dígitos).')
     }
@@ -63,6 +63,9 @@ export default function AcademiaDashboard() {
           <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
             <p className="text-sm text-text-muted font-semibold uppercase tracking-wider">Professores</p>
             <p className="text-3xl font-bold text-text mt-1">{data.totalProfessores}</p>
+            {data.professoresPendentes > 0 && (
+              <p className="text-xs text-yellow-400 font-semibold mt-1">{data.professoresPendentes} pendente{data.professoresPendentes > 1 ? 's' : ''} de aprovação</p>
+            )}
           </div>
           <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
             <p className="text-sm text-text-muted font-semibold uppercase tracking-wider">Alunos</p>
