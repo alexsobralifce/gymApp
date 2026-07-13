@@ -33,25 +33,28 @@ export async function alunoRoutes(app: FastifyInstance) {
     const existente = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
 
     if (existente) {
-      if (body.pesoKg && body.alturaCm) {
-        await prisma.aluno.update({
-          where: { id: existente.id },
-          data: {
-            data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : undefined,
-            peso_kg: body.pesoKg,
-            altura_cm: body.alturaCm,
-          },
-        })
+      const pesoAtualizado = body.pesoKg !== undefined ? body.pesoKg : existente.peso_kg
+      const alturaAtualizada = body.alturaCm !== undefined ? body.alturaCm : existente.altura_cm
 
+      await prisma.aluno.update({
+        where: { id: existente.id },
+        data: {
+          data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : undefined,
+          peso_kg: body.pesoKg !== undefined ? body.pesoKg : undefined,
+          altura_cm: body.alturaCm !== undefined ? body.alturaCm : undefined,
+        },
+      })
+
+      if (pesoAtualizado && alturaAtualizada) {
         const temMedida = await prisma.medidaCorporal.findFirst({
           where: { aluno_id: existente.id },
         })
 
         if (!temMedida) {
-          const imc = calcularIMC(body.pesoKg, body.alturaCm)
+          const imc = calcularIMC(pesoAtualizado, alturaAtualizada)
           try {
             await prisma.medidaCorporal.create({
-              data: { aluno_id: existente.id, peso_kg: body.pesoKg, altura_cm: body.alturaCm, imc },
+              data: { aluno_id: existente.id, peso_kg: pesoAtualizado, altura_cm: alturaAtualizada, imc },
             })
           } catch (err) {
             request.log.error(err, 'Falha ao criar MedidaCorporal no backfill do perfil')
@@ -59,7 +62,15 @@ export async function alunoRoutes(app: FastifyInstance) {
         }
       }
 
-      return reply.status(200).send(existente)
+      const atualizado = await prisma.aluno.findUniqueOrThrow({
+        where: { id: existente.id },
+        include: {
+          professor: { select: { usuario: { select: { nome: true, email: true, telefone: true } } } },
+          academia: { select: { nome: true } },
+        },
+      })
+
+      return reply.status(200).send(atualizado)
     }
 
     const imc = body.pesoKg && body.alturaCm ? calcularIMC(body.pesoKg, body.alturaCm) : null

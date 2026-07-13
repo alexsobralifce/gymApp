@@ -95,6 +95,7 @@ export default function Register() {
                 <input
                   type="number" step="0.1" min="0" placeholder="70.5" value={peso} onChange={(e) => setPeso(e.target.value)}
                   className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+                  required
                 />
               </div>
               <div className="flex-1">
@@ -102,6 +103,7 @@ export default function Register() {
                 <input
                   type="number" step="1" min="0" placeholder="175" value={altura} onChange={(e) => setAltura(e.target.value)}
                   className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+                  required
                 />
               </div>
             </div>
