@@ -2,8 +2,11 @@ import fastify, { FastifyInstance } from 'fastify'
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyJwt from '@fastify/jwt'
+import fastifyStatic from '@fastify/static'
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { env } from './shared/env.js'
 
 // Routes
@@ -43,6 +46,16 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(fastifyCors, {
     origin: env.NODE_ENV === 'development' ? true : origins,
     credentials: true,
+  })
+
+  // ─── Static Files (Exercise Assets) ─────────────────────────────────────
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = path.dirname(__filename)
+  const publicPath = path.join(__dirname, '..', 'public')
+  await app.register(fastifyStatic, {
+    root: publicPath,
+    prefix: '/',
+    decorateReply: false,
   })
 
   // ─── JWT ────────────────────────────────────────────────────────────────

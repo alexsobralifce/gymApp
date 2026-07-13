@@ -151,8 +151,12 @@ export async function professorRoutes(app: FastifyInstance) {
           name: ex.nome,
           bodyPart: ex.grupo_muscular,
           equipment: ex.equipamento,
-          gifUrl: ex.imagem_url, // 0.jpg
-          instructions: ex.dica ? ex.dica.split('\n') : []
+          gifUrl: ex.gif_url || ex.imagem_url,
+          imageUrl: ex.imagem_url,
+          musculoAlvo: ex.musculo_alvo,
+          musculosSecundarios: ex.musculos_secundarios,
+          instructions: ex.passos_pt?.length ? ex.passos_pt : (ex.dica ? ex.dica.split('\n') : []),
+          descricao: ex.descricao_pt || ex.dica || '',
         }))
       })
     } catch (error) {
@@ -193,7 +197,22 @@ export async function professorRoutes(app: FastifyInstance) {
       orderBy: { nome: 'asc' },
     })
 
-    return reply.status(200).send(exercicios)
+    return reply.status(200).send(
+      exercicios.map((ex) => ({
+        id: ex.id,
+        nome: ex.nome,
+        grupo_muscular: ex.grupo_muscular,
+        equipamento: ex.equipamento,
+        nivel: ex.nivel,
+        imagem_url: ex.imagem_url,
+        gif_url: ex.gif_url,
+        musculo_alvo: ex.musculo_alvo,
+        musculos_secundarios: ex.musculos_secundarios,
+        passos_pt: ex.passos_pt,
+        descricao_pt: ex.descricao_pt,
+        dica: ex.dica,
+      }))
+    )
   })
 
   /** POST /professores/fichas — cria múltiplas fichas de treino (A/B/C) para um aluno */
