@@ -993,6 +993,12 @@ function translateName(name: string): string {
 }
 
 async function sync() {
+  console.log('Limpando exercicios antigos...')
+  const deleted = await prisma.exercicio.deleteMany({
+    where: { id: { not: { startsWith: 'ds-' } } }
+  })
+  console.log(`${deleted.count} exercicios antigos removidos.`)
+
   const dataPath = findDatasetPath()
   console.log(`Carregando dataset: ${dataPath}`)
   const exercises: any[] = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
