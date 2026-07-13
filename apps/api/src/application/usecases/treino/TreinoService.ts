@@ -162,6 +162,10 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
   if (!treino) throw new NotFoundError('Treino')
   if (treino.aluno_id !== alunoId) throw new TenantAccessError()
 
+  if (treino.status === TreinoStatus.EM_EXECUCAO) {
+    return treino
+  }
+
   if (treino.status === TreinoStatus.CONCLUIDO) {
     assertTransicaoValida(treino.status, TreinoStatus.ACEITO, TreinoAtor.SISTEMA)
   }
