@@ -18,12 +18,6 @@ const GRUPOS_MUSCULARES = [
   { value: 'Pescoco', label: 'Pescoço' }
 ]
 
-const NIVEIS = [
-  { value: 'Iniciante', label: 'Iniciante' },
-  { value: 'Intermediário', label: 'Intermediário' },
-  { value: 'Avançado', label: 'Avançado' }
-]
-
 const EQUIPAMENTOS = [
   { value: 'Barra', label: 'Barra' },
   { value: 'Halteres', label: 'Halteres' },
@@ -84,11 +78,6 @@ function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void })
                 {ex.grupo_muscular}
               </span>
             )}
-            {ex.nivel && (
-              <span className="text-[9px] text-text-muted font-semibold bg-surface-input px-1.5 py-0.5 rounded border border-surface-input uppercase">
-                {ex.nivel}
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -123,7 +112,6 @@ export default function AcademiaCriarTreino() {
 
   // Filtros de busca
   const [filtroGrupo, setFiltroGrupo] = useState('')
-  const [filtroNivel, setFiltroNivel] = useState('')
   const [filtroEquip, setFiltroEquip] = useState('')
   const [busca, setBusca] = useState('')
 
@@ -146,7 +134,6 @@ export default function AcademiaCriarTreino() {
     if (loading) return
     api.getExercicios({
       grupo_muscular: filtroGrupo || undefined,
-      nivel: filtroNivel || undefined,
       equipamento: filtroEquip || undefined,
       busca: busca || undefined
     })
@@ -154,7 +141,7 @@ export default function AcademiaCriarTreino() {
         setExercicios(data)
       })
       .catch((err) => console.error(err))
-  }, [filtroGrupo, filtroNivel, filtroEquip, busca, loading])
+  }, [filtroGrupo, filtroEquip, busca, loading])
 
   function adicionarFicha() {
     const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -408,11 +395,6 @@ export default function AcademiaCriarTreino() {
                                     {exData.grupo_muscular}
                                   </span>
                                 )}
-                                {exData?.nivel && (
-                                  <span className="rounded bg-surface-input px-1.5 py-0.5 text-[10px] font-bold text-text-muted uppercase">
-                                    {exData.nivel}
-                                  </span>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -523,17 +505,6 @@ export default function AcademiaCriarTreino() {
                   <option value="">Todos Músculos</option>
                   {GRUPOS_MUSCULARES.map((g) => (
                     <option key={g.value} value={g.value}>{g.label}</option>
-                  ))}
-                </select>
-
-                <select
-                  value={filtroNivel}
-                  onChange={(e) => setFiltroNivel(e.target.value)}
-                  className="rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:outline-none"
-                >
-                  <option value="">Todos Níveis</option>
-                  {NIVEIS.map((n) => (
-                    <option key={n.value} value={n.value}>{n.label}</option>
                   ))}
                 </select>
               </div>
