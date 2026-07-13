@@ -162,9 +162,33 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
   if (!treino) throw new NotFoundError('Treino')
   if (treino.aluno_id !== alunoId) throw new TenantAccessError()
 
-  assertTransicaoValida(treino.status, TreinoStatus.EM_EXECUCAO, TreinoAtor.ALUNO)
+  if (treino.status === TreinoStatus.CONCLUIDO) {
+    assertTransicaoValida(treino.status, TreinoStatus.ACEITO, TreinoAtor.SISTEMA)
+  }
+
+  assertTransicaoValida(
+    treino.status === TreinoStatus.CONCLUIDO ? TreinoStatus.ACEITO : treino.status,
+    TreinoStatus.EM_EXECUCAO,
+    TreinoAtor.ALUNO,
+  )
 
   return prisma.$transaction(async (tx) => {
+    if (treino.status === TreinoStatus.CONCLUIDO) {
+      await tx.treino.update({
+        where: { id: treinoId },
+        data: { status: TreinoStatus.ACEITO, iniciado_em: null, finalizado_em: null },
+      })
+      await tx.treinoHistorico.create({
+        data: {
+          treino_id: treinoId,
+          status_anterior: TreinoStatus.CONCLUIDO,
+          status_novo: TreinoStatus.ACEITO,
+          ator_id: 'SISTEMA',
+          ator_tipo: TreinoAtor.SISTEMA,
+        },
+      })
+    }
+
     const atualizado = await tx.treino.update({
       where: { id: treinoId },
       data: { status: TreinoStatus.EM_EXECUCAO, iniciado_em: new Date() },
@@ -172,7 +196,7 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
     await tx.treinoHistorico.create({
       data: {
         treino_id: treinoId,
-        status_anterior: treino.status,
+        status_anterior: treino.status === TreinoStatus.CONCLUIDO ? TreinoStatus.ACEITO : treino.status,
         status_novo: TreinoStatus.EM_EXECUCAO,
         ator_id: alunoId,
         ator_tipo: TreinoAtor.ALUNO,

@@ -46,8 +46,47 @@ async function migrarTreinosCadastrados() {
   }
 }
 
+async function migrarTreinosConcluidos() {
+  const prisma = new PrismaClient()
+  try {
+    const concluidos = await prisma.treino.findMany({
+      where: { status: TreinoStatus.CONCLUIDO },
+      select: { id: true },
+    })
+
+    if (concluidos.length === 0) return
+
+    console.log(`🔧 Migrando ${concluidos.length} treinos CONCLUIDO → ACEITO...`)
+
+    for (const t of concluidos) {
+      await prisma.$transaction(async (tx) => {
+        await tx.treino.update({
+          where: { id: t.id },
+          data: { status: TreinoStatus.ACEITO, iniciado_em: null, finalizado_em: null },
+        })
+        await tx.treinoHistorico.create({
+          data: {
+            treino_id: t.id,
+            status_anterior: TreinoStatus.CONCLUIDO,
+            status_novo: TreinoStatus.ACEITO,
+            ator_id: 'SISTEMA',
+            ator_tipo: TreinoAtor.SISTEMA,
+          },
+        })
+      })
+    }
+
+    console.log('✅ Todos os treinos CONCLUIDO foram migrados para ACEITO.')
+  } catch (err) {
+    console.error('⚠️ Falha ao migrar treinos CONCLUIDO:', err)
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
 async function start() {
   await migrarTreinosCadastrados()
+  await migrarTreinosConcluidos()
 
   const app = await buildApp()
 
