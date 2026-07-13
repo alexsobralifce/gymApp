@@ -93,8 +93,8 @@ export const api = {
   login: (email: string, senha: string) =>
     api.post<AuthTokens>('/auth/login', { email, senha }),
 
-  register: (nome: string, email: string, senha: string, role: string) =>
-    api.post<User>('/auth/register', { nome, email, senha, role }),
+  register: (nome: string, email: string, senha: string, role: string, telefone?: string) =>
+    api.post<User>('/auth/register', { nome, email, senha, role, telefone }),
 
   getMe: () => api.get<User>('/auth/me'),
 

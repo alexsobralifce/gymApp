@@ -147,7 +147,7 @@ export interface PerfilAluno {
   professor_id?: string | null
   academia_id?: string | null
   criado_em: string
-  professor?: { usuario: { nome: string } } | null
+  professor?: { usuario: { nome: string; email: string; telefone?: string | null } } | null
   academia?: { nome: string } | null
 }
 

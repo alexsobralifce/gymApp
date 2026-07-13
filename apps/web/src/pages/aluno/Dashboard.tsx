@@ -56,7 +56,23 @@ export default function AlunoDashboard() {
           <h2 className="text-xl font-bold text-text">Olá, {user.nome}</h2>
           <div className="mt-1 space-y-0.5 text-xs text-text-muted">
             {perfil?.professor ? (
-              <p>Professor: <span className="font-semibold text-text">{perfil.professor.usuario.nome}</span></p>
+              <>
+                <p>Professor: <span className="font-semibold text-text">{perfil.professor.usuario.nome}</span></p>
+                <p>Email: <span className="text-text">{perfil.professor.usuario.email}</span></p>
+                {perfil.professor.usuario.telefone && (
+                  <p>
+                    WhatsApp:{' '}
+                    <a
+                      href={`https://wa.me/${perfil.professor.usuario.telefone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-400 font-semibold hover:underline"
+                    >
+                      {perfil.professor.usuario.telefone}
+                    </a>
+                  </p>
+                )}
+              </>
             ) : (
               <p>Modo: <span className="font-semibold text-text">Autogestão</span></p>
             )}

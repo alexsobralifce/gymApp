@@ -46,7 +46,7 @@ export async function alunoRoutes(app: FastifyInstance) {
     const aluno = await prisma.aluno.findUnique({
       where: { usuario_id: request.currentUser.sub },
       include: {
-        professor: { select: { usuario: { select: { nome: true } } } },
+        professor: { select: { usuario: { select: { nome: true, email: true, telefone: true } } } },
         academia: { select: { nome: true } },
       },
     })

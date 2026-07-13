@@ -11,6 +11,7 @@ export type RegisterInput = {
   email: string
   senha: string
   role: Role
+  telefone?: string
 }
 
 export type LoginInput = {
@@ -55,8 +56,9 @@ export class AuthService {
         email: input.email,
         senha_hash: senhaHash,
         role: input.role,
+        telefone: input.telefone || null,
       },
-      select: { id: true, nome: true, email: true, role: true, criado_em: true },
+      select: { id: true, nome: true, email: true, role: true, telefone: true, criado_em: true },
     })
 
     return usuario

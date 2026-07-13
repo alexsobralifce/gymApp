@@ -7,6 +7,7 @@ import type { Academia } from '../../types/api'
 export default function Register() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
+  const [telefone, setTelefone] = useState('')
   const [senha, setSenha] = useState('')
   const [role, setRole] = useState('ALUNO')
   const [academias, setAcademias] = useState<Academia[]>([])
@@ -22,7 +23,7 @@ export default function Register() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await register(nome, email, senha, role, role === 'ALUNO' ? academiaId : undefined)
+    await register(nome, email, senha, role, role === 'ALUNO' ? academiaId : undefined, telefone || undefined)
     navigate('/')
   }
 
@@ -47,6 +48,10 @@ export default function Register() {
           type="password" placeholder="Senha (mínimo 8 caracteres)" value={senha} onChange={(e) => setSenha(e.target.value)}
           className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
           required minLength={8}
+        />
+        <input
+          type="tel" placeholder="WhatsApp (opcional)" value={telefone} onChange={(e) => setTelefone(e.target.value)}
+          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
         />
         <select
           value={role} onChange={(e) => setRole(e.target.value)}

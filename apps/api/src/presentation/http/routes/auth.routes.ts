@@ -10,6 +10,7 @@ const registerBodySchema = z.object({
   email: z.string().email(),
   senha: z.string().min(8),
   role: z.enum([Role.ACADEMIA, Role.PROFESSOR, Role.ALUNO]),
+  telefone: z.string().optional(),
 })
 
 const loginBodySchema = z.object({

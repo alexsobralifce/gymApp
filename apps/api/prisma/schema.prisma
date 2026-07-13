@@ -59,6 +59,7 @@ model Usuario {
   senha_hash   String
   nome         String
   role         Role
+  telefone     String?
   foto_url     String?
   expo_push_token       String?  // token Expo para push notifications
   web_push_subscription  Json?    // PushSubscription JSON (Web Push API)
