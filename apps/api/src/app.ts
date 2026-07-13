@@ -36,7 +36,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   })
 
   // ─── Security ───────────────────────────────────────────────────────────
-  await app.register(fastifyHelmet)
+  await app.register(fastifyHelmet, {
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
 
   const origins: string[] = [env.API_BASE_URL]
   if (env.WEB_BASE_URL) {
