@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
+import { formatPhone } from '../../lib/phone'
 
 type Tab = 'academias' | 'professores' | 'alunos'
 
@@ -610,7 +611,7 @@ function EditAlunoModal({
 }) {
   const [nome, setNome] = useState(aluno.usuario.nome)
   const [email, setEmail] = useState(aluno.usuario.email)
-  const [telefone, setTelefone] = useState(aluno.usuario.telefone || '')
+  const [telefone, setTelefone] = useState(formatPhone(aluno.usuario.telefone || ''))
   const [dataNascimento, setDataNascimento] = useState(aluno.data_nascimento?.split('T')[0] || '')
   const [pesoKg, setPesoKg] = useState(aluno.peso_kg?.toString() || '')
   const [alturaCm, setAlturaCm] = useState(aluno.altura_cm?.toString() || '')
@@ -638,7 +639,7 @@ function EditAlunoModal({
     await onSave({
       nome,
       email,
-      telefone: telefone || null,
+      telefone: telefone ? telefone.replace(/\D/g, '') : null,
       data_nascimento: dataNascimento || null,
       peso_kg: pesoKg ? Number(pesoKg) : null,
       altura_cm: alturaCm ? Number(alturaCm) : null,
@@ -662,7 +663,7 @@ function EditAlunoModal({
         </div>
         <div>
           <label className="mb-1 block text-xs text-text-muted">Telefone</label>
-          <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className={inputClass} placeholder="(99) 99999-9999" type="tel" />
+          <input value={telefone} onChange={(e) => setTelefone(formatPhone(e.target.value))} className={inputClass} placeholder="(99) 99999-9999" type="tel" />
         </div>
         <div className="flex gap-3">
           <div className="flex-1">
