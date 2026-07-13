@@ -65,9 +65,15 @@ export async function professorRoutes(app: FastifyInstance) {
     const { academiaId } = z.object({ academiaId: z.string() }).parse(request.params)
     const professor = await resolveProfessor(request.currentUser.sub)
 
-    await prisma.professorAcademia.deleteMany({
-      where: { professor_id: professor.id, academia_id: academiaId },
-    })
+    await prisma.$transaction([
+      prisma.professorAcademia.deleteMany({
+        where: { professor_id: professor.id, academia_id: academiaId },
+      }),
+      prisma.aluno.updateMany({
+        where: { professor_id: professor.id, academia_id: academiaId },
+        data: { professor_id: null },
+      }),
+    ])
     return reply.status(204).send()
   })
 
@@ -80,6 +86,13 @@ export async function professorRoutes(app: FastifyInstance) {
 
     const professor = await resolveProfessor(request.currentUser.sub)
 
+    if (body.academiaId) {
+      const vinculo = await prisma.professorAcademia.findFirst({
+        where: { professor_id: professor.id, academia_id: body.academiaId, status: 'ATIVO' },
+      })
+      if (!vinculo) throw new TenantAccessError()
+    }
+
     const aluno = await prisma.aluno.upsert({
       where: { usuario_id: body.usuarioId },
       create: {
@@ -87,7 +100,7 @@ export async function professorRoutes(app: FastifyInstance) {
         professor_id: professor.id,
         academia_id: body.academiaId,
       },
-      update: { professor_id: professor.id },
+      update: { professor_id: professor.id, academia_id: body.academiaId || undefined },
     })
     return reply.status(200).send(aluno)
   })
@@ -95,7 +108,8 @@ export async function professorRoutes(app: FastifyInstance) {
   /** GET /professores/dashboard — UC-14 */
   app.get('/dashboard', { preHandler }, async (request, reply) => {
     const professor = await resolveProfessor(request.currentUser.sub)
-    const data = await dashboardProfessor(professor.id)
+    const { academiaId } = z.object({ academiaId: z.string().optional() }).parse(request.query)
+    const data = await dashboardProfessor(professor.id, academiaId)
     return reply.status(200).send(data)
   })
 
@@ -305,9 +319,13 @@ export async function professorRoutes(app: FastifyInstance) {
   /** GET /professores/fichas — lista todas as fichas de treino do professor */
   app.get('/fichas', { preHandler }, async (request, reply) => {
     const professor = await resolveProfessor(request.currentUser.sub)
+    const { academiaId } = z.object({ academiaId: z.string().optional() }).parse(request.query)
+
+    const alunoWhere: Record<string, any> = { professor_id: professor.id }
+    if (academiaId) alunoWhere.academia_id = academiaId
 
     const alunos = await prisma.aluno.findMany({
-      where: { professor_id: professor.id },
+      where: alunoWhere,
       include: {
         usuario: { select: { nome: true, email: true } },
         treinos: {

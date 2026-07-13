@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { Exercicio, ProfessorDashboard } from '../../types/api'
+import type { Exercicio, ProfessorDashboard, Vinculo } from '../../types/api'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -113,11 +113,26 @@ export default function ProfessorCriarTreino() {
   const [filtroGrupo, setFiltroGrupo] = useState('')
   const [filtroEquip, setFiltroEquip] = useState('')
   const [busca, setBusca] = useState('')
+  const [vinculos, setVinculos] = useState<Vinculo[]>([])
+  const [academiaId, setAcademiaId] = useState('')
 
   // Carregar alunos e exercícios
   useEffect(() => {
     Promise.all([
-      api.getDashboard(),
+      api.getVinculos(),
+    ])
+      .then(([v]) => {
+        const ativos = (v as any[]).filter((x: any) => x.status === 'ATIVO')
+        setVinculos(ativos)
+        if (ativos.length > 0) setAcademiaId(ativos[0].academia.id)
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      api.getDashboard(academiaId || undefined),
       api.getExercicios()
     ])
       .then(([a, e]) => {
@@ -126,7 +141,7 @@ export default function ProfessorCriarTreino() {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
-  }, [])
+  }, [academiaId])
 
   // Recarregar exercícios sob filtros
   useEffect(() => {
@@ -276,6 +291,23 @@ export default function ProfessorCriarTreino() {
           feedback.includes('Erro') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-success/10 text-success border border-success/20'
         }`}>
           {feedback}
+        </div>
+      )}
+
+      {/* Seletor de Academia (se multi-academia) */}
+      {vinculos.length > 1 && (
+        <div className="max-w-md">
+          <label className="mb-1.5 block text-xs font-semibold text-text-muted uppercase tracking-wider">Academia</label>
+          <select
+            value={academiaId}
+            onChange={(e) => setAcademiaId(e.target.value)}
+            className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
+          >
+            <option value="">Todas</option>
+            {vinculos.map((v: any) => (
+              <option key={v.academia.id} value={v.academia.id}>{v.academia.nome}</option>
+            ))}
+          </select>
         </div>
       )}
 

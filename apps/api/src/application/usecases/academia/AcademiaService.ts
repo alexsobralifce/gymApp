@@ -148,10 +148,16 @@ export async function removerProfessor(academiaId: string, professorId: string) 
     throw new NotFoundError('Vínculo ativo')
   }
 
-  return prisma.professorAcademia.update({
-    where: { id: vinculo.id },
-    data: { status: VinculoStatus.REMOVIDO },
-  })
+  await prisma.$transaction([
+    prisma.professorAcademia.update({
+      where: { id: vinculo.id },
+      data: { status: VinculoStatus.REMOVIDO },
+    }),
+    prisma.aluno.updateMany({
+      where: { professor_id: professorId, academia_id: academiaId },
+      data: { professor_id: null },
+    }),
+  ])
 }
 
 // ─── UC-08: Dashboard alunos da academia ─────────────────────────────────────

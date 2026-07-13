@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role } from '@prisma/client'
+import { Role, AcademiaStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
@@ -29,6 +29,9 @@ export async function alunoRoutes(app: FastifyInstance) {
   /** PATCH /alunos/academia — Vincula o aluno logado a uma academia */
   app.patch('/academia', { preHandler }, async (request, reply) => {
     const { academiaId } = z.object({ academiaId: z.string() }).parse(request.body)
+    const academia = await prisma.academia.findUnique({ where: { id: academiaId } })
+    if (!academia) throw new NotFoundError('Academia não encontrada')
+    if (academia.status !== AcademiaStatus.ATIVO) throw new NotFoundError('Academia não está ativa')
     const aluno = await resolveAluno(request.currentUser.sub)
     const updated = await prisma.aluno.update({
       where: { id: aluno.id },

@@ -234,13 +234,16 @@ export async function finalizarTreino(treinoId: string, alunoId: string) {
 
 // ─── UC-14: Dashboard professor ───────────────────────────────────────────────
 
-export async function dashboardProfessor(professorId: string) {
+export async function dashboardProfessor(professorId: string, academiaId?: string) {
+  const where: Record<string, any> = { professor_id: professorId }
+  if (academiaId) where.academia_id = academiaId
+
   return prisma.aluno.findMany({
-    where: { professor_id: professorId },
+    where,
     select: {
       id: true,
       usuario: { select: { nome: true, email: true } },
-      academia: { select: { nome: true } },
+      academia: { select: { nome: true, id: true } },
       treinos: {
         orderBy: { atualizado_em: 'desc' },
         take: 5,

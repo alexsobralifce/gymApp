@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { NotFoundError } from '../../../domain/errors/AppError.js'
+import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import {
   criarTreino,
   criarTreinoAutogestao,
@@ -165,9 +165,21 @@ export async function treinoRoutes(app: FastifyInstance) {
       include: {
         exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } },
         execucoes: { orderBy: { registrado_em: 'desc' } },
+        aluno: { select: { id: true, professor_id: true, academia_id: true } },
       },
     })
     if (!treino) throw new NotFoundError('Treino')
+
+    const { sub, role, tenantId } = request.currentUser
+    if (role === Role.ALUNO) {
+      if (treino.aluno_id !== sub) throw new TenantAccessError()
+    } else if (role === Role.PROFESSOR) {
+      const professor = await prisma.professor.findUnique({ where: { usuario_id: sub } })
+      if (!professor || treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
+    } else if (role === Role.ACADEMIA) {
+      if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
+    }
+
     return reply.status(200).send(treino)
   })
 }

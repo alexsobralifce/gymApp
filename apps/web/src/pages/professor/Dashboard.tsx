@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { ProfessorDashboard } from '../../types/api'
+import type { ProfessorDashboard, Vinculo } from '../../types/api'
 
 const STATUS_COR: Record<string, string> = {
   CADASTRADO: 'text-text-muted bg-surface border border-surface-input',
@@ -25,20 +25,51 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function ProfessorDashboard() {
   const [dados, setDados] = useState<ProfessorDashboard[]>([])
+  const [vinculos, setVinculos] = useState<Vinculo[]>([])
+  const [academiaId, setAcademiaId] = useState('')
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.getDashboard().then(setDados).finally(() => setLoading(false))
+    api.getVinculos()
+      .then((v) => {
+        const ativos = v.filter((x: any) => x.status === 'ATIVO')
+        setVinculos(ativos)
+        if (ativos.length > 0) setAcademiaId(ativos[0].academia.id)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  useEffect(() => {
+    setLoading(true)
+    api.getDashboard(academiaId || undefined)
+      .then(setDados)
+      .finally(() => setLoading(false))
+  }, [academiaId])
 
   return (
     <div className="p-4 md:p-6">
+      {vinculos.length > 1 && (
+        <div className="mb-4">
+          <select
+            value={academiaId}
+            onChange={(e) => setAcademiaId(e.target.value)}
+            className="rounded-xl border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:outline-none"
+          >
+            <option value="">Todas academias</option>
+            {vinculos.map((v: any) => (
+              <option key={v.academia.id} value={v.academia.id}>{v.academia.nome}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <h1 className="mb-6 text-xl font-bold text-text">Alunos Acompanhados</h1>
 
-      {dados.length === 0 ? (
+      {loading ? (
+        <p className="text-text-muted">Carregando...</p>
+      ) : dados.length === 0 ? (
         <p className="text-text-muted">Nenhum aluno vinculado ao seu perfil.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg bg-surface-card border border-surface-input">

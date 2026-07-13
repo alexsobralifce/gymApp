@@ -146,7 +146,8 @@ export const api = {
   // ─── Professor ─────────────────────────────────────
   criarPerfilProfessor: (cref?: string) => api.post('/professores/perfil', { cref }),
 
-  getDashboard: () => api.get<ProfessorDashboard[]>('/professores/dashboard'),
+  getDashboard: (academiaId?: string) =>
+    api.get<ProfessorDashboard[]>(`/professores/dashboard${academiaId ? `?academiaId=${academiaId}` : ''}`),
 
   vincularAcademia: (academiaId: string) =>
     api.post<{ jaVinculado?: boolean; status?: string }>(`/professores/vincular/${academiaId}`),
