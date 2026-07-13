@@ -186,7 +186,8 @@ export async function treinoRoutes(app: FastifyInstance) {
 
     const { sub, role, tenantId } = request.currentUser
     if (role === Role.ALUNO) {
-      if (treino.aluno_id !== sub) throw new TenantAccessError()
+      const aluno = await prisma.aluno.findUnique({ where: { usuario_id: sub } })
+      if (!aluno || treino.aluno_id !== aluno.id) throw new TenantAccessError()
     } else if (role === Role.PROFESSOR) {
       const professor = await prisma.professor.findUnique({ where: { usuario_id: sub } })
       if (!professor || treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
