@@ -177,7 +177,7 @@ export async function professorRoutes(app: FastifyInstance) {
     const where: Record<string, any> = {}
 
     if (grupo_muscular) {
-      where.grupo_muscular = { equals: grupo_muscular, mode: 'insensitive' }
+      where.grupo_muscular = { contains: grupo_muscular, mode: 'insensitive' }
     }
 
     if (equipamento) {

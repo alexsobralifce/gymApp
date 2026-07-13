@@ -9,12 +9,13 @@ const GRUPOS_MUSCULARES = [
   { value: 'Peito', label: 'Peito' },
   { value: 'Costas', label: 'Costas' },
   { value: 'Ombros', label: 'Ombros' },
-  { value: 'Braços', label: 'Braços' },
-  { value: 'Pernas', label: 'Pernas' },
-  { value: 'Panturrilhas', label: 'Panturrilha' },
-  { value: 'Abdômen', label: 'Abdômen' },
-  { value: 'Glúteos', label: 'Glúteos' },
-  { value: 'Cardio', label: 'Cardio' }
+  { value: 'Bracos', label: 'Braços' },
+  { value: 'Coxas', label: 'Coxas' },
+  { value: 'Panturrilhas / Tibiais', label: 'Panturrilhas' },
+  { value: 'Abdomen / Lombar', label: 'Abdômen / Lombar' },
+  { value: 'Antebraccos', label: 'Antebraços' },
+  { value: 'Cardio', label: 'Cardio' },
+  { value: 'Pescoco', label: 'Pescoço' }
 ]
 
 const NIVEIS = [
