@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await get().login(email, senha)
       if (role === 'ALUNO') {
         await api.criarPerfilAluno({ dataNascimento, pesoKg, alturaCm })
-        if (academiaId) {
+        if (academiaId && academiaId !== 'AUTOGESTAO') {
           await api.vincularAcademiaAluno(academiaId)
         }
       } else if (role === 'PROFESSOR') {

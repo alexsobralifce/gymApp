@@ -115,7 +115,8 @@ export default function Register() {
                 className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
                 required
               >
-                <option value="">Selecionar academia...</option>
+                <option value="">Selecionar...</option>
+                <option value="AUTOGESTAO">Autogestão (sem academia)</option>
                 {academias.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.nome}

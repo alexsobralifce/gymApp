@@ -28,7 +28,10 @@ interface AlunoItem {
   usuario_id: string
   professor_id: string | null
   academia_id: string | null
-  usuario: { id: string; email: string; nome: string }
+  data_nascimento: string | null
+  peso_kg: number | null
+  altura_cm: number | null
+  usuario: { id: string; email: string; nome: string; telefone: string | null }
   academia: { id: string; nome: string } | null
   professor: { id: string; usuario: { nome: string } } | null
 }
@@ -363,6 +366,12 @@ function AlunosTab({
             <p className="text-xs text-text-muted">
               Academia: {a.academia?.nome || '—'} · Professor: {a.professor?.usuario.nome || 'Autogestão'}
             </p>
+            {(a.peso_kg || a.altura_cm) && (
+              <p className="text-xs text-text-muted">
+                Peso: {a.peso_kg ? `${a.peso_kg}kg` : '—'} · Altura: {a.altura_cm ? `${a.altura_cm}cm` : '—'}
+                {a.data_nascimento && ` · Nasc: ${new Date(a.data_nascimento).toLocaleDateString('pt-BR')}`}
+              </p>
+            )}
           </div>
           <div className="flex gap-1">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
@@ -601,6 +610,10 @@ function EditAlunoModal({
 }) {
   const [nome, setNome] = useState(aluno.usuario.nome)
   const [email, setEmail] = useState(aluno.usuario.email)
+  const [telefone, setTelefone] = useState(aluno.usuario.telefone || '')
+  const [dataNascimento, setDataNascimento] = useState(aluno.data_nascimento?.split('T')[0] || '')
+  const [pesoKg, setPesoKg] = useState(aluno.peso_kg?.toString() || '')
+  const [alturaCm, setAlturaCm] = useState(aluno.altura_cm?.toString() || '')
   const [academiaId, setAcademiaId] = useState(aluno.academia_id || '')
   const [professorId, setProfessorId] = useState(aluno.professor_id || '')
   const [saving, setSaving] = useState(false)
@@ -625,6 +638,10 @@ function EditAlunoModal({
     await onSave({
       nome,
       email,
+      telefone: telefone || null,
+      data_nascimento: dataNascimento || null,
+      peso_kg: pesoKg ? Number(pesoKg) : null,
+      altura_cm: alturaCm ? Number(alturaCm) : null,
       academia_id: academiaId || null,
       professor_id: professorId || null,
     })
@@ -642,6 +659,24 @@ function EditAlunoModal({
         <div>
           <label className="mb-1 block text-xs text-text-muted">E-mail</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-text-muted">Telefone</label>
+          <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className={inputClass} placeholder="(99) 99999-9999" type="tel" />
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs text-text-muted">Peso (kg)</label>
+            <input type="number" step="0.1" min="0" value={pesoKg} onChange={(e) => setPesoKg(e.target.value)} className={inputClass} placeholder="70.5" />
+          </div>
+          <div className="flex-1">
+            <label className="mb-1 block text-xs text-text-muted">Altura (cm)</label>
+            <input type="number" step="1" min="0" value={alturaCm} onChange={(e) => setAlturaCm(e.target.value)} className={inputClass} placeholder="175" />
+          </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-text-muted">Data de nascimento</label>
+          <input type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} className={inputClass} />
         </div>
         <div>
           <label className="mb-1 block text-xs text-text-muted">Academia</label>

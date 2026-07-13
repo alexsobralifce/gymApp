@@ -293,7 +293,7 @@ export async function rootRoutes(app: FastifyInstance) {
   app.get('/alunos', { preHandler }, async (_request, reply) => {
     const alunos = await prisma.aluno.findMany({
       include: {
-        usuario: { select: { id: true, email: true, nome: true } },
+        usuario: { select: { id: true, email: true, nome: true, telefone: true } },
         academia: { select: { id: true, nome: true } },
         professor: { select: { id: true, usuario: { select: { nome: true } } } },
       },
@@ -308,6 +308,10 @@ export async function rootRoutes(app: FastifyInstance) {
     const body = z.object({
       nome: z.string().min(1).optional(),
       email: z.string().email().optional(),
+      telefone: z.string().nullable().optional(),
+      data_nascimento: z.string().nullable().optional(),
+      peso_kg: z.number().positive().nullable().optional(),
+      altura_cm: z.number().positive().nullable().optional(),
       academia_id: z.string().nullable().optional(),
       professor_id: z.string().nullable().optional(),
     }).parse(request.body)
@@ -318,7 +322,7 @@ export async function rootRoutes(app: FastifyInstance) {
     })
     if (!aluno) throw new NotFoundError('Aluno')
 
-    const { email, nome, ...alunoData } = body
+    const { email, nome, telefone, data_nascimento, peso_kg, altura_cm, ...alunoData } = body
 
     if (email && email !== aluno.usuario.email) {
       const exists = await prisma.usuario.findUnique({ where: { email } })
@@ -326,25 +330,34 @@ export async function rootRoutes(app: FastifyInstance) {
     }
 
     const updated = await prisma.$transaction(async (tx) => {
-      if (nome || email) {
-        const usuarioData: Record<string, string> = {}
-        if (nome) usuarioData.nome = nome
-        if (email) usuarioData.email = email
+      const usuarioData: Record<string, unknown> = {}
+      if (nome !== undefined) usuarioData.nome = nome
+      if (email !== undefined) usuarioData.email = email
+      if (telefone !== undefined) usuarioData.telefone = telefone
+      if (Object.keys(usuarioData).length > 0) {
         await tx.usuario.update({
           where: { id: aluno.usuario_id },
           data: usuarioData,
         })
       }
 
-      await tx.aluno.update({
-        where: { id },
-        data: alunoData,
-      })
+      const alunoUpdateData: Record<string, unknown> = {}
+      if (data_nascimento !== undefined) alunoUpdateData.data_nascimento = data_nascimento ? new Date(data_nascimento) : null
+      if (peso_kg !== undefined) alunoUpdateData.peso_kg = peso_kg
+      if (altura_cm !== undefined) alunoUpdateData.altura_cm = altura_cm
+      if (alunoData.academia_id !== undefined) alunoUpdateData.academia_id = alunoData.academia_id
+      if (alunoData.professor_id !== undefined) alunoUpdateData.professor_id = alunoData.professor_id
+      if (Object.keys(alunoUpdateData).length > 0) {
+        await tx.aluno.update({
+          where: { id },
+          data: alunoUpdateData,
+        })
+      }
 
       return tx.aluno.findUnique({
         where: { id },
         include: {
-          usuario: { select: { id: true, email: true, nome: true } },
+          usuario: { select: { id: true, email: true, nome: true, telefone: true } },
           academia: { select: { id: true, nome: true } },
           professor: { select: { id: true, usuario: { select: { nome: true } } } },
         },
