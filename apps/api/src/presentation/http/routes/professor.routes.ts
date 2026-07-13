@@ -91,9 +91,30 @@ export async function professorRoutes(app: FastifyInstance) {
   /** POST /professores/alunos — UC-10 */
   app.post('/alunos', { preHandler }, async (request, reply) => {
     const body = z.object({
-      usuarioId: z.string(),
+      usuarioId: z.string().optional(),
+      email: z.string().email().optional(),
       academiaId: z.string().optional(),
     }).parse(request.body)
+
+    if (!body.usuarioId && !body.email) {
+      return reply.status(400).send({ message: 'Informe usuarioId ou email do aluno' })
+    }
+
+    let usuarioId = body.usuarioId
+
+    if (!usuarioId && body.email) {
+      const usuarioAluno = await prisma.usuario.findUnique({
+        where: { email: body.email },
+        select: { id: true, role: true },
+      })
+      if (!usuarioAluno) {
+        return reply.status(404).send({ message: 'Nenhum usuário encontrado com este email' })
+      }
+      if (usuarioAluno.role !== Role.ALUNO) {
+        return reply.status(400).send({ message: 'O usuário encontrado não tem perfil de Aluno' })
+      }
+      usuarioId = usuarioAluno.id
+    }
 
     const professor = await resolveProfessor(request.currentUser.sub)
 
@@ -105,9 +126,9 @@ export async function professorRoutes(app: FastifyInstance) {
     }
 
     const aluno = await prisma.aluno.upsert({
-      where: { usuario_id: body.usuarioId },
+      where: { usuario_id: usuarioId! },
       create: {
-        usuario_id: body.usuarioId,
+        usuario_id: usuarioId!,
         professor_id: professor.id,
         academia_id: body.academiaId,
       },

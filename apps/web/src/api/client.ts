@@ -166,8 +166,8 @@ export const api = {
   desvincularAcademia: (academiaId: string) =>
     api.delete(`/professores/vinculos/${academiaId}`),
 
-  vincularAluno: (usuarioId: string, academiaId?: string) =>
-    api.post('/professores/alunos', { usuarioId, academiaId }),
+  vincularAluno: (usuarioId?: string, email?: string, academiaId?: string) =>
+    api.post('/professores/alunos', { usuarioId, email, academiaId }),
 
   getAlunoCorrelacoes: (alunoId: string) =>
     api.get<CorrelacaoResponse>(`/professores/alunos/${alunoId}/correlacoes`),
