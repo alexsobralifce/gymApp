@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Treino, Exercicio, TreinoExercicio } from '../../types/api'
@@ -8,19 +8,37 @@ export default function AlunoMeusTreinos() {
   const [loading, setLoading] = useState(true)
   const [fichaAtiva, setFichaAtiva] = useState(0)
   const [selectedExercicio, setSelectedExercicio] = useState<Exercicio | null>(null)
+  const [feedback, setFeedback] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    api.getAlunoTreinos()
-      .then((data) => {
-        const ativos = data.filter(
-          (t) => t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO'
-        )
-        setTreinos(ativos)
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false))
+  const carregarTreinos = useCallback(async () => {
+    try {
+      const data = await api.getAlunoTreinos()
+      const disponiveis = data.filter(
+        (t) => t.status === 'ENVIADO' || t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO' || t.status === 'CADASTRADO'
+      )
+      setTreinos(disponiveis)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  async function handleResponder(treinoId: string, acao: 'ACEITAR' | 'RECUSAR') {
+    try {
+      await api.responderTreino(treinoId, acao)
+      setFeedback(acao === 'ACEITAR' ? 'Treino aceito! Pronto para iniciar.' : 'Treino recusado.')
+      await carregarTreinos()
+      setTimeout(() => setFeedback(null), 3000)
+    } catch {
+      setFeedback('Erro ao responder ao treino.')
+    }
+  }
+
+  useEffect(() => {
+    carregarTreinos()
+  }, [carregarTreinos])
 
   if (loading) return <div className="p-4 text-text-muted">Carregando seus treinos...</div>
 
@@ -29,7 +47,7 @@ export default function AlunoMeusTreinos() {
       <div className="px-4 py-8 max-w-xl mx-auto w-full text-center space-y-4">
         <h1 className="text-xl font-bold text-text">Meus Treinos</h1>
         <p className="text-sm text-text-muted bg-surface-card rounded-2xl p-6 border border-surface-input">
-          Nenhum treino ativo disponível hoje. Fale com seu professor ou crie no painel inicial em modo autogestão.
+          Nenhum treino disponível no momento. Seu professor ainda não enviou nenhuma ficha ou você ainda não aceitou nenhuma.
         </p>
         <button
           onClick={() => navigate('/')}
@@ -63,6 +81,14 @@ export default function AlunoMeusTreinos() {
         <p className="text-xs text-text-muted">Veja as fichas montadas pelo seu treinador</p>
       </div>
 
+      {feedback && (
+        <div className={`rounded-xl p-3 text-sm text-center font-medium ${
+          feedback.includes('Erro') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-success/10 text-success border border-success/20'
+        }`}>
+          {feedback}
+        </div>
+      )}
+
       {/* Tabs para selecionar treino */}
       <div className="flex gap-2 bg-surface-card p-1.5 rounded-2xl border border-surface-input overflow-x-auto">
         {treinos.map((t, idx) => (
@@ -87,8 +113,14 @@ export default function AlunoMeusTreinos() {
               Dias: {treino.dias_semana.map((d) => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d]).join(', ')}
             </p>
           </div>
-          <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-xs font-bold text-primary uppercase">
-            Ativo
+          <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold uppercase ${
+            treino.status === 'ENVIADO'
+              ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+              : treino.status === 'CADASTRADO'
+              ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+              : 'bg-primary/10 border-primary/20 text-primary'
+          }`}>
+            {treino.status === 'ENVIADO' ? 'Pendente' : treino.status === 'CADASTRADO' ? 'Em preparação' : 'Ativo'}
           </span>
         </div>
 
@@ -142,12 +174,33 @@ export default function AlunoMeusTreinos() {
           ))}
         </div>
 
-        <button
-          onClick={() => navigate(`/treino/${treino.id}/inicio`)}
-          className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-        >
-          Iniciar Ficha de Treino
-        </button>
+        {treino.status === 'ENVIADO' ? (
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => handleResponder(treino.id, 'RECUSAR')}
+              className="flex-1 rounded-xl border border-red-500/30 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/10 active:scale-95 transition-all"
+            >
+              Recusar
+            </button>
+            <button
+              onClick={() => handleResponder(treino.id, 'ACEITAR')}
+              className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-500 active:scale-95 transition-all"
+            >
+              Aceitar Ficha
+            </button>
+          </div>
+        ) : treino.status === 'CADASTRADO' ? (
+          <p className="text-xs text-center text-text-muted italic py-2">
+            Esta ficha ainda está sendo preparada pelo professor e será enviada em breve.
+          </p>
+        ) : (
+          <button
+            onClick={() => navigate(`/treino/${treino.id}/inicio`)}
+            className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+          >
+            Iniciar Ficha de Treino
+          </button>
+        )}
       </div>
 
       {/* Modal de Instruções com GIF em destaque */}
