@@ -431,4 +431,43 @@ export async function rootRoutes(app: FastifyInstance) {
       })
     }
   })
+
+  /** GET /root/check-exercises — verifica URLs dos exercícios */
+  app.get('/check-exercises', { preHandler }, async (_request, reply) => {
+    try {
+      const sample = await prisma.exercicio.findMany({
+        take: 5,
+        select: {
+          id: true,
+          nome: true,
+          imagem_url: true,
+          gif_url: true,
+        },
+      })
+      
+      const stats = await prisma.exercicio.aggregate({
+        _count: true,
+      })
+      
+      const withLocalhost = await prisma.exercicio.count({
+        where: {
+          OR: [
+            { imagem_url: { contains: 'localhost:3333' } },
+            { gif_url: { contains: 'localhost:3333' } },
+          ],
+        },
+      })
+      
+      return reply.status(200).send({
+        total: stats._count,
+        withLocalhost,
+        sample,
+      })
+    } catch (error: any) {
+      return reply.status(500).send({
+        message: 'Erro ao verificar exercícios',
+        error: error.message,
+      })
+    }
+  })
 }
