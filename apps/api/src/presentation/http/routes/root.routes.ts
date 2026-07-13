@@ -390,6 +390,7 @@ export async function rootRoutes(app: FastifyInstance) {
       }
 
       await tx.medidaCorporal.deleteMany({ where: { aluno_id: id } })
+      await tx.notificacao.deleteMany({ where: { aluno_id: id } })
       await tx.mensagemMotivacionalEnviada.deleteMany({ where: { aluno_id: id } })
       await tx.correlacaoDesempenho.deleteMany({ where: { aluno_id: id } })
       await tx.aluno.delete({ where: { id } })
