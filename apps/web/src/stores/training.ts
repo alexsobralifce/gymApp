@@ -7,6 +7,7 @@ interface TrainingState {
   exercicioAtual: TreinoExercicio | null
   execucoes: ExecucaoExercicio[]
   timer: number
+  timerFinalizado: number
   loading: boolean
   error: string | null
 
@@ -23,6 +24,7 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
   exercicioAtual: null,
   execucoes: [],
   timer: 0,
+  timerFinalizado: 0,
   loading: false,
   error: null,
 
@@ -60,10 +62,10 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
   },
 
   finalizarTreino: async (avaliacao?: string) => {
-    const { treinoAtual } = get()
+    const { treinoAtual, timer } = get()
     if (!treinoAtual) return
 
-    set({ loading: true })
+    set({ loading: true, timerFinalizado: timer })
     try {
       await api.finalizarTreino(treinoAtual.id, avaliacao)
       get().reset()

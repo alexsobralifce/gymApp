@@ -3,10 +3,10 @@ import { useTrainingStore } from '../../stores/training'
 
 export default function AlunoTreinoConclusao() {
   const navigate = useNavigate()
-  const { timer } = useTrainingStore()
+  const { timerFinalizado } = useTrainingStore()
 
-  const min = Math.floor(timer / 60)
-  const sec = timer % 60
+  const min = Math.floor(timerFinalizado / 60)
+  const sec = timerFinalizado % 60
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-surface px-4">
