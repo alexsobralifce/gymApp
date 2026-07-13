@@ -30,10 +30,14 @@ const EQUIPAMENTOS = [
 
 interface ExercicioTreino {
   exercicioId: string
+  nome: string
   ordem: number
   series: number
   repeticoes: number
   cargaSugeridaKg?: number
+  imagemUrl?: string | null
+  gifUrl?: string | null
+  grupoMuscular?: string | null
 }
 
 interface FichaTreino {
@@ -174,9 +178,13 @@ export default function ProfessorCriarTreino() {
 
     const novoExercicio: ExercicioTreino = {
       exercicioId: ex.id,
+      nome: ex.nome,
       ordem: ficha.exercicios.length + 1,
       series: 3,
       repeticoes: 12,
+      imagemUrl: ex.imagem_url,
+      gifUrl: ex.gif_url,
+      grupoMuscular: ex.grupo_muscular,
     }
     atualizarFicha(fichaAtiva, { exercicios: [...ficha.exercicios, novoExercicio] })
   }
@@ -229,21 +237,16 @@ export default function ProfessorCriarTreino() {
         fichas: fichasValidas.map((f) => ({
           nome: f.nome,
           diasSemana: f.diasSemana,
-          exercicios: f.exercicios.map((e) => {
-            const exData = exercicios.find((ex) => ex.id === e.exercicioId)
-            return {
-              exercicioId: e.exercicioId,
-              nome: exData?.nome,
-              grupo_muscular: exData?.grupo_muscular || undefined,
-              equipamento: exData?.equipamento || undefined,
-              imagemUrl: exData?.imagem_url || undefined,
-              dica: exData?.dica || undefined,
-              ordem: e.ordem,
-              series: e.series,
-              repeticoes: e.repeticoes,
-              cargaSugeridaKg: e.cargaSugeridaKg,
-            }
-          }),
+          exercicios: f.exercicios.map((e) => ({
+            exercicioId: e.exercicioId,
+            nome: e.nome,
+            grupo_muscular: e.grupoMuscular || undefined,
+            imagemUrl: e.imagemUrl || undefined,
+            ordem: e.ordem,
+            series: e.series,
+            repeticoes: e.repeticoes,
+            cargaSugeridaKg: e.cargaSugeridaKg,
+          })),
         })),
       })
 
@@ -376,24 +379,22 @@ export default function ProfessorCriarTreino() {
                 ) : (
                   <div className="space-y-2">
                     {ficha.exercicios.map((ex, idx) => {
-                      const exData = exercicios.find((e) => e.id === ex.exercicioId)
                       return (
                         <div key={ex.exercicioId} className="flex flex-col md:flex-row md:items-center justify-between p-3.5 bg-surface rounded-xl border border-surface-input gap-3">
                           <div className="flex items-center gap-3">
-                            {/* Visualização da imagem do exercício */}
-                            {exData?.imagem_url && (
+                            {(ex.gifUrl || ex.imagemUrl) && (
                               <img
-                                src={exData.imagem_url}
-                                alt={exData.nome}
+                                src={ex.gifUrl || ex.imagemUrl!}
+                                alt={ex.nome}
                                 className="w-12 h-12 rounded-lg object-cover bg-surface-input border border-surface-input"
                               />
                             )}
                             <div>
-                              <p className="text-sm font-bold text-text leading-tight">{ex.ordem}. {exData?.nome || ex.exercicioId}</p>
+                              <p className="text-sm font-bold text-text leading-tight">{ex.ordem}. {ex.nome}</p>
                               <div className="flex gap-1.5 mt-1">
-                                {exData?.grupo_muscular && (
+                                {ex.grupoMuscular && (
                                   <span className="rounded bg-surface-input px-1.5 py-0.5 text-[10px] font-bold text-text-muted uppercase">
-                                    {exData.grupo_muscular}
+                                    {ex.grupoMuscular}
                                   </span>
                                 )}
                               </div>
