@@ -9,12 +9,13 @@ const GRUPOS_MUSCULARES = [
   { value: 'Peito', label: 'Peito' },
   { value: 'Costas', label: 'Costas' },
   { value: 'Ombros', label: 'Ombros' },
-  { value: 'Braços', label: 'Braços' },
-  { value: 'Pernas', label: 'Pernas' },
-  { value: 'Panturrilhas', label: 'Panturrilha' },
-  { value: 'Abdômen', label: 'Abdômen' },
-  { value: 'Glúteos', label: 'Glúteos' },
-  { value: 'Cardio', label: 'Cardio' }
+  { value: 'Bracos', label: 'Braços' },
+  { value: 'Coxas', label: 'Coxas' },
+  { value: 'Panturrilhas / Tibiais', label: 'Panturrilhas' },
+  { value: 'Abdomen / Lombar', label: 'Abdômen / Lombar' },
+  { value: 'Antebraccos', label: 'Antebraços' },
+  { value: 'Cardio', label: 'Cardio' },
+  { value: 'Pescoco', label: 'Pescoço' }
 ]
 
 const NIVEIS = [
@@ -391,14 +392,14 @@ export default function AcademiaCriarTreino() {
                       const exData = exercicios.find((e) => e.id === ex.exercicioId)
                       return (
                         <div key={ex.exercicioId} className="flex flex-col md:flex-row md:items-center justify-between p-3.5 bg-surface rounded-xl border border-surface-input gap-3">
-                          <div className="flex items-center gap-3">
-                            {exData?.imagem_url && (
-                              <img
-                                src={exData.imagem_url}
-                                alt={exData.nome}
-                                className="w-12 h-12 rounded-lg object-cover bg-surface-input border border-surface-input"
-                              />
-                            )}
+                            <div className="flex items-center gap-3">
+                              {(exData?.gif_url || exData?.imagem_url) && (
+                                <img
+                                  src={exData.gif_url || exData.imagem_url!}
+                                  alt={exData.nome}
+                                  className="w-12 h-12 rounded-lg object-cover bg-surface-input border border-surface-input"
+                                />
+                              )}
                             <div>
                               <p className="text-sm font-bold text-text leading-tight">{ex.ordem}. {exData?.nome || ex.exercicioId}</p>
                               <div className="flex gap-1.5 mt-1">
