@@ -14,9 +14,11 @@ export default function AlunoMeusTreinos() {
   const carregarTreinos = useCallback(async () => {
     try {
       const data = await api.getAlunoTreinos()
-      const disponiveis = data.filter(
-        (t) => t.status === 'ENVIADO' || t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO' || t.status === 'CADASTRADO' || t.status === 'CONCLUIDO'
-      )
+      const disponiveis = data
+        .filter(
+          (t) => t.status === 'ENVIADO' || t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO' || t.status === 'CADASTRADO' || t.status === 'CONCLUIDO'
+        )
+        .sort((a, b) => a.nome.localeCompare(b.nome))
       setTreinos(disponiveis)
     } catch (err) {
       console.error(err)

@@ -47,7 +47,7 @@ export default function AlunoDashboard() {
         api.getPerfilAluno(),
         api.getNotificacoes().catch(() => [] as Notificacao[]),
       ])
-      setTreinos(tData)
+      setTreinos(tData.sort((a, b) => a.nome.localeCompare(b.nome)))
       setPerfil(pData)
       setNotificacoes(nData)
       if (nData.length > 0) {
