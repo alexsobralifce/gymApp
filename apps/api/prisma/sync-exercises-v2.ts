@@ -992,6 +992,17 @@ function translateName(name: string): string {
   return t || name
 }
 
+function getLevel(equipamento: string): string {
+  const iniciante = ['Peso Corporal', 'Elastico', 'Bola de Pilates', 'Assistido', 'Bola de Medicina',
+    'Rolo de Liberacao Miofascial', 'Elastico de Resistencia', 'Bosu', 'Roda Abdominal',
+    'Bicicleta Estacionaria', 'Escada Rolante', 'Eliptico', 'Remo Vertical (SkiErg)', 'Ergometro de Bracos']
+  const avancado = ['Barra', 'Maquina de Alavanca', 'Maquina Smith', 'Barra W (EZ)', 'Treno de Arrasto',
+    'Barra Olimpica', 'Barra Hexagonal', 'Pneu', 'Marreta']
+  if (iniciante.includes(equipamento)) return 'Iniciante'
+  if (avancado.includes(equipamento)) return 'Avancado'
+  return 'Intermediario'
+}
+
 async function sync() {
   // Verificar se já foi sincronizado
   const existingCount = await prisma.exercicio.count({
@@ -1061,10 +1072,11 @@ async function sync() {
         const descricaoPT = descricaoEN ? translateStep(descricaoEN) : passosPT.join(' ')
         const dica = `${bodyPartPT[ex.body_part?.toLowerCase()] || ex.body_part || ''} | ${grupoMuscular}`
         const exercicioId = `ds-${ex.id}`
+        const nivel = getLevel(equipamento)
 
         await prisma.exercicio.upsert({
           where: { id: exercicioId },
-          create: { id: exercicioId, nome: nomePT, grupo_muscular: grupoMuscular, equipamento, imagem_url: imagemUrl, gif_url: gifUrl, descricao_pt: descricaoPT, passos_pt: passosPT, musculo_alvo: musculoAlvo, musculos_secundarios: musculosSecundarios, dica, nivel: 'Intermediario' },
+          create: { id: exercicioId, nome: nomePT, grupo_muscular: grupoMuscular, equipamento, imagem_url: imagemUrl, gif_url: gifUrl, descricao_pt: descricaoPT, passos_pt: passosPT, musculo_alvo: musculoAlvo, musculos_secundarios: musculosSecundarios, dica, nivel },
           update: { nome: nomePT, grupo_muscular: grupoMuscular, equipamento, imagem_url: imagemUrl, gif_url: gifUrl, descricao_pt: descricaoPT, passos_pt: passosPT, musculo_alvo: musculoAlvo, musculos_secundarios: musculosSecundarios, dica },
         })
         count++
