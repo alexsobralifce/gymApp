@@ -432,6 +432,42 @@ export async function rootRoutes(app: FastifyInstance) {
     }
   })
 
+  /** POST /root/fix-exercise-levels — distribui níveis dos exercícios por equipamento */
+  app.post('/fix-exercise-levels', { preHandler }, async (_request, reply) => {
+    try {
+      const iniciante = await prisma.$executeRaw`
+        UPDATE exercicios SET nivel = 'Iniciante' WHERE equipamento IN (
+          'Peso Corporal', 'Elastico', 'Bola de Pilates', 'Assistido', 'Bola de Medicina',
+          'Rolo de Liberacao Miofascial', 'Elastico de Resistencia', 'Bosu', 'Roda Abdominal',
+          'Bicicleta Estacionaria', 'Escada Rolante', 'Eliptico', 'Remo Vertical (SkiErg)', 'Ergometro de Bracos'
+        )
+      `
+      const avancado = await prisma.$executeRaw`
+        UPDATE exercicios SET nivel = 'Avancado' WHERE equipamento IN (
+          'Barra', 'Maquina de Alavanca', 'Maquina Smith', 'Barra W (EZ)', 'Treno de Arrasto',
+          'Barra Olimpica', 'Barra Hexagonal', 'Pneu', 'Marreta'
+        )
+      `
+      const intermediario = await prisma.exercicio.count({ where: { nivel: { notIn: ['Iniciante', 'Avancado'] } } })
+      await prisma.exercicio.updateMany({
+        where: { nivel: { notIn: ['Iniciante', 'Avancado'] } },
+        data: { nivel: 'Intermediario' },
+      })
+
+      return reply.status(200).send({
+        message: 'Niveis atualizados com sucesso!',
+        iniciante,
+        intermediario,
+        avancado,
+      })
+    } catch (error: any) {
+      return reply.status(500).send({
+        message: 'Erro ao corrigir niveis',
+        error: error.message,
+      })
+    }
+  })
+
   /** GET /root/check-exercises — verifica URLs dos exercícios */
   app.get('/check-exercises', { preHandler }, async (_request, reply) => {
     try {
