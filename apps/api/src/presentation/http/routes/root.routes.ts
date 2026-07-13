@@ -2,6 +2,8 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role, VinculoStatus, AcademiaStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { exec } from 'child_process'
+import { promisify } from 'util'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ForbiddenError, ConflictError } from '../../../domain/errors/AppError.js'
 import {
@@ -11,6 +13,8 @@ import {
   aprovacaoVinculoProfessor,
   alterarStatusAcademia,
 } from '../../../application/usecases/academia/AcademiaService.js'
+
+const execAsync = promisify(exec)
 
 export async function rootRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ROOT)]
@@ -380,5 +384,28 @@ export async function rootRoutes(app: FastifyInstance) {
     })
 
     return reply.status(200).send({ message: 'Aluno excluído com sucesso!' })
+  })
+
+  /** POST /root/sync-exercises — executa sync de exercícios (apenas uma vez) */
+  app.post('/sync-exercises', { preHandler }, async (_request, reply) => {
+    try {
+      const { stdout, stderr } = await execAsync('npx tsx prisma/sync-exercises-v2.ts', {
+        cwd: process.cwd(),
+        timeout: 300000,
+      })
+      
+      return reply.status(200).send({
+        message: 'Sync de exercícios executado com sucesso!',
+        output: stdout,
+        errors: stderr || null,
+      })
+    } catch (error: any) {
+      return reply.status(500).send({
+        message: 'Erro ao executar sync de exercícios',
+        error: error.message,
+        output: error.stdout || null,
+        errors: error.stderr || null,
+      })
+    }
   })
 }
