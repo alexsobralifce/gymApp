@@ -2,6 +2,36 @@ import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import type { MedidaCorporal } from '../../types/api'
 
+interface IMCClassification {
+  label: string
+  min: number | null
+  max: number | null
+  color: string
+  bgClass: string
+}
+
+const IMC_TABLE: IMCClassification[] = [
+  { label: 'Abaixo do peso', min: 0, max: 18.49, color: '#3b82f6', bgClass: 'bg-blue-500/20 text-blue-400' },
+  { label: 'Peso normal', min: 18.5, max: 24.99, color: '#22c55e', bgClass: 'bg-green-500/20 text-green-400' },
+  { label: 'Sobrepeso', min: 25, max: 29.99, color: '#f59e0b', bgClass: 'bg-amber-500/20 text-amber-400' },
+  { label: 'Obesidade grau I', min: 30, max: 34.99, color: '#f97316', bgClass: 'bg-orange-500/20 text-orange-400' },
+  { label: 'Obesidade grau II', min: 35, max: 39.99, color: '#ef4444', bgClass: 'bg-red-500/20 text-red-400' },
+  { label: 'Obesidade grau III', min: 40, max: null, color: '#dc2626', bgClass: 'bg-red-700/30 text-red-500' },
+]
+
+const IMC_MIN = 10
+const IMC_MAX = 45
+
+function getIMCClassificacao(imc: number): IMCClassification {
+  return IMC_TABLE.find(c =>
+    (c.min === null || imc >= c.min) && (c.max === null || imc <= c.max)
+  ) || IMC_TABLE[0]
+}
+
+function imcBarPosition(imc: number): number {
+  return Math.max(0, Math.min(100, ((imc - IMC_MIN) / (IMC_MAX - IMC_MIN)) * 100))
+}
+
 export default function AlunoMedidas() {
   const [medidas, setMedidas] = useState<MedidaCorporal[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,6 +59,10 @@ export default function AlunoMedidas() {
       }
     }).finally(() => setLoading(false))
   }, [])
+
+  const ultimaMedida = medidas.length > 0 ? medidas[medidas.length - 1] : null
+  const classificacao = ultimaMedida?.imc ? getIMCClassificacao(ultimaMedida.imc) : null
+  const posicaoBarra = ultimaMedida?.imc ? imcBarPosition(ultimaMedida.imc) : 0
 
   function resetForm() {
     setPesoKg('')
@@ -126,6 +160,52 @@ export default function AlunoMedidas() {
         </div>
       )}
 
+      {/* IMC Card – última medida */}
+      {classificacao && ultimaMedida && (
+        <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Seu IMC</p>
+              <p className="text-3xl font-bold text-text mt-0.5">
+                {ultimaMedida.imc?.toFixed(1)}
+              </p>
+              <p className="text-xs text-text-muted mt-0.5">
+                {ultimaMedida.peso_kg} kg &middot; {ultimaMedida.altura_cm} cm
+              </p>
+            </div>
+            <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${classificacao.bgClass}`}>
+              {classificacao.label}
+            </div>
+          </div>
+
+          {/* IMC scale bar */}
+          <div className="space-y-1.5">
+            <div className="relative h-2 rounded-full bg-surface overflow-hidden">
+              {IMC_TABLE.map((cat) => {
+                const left = cat.min != null ? ((cat.min - IMC_MIN) / (IMC_MAX - IMC_MIN)) * 100 : 0
+                const right = cat.max != null ? ((cat.max - IMC_MIN) / (IMC_MAX - IMC_MIN)) * 100 : 100
+                const width = right - left
+                return (
+                  <div
+                    key={cat.label}
+                    className="absolute h-full"
+                    style={{ left: `${left}%`, width: `${width}%`, backgroundColor: cat.color, opacity: 0.45 }}
+                  />
+                )
+              })}
+              <div
+                className="absolute top-0 h-full w-1 bg-white rounded-full shadow-[0_0_6px_rgba(255,255,255,0.6)] transition-all duration-500"
+                style={{ left: `${posicaoBarra}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-text-muted">
+              <span>{IMC_MIN}</span>
+              <span>{IMC_MAX}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Formulário (Novo ou Edição) */}
       {(mostrarNovo || editando) && (
         <form onSubmit={editando ? handleAtualizar : handleCriar} className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3">
@@ -187,27 +267,72 @@ export default function AlunoMedidas() {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-input">
-              {medidas.map((m) => (
-                <tr key={m.id} className="hover:bg-surface/30 transition-colors">
-                  <td className="p-3 text-xs text-text-muted">{formatDate(m.data)}</td>
-                  <td className="p-3 text-sm text-text">{m.peso_kg ? `${m.peso_kg} kg` : '-'}</td>
-                  <td className="p-3 text-sm text-text">{m.altura_cm ? `${m.altura_cm} cm` : '-'}</td>
-                  <td className="p-3 text-sm text-text">{m.imc ? m.imc.toFixed(1) : '-'}</td>
-                  <td className="p-3 text-sm text-text">{m.percentual_bf ? `${m.percentual_bf}%` : '-'}</td>
-                  <td className="p-3 text-right">
-                    <button
-                      onClick={() => preencherEdicao(m)}
-                      className="text-xs text-primary hover:underline cursor-pointer"
-                    >
-                      Editar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {medidas.map((m) => {
+                const cat = m.imc ? getIMCClassificacao(m.imc) : null
+                return (
+                  <tr key={m.id} className="hover:bg-surface/30 transition-colors">
+                    <td className="p-3 text-xs text-text-muted">{formatDate(m.data)}</td>
+                    <td className="p-3 text-sm text-text">{m.peso_kg ? `${m.peso_kg} kg` : '-'}</td>
+                    <td className="p-3 text-sm text-text">{m.altura_cm ? `${m.altura_cm} cm` : '-'}</td>
+                    <td className="p-3 text-sm">
+                      {m.imc ? (
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${cat?.bgClass}`}>
+                          {m.imc.toFixed(1)}
+                        </span>
+                      ) : '-'}
+                    </td>
+                    <td className="p-3 text-sm text-text">{m.percentual_bf ? `${m.percentual_bf}%` : '-'}</td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => preencherEdicao(m)}
+                        className="text-xs text-primary hover:underline cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
       )}
+
+      {/* Tabela de Classificação IMC (OMS) */}
+      <div className="rounded-2xl bg-surface-card border border-surface-input overflow-hidden">
+        <div className="px-4 py-3 border-b border-surface-input bg-surface/50">
+          <h3 className="text-sm font-bold text-text">Classificação IMC (OMS)</h3>
+        </div>
+        <div className="divide-y divide-surface-input">
+          {IMC_TABLE.map((cat) => {
+            const range = cat.max === null
+              ? `≥ ${cat.min}`
+              : `${cat.min} – ${cat.max}`
+            const isActive = classificacao?.label === cat.label
+            return (
+              <div
+                key={cat.label}
+                className={`flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
+                  isActive ? 'bg-white/5' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className={`${isActive ? 'text-text font-semibold' : 'text-text-muted'}`}>
+                    {cat.label}
+                    {isActive && (
+                      <span className="ml-1.5 text-[10px] text-text-muted font-normal">(você)</span>
+                    )}
+                  </span>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cat.bgClass}`}>
+                  {range}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

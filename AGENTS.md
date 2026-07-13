@@ -100,7 +100,8 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 - **UC-21** Ver instruções do exercício
 - **UC-22** Registrar execução por série
 - **UC-23** Finalizar treino
-- **UC-24** Registrar medidas corporais
+- **UC-24** Registrar medidas corporais (peso, altura, %BF, massa magra) com cálculo automático do IMC
+- **UC-24b** Visualizar classificação IMC (OMS) com barra de escala e destaque da categoria atual do aluno
 - **UC-25** Gráficos de evolução
 - **UC-26** Push notifications motivacionais
 - **UC-27** Ler resumos científicos
