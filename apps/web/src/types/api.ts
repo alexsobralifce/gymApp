@@ -78,8 +78,19 @@ export interface MedidaCorporal {
   altura_cm?: number | null
   percentual_bf?: number | null
   massa_magra_kg?: number | null
+  imc?: number | null
   data: string
   observacao?: string | null
+}
+
+export interface Notificacao {
+  id: string
+  aluno_id: string
+  tipo: 'PROFESSOR_ATRIBUIDO' | 'NOVO_TREINO'
+  mensagem: string
+  dados?: Record<string, unknown> | null
+  lida: boolean
+  criado_em: string
 }
 
 export interface CorrelacaoResponse {
@@ -148,6 +159,9 @@ export interface PerfilAluno {
   usuario_id: string
   professor_id?: string | null
   academia_id?: string | null
+  data_nascimento?: string | null
+  peso_kg?: number | null
+  altura_cm?: number | null
   criado_em: string
   professor?: { usuario: { nome: string; email: string; telefone?: string | null } } | null
   academia?: { nome: string } | null

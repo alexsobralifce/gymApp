@@ -136,6 +136,14 @@ export const api = {
   criarMedida: (data: { pesoKg?: number; alturaCm?: number; percentualBf?: number; massaMagraKg?: number; observacao?: string }) =>
     api.post<MedidaCorporal>('/alunos/medidas', data),
 
+  updateMedida: (id: string, data: { pesoKg?: number; alturaCm?: number; percentualBf?: number; massaMagraKg?: number; observacao?: string }) =>
+    api.patch<MedidaCorporal>(`/alunos/medidas/${id}`, data),
+
+  // ─── Notificações ──────────────────────────────────
+  getNotificacoes: () => api.get<import('../types/api').Notificacao[]>('/alunos/notificacoes'),
+
+  visualizarNotificacoes: () => api.post('/alunos/notificacoes/visualizar'),
+
   // ─── Correlações ───────────────────────────────────
   getCorrelacoes: () => api.get<CorrelacaoResponse>('/alunos/correlacoes'),
 

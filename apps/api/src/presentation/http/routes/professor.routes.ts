@@ -113,6 +113,23 @@ export async function professorRoutes(app: FastifyInstance) {
       },
       update: { professor_id: professor.id, academia_id: body.academiaId || undefined },
     })
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: request.currentUser.sub },
+      select: { nome: true },
+    })
+
+    if (usuario) {
+      await prisma.notificacao.create({
+        data: {
+          aluno_id: aluno.id,
+          tipo: 'PROFESSOR_ATRIBUIDO',
+          mensagem: `O professor ${usuario.nome} agora é seu treinador!`,
+          dados: { professorNome: usuario.nome },
+        },
+      })
+    }
+
     return reply.status(200).send(aluno)
   })
 

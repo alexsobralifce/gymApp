@@ -157,6 +157,7 @@ model Aluno {
   academia   Academia?        @relation(fields: [academia_id], references: [id])
   treinos    Treino[]
   medidas    MedidaCorporal[]
+  notificacoes Notificacao[]
   mensagensEnviadas MensagemMotivacionalEnviada[]
   correlacao  CorrelacaoDesempenho?
 
@@ -267,12 +268,34 @@ model MedidaCorporal {
   altura_cm       Float?
   percentual_bf   Float?
   massa_magra_kg  Float?
+  imc             Float?
   data            DateTime @default(now())
   observacao      String?
 
   aluno Aluno @relation(fields: [aluno_id], references: [id])
 
   @@map("medidas_corporais")
+}
+
+// ─── Notificações ─────────────────────────────────────────────────────────────
+
+model Notificacao {
+  id        String           @id @default(cuid())
+  aluno_id  String
+  tipo      NotificacaoTipo
+  mensagem  String
+  dados     Json?
+  lida      Boolean          @default(false)
+  criado_em DateTime         @default(now())
+
+  aluno Aluno @relation(fields: [aluno_id], references: [id])
+
+  @@map("notificacoes")
+}
+
+enum NotificacaoTipo {
+  PROFESSOR_ATRIBUIDO
+  NOVO_TREINO
 }
 
 // ─── Mensagens Motivacionais ──────────────────────────────────────────────────

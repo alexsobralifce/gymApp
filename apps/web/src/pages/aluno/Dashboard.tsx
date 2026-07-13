@@ -2,26 +2,57 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
-import type { Treino, PerfilAluno } from '../../types/api'
+import type { Treino, PerfilAluno, Notificacao } from '../../types/api'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+function calcularIMC(pesoKg: number | null | undefined, alturaCm: number | null | undefined): number | null {
+  if (!pesoKg || !alturaCm || alturaCm <= 0) return null
+  return parseFloat((pesoKg / ((alturaCm / 100) ** 2)).toFixed(1))
+}
+
+function classificarIMC(imc: number): { label: string; cor: string } {
+  if (imc < 18.5) return { label: 'Abaixo do peso', cor: 'text-yellow-400' }
+  if (imc < 25) return { label: 'Peso normal', cor: 'text-green-400' }
+  if (imc < 30) return { label: 'Sobrepeso', cor: 'text-yellow-400' }
+  if (imc < 35) return { label: 'Obesidade grau I', cor: 'text-orange-400' }
+  if (imc < 40) return { label: 'Obesidade grau II', cor: 'text-red-400' }
+  return { label: 'Obesidade grau III', cor: 'text-red-400' }
+}
+
+function calcularIdade(dataNascimento: string | null | undefined): number | null {
+  if (!dataNascimento) return null
+  const nasc = new Date(dataNascimento)
+  const hoje = new Date()
+  let idade = hoje.getFullYear() - nasc.getFullYear()
+  const mes = hoje.getMonth() - nasc.getMonth()
+  if (mes < 0 || (mes === 0 && hoje.getDate() < nasc.getDate())) idade--
+  return idade
+}
 
 export default function AlunoDashboard() {
   const [treinos, setTreinos] = useState<Treino[]>([])
   const [perfil, setPerfil] = useState<PerfilAluno | null>(null)
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [modalNotificacao, setModalNotificacao] = useState<Notificacao | null>(null)
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
 
   async function carregarDados() {
     try {
-      const [tData, pData] = await Promise.all([
+      const [tData, pData, nData] = await Promise.all([
         api.getAlunoTreinos(),
         api.getPerfilAluno(),
+        api.getNotificacoes().catch(() => [] as Notificacao[]),
       ])
       setTreinos(tData)
       setPerfil(pData)
+      setNotificacoes(nData)
+      if (nData.length > 0) {
+        setModalNotificacao(nData[0])
+      }
     } catch (err) {
       console.error(err)
     }
@@ -42,6 +73,14 @@ export default function AlunoDashboard() {
     }
   }
 
+  async function handleFecharNotificacao() {
+    await api.visualizarNotificacoes().catch(() => {})
+    setModalNotificacao(null)
+    if (notificacoes.length > 1) {
+      setModalNotificacao(notificacoes[1])
+    }
+  }
+
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   const pendentes = treinos.filter((t) => t.status === 'ENVIADO')
@@ -49,12 +88,51 @@ export default function AlunoDashboard() {
     (t) => t.status === 'ACEITO' || t.status === 'EM_ABERTO'
   )
 
+  const imc = calcularIMC(perfil?.peso_kg, perfil?.altura_cm)
+  const classificacao = imc ? classificarIMC(imc) : null
+  const idade = calcularIdade(perfil?.data_nascimento)
+
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6">
+      {/* Modal de Notificação */}
+      {modalNotificacao && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={handleFecharNotificacao} />
+          <div className="relative z-10 mx-4 w-full max-w-sm rounded-2xl bg-surface-card p-6 shadow-2xl border border-surface-input animate-modal-pop">
+            <div className="text-center">
+              <span className="text-4xl">{modalNotificacao.tipo === 'NOVO_TREINO' ? '🏋️' : '👨‍🏫'}</span>
+              <h3 className="mt-3 text-lg font-bold text-text">
+                {modalNotificacao.tipo === 'NOVO_TREINO' ? 'Nova Ficha de Treino!' : 'Professor Atribuído!'}
+              </h3>
+              <p className="mt-2 text-sm text-text-muted">{modalNotificacao.mensagem}</p>
+            </div>
+            <div className="mt-5 flex gap-2">
+              {modalNotificacao.tipo === 'NOVO_TREINO' && (
+                <button
+                  onClick={() => { handleFecharNotificacao(); navigate('/meus-treinos') }}
+                  className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-bold text-white hover:brightness-110 transition-all cursor-pointer"
+                >
+                  Ver Treinos
+                </button>
+              )}
+              <button
+                onClick={handleFecharNotificacao}
+                className="flex-1 rounded-xl border border-surface-input bg-surface py-2.5 text-sm font-medium text-text-muted hover:text-text transition-all cursor-pointer"
+              >
+                {modalNotificacao.tipo === 'NOVO_TREINO' ? 'Depois' : 'OK, entendi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Card do Perfil */}
       {user && (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm">
           <h2 className="text-xl font-bold text-text">Olá, {user.nome}</h2>
           <div className="mt-1 space-y-0.5 text-xs text-text-muted">
+            {perfil?.academia && <p>Academia: <span className="font-semibold text-text">{perfil.academia.nome}</span></p>}
+            {idade && <p>Idade: <span className="font-semibold text-text">{idade} anos</span></p>}
             {perfil?.professor ? (
               <>
                 <p>Professor: <span className="font-semibold text-text">{perfil.professor.usuario.nome}</span></p>
@@ -76,8 +154,25 @@ export default function AlunoDashboard() {
             ) : (
               <p>Modo: <span className="font-semibold text-text">Autogestão</span></p>
             )}
-            {perfil?.academia && <p>Academia: <span className="font-semibold text-text">{perfil.academia.nome}</span></p>}
           </div>
+
+          {/* IMC */}
+          {imc !== null && (
+            <div className="mt-3 pt-3 border-t border-surface-input">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-text-muted">Seu IMC</p>
+                  <p className="text-2xl font-bold text-text">{imc}</p>
+                </div>
+                <div className="text-right">
+                  <p className={`text-sm font-semibold ${classificacao?.cor}`}>{classificacao?.label}</p>
+                  <p className="text-[10px] text-text-muted">
+                    {perfil?.peso_kg}kg / {perfil?.altura_cm}cm
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -180,6 +275,31 @@ export default function AlunoDashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Seção de Ciência & Bem-estar */}
+      <div className="rounded-2xl bg-surface-card border border-surface-input p-5 shadow-sm">
+        <h2 className="text-base font-bold text-text uppercase tracking-wider mb-3">Ciência & Bem-estar</h2>
+        <div className="space-y-3">
+          <div className="rounded-xl bg-surface p-3 border border-surface-input">
+            <p className="text-sm font-medium text-text">💡 Por que o aquecimento é essencial?</p>
+            <p className="text-xs text-text-muted mt-1">
+              Estudos mostram que 5-10 minutos de aquecimento reduzem o risco de lesões em até 40% e melhoram o desempenho nas primeiras séries.
+            </p>
+          </div>
+          <div className="rounded-xl bg-surface p-3 border border-surface-input">
+            <p className="text-sm font-medium text-text">📊 Consistência &gt; Intensidade</p>
+            <p className="text-xs text-text-muted mt-1">
+              Pesquisas longitudinais mostram que a frequência semanal de treino é o maior preditor de ganhos de força, acima da carga absoluta.
+            </p>
+          </div>
+          <div className="rounded-xl bg-surface p-3 border border-surface-input">
+            <p className="text-sm font-medium text-text">🥗 Proteína pós-treino</p>
+            <p className="text-xs text-text-muted mt-1">
+              A janela anabólica de 30-60 minutos após o treino é o momento ideal para consumir proteína, maximizando a síntese muscular em até 50%.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

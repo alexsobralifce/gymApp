@@ -28,7 +28,6 @@ function getNavItems(role: string): NavEntry[] {
           { to: '/meus-treinos', label: 'Meus Treinos' },
           { to: '/medidas', label: 'Medidas' },
           { to: '/evolucao', label: 'Evolução' },
-          { to: '/estudo', label: 'Estudo' },
           { to: '/alterar-senha', label: 'Alterar Senha' },
         ]
     case 'PROFESSOR':

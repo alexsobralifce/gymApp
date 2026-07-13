@@ -103,6 +103,16 @@ export async function treinoRoutes(app: FastifyInstance) {
     const professor = await resolveProfessor(request.currentUser.sub)
 
     const treino = await enviarTreinoParaAceite(id, professor.id)
+
+    await prisma.notificacao.create({
+      data: {
+        aluno_id: treino.aluno_id,
+        tipo: 'NOVO_TREINO',
+        mensagem: `Você recebeu uma nova ficha de treino: ${treino.nome}!`,
+        dados: { treinoId: treino.id, treinoNome: treino.nome },
+      },
+    })
+
     return reply.status(200).send(treino)
   })
 

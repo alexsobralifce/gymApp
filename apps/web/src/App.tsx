@@ -11,7 +11,6 @@ import AlunoTreinoExecucao from './pages/aluno/TreinoExecucao'
 import AlunoTreinoConclusao from './pages/aluno/TreinoConclusao'
 import AlunoMedidas from './pages/aluno/Medidas'
 import AlunoEvolucao from './pages/aluno/Evolucao'
-import AlunoEstudo from './pages/aluno/Estudo'
 import ProfessorDashboard from './pages/professor/Dashboard'
 import ProfessorAlunoCorrelacoes from './pages/professor/AlunoCorrelacoes'
 import ProfessorCriarTreino from './pages/professor/CriarTreino'
@@ -56,7 +55,6 @@ export default function App() {
           <Route path="treino/:id/conclusao" element={<AlunoTreinoConclusao />} />
           <Route path="medidas" element={<AlunoMedidas />} />
           <Route path="evolucao" element={<AlunoEvolucao />} />
-          <Route path="estudo" element={<AlunoEstudo />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
