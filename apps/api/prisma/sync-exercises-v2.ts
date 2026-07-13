@@ -15,13 +15,14 @@ const __dirname = path.dirname(__filename)
 
 function findDatasetPath(): string {
   const candidates = [
+    path.join(__dirname, 'data', 'exercises.json'),
     path.join(process.cwd(), 'exercises-dataset-main', 'data', 'exercises.json'),
     path.join(__dirname, '..', '..', '..', 'exercises-dataset-main', 'data', 'exercises.json'),
   ]
   for (const c of candidates) {
     if (fs.existsSync(c)) return c
   }
-  throw new Error('exercises-dataset-main/data/exercises.json nao encontrado!')
+  throw new Error('exercises.json nao encontrado! Verifique apps/api/prisma/data/exercises.json')
 }
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3333'
