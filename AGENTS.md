@@ -68,8 +68,12 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 - `TreinoAtor`: `ALUNO | PROFESSOR | SISTEMA`
 
 ### Notificacao (`notificacoes`)
-`id (cuid), aluno_id (FK), tipo (String — ex: NOVO_TREINO), mensagem (String), dados (Json), lida (Boolean, default false), criado_em`
+`id (cuid), aluno_id (FK), tipo (NotificacaoTipo), mensagem (String), dados (Json?), lida (Boolean, default false), criado_em`
 - Criada automaticamente ao enviar treino (`POST /treinos/:id/enviar`)
+- `NotificacaoTipo`: `PROFESSOR_ATRIBUIDO | NOVO_TREINO`
+
+### AvaliacaoDificuldade (não é enum no Prisma, é String?)
+`FACIL | MODERADO | INTENSO | MUITO_INTENSO` — usado em `treinos.avaliacao_dificuldade` ao finalizar
 
 ### TreinoExercicio
 `id (cuid), treino_id (FK), exercicio_id (FK), ordem, series, repeticoes, carga_sugerida_kg?`
@@ -162,13 +166,15 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 |--------|------|-----------|
 | POST | `/alunos/perfil` | Criar/atualizar perfil Aluno (body: dataNascimento?, pesoKg?, alturaCm?). Update parcial permitido. |
 | GET | `/alunos/perfil` | Perfil do aluno com professor e academia |
-| GET | `/alunos/treinos` | Listar treinos do aluno |
+| GET | `/alunos/treinos` | Listar treinos do aluno (todos os status, sem filtro no backend) |
 | GET | `/alunos/medidas` | Listar medidas (auto-backfill do perfil se nenhuma existir) |
 | POST | `/alunos/medidas` | Registrar medida com cálculo automático de IMC |
 | PATCH | `/alunos/medidas/:id` | Editar medida existente (recalcula IMC) |
 | GET | `/alunos/correlacoes` | Correlações em cache |
 | POST | `/alunos/correlacoes` | Recalcular correlações |
 | PATCH | `/alunos/academia` | Vincular aluno a academia |
+| GET | `/alunos/notificacoes` | Listar notificações não lidas do aluno |
+| POST | `/alunos/notificacoes/visualizar` | Marcar todas as notificações como lidas |
 
 ### Professor (`/professores`) — role PROFESSOR
 | Método | Rota | Descrição |
@@ -218,6 +224,9 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/root/painel` | Painel global |
+| GET | `/root/academias` | Listar todas as academias (CRUD) |
+| PUT | `/root/academias/:id` | Atualizar academia (nome, cnpj, max_professores, status, email) |
+| DELETE | `/root/academias/:id` | Excluir academia e usuário associado |
 | PATCH | `/root/academias/:id/aprovacao` | Aprovar/rejeitar academia |
 | PATCH | `/root/academias/:id/limite-professores` | Definir limite |
 | PATCH | `/root/academias/:id/status` | Alterar status |
@@ -225,13 +234,87 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | PATCH | `/root/vinculos/:id/aprovacao` | Aprovar/rejeitar vínculo |
 | GET | `/root/usuarios` | Listar usuários |
 | POST | `/root/usuarios/:id/reset-password` | Resetar senha |
+| GET | `/root/professores` | Listar todos os professores |
+| PUT | `/root/professores/:id` | Atualizar professor (nome, email, cref, academias_ids) |
+| DELETE | `/root/professores/:id` | Excluir professor e usuário associado |
 | GET | `/root/alunos` | Listar todos os alunos (inclui telefone, data_nascimento, peso_kg, altura_cm) |
 | PUT | `/root/alunos/:id` | Atualizar aluno (nome, email, telefone, data_nascimento, peso_kg, altura_cm, academia_id, professor_id) |
 | DELETE | `/root/alunos/:id` | Excluir aluno e todos os dados relacionados (cascade) |
 
 ---
 
-## 5. Diretrizes e Padrões de Código
+## 5. Estrutura do Frontend (`apps/web/src`)
+
+### Páginas por Role
+| Role | Página | Rota | Arquivo |
+|------|--------|------|---------|
+| `ALUNO` | Dashboard | `/` | `pages/aluno/Dashboard.tsx` |
+| `ALUNO` | Meus Treinos | `/meus-treinos` | `pages/aluno/MeusTreinos.tsx` |
+| `ALUNO` | Início do Treino | `/treino/:id/inicio` | `pages/aluno/TreinoInicio.tsx` |
+| `ALUNO` | Execução | `/treino/:id/execucao` | `pages/aluno/TreinoExecucao.tsx` |
+| `ALUNO` | Conclusão | `/treino/:id/conclusao` | `pages/aluno/TreinoConclusao.tsx` |
+| `ALUNO` | Medidas | `/medidas` | `pages/aluno/Medidas.tsx` |
+| `ALUNO` | Evolução | `/evolucao` | `pages/aluno/Evolucao.tsx` |
+| `PROFESSOR` | Dashboard | `/` | `pages/professor/Dashboard.tsx` |
+| `PROFESSOR` | Treinos (listagem) | `/treinos` | `pages/professor/Treinos.tsx` |
+| `PROFESSOR` | Criar Treino | `/treinos/criar` | `pages/professor/CriarTreino.tsx` |
+| `PROFESSOR` | Fichas (enviar) | `/fichas` | `pages/professor/Fichas.tsx` |
+| `PROFESSOR` | Criar Exercício | `/exercicios/criar` | `pages/professor/CriarExercicio.tsx` |
+| `PROFESSOR` | Academias | `/academias` | `pages/professor/Academias.tsx` |
+| `PROFESSOR` | Vincular Aluno | `/alunos/vincular` | `pages/professor/VincularAluno.tsx` |
+| `PROFESSOR` | Correlações Aluno | `/alunos/:alunoId/correlacoes` | `pages/professor/AlunoCorrelacoes.tsx` |
+| `ACADEMIA` | Dashboard | `/` | `pages/academia/Dashboard.tsx` |
+| `ACADEMIA` | Professores | `/professores` | `pages/academia/Professores.tsx` |
+| `ACADEMIA` | Alunos | `/alunos` | `pages/academia/Alunos.tsx` |
+| `ACADEMIA` | Treinos | `/treinos` | `pages/academia/Treinos.tsx` |
+| `ACADEMIA` | Criar Treino | `/treinos/criar` | `pages/academia/CriarTreinoAcademia.tsx` |
+| `ROOT` | Painel | `/` | `pages/root/Painel.tsx` |
+| `ROOT` | Vínculos | `/vinculos` | `pages/root/Vinculos.tsx` |
+| `ROOT` | Usuários | `/usuarios` | `pages/root/Usuarios.tsx` |
+| `*` | Login | `/login` | `pages/auth/Login.tsx` |
+| `*` | Registro | `/register` | `pages/auth/Register.tsx` |
+| `*` | Alterar Senha | `/alterar-senha` | `pages/auth/AlterarSenha.tsx` |
+
+### Stores (Zustand)
+| Store | Arquivo | Responsabilidade |
+|-------|---------|-----------------|
+| `useAuthStore` | `stores/auth.ts` | Autenticação: login, register, logout, fetchUser, updatePushSubscription |
+| `useTrainingStore` | `stores/training.ts` | Sessão ativa de treino: iniciarTreino, registrarExecucao, finalizarTreino, timer, exercicioAtual |
+
+### Hooks
+| Hook | Arquivo | Responsabilidade |
+|------|---------|-----------------|
+| `useNotifications` | `hooks/useNotifications.ts` | Gerenciamento de push notifications (expo/web) |
+| `useToast` | (via contexto/componente) | Feedback de sucesso/erro |
+
+### Componentes Compartilhados
+| Componente | Arquivo |
+|------------|---------|
+| `AppShell` | `components/layout/AppShell.tsx` |
+| `Toast` | `components/ui/Toast.tsx` |
+| `ConfirmModal` | `components/ui/ConfirmModal.tsx` |
+
+### Visibilidade dos Treinos para o Aluno (Frontend)
+- **Dashboard** (`/`): mostra treinos `ENVIADO` como "Fichas de Treino Recebidas" com botões Aceitar/Recusar, e `ACEITO`/`EM_ABERTO` como "Meus Treinos Ativos" com botão Iniciar
+- **Meus Treinos** (`/meus-treinos`): mostra `ENVIADO` (badge azul "Pendente" + Aceitar/Recusar), `CADASTRADO` (badge amarelo "Em preparação" + mensagem), e `ACEITO`/`EM_ABERTO`/`EM_EXECUCAO` (badge verde "Ativo" + Iniciar)
+- **Importante**: `GET /alunos/treinos` retorna TODOS os status sem filtro. O filtro é feito no frontend para controlar o que cada tela exibe.
+- Status não exibidos em nenhuma tela do aluno: `RECUSADO`, `CONCLUIDO`
+
+### Fluxo de Criação de Treino (Professor/Academia)
+1. Professor acessa Dashboard → "Montar Treino" → `CriarTreino.tsx`
+2. Monta as fichas de treino (A/B/C) com exercícios e dias da semana
+3. Clica "Salvar Treino Completo" → `POST /professores/fichas` (cria com status `CADASTRADO`)
+4. **Auto-envio**: o frontend chama `POST /treinos/:id/enviar` para cada ficha criada, transicionando para `ENVIADO` e gerando notificação
+5. Aluno vê na Dashboard como "Ficha de Treino Recebida" e pode Aceitar ou Recusar
+6. Ao aceitar: status vai para `ACEITO`, treino aparece em Meus Treinos como disponível para iniciar
+
+### Arquivos Não Utilizados (Dead Code)
+- `pages/aluno/Estudo.tsx` — arquivo existe no disco mas não está mapeado em nenhuma rota do `App.tsx`
+- `components/ProtectedRoute.tsx` — não é importado ou usado em nenhum lugar; proteção de rota é feita diretamente via condicionais no `App.tsx`
+
+---
+
+## 6. Diretrizes e Padrões de Código
 
 ### Backend (`apps/api`)
 1. **Compilação**: TypeScript compilado para `dist`. Nunca execute `tsc` em runtime.
@@ -281,7 +364,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 
 ---
 
-## 6. Skills do Projeto (`.agent/skills/`)
+## 7. Skills do Projeto (`.agent/skills/`)
 
 ### SKILL.md
 - Regras de transição de estado do Treino (máquina de estados)
@@ -309,7 +392,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 
 ---
 
-## 7. Instruções de Deploy (Railway)
+## 8. Instruções de Deploy (Railway)
 
 ```bash
 # API
@@ -327,7 +410,7 @@ RAILPACK_START_CMD = npm run start --workspace=apps/web
 
 ---
 
-## 8. Comandos Úteis
+## 9. Comandos Úteis
 
 ```bash
 npm run dev:api          # Backend dev (Fastify com hot-reload)
