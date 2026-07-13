@@ -10,7 +10,6 @@ export default function AlunoMedidas() {
   const [sucesso, setSucesso] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // Campos do formulário
   const [pesoKg, setPesoKg] = useState('')
   const [alturaCm, setAlturaCm] = useState('')
   const [percentualBf, setPercentualBf] = useState('')
@@ -18,7 +17,17 @@ export default function AlunoMedidas() {
   const [observacao, setObservacao] = useState('')
 
   useEffect(() => {
-    api.getMedidas().then(setMedidas).finally(() => setLoading(false))
+    Promise.all([
+      api.getMedidas(),
+      api.getPerfilAluno(),
+    ]).then(([mData, pData]) => {
+      setMedidas(mData)
+      if (mData.length === 0 && pData.peso_kg && pData.altura_cm) {
+        setPesoKg(pData.peso_kg.toString())
+        setAlturaCm(pData.altura_cm.toString())
+        setMostrarNovo(true)
+      }
+    }).finally(() => setLoading(false))
   }, [])
 
   function resetForm() {

@@ -31,7 +31,36 @@ export async function alunoRoutes(app: FastifyInstance) {
     }).parse(request.body || {})
 
     const existente = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
-    if (existente) return reply.status(200).send(existente)
+
+    if (existente) {
+      if (body.pesoKg && body.alturaCm) {
+        await prisma.aluno.update({
+          where: { id: existente.id },
+          data: {
+            data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : undefined,
+            peso_kg: body.pesoKg,
+            altura_cm: body.alturaCm,
+          },
+        })
+
+        const temMedida = await prisma.medidaCorporal.findFirst({
+          where: { aluno_id: existente.id },
+        })
+
+        if (!temMedida) {
+          const imc = calcularIMC(body.pesoKg, body.alturaCm)
+          try {
+            await prisma.medidaCorporal.create({
+              data: { aluno_id: existente.id, peso_kg: body.pesoKg, altura_cm: body.alturaCm, imc },
+            })
+          } catch (err) {
+            request.log.error(err, 'Falha ao criar MedidaCorporal no backfill do perfil')
+          }
+        }
+      }
+
+      return reply.status(200).send(existente)
+    }
 
     const imc = body.pesoKg && body.alturaCm ? calcularIMC(body.pesoKg, body.alturaCm) : null
 
@@ -45,14 +74,13 @@ export async function alunoRoutes(app: FastifyInstance) {
     })
 
     if (body.pesoKg && body.alturaCm) {
-      await prisma.medidaCorporal.create({
-        data: {
-          aluno_id: aluno.id,
-          peso_kg: body.pesoKg,
-          altura_cm: body.alturaCm,
-          imc,
-        },
-      })
+      try {
+        await prisma.medidaCorporal.create({
+          data: { aluno_id: aluno.id, peso_kg: body.pesoKg, altura_cm: body.alturaCm, imc },
+        })
+      } catch (err) {
+        request.log.error(err, 'Falha ao criar MedidaCorporal no cadastro do perfil')
+      }
     }
 
     return reply.status(201).send(aluno)
@@ -131,10 +159,23 @@ export async function alunoRoutes(app: FastifyInstance) {
   app.get('/medidas', { preHandler }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
 
-    const medidas = await prisma.medidaCorporal.findMany({
+    let medidas = await prisma.medidaCorporal.findMany({
       where: { aluno_id: aluno.id },
       orderBy: { data: 'asc' },
     })
+
+    if (medidas.length === 0 && aluno.peso_kg && aluno.altura_cm) {
+      const imc = calcularIMC(aluno.peso_kg, aluno.altura_cm)
+      try {
+        const nova = await prisma.medidaCorporal.create({
+          data: { aluno_id: aluno.id, peso_kg: aluno.peso_kg, altura_cm: aluno.altura_cm, imc },
+        })
+        medidas = [nova]
+      } catch (err) {
+        request.log.error(err, 'Falha ao criar MedidaCorporal automática')
+      }
+    }
+
     return reply.status(200).send(medidas)
   })
 
