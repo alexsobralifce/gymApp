@@ -1003,11 +1003,38 @@ async function sync() {
     return
   }
   
-  console.log('Limpando exercicios antigos...')
-  const deleted = await prisma.exercicio.deleteMany({
-    where: { id: { not: { startsWith: 'ds-' } } }
+  console.log('Limpando exercicios antigos e dados dependentes...')
+  
+  // Buscar IDs dos exercícios antigos
+  const oldExercises = await prisma.exercicio.findMany({
+    where: { id: { not: { startsWith: 'ds-' } } },
+    select: { id: true }
   })
-  console.log(`${deleted.count} exercicios antigos removidos.`)
+  
+  const oldIds = oldExercises.map(e => e.id)
+  
+  if (oldIds.length > 0) {
+    // Deletar em transação: primeiro os dependentes, depois os exercícios
+    await prisma.$transaction(async (tx) => {
+      // Deletar execuções de exercícios antigos
+      await tx.execucaoExercicio.deleteMany({
+        where: { exercicio_id: { in: oldIds } }
+      })
+      
+      // Deletar vínculos treino-exercício
+      await tx.treinoExercicio.deleteMany({
+        where: { exercicio_id: { in: oldIds } }
+      })
+      
+      // Deletar exercícios antigos
+      await tx.exercicio.deleteMany({
+        where: { id: { in: oldIds } }
+      })
+    })
+    console.log(`${oldIds.length} exercicios antigos removidos (com dados dependentes).`)
+  } else {
+    console.log('Nenhum exercicio antigo encontrado.')
+  }
 
   const dataPath = findDatasetPath()
   console.log(`Carregando dataset: ${dataPath}`)
