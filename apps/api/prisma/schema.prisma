@@ -142,12 +142,15 @@ model ProfessorAcademia {
 // ─── Aluno ────────────────────────────────────────────────────────────────────
 
 model Aluno {
-  id            String   @id @default(cuid())
-  usuario_id    String   @unique
-  professor_id  String?  // null = modo autogestão
-  academia_id   String?
-  criado_em     DateTime @default(now())
-  atualizado_em DateTime @updatedAt
+  id              String    @id @default(cuid())
+  usuario_id      String    @unique
+  professor_id    String?   // null = modo autogestão
+  academia_id     String?
+  data_nascimento DateTime?
+  peso_kg         Float?
+  altura_cm       Float?
+  criado_em       DateTime  @default(now())
+  atualizado_em   DateTime  @updatedAt
 
   usuario    Usuario          @relation(fields: [usuario_id], references: [id])
   professor  Professor?       @relation(fields: [professor_id], references: [id])

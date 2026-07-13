@@ -127,6 +127,8 @@ export interface Academia {
 export interface AcademiaDashboard {
   nome: string
   cnpj: string
+  email?: string | null
+  telefone?: string | null
   status: string
   totalProfessores: number
   totalAlunos: number

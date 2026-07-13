@@ -105,7 +105,8 @@ export const api = {
     api.post('/auth/change-password', { senhaAtual, novaSenha }),
 
   // ─── Aluno ─────────────────────────────────────────
-  criarPerfilAluno: () => api.post('/alunos/perfil'),
+  criarPerfilAluno: (data?: { dataNascimento?: string; pesoKg?: number; alturaCm?: number }) =>
+    api.post('/alunos/perfil', data),
 
   vincularAcademiaAluno: (academiaId: string) => api.patch('/alunos/academia', { academiaId }),
 

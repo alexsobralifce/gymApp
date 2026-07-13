@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role } from '@prisma/client'
+import { Role, VinculoStatus } from '@prisma/client'
 import { dashboardProfessor } from '../../../application/usecases/treino/TreinoService.js'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { obterCorrelacoes } from '../../../application/usecases/correlacao/CorrelacaoService.js'
@@ -29,23 +29,34 @@ export async function professorRoutes(app: FastifyInstance) {
     return reply.status(200).send(professor)
   })
 
-  /** POST /professores/vincular/:academiaId — UC-09 */
+  /** POST /professores/vincular/:academiaId — UC-09 (com proteção contra race condition) */
   app.post('/vincular/:academiaId', { preHandler }, async (request, reply) => {
     const { academiaId } = z.object({ academiaId: z.string() }).parse(request.params)
     const professor = await resolveProfessor(request.currentUser.sub)
 
-    const existente = await prisma.professorAcademia.findUnique({
+    let vinculo = await prisma.professorAcademia.findUnique({
       where: { professor_id_academia_id: { professor_id: professor.id, academia_id: academiaId } },
     })
 
-    if (existente) {
-      return reply.status(200).send({ ...existente, jaVinculado: true })
+    if (vinculo) {
+      return reply.status(200).send({ ...vinculo, jaVinculado: true })
     }
 
-    const vinculo = await prisma.professorAcademia.create({
-      data: { professor_id: professor.id, academia_id: academiaId },
-    })
-    return reply.status(201).send({ ...vinculo, jaVinculado: false })
+    try {
+      vinculo = await prisma.professorAcademia.create({
+        data: { professor_id: professor.id, academia_id: academiaId },
+      })
+      return reply.status(201).send({ ...vinculo, jaVinculado: false })
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        // Race condition: outro request criou o vínculo entre o findUnique e o create
+        vinculo = await prisma.professorAcademia.findUnique({
+          where: { professor_id_academia_id: { professor_id: professor.id, academia_id: academiaId } },
+        })
+        return reply.status(200).send({ ...vinculo!, jaVinculado: true })
+      }
+      throw err
+    }
   })
 
   /** GET /professores/vinculos — lista vínculos do professor logado */

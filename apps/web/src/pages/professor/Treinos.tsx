@@ -20,9 +20,9 @@ const STATUS_COR: Record<string, string> = {
 export default function ProfessorTreinos() {
   const [alunos, setAlunos] = useState<ProfessorDashboard[]>([])
   const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-  const [editingTreino, setEditingTreino] = useState<Treino | null>(null)
+  const [editingTreino, setEditingTreino] = useState<{ treino: Treino; alunoId: string } | null>(null)
   const [deletingTreino, setDeletingTreino] = useState<{ id: string; nome: string } | null>(null)
+  const [viewingTreinos, setViewingTreinos] = useState<{ treinos: ProfessorDashboard['treinos']; alunoNome: string; alunoId: string } | null>(null)
   const [form, setForm] = useState({ nome: '', diasSemana: [] as number[] })
   const [saving, setSaving] = useState(false)
   const { showToast, ToastComponent } = useToast()
@@ -31,10 +31,6 @@ export default function ProfessorTreinos() {
   useEffect(() => {
     api.getDashboard().then(setAlunos).finally(() => setLoading(false))
   }, [])
-
-  const toggleExpand = (id: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
-  }
 
   const toggleDia = (dia: number) => {
     setForm((prev) => ({
@@ -49,10 +45,7 @@ export default function ProfessorTreinos() {
     if (!editingTreino || !form.nome || form.diasSemana.length === 0) return
     setSaving(true)
     try {
-      await api.updateTreino(editingTreino.id, {
-        nome: form.nome,
-        diasSemana: form.diasSemana,
-      })
+      await api.updateTreino(editingTreino.treino.id, { nome: form.nome, diasSemana: form.diasSemana })
       showToast('Treino atualizado com sucesso!')
       setEditingTreino(null)
       setForm({ nome: '', diasSemana: [] })
@@ -81,18 +74,13 @@ export default function ProfessorTreinos() {
     }
   }
 
-  const openEdit = (treino: { id: string; nome: string; dias_semana?: number[] }) => {
-    setEditingTreino(treino as Treino)
-    setForm({ nome: treino.nome, diasSemana: treino.dias_semana ? [...treino.dias_semana] : [] })
-  }
-
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
     <div className="p-4 md:p-6">
       {ToastComponent}
 
-      <h1 className="mb-6 text-xl font-bold text-text">Treinos dos Alunos</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">Listar Treinos</h1>
 
       {alunos.length === 0 ? (
         <p className="text-text-muted">Nenhum aluno vinculado ao seu perfil.</p>
@@ -102,8 +90,8 @@ export default function ProfessorTreinos() {
             <thead>
               <tr className="border-b border-surface-input bg-surface/50 text-xs font-semibold text-text-muted uppercase tracking-wider">
                 <th className="p-4">Aluno</th>
-                <th className="p-4 hidden md:table-cell">Telefone</th>
-                <th className="p-4 hidden md:table-cell">Email</th>
+                <th className="p-4">Fone</th>
+                <th className="p-4">Email</th>
                 <th className="p-4">Treinos</th>
                 <th className="p-4 text-right">Ações</th>
               </tr>
@@ -111,65 +99,30 @@ export default function ProfessorTreinos() {
             <tbody className="divide-y divide-surface-input">
               {alunos.map((aluno) => (
                 <tr key={aluno.id} className="hover:bg-surface/30 transition-colors">
-                  <td className="p-4">
-                    <p className="text-sm font-medium text-text">{aluno.usuario.nome}</p>
-                    <p className="text-xs text-text-muted md:hidden">{aluno.usuario.email}</p>
-                    {aluno.usuario.telefone && (
-                      <p className="text-xs text-text-muted md:hidden">{aluno.usuario.telefone}</p>
-                    )}
-                  </td>
-                  <td className="p-4 hidden md:table-cell text-sm text-text-muted">
-                    {aluno.usuario.telefone || '-'}
-                  </td>
-                  <td className="p-4 hidden md:table-cell text-sm text-text-muted">
-                    {aluno.usuario.email}
-                  </td>
+                  <td className="p-4 text-sm font-medium text-text">{aluno.usuario.nome}</td>
+                  <td className="p-4 text-sm text-text-muted">{aluno.usuario.telefone || '-'}</td>
+                  <td className="p-4 text-sm text-text-muted">{aluno.usuario.email}</td>
                   <td className="p-4">
                     {aluno.treinos.length === 0 ? (
-                      <span className="text-xs text-text-muted italic">Nenhum treino</span>
+                      <span className="text-xs text-text-muted italic">Nenhum</span>
                     ) : (
-                      <div className="space-y-1">
-                        {(expanded[aluno.id] ? aluno.treinos : aluno.treinos.slice(0, 2)).map((t) => (
-                          <div key={t.id} className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs text-text font-medium">{t.nome}</span>
-                            <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
-                              {t.status}
-                            </span>
-                            <span className="text-[10px] text-text-muted">
-                              {t.dias_semana?.map((d: number) => DIA_LABEL[d]).join(', ')}
-                            </span>
-                            <button
-                              onClick={() => openEdit(t)}
-                              className="text-[10px] text-primary hover:underline cursor-pointer"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => setDeletingTreino({ id: t.id, nome: t.nome })}
-                              className="text-[10px] text-red-400 hover:underline cursor-pointer"
-                            >
-                              Remover
-                            </button>
-                          </div>
-                        ))}
-                        {aluno.treinos.length > 2 && (
-                          <button
-                            onClick={() => toggleExpand(aluno.id)}
-                            className="text-xs text-primary hover:underline cursor-pointer"
-                          >
-                            {expanded[aluno.id] ? 'Ver menos' : `+${aluno.treinos.length - 2} mais`}
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => setViewingTreinos({ treinos: aluno.treinos, alunoNome: aluno.usuario.nome, alunoId: aluno.id })}
+                        className="text-sm text-primary hover:underline cursor-pointer"
+                      >
+                        Ver treinos ({aluno.treinos.length})
+                      </button>
                     )}
                   </td>
                   <td className="p-4 text-right">
-                    <button
-                      onClick={() => navigate(`/treinos/criar?alunoId=${aluno.id}`)}
-                      className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/95 transition-colors cursor-pointer"
-                    >
-                      + Treino
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => navigate(`/treinos/criar?alunoId=${aluno.id}`)}
+                        className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/95 transition-colors cursor-pointer"
+                      >
+                        + Novo
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -178,6 +131,65 @@ export default function ProfessorTreinos() {
         </div>
       )}
 
+      {/* Modal: Visualizar Treinos */}
+      {viewingTreinos && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setViewingTreinos(null)} />
+          <div className="relative z-10 mx-4 w-full max-w-lg rounded-lg bg-surface-card p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-text">Treinos de {viewingTreinos.alunoNome}</h3>
+              <button onClick={() => setViewingTreinos(null)} className="text-text-muted hover:text-text text-lg cursor-pointer">&times;</button>
+            </div>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {viewingTreinos.treinos.map((t) => (
+                <div key={t.id} className="flex items-center justify-between rounded-lg border border-surface-input bg-surface p-3">
+                  <div>
+                    <p className="text-sm font-medium text-text">{t.nome}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
+                        {t.status}
+                      </span>
+                      <span className="text-[10px] text-text-muted">
+                        {t.dias_semana?.map((d: number) => DIA_LABEL[d]).join(', ')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setViewingTreinos(null); navigate(`/treino/${t.id}/inicio`) }}
+                      className="text-xs text-primary hover:underline cursor-pointer"
+                    >
+                      Exibir
+                    </button>
+                    <button
+                      onClick={() => {
+                        const treino = t as Treino
+                        setEditingTreino({ treino: { ...treino, aluno_id: '', criado_em: '' }, alunoId: viewingTreinos.alunoId })
+                        setForm({ nome: treino.nome, diasSemana: treino.dias_semana ? [...treino.dias_semana] : [] })
+                        setViewingTreinos(null)
+                      }}
+                      className="text-xs text-blue-400 hover:underline cursor-pointer"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeletingTreino({ id: t.id, nome: t.nome })
+                        setViewingTreinos(null)
+                      }}
+                      className="text-xs text-red-400 hover:underline cursor-pointer"
+                    >
+                      Deletar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Editar Treino */}
       {editingTreino && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => { setEditingTreino(null); setForm({ nome: '', diasSemana: [] }) }} />
@@ -230,6 +242,7 @@ export default function ProfessorTreinos() {
         </div>
       )}
 
+      {/* Modal: Confirmar Remoção */}
       {deletingTreino && (
         <ConfirmModal
           open={!!deletingTreino}

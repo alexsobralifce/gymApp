@@ -4,6 +4,13 @@ import { useAuthStore } from '../../stores/auth'
 import { api } from '../../api/client'
 import type { Academia } from '../../types/api'
 
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 2) return `(${digits}`
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+}
+
 export default function Register() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -12,6 +19,9 @@ export default function Register() {
   const [role, setRole] = useState('ALUNO')
   const [academias, setAcademias] = useState<Academia[]>([])
   const [academiaId, setAcademiaId] = useState('')
+  const [dataNascimento, setDataNascimento] = useState('')
+  const [peso, setPeso] = useState('')
+  const [altura, setAltura] = useState('')
   const { register, loading, error } = useAuthStore()
   const navigate = useNavigate()
 
@@ -23,7 +33,14 @@ export default function Register() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await register(nome, email, senha, role, role === 'ALUNO' ? academiaId : undefined, telefone || undefined)
+    await register(
+      nome, email, senha, role,
+      role === 'ALUNO' ? academiaId : undefined,
+      telefone.replace(/\D/g, '') || undefined,
+      dataNascimento || undefined,
+      peso ? Number(peso) : undefined,
+      altura ? Number(altura) : undefined,
+    )
     navigate('/')
   }
 
@@ -50,8 +67,9 @@ export default function Register() {
           required minLength={8}
         />
         <input
-          type="tel" placeholder="WhatsApp (opcional)" value={telefone} onChange={(e) => setTelefone(e.target.value)}
+          type="tel" placeholder="WhatsApp (opcional)" value={telefone} onChange={(e) => setTelefone(formatPhone(e.target.value))}
           className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+          maxLength={16}
         />
         <select
           value={role} onChange={(e) => setRole(e.target.value)}
@@ -63,22 +81,47 @@ export default function Register() {
         </select>
 
         {role === 'ALUNO' && (
-          <div>
-            <label className="block text-xs text-text-muted mb-1">Academia</label>
-            <select
-              value={academiaId}
-              onChange={(e) => setAcademiaId(e.target.value)}
-              className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
-              required
-            >
-              <option value="">Selecionar academia...</option>
-              {academias.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.nome}
-                </option>
-              ))}
-            </select>
-          </div>
+          <>
+            <div>
+              <label className="block text-xs text-text-muted mb-1">Data de nascimento</label>
+              <input
+                type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)}
+                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-xs text-text-muted mb-1">Peso (kg)</label>
+                <input
+                  type="number" step="0.1" min="0" placeholder="70.5" value={peso} onChange={(e) => setPeso(e.target.value)}
+                  className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs text-text-muted mb-1">Altura (cm)</label>
+                <input
+                  type="number" step="1" min="0" placeholder="175" value={altura} onChange={(e) => setAltura(e.target.value)}
+                  className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-text-muted mb-1">Academia</label>
+              <select
+                value={academiaId}
+                onChange={(e) => setAcademiaId(e.target.value)}
+                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                required
+              >
+                <option value="">Selecionar academia...</option>
+                {academias.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
         )}
 
         <button

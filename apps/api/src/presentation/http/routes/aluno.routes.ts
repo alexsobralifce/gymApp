@@ -19,10 +19,23 @@ export async function alunoRoutes(app: FastifyInstance) {
   /** POST /alunos/perfil — UC-17 */
   app.post('/perfil', { preHandler: [app.authenticate] }, async (request, reply) => {
     const usuarioId = request.currentUser.sub
+    const body = z.object({
+      dataNascimento: z.string().optional(),
+      pesoKg: z.number().positive().optional(),
+      alturaCm: z.number().positive().optional(),
+    }).parse(request.body || {})
+
     const existente = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
     if (existente) return reply.status(200).send(existente)
 
-    const aluno = await prisma.aluno.create({ data: { usuario_id: usuarioId } })
+    const aluno = await prisma.aluno.create({
+      data: {
+        usuario_id: usuarioId,
+        data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : undefined,
+        peso_kg: body.pesoKg,
+        altura_cm: body.alturaCm,
+      },
+    })
     return reply.status(201).send(aluno)
   })
 

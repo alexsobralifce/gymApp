@@ -18,7 +18,7 @@ export async function academiaRoutes(app: FastifyInstance) {
     const academiaId = request.currentUser.tenantId!
     const academia = await prisma.academia.findUnique({
       where: { id: academiaId },
-      select: { nome: true, cnpj: true, status: true },
+      select: { nome: true, cnpj: true, status: true, usuario: { select: { email: true, telefone: true } } },
     })
     if (!academia) throw new NotFoundError('Academia')
 
@@ -31,6 +31,8 @@ export async function academiaRoutes(app: FastifyInstance) {
     return reply.status(200).send({
       nome: academia.nome,
       cnpj: academia.cnpj,
+      email: academia.usuario.email,
+      telefone: academia.usuario.telefone,
       status: academia.status,
       totalProfessores,
       totalAlunos,

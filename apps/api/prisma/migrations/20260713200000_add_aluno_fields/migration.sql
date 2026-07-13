@@ -1,0 +1,3 @@
+ALTER TABLE "alunos" ADD COLUMN "data_nascimento" TIMESTAMPTZ;
+ALTER TABLE "alunos" ADD COLUMN "peso_kg" DOUBLE PRECISION;
+ALTER TABLE "alunos" ADD COLUMN "altura_cm" DOUBLE PRECISION;
