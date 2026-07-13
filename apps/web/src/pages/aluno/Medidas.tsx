@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client'
-import type { MedidaCorporal } from '../../types/api'
+import type { MedidaCorporal, PerfilAluno } from '../../types/api'
 
 interface IMCClassification {
   label: string
@@ -32,8 +32,15 @@ function imcBarPosition(imc: number): number {
   return Math.max(0, Math.min(100, ((imc - IMC_MIN) / (IMC_MAX - IMC_MIN)) * 100))
 }
 
+function pesoAlturaDoPerfil(perfil: PerfilAluno | null, ultimaMedida: MedidaCorporal | null) {
+  const peso = ultimaMedida?.peso_kg ?? perfil?.peso_kg ?? null
+  const altura = ultimaMedida?.altura_cm ?? perfil?.altura_cm ?? null
+  return { peso, altura }
+}
+
 export default function AlunoMedidas() {
   const [medidas, setMedidas] = useState<MedidaCorporal[]>([])
+  const [perfil, setPerfil] = useState<PerfilAluno | null>(null)
   const [loading, setLoading] = useState(true)
   const [editando, setEditando] = useState<MedidaCorporal | null>(null)
   const [mostrarNovo, setMostrarNovo] = useState(false)
@@ -46,19 +53,37 @@ export default function AlunoMedidas() {
   const [massaMagraKg, setMassaMagraKg] = useState('')
   const [observacao, setObservacao] = useState('')
 
-  useEffect(() => {
-    Promise.all([
+  const carregarDados = useCallback(async () => {
+    const [mData, pData] = await Promise.all([
       api.getMedidas(),
       api.getPerfilAluno(),
-    ]).then(([mData, pData]) => {
-      setMedidas(mData)
+    ])
+    setMedidas(mData)
+    setPerfil(pData)
+    return { mData, pData }
+  }, [])
+
+  useEffect(() => {
+    carregarDados().then(({ mData, pData }) => {
       if (mData.length === 0 && pData.peso_kg && pData.altura_cm) {
         setPesoKg(pData.peso_kg.toString())
         setAlturaCm(pData.altura_cm.toString())
         setMostrarNovo(true)
       }
     }).finally(() => setLoading(false))
-  }, [])
+  }, [carregarDados])
+
+  function abrirNovo() {
+    const ultima = medidas.length > 0 ? medidas[medidas.length - 1] : null
+    const { peso, altura } = pesoAlturaDoPerfil(perfil, ultima)
+    setPesoKg(peso?.toString() || '')
+    setAlturaCm(altura?.toString() || '')
+    setPercentualBf('')
+    setMassaMagraKg('')
+    setObservacao('')
+    setEditando(null)
+    setMostrarNovo(true)
+  }
 
   const ultimaMedida = medidas.length > 0 ? medidas[medidas.length - 1] : null
   const classificacao = ultimaMedida?.imc ? getIMCClassificacao(ultimaMedida.imc) : null
@@ -98,8 +123,7 @@ export default function AlunoMedidas() {
       })
       setSucesso('Medida registrada com sucesso!')
       resetForm()
-      const data = await api.getMedidas()
-      setMedidas(data)
+      await carregarDados()
     } catch {
       setSucesso('Erro ao registrar medida.')
     } finally {
@@ -122,8 +146,7 @@ export default function AlunoMedidas() {
       })
       setSucesso('Medida atualizada com sucesso!')
       resetForm()
-      const data = await api.getMedidas()
-      setMedidas(data)
+      await carregarDados()
     } catch {
       setSucesso('Erro ao atualizar medida.')
     } finally {
@@ -144,7 +167,7 @@ export default function AlunoMedidas() {
         <h1 className="text-xl font-bold text-text">Medidas Corporais</h1>
         {!mostrarNovo && !editando && (
           <button
-            onClick={() => setMostrarNovo(true)}
+            onClick={abrirNovo}
             className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110 transition-all cursor-pointer"
           >
             + Nova
