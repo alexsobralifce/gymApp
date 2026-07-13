@@ -265,7 +265,9 @@ export default function ProfessorCriarTreino() {
         })),
       })
 
-      setFeedback(`${treinos.length} ficha(s) criada(s) com sucesso!`)
+      await Promise.all(treinos.map((t) => api.enviarTreino(t.id)))
+
+      setFeedback(`${treinos.length} ficha(s) criada(s) e enviada(s) com sucesso!`)
       setTimeout(() => navigate('/treinos'), 2000)
     } catch (err) {
       console.error(err)

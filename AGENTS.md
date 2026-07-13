@@ -42,8 +42,34 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 
 ### Treino (`treinos`)
 `id (cuid), aluno_id (FK), nome, dias_semana (Int[]), status (TreinoStatus), iniciado_em?, finalizado_em?, avaliacao_dificuldade?, criado_em, atualizado_em`
-- Status: `CADASTRADO → ENVIADO → ACEITO | RECUSADO → EM_ABERTO → EM_EXECUCAO → CONCLUIDO`
+- **Máquina de estados**:
+  - `CADASTRADO`: professor criou, ainda não enviou
+  - `ENVIADO`: professor enviou, aluno precisa aceitar/recusar
+  - `ACEITO`: aluno aceitou, pronto para iniciar
+  - `RECUSADO`: aluno recusou (terminal)
+  - `EM_ABERTO`: aceito mas não iniciado no dia
+  - `EM_EXECUCAO`: aluno iniciou a execução
+  - `CONCLUIDO`: aluno finalizou (terminal)
+- **Transições válidas**:
+  | De | Para | Ator |
+  |---|---|---|
+  | `CADASTRADO` | `ENVIADO` | `PROFESSOR`, `SISTEMA` |
+  | `CADASTRADO` | `ACEITO` | `ALUNO` (autogestão only) |
+  | `ENVIADO` | `ACEITO`, `RECUSADO` | `ALUNO` |
+  | `ACEITO` | `EM_EXECUCAO`, `EM_ABERTO` | `ALUNO`, `SISTEMA` |
+  | `EM_ABERTO` | `EM_EXECUCAO` | `ALUNO` |
+  | `EM_EXECUCAO` | `CONCLUIDO` | `ALUNO` |
+- Toda transição inválida lança `InvalidStateTransitionError`
 - `exercicios[]` (TreinoExercicio), `historico[]`, `execucoes[]`
+
+### TreinoHistorico (`treino_historico`) — Log imutável append-only
+`id (cuid), treino_id (FK), status_anterior (TreinoStatus), status_novo (TreinoStatus), ator_id (String), ator_tipo (TreinoAtor), timestamp`
+- Toda transição de estado do Treino deve ser registrada nesta tabela
+- `TreinoAtor`: `ALUNO | PROFESSOR | SISTEMA`
+
+### Notificacao (`notificacoes`)
+`id (cuid), aluno_id (FK), tipo (String — ex: NOVO_TREINO), mensagem (String), dados (Json), lida (Boolean, default false), criado_em`
+- Criada automaticamente ao enviar treino (`POST /treinos/:id/enviar`)
 
 ### TreinoExercicio
 `id (cuid), treino_id (FK), exercicio_id (FK), ordem, series, repeticoes, carga_sugerida_kg?`
