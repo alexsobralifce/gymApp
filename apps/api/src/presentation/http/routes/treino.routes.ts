@@ -150,10 +150,14 @@ export async function treinoRoutes(app: FastifyInstance) {
   /** POST /treinos/:id/finalizar — UC-23 */
   app.post('/:id/finalizar', { preHandler: prehandlerAluno }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { avaliacao } = z.object({ avaliacao: z.string().optional() }).parse(request.body || {})
     const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
     if (!aluno) throw new NotFoundError('Aluno')
 
     const treino = await finalizarTreino(id, aluno.id)
+    if (avaliacao) {
+      await prisma.treino.update({ where: { id }, data: { avaliacao_dificuldade: avaliacao } })
+    }
     return reply.status(200).send(treino)
   })
 

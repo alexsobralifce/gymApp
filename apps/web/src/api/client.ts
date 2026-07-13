@@ -123,8 +123,8 @@ export const api = {
   registrarExecucao: (treinoId: string, data: { exercicioId: string; serieNumero: number; repeticoes: number; cargaKg: number }) =>
     api.post<ExecucaoExercicio>(`/treinos/${treinoId}/execucoes`, data),
 
-  finalizarTreino: (id: string) =>
-    api.post<Treino>(`/treinos/${id}/finalizar`),
+  finalizarTreino: (id: string, avaliacao?: string) =>
+    api.post<Treino>(`/treinos/${id}/finalizar`, avaliacao ? { avaliacao } : undefined),
 
   criarTreinoAutogestao: (data: { nome: string; diasSemana: number[]; exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }> }) =>
     api.post<Treino>('/treinos/autogestao', data),

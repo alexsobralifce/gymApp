@@ -162,15 +162,16 @@ model Aluno {
 // ─── Treino ───────────────────────────────────────────────────────────────────
 
 model Treino {
-  id            String       @id @default(cuid())
-  aluno_id      String
-  nome          String       // ex.: "Treino A — Peito e Tríceps"
-  dias_semana   Int[]        // 0=Dom, 1=Seg, ..., 6=Sáb
-  status        TreinoStatus @default(CADASTRADO)
-  iniciado_em   DateTime?
-  finalizado_em DateTime?
-  criado_em     DateTime     @default(now())
-  atualizado_em DateTime     @updatedAt
+  id                     String       @id @default(cuid())
+  aluno_id               String
+  nome                   String       // ex.: "Treino A — Peito e Tríceps"
+  dias_semana            Int[]        // 0=Dom, 1=Seg, ..., 6=Sáb
+  status                 TreinoStatus @default(CADASTRADO)
+  avaliacao_dificuldade  String?      // FACIL, MODERADO, INTENSO, MUITO_INTENSO
+  iniciado_em            DateTime?
+  finalizado_em          DateTime?
+  criado_em              DateTime     @default(now())
+  atualizado_em          DateTime     @updatedAt
 
   aluno      Aluno               @relation(fields: [aluno_id], references: [id])
   exercicios TreinoExercicio[]

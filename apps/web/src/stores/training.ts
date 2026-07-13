@@ -13,7 +13,7 @@ interface TrainingState {
   iniciarTreino: (id: string) => Promise<void>
   setExercicioAtual: (exercicio: TreinoExercicio | null) => void
   registrarExecucao: (exercicioId: string, serieNumero: number, repeticoes: number, cargaKg: number) => Promise<void>
-  finalizarTreino: () => Promise<void>
+  finalizarTreino: (avaliacao?: string) => Promise<void>
   tick: () => void
   reset: () => void
 }
@@ -59,13 +59,13 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     set((s) => ({ execucoes: [...s.execucoes, execucao] }))
   },
 
-  finalizarTreino: async () => {
+  finalizarTreino: async (avaliacao?: string) => {
     const { treinoAtual } = get()
     if (!treinoAtual) return
 
     set({ loading: true })
     try {
-      await api.finalizarTreino(treinoAtual.id)
+      await api.finalizarTreino(treinoAtual.id, avaliacao)
       get().reset()
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
