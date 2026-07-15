@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/auth'
 import { useNotifications } from './hooks/useNotifications'
 import AppShell from './components/layout/AppShell'
+import LoadingSpinner from './components/ui/LoadingSpinner'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import AlunoDashboard from './pages/aluno/Dashboard'
@@ -39,7 +40,17 @@ export default function App() {
     fetchUser().finally(() => setReady(true))
   }, [])
 
-  if (!ready) return <div className="flex h-screen items-center justify-center bg-surface text-text">Carregando...</div>
+  if (!ready) return (
+    <div className="flex h-screen items-center justify-center bg-surface">
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-white">
+          G
+        </div>
+        <LoadingSpinner size="md" />
+        <p className="text-sm text-text-muted">Carregando...</p>
+      </div>
+    </div>
+  )
 
   return (
     <Routes>

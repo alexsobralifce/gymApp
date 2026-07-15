@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Treino, Exercicio, TreinoExercicio, HistoricoDia } from '../../types/api'
+import StatusBadge, { getTreinoStatusVariant, getTreinoStatusLabel } from '../../components/ui/StatusBadge'
+import { SkeletonCard } from '../../components/ui/LoadingSpinner'
+import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons/Icon'
 
 function formatMes(ano: number, mes: number) {
   return `${ano}-${String(mes + 1).padStart(2, '0')}`
@@ -112,7 +115,12 @@ export default function AlunoMeusTreinos() {
     }
   }
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando seus treinos...</div>
+  if (loading) return (
+    <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-4">
+      <SkeletonCard />
+      <SkeletonCard />
+    </div>
+  )
 
   if (treinos.length === 0) {
     return (
@@ -162,14 +170,14 @@ export default function AlunoMeusTreinos() {
       {/* Calendário de Treinos */}
       <div className="bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <button onClick={() => mudarMes(-1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors">
-            ◀
+          <button onClick={() => mudarMes(-1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer">
+            <ChevronLeftIcon className="h-4 w-4" />
           </button>
           <span className="text-sm font-bold text-text">
             {MESES[mesCalendario.mes]} {mesCalendario.ano}
           </span>
-          <button onClick={() => mudarMes(1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors">
-            ▶
+          <button onClick={() => mudarMes(1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer">
+            <ChevronRightIcon className="h-4 w-4" />
           </button>
         </div>
 
@@ -246,17 +254,10 @@ export default function AlunoMeusTreinos() {
               Dias: {treino.dias_semana.map((d) => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d]).join(', ')}
             </p>
           </div>
-          <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold uppercase ${
-            treino.status === 'ENVIADO'
-              ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-              : treino.status === 'CADASTRADO'
-              ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
-              : treino.status === 'CONCLUIDO'
-              ? 'bg-green-500/10 border-green-500/20 text-green-400'
-              : 'bg-primary/10 border-primary/20 text-primary'
-          }`}>
-            {treino.status === 'ENVIADO' ? 'Pendente' : treino.status === 'CADASTRADO' ? 'Em preparação' : treino.status === 'CONCLUIDO' ? 'Concluído' : 'Ativo'}
-          </span>
+          <StatusBadge
+            label={getTreinoStatusLabel(treino.status)}
+            variant={getTreinoStatusVariant(treino.status)}
+          />
         </div>
 
         {/* Lista de Exercícios */}

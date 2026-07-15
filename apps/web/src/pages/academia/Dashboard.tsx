@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import type { AcademiaDashboard as AcademiaDashboardType } from '../../types/api'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import { Building2Icon, UsersIcon, UserPlusIcon } from '../../components/icons/Icon'
 
 function formatCNPJ(value: string) {
   return value
@@ -17,7 +19,6 @@ export default function AcademiaDashboard() {
   const [loading, setLoading] = useState(true)
   const [cadastrada, setCadastrada] = useState(false)
 
-  // cadastro
   const [nome, setNome] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -28,7 +29,7 @@ export default function AcademiaDashboard() {
         setData(d)
         setCadastrada(true)
       })
-      .catch(() => { /* academia ainda não cadastrada */ })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
@@ -36,77 +37,158 @@ export default function AcademiaDashboard() {
     e.preventDefault()
     try {
       const a = await api.cadastrarAcademia({ nome, cnpj: cnpj.replace(/\D/g, '') })
-      setFeedback(`Academia "${a.nome}" cadastrada! Aguardando aprovação do Root.`)
+      setFeedback(`Academia "${a.nome}" cadastrada! Aguardando aprovacao do Root.`)
       setCadastrada(true)
       setData({ nome: a.nome, cnpj: a.cnpj, email: null, telefone: null, status: a.status, totalProfessores: 0, totalAlunos: 0, professoresPendentes: 0 })
     } catch (err: any) {
-      setFeedback(err.message || 'Erro ao cadastrar. Verifique o CNPJ (14 dígitos).')
+      setFeedback(err.message || 'Erro ao cadastrar. Verifique o CNPJ (14 digitos).')
     }
   }
 
   if (loading) {
-    return <div className="p-4 md:p-6 text-text-muted">Carregando...</div>
+    return (
+      <div className="p-4 md:p-6 flex items-center justify-center min-h-[50vh]">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
   }
 
-  // ─── Dashboard ──────────────────────────────────────
   if (data) {
     return (
-      <div className="p-4 md:p-6 max-w-2xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-text">{data.nome}</h1>
-          <p className="text-sm text-text-muted mt-1">
-            CNPJ: {formatCNPJ(data.cnpj)} · Status: <span className={`font-semibold ${data.status === 'ATIVO' ? 'text-green-400' : 'text-yellow-400'}`}>{data.status}</span>
-          </p>
-          <div className="mt-2 flex flex-wrap gap-4 text-sm text-text-muted">
-            {data.email && <span>📧 {data.email}</span>}
-            {data.telefone && <span>📞 {data.telefone}</span>}
+      <div className="px-4 py-6 max-w-2xl mx-auto w-full space-y-6">
+        {/* Header */}
+        <div className="rounded-2xl gradient-card border border-surface-input p-5 shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400">
+              <Building2Icon className="h-7 w-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-text">{data.nome}</h1>
+              <p className="text-xs text-text-muted mt-0.5">
+                CNPJ: {formatCNPJ(data.cnpj)}
+              </p>
+            </div>
+            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase ${
+              data.status === 'ATIVO'
+                ? 'bg-green-500/15 text-green-400 border border-green-500/20'
+                : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20'
+            }`}>
+              {data.status === 'ATIVO' ? (
+                <CheckCircleIcon className="h-3.5 w-3.5 inline mr-1" />
+              ) : (
+                <ClockIcon className="h-3.5 w-3.5 inline mr-1" />
+              )}
+              {data.status}
+            </span>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-muted">
+            {data.email && <span className="inline-flex items-center gap-1">{data.email}</span>}
+            {data.telefone && <span className="inline-flex items-center gap-1">{data.telefone}</span>}
           </div>
         </div>
 
+        {/* Metricas */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
-            <p className="text-sm text-text-muted font-semibold uppercase tracking-wider">Professores</p>
-            <p className="text-3xl font-bold text-text mt-1">{data.totalProfessores}</p>
+          <div className="rounded-2xl bg-surface-card border border-surface-input p-5 hover:border-primary/20 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
+                <UsersIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold text-text">{data.totalProfessores}</p>
+                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Professores</p>
+              </div>
+            </div>
             {data.professoresPendentes > 0 && (
-              <p className="text-xs text-yellow-400 font-semibold mt-1">{data.professoresPendentes} pendente{data.professoresPendentes > 1 ? 's' : ''} de aprovação</p>
+              <div className="flex items-center gap-1.5 rounded-lg bg-amber-500/10 border border-amber-500/10 px-2.5 py-1.5">
+                <UserPlusIcon className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-xs font-semibold text-amber-400">
+                  {data.professoresPendentes} pendente{data.professoresPendentes > 1 ? 's' : ''} de aprovacao
+                </span>
+              </div>
             )}
           </div>
-          <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
-            <p className="text-sm text-text-muted font-semibold uppercase tracking-wider">Alunos</p>
-            <p className="text-3xl font-bold text-text mt-1">{data.totalAlunos}</p>
+
+          <div className="rounded-2xl bg-surface-card border border-surface-input p-5 hover:border-primary/20 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
+                <UsersIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold text-text">{data.totalAlunos}</p>
+                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Alunos</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     )
   }
 
-  // ─── Cadastro ───────────────────────────────────────
   return (
-    <div className="p-4 md:p-6 max-w-md">
-      <h1 className="mb-6 text-xl font-bold text-text">Cadastrar Academia</h1>
+    <div className="px-4 py-6 max-w-md mx-auto w-full">
+      <h1 className="text-xl font-bold text-text mb-6">Cadastrar Academia</h1>
 
       {feedback && (
-        <div className={`mb-4 rounded p-3 text-sm ${cadastrada ? 'bg-surface-card text-success' : 'bg-red-500/10 text-red-400'}`}>
+        <div className={`mb-4 rounded-xl p-4 text-sm font-medium ${
+          cadastrada
+            ? 'bg-success/10 text-success border border-success/20'
+            : 'bg-red-500/10 text-red-400 border border-red-500/20'
+        }`}>
           {feedback}
         </div>
       )}
 
-      <form onSubmit={handleCadastrar} className="space-y-3">
+      <form onSubmit={handleCadastrar} className="space-y-4">
         <div>
-          <label className="block text-xs text-text-muted mb-1">Nome da academia</label>
-          <input type="text" placeholder="Ex: Academia Iron Body" value={nome} onChange={(e) => setNome(e.target.value)}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" required />
+          <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">Nome da academia</label>
+          <input
+            type="text"
+            placeholder="Ex: Academia Iron Body"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="w-full rounded-xl border border-surface-input bg-surface-card px-4 py-3 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors"
+            required
+          />
         </div>
         <div>
-          <label className="block text-xs text-text-muted mb-1">CNPJ</label>
-          <input type="text" placeholder="00.000.000/0000-00" value={cnpj} onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" required maxLength={18} />
+          <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">CNPJ</label>
+          <input
+            type="text"
+            placeholder="00.000.000/0000-00"
+            value={cnpj}
+            onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
+            className="w-full rounded-xl border border-surface-input bg-surface-card px-4 py-3 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors"
+            required
+            maxLength={18}
+          />
         </div>
-        <button type="submit" disabled={!nome || cnpj.replace(/\D/g, '').length !== 14}
-          className="w-full rounded bg-primary py-2 text-sm font-medium text-white disabled:opacity-40">
-          Cadastrar
+        <button
+          type="submit"
+          disabled={!nome || cnpj.replace(/\D/g, '').length !== 14}
+          className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
+        >
+          Cadastrar Academia
         </button>
       </form>
     </div>
+  )
+}
+
+function CheckCircleIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  )
+}
+
+function ClockIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
   )
 }
