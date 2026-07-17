@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
 @import "tailwindcss";
 
 @theme {
@@ -24,6 +26,22 @@
   --color-info: #3b82f6;
 
   --color-white: #FFFFFF;
+
+  --color-background: #0D0D0D;
+  --color-foreground: #F2F2F2;
+  --color-card: #1A1A1A;
+  --color-card-foreground: #F2F2F2;
+  --color-secondary: #2A2A2A;
+  --color-secondary-foreground: #F2F2F2;
+  --color-muted: #1A1A1A;
+  --color-muted-foreground: #BFBFBF;
+  --color-accent-foreground: #0D0D0D;
+  --color-destructive: #F20C0C;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #2A2A2A;
+  --color-input: #2A2A2A;
+  --color-ring: #F20C0C;
+  --color-primary-foreground: #FFFFFF;
 
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
