@@ -1,25 +1,13 @@
-# Planejamento: Sexo do Aluno + Filtro de Exercícios por Gênero
+# Planejamento: Sexo do Aluno no Cadastro
 
 **Data:** 2026-07-17  
-**Objetivo:** Adicionar campo `sexo` (Masculino/Feminino) no cadastro do aluno e filtrar exercícios/alongamentos com base no gênero.
+**Objetivo:** Adicionar campo `sexo` (Masculino/Feminino) no cadastro do aluno. Homens e mulheres veem os mesmos GIFs — sem filtro de exercícios por gênero.
 
 ---
 
-## 1. Análise da Fonte (GifDoTreino)
+## 1. Modelo de Dados
 
-O site https://www.gifdotreino.com **não expõe metadados de gênero** na API:
-- `GET /search_gifs.php` retorna os mesmos exercícios independente do sexo
-- Não há URLs separadas (ex: `/male/`, `/female/`) — retornam 404
-- Não há campo `sexo` ou `gender` nos objetos retornados
-- Os GIFs são unissex (o executante pode ser homem ou mulher, mas o exercício é o mesmo)
-
-**Estratégia adotada:** Implementar a infraestrutura de sexo no modelo de dados e UI, com exercícios padrão como unissex (`sexo = null`). O campo `sexo` no `Exercicio` fica pronto para quando houver uma fonte de dados com conteúdo segmentado por gênero. Enquanto isso, todos os exercícios são exibidos para ambos os sexos.
-
----
-
-## 2. Modelo de Dados
-
-### 2.1 Migration: Adicionar `sexo` no Aluno
+### Migration: Adicionar `sexo` apenas no Aluno
 
 ```prisma
 enum Sexo {
@@ -29,43 +17,23 @@ enum Sexo {
 
 model Aluno {
   // ... campos existentes ...
-  sexo Sexo? // nullable para compatibilidade com dados existentes
+  sexo Sexo?
 }
 ```
 
-**Justificativa:** `nullable` porque alunos existentes não terão o campo preenchido. No futuro pode se tornar required após backfill.
-
-### 2.2 Migration: Adicionar `sexo` no Exercicio
-
-```prisma
-model Exercicio {
-  // ... campos existentes ...
-  sexo Sexo? // null = unissex, MASCULINO ou FEMININO
-}
-```
-
-**Justificativa:** Exercícios sem sexo definido (null) são exibidos para ambos. Exercícios com sexo específico são exibidos apenas para alunos do sexo correspondente.
-
-### 2.3 Comando Migration
-
-```bash
-npx prisma migrate dev --name add_sexo_to_aluno_and_exercicio --schema=apps/api/prisma/schema.prisma
-```
-
-**Migration SQL:**
+**SQL:**
 ```sql
 CREATE TYPE "Sexo" AS ENUM ('MASCULINO', 'FEMININO');
 ALTER TABLE "alunos" ADD COLUMN "sexo" "Sexo";
-ALTER TABLE "exercicios" ADD COLUMN "sexo" "Sexo";
 ```
+
+`nullable` para compatibilidade com alunos existentes. Exercícios **não** recebem campo `sexo` — todos veem os mesmos GIFs.
 
 ---
 
-## 3. Backend
+## 2. Backend
 
-### 3.1 Perfil do Aluno — Rota `POST /alunos/perfil`
-
-Adicionar `sexo` ao body da requisição:
+### 2.1 `POST /alunos/perfil` — aceitar `sexo`
 
 ```typescript
 const body = z.object({
@@ -76,95 +44,70 @@ const body = z.object({
 }).parse(request.body)
 ```
 
-Atualizar o upsert do perfil para incluir `sexo`.
+### 2.2 `GET /alunos/perfil` — retornar `sexo`
 
-### 3.2 Listagem de Exercícios — `GET /professores/exercicios`
+Incluir `sexo: true` no select.
 
-Adicionar filtro opcional por `sexo`:
+### 2.3 Dashboard professor — incluir `sexo`
 
-```typescript
-const { sexo } = z.object({ sexo: z.enum(['MASCULINO', 'FEMININO']).optional() }).parse(request.query)
-```
-
-Se `sexo` informado, filtrar: `where: { OR: [{ sexo: sexo }, { sexo: null }] }` — exercícios que correspondem ao sexo OU são unissex.
-
-### 3.3 Rota `GET /professores/templates`
-
-Mesmo filtro de sexo aplicado aos templates.
-
-### 3.4 Rota `GET /alunos/perfil`
-
-Incluir `sexo` na resposta.
+No `dashboardProfessor` (`TreinoService.ts`), adicionar `sexo: true` no select do aluno.
 
 ---
 
-## 4. Frontend
+## 3. Frontend
 
-### 4.1 Cadastro do Aluno (`Register.tsx`)
+### 3.1 Cadastro (`Register.tsx`)
 
-Adicionar campo de seleção de sexo após o campo de telefone:
+Adicionar select de sexo no formulário de perfil do aluno:
 
 ```tsx
-<div>
-  <label>Sexo</label>
-  <select required>
-    <option value="">Selecione...</option>
-    <option value="MASCULINO">Masculino</option>
-    <option value="FEMININO">Feminino</option>
-  </select>
-</div>
+<select required>
+  <option value="">Selecione...</option>
+  <option value="MASCULINO">Masculino</option>
+  <option value="FEMININO">Feminino</option>
+</select>
 ```
 
-Enviar `sexo` no body do `POST /alunos/perfil` (junto com pesoKg e alturaCm).
+Enviar no `POST /alunos/perfil`.
 
-### 4.2 Perfil do Aluno — Tela "Dados do Aluno"
-
-Exibir o sexo cadastrado (somente leitura).
-
-### 4.3 CriarTreino.tsx (Professor)
-
-Ler `sexo` do aluno selecionado e passar como filtro ao carregar exercícios:
+### 3.2 Types
 
 ```typescript
-const alunoSelecionado = alunos.find(a => a.id === alunoId)
-const sexoAluno = alunoSelecionado?.sexo
+export interface PerfilAluno {
+  // ... existentes ...
+  sexo?: 'MASCULINO' | 'FEMININO' | null
+}
 
-// Ao carregar exercícios:
-api.getExercicios({ sexo: sexoAluno || undefined })
+export interface ProfessorDashboard {
+  // ... existentes ...
+  sexo?: 'MASCULINO' | 'FEMININO' | null
+}
 ```
 
-O backend retorna exercícios com `sexo = aluno.sexo` OU `sexo = null`.
+### 3.3 Perfil do Aluno (avatar dropdown)
 
-### 4.4 Dashboard do Professor (`GET /professores/dashboard`)
-
-Incluir `sexo` no retorno do aluno para uso no frontend.
-
-### 4.5 Templates
-
-Mesmo filtro de sexo aplicado ao carregar templates (`GET /professores/templates?sexo=...`).
+Exibir "Masculino" / "Feminino" nos dados do aluno (somente leitura).
 
 ---
 
-## 5. Ordem de Implementação
+## 4. Ordem de Implementação
 
-| # | Etapa | Arquivos | Depende |
-|---|-------|----------|---------|
-| 1 | Adicionar `enum Sexo` no schema Prisma | `schema.prisma` | - |
-| 2 | Migration `add_sexo` | Nova migration | 1 |
-| 3 | Adicionar `sexo` no `POST /alunos/perfil` | `aluno.routes.ts` | 2 |
-| 4 | Adicionar filtro `sexo` no `GET /professores/exercicios` | `professor.routes.ts` | 2 |
-| 5 | Adicionar filtro `sexo` no `GET /professores/templates` | `professor.routes.ts` | 2 |
-| 6 | Incluir `sexo` no dashboard professor | `TreinoService.ts` | 2 |
-| 7 | Adicionar `sexo` nas types do frontend | `api.ts` | - |
-| 8 | Campo "Sexo" no cadastro (`Register.tsx`) | `Register.tsx` | 3 |
-| 9 | Filtro de sexo ao carregar exercícios no `CriarTreino.tsx` | `CriarTreino.tsx` | 4, 7 |
-| 10 | Filtro de sexo nos templates | `Treinos.tsx` | 5, 7 |
+| # | Etapa | Arquivos |
+|---|-------|----------|
+| 1 | `enum Sexo` + campo no `Aluno` | `schema.prisma` |
+| 2 | Migration | Nova migration |
+| 3 | `POST /alunos/perfil` aceitar `sexo` | `aluno.routes.ts` |
+| 4 | `GET /alunos/perfil` retornar `sexo` | `aluno.routes.ts` |
+| 5 | Dashboard incluir `sexo` | `TreinoService.ts` |
+| 6 | Types: `sexo` no `PerfilAluno` e `ProfessorDashboard` | `api.ts` |
+| 7 | Campo "Sexo" no cadastro | `Register.tsx` |
+| 8 | Exibir sexo nos dados do aluno | Componente de perfil |
 
 ---
 
-## 6. Observações
+## 5. O que NÃO muda
 
-- **Clean Code (F3):** O filtro de sexo não usa flag booleana — usa enum `Sexo?` que pode ser `undefined` (sem filtro), `MASCULINO` ou `FEMININO`. Evita o anti-pattern `isMale: boolean`.
-- **KISS:** A regra de filtro é simples — exercício com `sexo = null` sempre aparece; com `sexo` específico, aparece só para o gênero correspondente.
-- **Backward compatibility:** `sexo` é nullable em ambas as tabelas. Alunos existentes ficam sem sexo, exercícios existentes são unissex. Nenhum breaking change.
-- **GifDoTreino:** Como a fonte não tem segmentação por gênero, o campo `sexo` nos exercícios fica `null` (unissex) e todos os GIFs aparecem para ambos os sexos. A infraestrutura fica pronta para quando houver conteúdo segmentado.
+- **Exercícios:** sem campo `sexo`, sem filtro por gênero — homens e mulheres veem a mesma biblioteca
+- **Templates:** sem filtro
+- **CriarTreino:** sem filtro de sexo ao carregar exercícios
+- **GIFs:** mesmos GIFs para todos
