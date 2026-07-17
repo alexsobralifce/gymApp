@@ -4,6 +4,7 @@ import { Role, VinculoStatus, AcademiaStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ForbiddenError, ConflictError } from '../../../domain/errors/AppError.js'
 import {
@@ -25,17 +26,32 @@ export async function rootRoutes(app: FastifyInstance) {
     return reply.status(200).send(data)
   })
 
-  /** GET /root/vinculos — lista vínculos pendentes (2ª camada) */
-  app.get('/vinculos', { preHandler }, async (_request, reply) => {
-    const vinculos = await prisma.professorAcademia.findMany({
-      where: { status: VinculoStatus.PENDENTE_ROOT },
-      include: {
-        professor: { include: { usuario: { select: { nome: true, email: true } } } },
-        academia: { select: { id: true, nome: true } },
-      },
-      orderBy: { criado_em: 'asc' },
-    })
-    return reply.status(200).send(vinculos)
+  /** GET /root/vinculos — lista vínculos com paginação */
+  app.get('/vinculos', { preHandler }, async (request, reply) => {
+    const { page, limit, status } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      status: z.enum(['PENDENTE_ACADEMIA', 'PENDENTE_ROOT', 'ATIVO', 'REJEITADO', 'REMOVIDO']).optional(),
+    }).parse(request.query)
+
+    const where: Prisma.ProfessorAcademiaWhereInput = status ? { status } : { status: VinculoStatus.PENDENTE_ROOT }
+
+    const skip = (page - 1) * limit
+    const [vinculos, total] = await Promise.all([
+      prisma.professorAcademia.findMany({
+        where,
+        include: {
+          professor: { include: { usuario: { select: { nome: true, email: true } } } },
+          academia: { select: { id: true, nome: true } },
+        },
+        orderBy: { criado_em: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.professorAcademia.count({ where }),
+    ])
+
+    return reply.status(200).send({ items: vinculos, total, page, limit, totalPages: Math.ceil(total / limit) })
   })
 
   /** PATCH /root/academias/:id/aprovacao — UC-01 */
@@ -90,17 +106,68 @@ export async function rootRoutes(app: FastifyInstance) {
     return reply.status(200).send(academia)
   })
 
-  /** GET /root/usuarios — lista todos os usuários */
-  app.get('/usuarios', { preHandler }, async (_request, reply) => {
-    const usuarios = await prisma.usuario.findMany({
-      include: {
-        academia: true,
-        professor: true,
-        aluno: true,
-      },
-      orderBy: { criado_em: 'desc' },
+  /** GET /root/usuarios — lista usuários com paginação, busca e ordenação */
+  app.get('/usuarios', { preHandler }, async (request, reply) => {
+    const { page, limit, search, sortBy, order, role, ativo } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      search: z.string().optional(),
+      sortBy: z.enum(['nome', 'email', 'criado_em', 'role']).default('criado_em'),
+      order: z.enum(['asc', 'desc']).default('desc'),
+      role: z.enum(['ROOT', 'ACADEMIA', 'PROFESSOR', 'ALUNO']).optional(),
+      ativo: z.coerce.boolean().optional(),
+    }).parse(request.query)
+
+    const where: Prisma.UsuarioWhereInput = {}
+    if (search) {
+      where.OR = [
+        { nome: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+    if (role) where.role = role
+    if (ativo !== undefined) where.ativo = ativo
+
+    const skip = (page - 1) * limit
+    const [usuarios, total] = await Promise.all([
+      prisma.usuario.findMany({
+        where,
+        include: {
+          academia: true,
+          professor: true,
+          aluno: true,
+        },
+        orderBy: { [sortBy]: order },
+        skip,
+        take: limit,
+      }),
+      prisma.usuario.count({ where }),
+    ])
+
+    return reply.status(200).send({
+      items: usuarios,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     })
-    return reply.status(200).send(usuarios)
+  })
+
+  /** PATCH /root/usuarios/:id/status — ativa ou desativa usuário */
+  app.patch('/usuarios/:id/status', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { ativo } = z.object({ ativo: z.boolean() }).parse(request.body)
+
+    const usuario = await prisma.usuario.findUnique({ where: { id } })
+    if (!usuario) throw new NotFoundError('Usuário')
+    if (usuario.role === Role.ROOT) throw new ForbiddenError('Não é permitido alterar o status de outro administrador ROOT')
+
+    const updated = await prisma.usuario.update({
+      where: { id },
+      data: { ativo },
+    })
+
+    return reply.status(200).send({ id: updated.id, ativo: updated.ativo })
   })
 
   /** POST /root/usuarios/:id/reset-password — reseta senha */
@@ -121,16 +188,40 @@ export async function rootRoutes(app: FastifyInstance) {
     return reply.status(200).send({ message: 'Senha resetada com sucesso!' })
   })
 
-  /** GET /root/academias — lista todas as academias */
-  app.get('/academias', { preHandler }, async (_request, reply) => {
-    const academias = await prisma.academia.findMany({
-      include: {
-        usuario: { select: { id: true, email: true, nome: true } },
-        _count: { select: { professores: true, alunos: true } },
-      },
-      orderBy: { criado_em: 'desc' },
-    })
-    return reply.status(200).send(academias)
+  /** GET /root/academias — lista academias com paginação */
+  app.get('/academias', { preHandler }, async (request, reply) => {
+    const { page, limit, search, status } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      search: z.string().optional(),
+      status: z.enum(['PENDENTE', 'ATIVO', 'REJEITADO']).optional(),
+    }).parse(request.query)
+
+    const where: Prisma.AcademiaWhereInput = {}
+    if (search) {
+      where.OR = [
+        { nome: { contains: search, mode: 'insensitive' } },
+        { cnpj: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+    if (status) where.status = status
+
+    const skip = (page - 1) * limit
+    const [academias, total] = await Promise.all([
+      prisma.academia.findMany({
+        where,
+        include: {
+          usuario: { select: { id: true, email: true, nome: true } },
+          _count: { select: { professores: true, alunos: true } },
+        },
+        orderBy: { criado_em: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.academia.count({ where }),
+    ])
+
+    return reply.status(200).send({ items: academias, total, page, limit, totalPages: Math.ceil(total / limit) })
   })
 
   /** PUT /root/academias/:id — atualiza academia */
@@ -201,19 +292,42 @@ export async function rootRoutes(app: FastifyInstance) {
     return reply.status(200).send({ message: 'Academia excluída com sucesso!' })
   })
 
-  /** GET /root/professores — lista todos os professores */
-  app.get('/professores', { preHandler }, async (_request, reply) => {
-    const professores = await prisma.professor.findMany({
-      include: {
-        usuario: { select: { id: true, email: true, nome: true } },
-        academias: {
-          include: { academia: { select: { id: true, nome: true } } },
+  /** GET /root/professores — lista professores com paginação */
+  app.get('/professores', { preHandler }, async (request, reply) => {
+    const { page, limit, search } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      search: z.string().optional(),
+    }).parse(request.query)
+
+    const where: Prisma.ProfessorWhereInput = {}
+    if (search) {
+      where.OR = [
+        { usuario: { nome: { contains: search, mode: 'insensitive' } } },
+        { usuario: { email: { contains: search, mode: 'insensitive' } } },
+        { cref: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const skip = (page - 1) * limit
+    const [professores, total] = await Promise.all([
+      prisma.professor.findMany({
+        where,
+        include: {
+          usuario: { select: { id: true, email: true, nome: true } },
+          academias: {
+            include: { academia: { select: { id: true, nome: true } } },
+          },
+          _count: { select: { alunos: true } },
         },
-        _count: { select: { alunos: true } },
-      },
-      orderBy: { criado_em: 'desc' },
-    })
-    return reply.status(200).send(professores)
+        orderBy: { criado_em: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.professor.count({ where }),
+    ])
+
+    return reply.status(200).send({ items: professores, total, page, limit, totalPages: Math.ceil(total / limit) })
   })
 
   /** PUT /root/professores/:id — atualiza professor */
@@ -302,17 +416,39 @@ export async function rootRoutes(app: FastifyInstance) {
     return reply.status(200).send({ message: 'Professor excluído com sucesso!' })
   })
 
-  /** GET /root/alunos — lista todos os alunos */
-  app.get('/alunos', { preHandler }, async (_request, reply) => {
-    const alunos = await prisma.aluno.findMany({
-      include: {
-        usuario: { select: { id: true, email: true, nome: true, telefone: true } },
-        academia: { select: { id: true, nome: true } },
-        professor: { select: { id: true, usuario: { select: { nome: true } } } },
-      },
-      orderBy: { criado_em: 'desc' },
-    })
-    return reply.status(200).send(alunos)
+  /** GET /root/alunos — lista alunos com paginação */
+  app.get('/alunos', { preHandler }, async (request, reply) => {
+    const { page, limit, search } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      search: z.string().optional(),
+    }).parse(request.query)
+
+    const where: Prisma.AlunoWhereInput = {}
+    if (search) {
+      where.OR = [
+        { usuario: { nome: { contains: search, mode: 'insensitive' } } },
+        { usuario: { email: { contains: search, mode: 'insensitive' } } },
+      ]
+    }
+
+    const skip = (page - 1) * limit
+    const [alunos, total] = await Promise.all([
+      prisma.aluno.findMany({
+        where,
+        include: {
+          usuario: { select: { id: true, email: true, nome: true, telefone: true } },
+          academia: { select: { id: true, nome: true } },
+          professor: { select: { id: true, usuario: { select: { nome: true } } } },
+        },
+        orderBy: { criado_em: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.aluno.count({ where }),
+    ])
+
+    return reply.status(200).send({ items: alunos, total, page, limit, totalPages: Math.ceil(total / limit) })
   })
 
   /** PUT /root/alunos/:id — atualiza aluno */
@@ -532,5 +668,127 @@ export async function rootRoutes(app: FastifyInstance) {
         error: error.message,
       })
     }
+  })
+
+  // ─── Social Moderation (ROOT) ──────────────────────────────────────────
+
+  /** GET /root/social/mural — feed global com paginação */
+  app.get('/social/mural', { preHandler }, async (request, reply) => {
+    const { page, limit, search } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      search: z.string().optional(),
+    }).parse(request.query)
+
+    const where: Prisma.SocialPostWhereInput = {}
+    if (search) {
+      where.autor_nome = { contains: search, mode: 'insensitive' }
+    }
+
+    const skip = (page - 1) * limit
+    const [posts, total] = await Promise.all([
+      prisma.socialPost.findMany({
+        where,
+        orderBy: { criado_em: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.socialPost.count({ where }),
+    ])
+
+    return reply.status(200).send({ items: posts, total, page, limit, totalPages: Math.ceil(total / limit) })
+  })
+
+  /** DELETE /root/social/mural/:postId — remove post */
+  app.delete('/social/mural/:postId', { preHandler }, async (request, reply) => {
+    const { postId } = z.object({ postId: z.string() }).parse(request.params)
+
+    const post = await prisma.socialPost.findUnique({ where: { id: postId } })
+    if (!post) throw new NotFoundError('Post')
+
+    await prisma.$transaction(async (tx) => {
+      await tx.socialComment.deleteMany({ where: { post_id: postId } })
+      await tx.socialLike.deleteMany({ where: { post_id: postId } })
+      await tx.socialPost.delete({ where: { id: postId } })
+    })
+
+    return reply.status(200).send({ message: 'Post removido com sucesso!' })
+  })
+
+  /** GET /root/social/clubes — lista clubes */
+  app.get('/social/clubes', { preHandler }, async (request, reply) => {
+    const { page, limit } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+    }).parse(request.query)
+
+    const skip = (page - 1) * limit
+    const [clubes, total] = await Promise.all([
+      prisma.socialClub.findMany({
+        orderBy: { criado_em: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.socialClub.count(),
+    ])
+
+    const clubesComMembros = await Promise.all(
+      clubes.map(async (c) => ({
+        ...c,
+        totalMembros: await prisma.socialClubMember.count({ where: { clube_id: c.id } }),
+      })),
+    )
+
+    return reply.status(200).send({ items: clubesComMembros, total, page, limit, totalPages: Math.ceil(total / limit) })
+  })
+
+  /** DELETE /root/social/clubes/:id — remove clube */
+  app.delete('/social/clubes/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+
+    const clube = await prisma.socialClub.findUnique({ where: { id } })
+    if (!clube) throw new NotFoundError('Clube')
+
+    await prisma.$transaction(async (tx) => {
+      await tx.socialClubMember.deleteMany({ where: { clube_id: id } })
+      await tx.socialPost.deleteMany({ where: { clube_id: id } })
+      await tx.socialClub.delete({ where: { id } })
+    })
+
+    return reply.status(200).send({ message: 'Clube removido com sucesso!' })
+  })
+
+  /** GET /root/social/amizades — lista todas as amizades com paginação */
+  app.get('/social/amizades', { preHandler }, async (request, reply) => {
+    const { page, limit } = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+    }).parse(request.query)
+
+    const skip = (page - 1) * limit
+    const [amizades, total] = await Promise.all([
+      prisma.socialFriendship.findMany({
+        orderBy: { criado_em: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.socialFriendship.count(),
+    ])
+
+    const amizadesComNomes = await Promise.all(
+      amizades.map(async (a) => {
+        const [aluno1, aluno2] = await Promise.all([
+          prisma.aluno.findUnique({ where: { id: a.aluno_id }, include: { usuario: { select: { nome: true } } } }),
+          prisma.aluno.findUnique({ where: { id: a.amigo_id }, include: { usuario: { select: { nome: true } } } }),
+        ])
+        return {
+          ...a,
+          aluno_nome: aluno1?.usuario.nome ?? '',
+          amigo_nome: aluno2?.usuario.nome ?? '',
+        }
+      }),
+    )
+
+    return reply.status(200).send({ items: amizadesComNomes, total, page, limit, totalPages: Math.ceil(total / limit) })
   })
 }

@@ -67,6 +67,7 @@ model Usuario {
   role         Role
   telefone     String?
   foto_url     String?
+  ativo        Boolean  @default(true)
   expo_push_token       String?  // token Expo para push notifications
   web_push_subscription  Json?    // PushSubscription JSON (Web Push API)
   criado_em    DateTime @default(now())

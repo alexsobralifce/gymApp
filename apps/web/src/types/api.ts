@@ -313,3 +313,12 @@ export interface LeaderboardEntry {
   foto_url?: string | null
   xp_semana: number
 }
+
+// ─── Pagination ───────────────────────────────────────
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}

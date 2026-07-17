@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../api/client'
 import { formatPhone } from '../../lib/phone'
 
@@ -37,6 +37,14 @@ interface AlunoItem {
   professor: { id: string; usuario: { nome: string } } | null
 }
 
+interface PaginatedData<T> {
+  items: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
 const inputClass =
   'w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none'
 
@@ -56,41 +64,101 @@ function statusBadge(status: string) {
   return <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>{status}</span>
 }
 
+function Pagination({
+  page,
+  totalPages,
+  onChange,
+}: {
+  page: number
+  totalPages: number
+  onChange: (p: number) => void
+}) {
+  if (totalPages <= 1) return null
+  const pages: (number | '...')[] = []
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || Math.abs(i - page) <= 1) {
+      pages.push(i)
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...')
+    }
+  }
+  return (
+    <div className="mt-4 flex items-center justify-center gap-1">
+      <button
+        onClick={() => onChange(page - 1)}
+        disabled={page <= 1}
+        className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
+      >
+        Anterior
+      </button>
+      {pages.map((p, i) =>
+        p === '...' ? (
+          <span key={`e${i}`} className="px-2 text-text-muted">...</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`rounded px-3 py-1 text-sm ${p === page ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface-input'}`}
+          >
+            {p}
+          </button>
+        ),
+      )}
+      <button
+        onClick={() => onChange(page + 1)}
+        disabled={page >= totalPages}
+        className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
+      >
+        Proximo
+      </button>
+    </div>
+  )
+}
+
 export default function RootUsuarios() {
   const [tab, setTab] = useState<Tab>('academias')
   const [feedback, setFeedback] = useState<string | null>(null)
 
-  const [academias, setAcademias] = useState<AcademiaItem[]>([])
-  const [professores, setProfessores] = useState<ProfessorItem[]>([])
-  const [alunos, setAlunos] = useState<AlunoItem[]>([])
+  const [academias, setAcademias] = useState<PaginatedData<AcademiaItem> | null>(null)
+  const [professores, setProfessores] = useState<PaginatedData<ProfessorItem> | null>(null)
+  const [alunos, setAlunos] = useState<PaginatedData<AlunoItem> | null>(null)
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   const [editAcademia, setEditAcademia] = useState<AcademiaItem | null>(null)
   const [editProfessor, setEditProfessor] = useState<ProfessorItem | null>(null)
   const [editAluno, setEditAluno] = useState<AlunoItem | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: Tab; id: string; nome: string } | null>(null)
 
-  useEffect(() => {
-    loadAll()
-  }, [])
-
-  async function loadAll() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [a, p, al] = await Promise.all([
-        api.getRootAcademias(),
-        api.getRootProfessores(),
-        api.getRootAlunos(),
-      ])
-      setAcademias(a as AcademiaItem[])
-      setProfessores(p as ProfessorItem[])
-      setAlunos(al as AlunoItem[])
+      const params = { page, limit: 20, search: search || undefined }
+      if (tab === 'academias') {
+        const result = await api.getRootAcademias(params)
+        setAcademias(result)
+      } else if (tab === 'professores') {
+        const result = await api.getRootProfessores(params)
+        setProfessores(result)
+      } else {
+        const result = await api.getRootAlunos(params)
+        setAlunos(result)
+      }
     } catch {
       showFeedback('Erro ao carregar dados.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [tab, page, search])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  useEffect(() => {
+    setPage(1)
+  }, [tab, search])
 
   function showFeedback(msg: string) {
     setFeedback(msg)
@@ -102,15 +170,13 @@ export default function RootUsuarios() {
     try {
       if (deleteConfirm.type === 'academias') {
         await api.deleteRootAcademia(deleteConfirm.id)
-        setAcademias((prev) => prev.filter((a) => a.id !== deleteConfirm.id))
       } else if (deleteConfirm.type === 'professores') {
         await api.deleteRootProfessor(deleteConfirm.id)
-        setProfessores((prev) => prev.filter((p) => p.id !== deleteConfirm.id))
       } else {
         await api.deleteRootAluno(deleteConfirm.id)
-        setAlunos((prev) => prev.filter((a) => a.id !== deleteConfirm.id))
       }
-      showFeedback(`${deleteConfirm.nome} excluído com sucesso!`)
+      showFeedback(`${deleteConfirm.nome} excluido com sucesso!`)
+      await loadData()
     } catch {
       showFeedback('Erro ao excluir.')
     }
@@ -122,8 +188,6 @@ export default function RootUsuarios() {
     { key: 'professores', label: 'Professores' },
     { key: 'alunos', label: 'Alunos' },
   ]
-
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
     <div className="p-4 md:p-6">
@@ -149,32 +213,56 @@ export default function RootUsuarios() {
         ))}
       </div>
 
-      {tab === 'academias' && (
-        <AcademiasTab
-          academias={academias}
-          onEdit={setEditAcademia}
-          onDelete={(a) => setDeleteConfirm({ type: 'academias', id: a.id, nome: a.nome })}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar por nome ou email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={inputClass}
         />
-      )}
+      </div>
 
-      {tab === 'professores' && (
-        <ProfessoresTab
-          professores={professores}
-          onEdit={setEditProfessor}
-          onDelete={(p) =>
-            setDeleteConfirm({ type: 'professores', id: p.id, nome: p.usuario.nome })
-          }
-        />
-      )}
+      {loading ? (
+        <div className="py-12 text-center text-text-muted">Carregando...</div>
+      ) : (
+        <>
+          {tab === 'academias' && academias && (
+            <>
+              <p className="mb-3 text-xs text-text-muted">{academias.total} academias encontradas</p>
+              <AcademiasTab
+                academias={academias.items}
+                onEdit={setEditAcademia}
+                onDelete={(a) => setDeleteConfirm({ type: 'academias', id: a.id, nome: a.nome })}
+              />
+              <Pagination page={academias.page} totalPages={academias.totalPages} onChange={setPage} />
+            </>
+          )}
 
-      {tab === 'alunos' && (
-        <AlunosTab
-          alunos={alunos}
-          onEdit={setEditAluno}
-          onDelete={(a) =>
-            setDeleteConfirm({ type: 'alunos', id: a.id, nome: a.usuario.nome })
-          }
-        />
+          {tab === 'professores' && professores && (
+            <>
+              <p className="mb-3 text-xs text-text-muted">{professores.total} professores encontrados</p>
+              <ProfessoresTab
+                professores={professores.items}
+                onEdit={setEditProfessor}
+                onDelete={(p) => setDeleteConfirm({ type: 'professores', id: p.id, nome: p.usuario.nome })}
+              />
+              <Pagination page={professores.page} totalPages={professores.totalPages} onChange={setPage} />
+            </>
+          )}
+
+          {tab === 'alunos' && alunos && (
+            <>
+              <p className="mb-3 text-xs text-text-muted">{alunos.total} alunos encontrados</p>
+              <AlunosTab
+                alunos={alunos.items}
+                onEdit={setEditAluno}
+                onDelete={(a) => setDeleteConfirm({ type: 'alunos', id: a.id, nome: a.usuario.nome })}
+              />
+              <Pagination page={alunos.page} totalPages={alunos.totalPages} onChange={setPage} />
+            </>
+          )}
+        </>
       )}
 
       {editAcademia && (
@@ -186,7 +274,7 @@ export default function RootUsuarios() {
               await api.updateRootAcademia(editAcademia.id, data)
               showFeedback('Academia atualizada!')
               setEditAcademia(null)
-              await loadAll()
+              await loadData()
             } catch {
               showFeedback('Erro ao atualizar academia.')
             }
@@ -197,14 +285,14 @@ export default function RootUsuarios() {
       {editProfessor && (
         <EditProfessorModal
           professor={editProfessor}
-          academias={academias}
+          academias={academias?.items || []}
           onClose={() => setEditProfessor(null)}
           onSave={async (data) => {
             try {
               await api.updateRootProfessor(editProfessor.id, data)
               showFeedback('Professor atualizado!')
               setEditProfessor(null)
-              await loadAll()
+              await loadData()
             } catch {
               showFeedback('Erro ao atualizar professor.')
             }
@@ -215,15 +303,15 @@ export default function RootUsuarios() {
       {editAluno && (
         <EditAlunoModal
           aluno={editAluno}
-          academias={academias}
-          professores={professores}
+          academias={academias?.items || []}
+          professores={professores?.items || []}
           onClose={() => setEditAluno(null)}
           onSave={async (data) => {
             try {
               await api.updateRootAluno(editAluno.id, data)
               showFeedback('Aluno atualizado!')
               setEditAluno(null)
-              await loadAll()
+              await loadData()
             } catch {
               showFeedback('Erro ao atualizar aluno.')
             }
@@ -233,10 +321,10 @@ export default function RootUsuarios() {
 
       {deleteConfirm && (
         <Modal onClose={() => setDeleteConfirm(null)}>
-          <h2 className="mb-2 text-lg font-bold text-text">Confirmar exclusão</h2>
+          <h2 className="mb-2 text-lg font-bold text-text">Confirmar exclusao</h2>
           <p className="mb-6 text-sm text-text-muted">
             Tem certeza que deseja excluir <strong className="text-text">{deleteConfirm.nome}</strong>?
-            Esta ação não pode ser desfeita e todos os dados vinculados serão removidos.
+            Esta acao nao pode ser desfeita e todos os dados vinculados serao removidos.
           </p>
           <div className="flex justify-end gap-2">
             <button onClick={() => setDeleteConfirm(null)} className={btnGhost}>Cancelar</button>
@@ -256,11 +344,8 @@ export default function RootUsuarios() {
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop de fundo */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      
-      {/* Container do Modal */}
-      <div className="relative w-full max-w-lg rounded-lg bg-surface-card p-6 z-10 shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg rounded-lg bg-surface-card p-6 shadow-2xl">
         {children}
       </div>
     </div>
@@ -290,7 +375,7 @@ function AcademiasTab({
             <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
             <p className="text-xs text-text-muted">{a.usuario.email}</p>
             <p className="text-xs text-text-muted">
-              Máx. professores: {a.max_professores} · Professores: {a._count.professores} · Alunos: {a._count.alunos}
+              Max. professores: {a.max_professores} | Professores: {a._count.professores} | Alunos: {a._count.alunos}
             </p>
           </div>
           <div className="flex gap-1">
@@ -323,7 +408,7 @@ function ProfessoresTab({
               <h3 className="font-semibold text-text">{p.usuario.nome}</h3>
               <p className="text-xs text-text-muted">{p.usuario.email}</p>
               <p className="text-xs text-text-muted">
-                CREF: {p.cref || '—'} · Alunos: {p._count.alunos}
+                CREF: {p.cref || '---'} | Alunos: {p._count.alunos}
               </p>
             </div>
             <div className="flex gap-1">
@@ -365,12 +450,12 @@ function AlunosTab({
             <h3 className="font-semibold text-text">{a.usuario.nome}</h3>
             <p className="text-xs text-text-muted">{a.usuario.email}</p>
             <p className="text-xs text-text-muted">
-              Academia: {a.academia?.nome || '—'} · Professor: {a.professor?.usuario.nome || 'Autogestão'}
+              Academia: {a.academia?.nome || '---'} | Professor: {a.professor?.usuario.nome || 'Autogestao'}
             </p>
             {(a.peso_kg || a.altura_cm) && (
               <p className="text-xs text-text-muted">
-                Peso: {a.peso_kg ? `${a.peso_kg}kg` : '—'} · Altura: {a.altura_cm ? `${a.altura_cm}cm` : '—'}
-                {a.data_nascimento && ` · Nasc: ${new Date(a.data_nascimento).toLocaleDateString('pt-BR')}`}
+                Peso: {a.peso_kg ? `${a.peso_kg}kg` : '---'} | Altura: {a.altura_cm ? `${a.altura_cm}cm` : '---'}
+                {a.data_nascimento && ` | Nasc: ${new Date(a.data_nascimento).toLocaleDateString('pt-BR')}`}
               </p>
             )}
           </div>
@@ -438,7 +523,7 @@ function EditAcademiaModal({
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-text-muted">Máx. Professores</label>
+          <label className="mb-1 block text-xs text-text-muted">Max. Professores</label>
           <input type="number" min={1} max={500} value={maxProfessores} onChange={(e) => setMaxProfessores(Number(e.target.value))} className={inputClass} />
         </div>
         <div>
@@ -454,12 +539,12 @@ function EditAcademiaModal({
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
-      <div className="border-t border-surface-input pt-4 mt-4 space-y-2">
-        <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Redefinir Senha do Usuário</h4>
+      <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuario</h4>
         <div className="flex gap-2">
           <input
             type="password"
-            placeholder="Nova senha (mín. 8 caracteres)"
+            placeholder="Nova senha (min. 8 caracteres)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className={inputClass}
@@ -468,12 +553,12 @@ function EditAcademiaModal({
             type="button"
             onClick={handleResetPassword}
             disabled={newPassword.length < 8}
-            className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap disabled:opacity-40"
+            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
           >
             Resetar
           </button>
         </div>
-        {resetMsg && <p className="text-xs font-medium text-success mt-1">{resetMsg}</p>}
+        {resetMsg && <p className="mt-1 text-xs font-medium text-success">{resetMsg}</p>}
       </div>
     </Modal>
   )
@@ -552,7 +637,7 @@ function EditProfessorModal({
         <div>
           <label className="mb-2 block text-xs text-text-muted">Academias vinculadas</label>
           <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-surface-input p-2">
-            {academias.length === 0 && <p className="text-xs text-text-muted">Nenhuma academia disponível.</p>}
+            {academias.length === 0 && <p className="text-xs text-text-muted">Nenhuma academia disponivel.</p>}
             {academias.map((a) => (
               <label key={a.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-text hover:bg-surface-input">
                 <input
@@ -571,12 +656,12 @@ function EditProfessorModal({
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
-      <div className="border-t border-surface-input pt-4 mt-4 space-y-2">
-        <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Redefinir Senha do Usuário</h4>
+      <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuario</h4>
         <div className="flex gap-2">
           <input
             type="password"
-            placeholder="Nova senha (mín. 8 caracteres)"
+            placeholder="Nova senha (min. 8 caracteres)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className={inputClass}
@@ -585,12 +670,12 @@ function EditProfessorModal({
             type="button"
             onClick={handleResetPassword}
             disabled={newPassword.length < 8}
-            className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap disabled:opacity-40"
+            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
           >
             Resetar
           </button>
         </div>
-        {resetMsg && <p className="text-xs font-medium text-success mt-1">{resetMsg}</p>}
+        {resetMsg && <p className="mt-1 text-xs font-medium text-success">{resetMsg}</p>}
       </div>
     </Modal>
   )
@@ -691,7 +776,7 @@ function EditAlunoModal({
         <div>
           <label className="mb-1 block text-xs text-text-muted">Professor</label>
           <select value={professorId} onChange={(e) => setProfessorId(e.target.value)} className={inputClass}>
-            <option value="">Autogestão</option>
+            <option value="">Autogestao</option>
             {professores.map((p) => (
               <option key={p.id} value={p.id}>{p.usuario.nome}</option>
             ))}
@@ -702,12 +787,12 @@ function EditAlunoModal({
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
-      <div className="border-t border-surface-input pt-4 mt-4 space-y-2">
-        <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Redefinir Senha do Usuário</h4>
+      <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuario</h4>
         <div className="flex gap-2">
           <input
             type="password"
-            placeholder="Nova senha (mín. 8 caracteres)"
+            placeholder="Nova senha (min. 8 caracteres)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className={inputClass}
@@ -716,12 +801,12 @@ function EditAlunoModal({
             type="button"
             onClick={handleResetPassword}
             disabled={newPassword.length < 8}
-            className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white whitespace-nowrap disabled:opacity-40"
+            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
           >
             Resetar
           </button>
         </div>
-        {resetMsg && <p className="text-xs font-medium text-success mt-1">{resetMsg}</p>}
+        {resetMsg && <p className="mt-1 text-xs font-medium text-success">{resetMsg}</p>}
       </div>
     </Modal>
   )

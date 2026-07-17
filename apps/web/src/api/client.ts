@@ -262,22 +262,95 @@ export const api = {
   alterarStatusAcademia: (id: string, status: 'ATIVO' | 'REJEITADO') =>
     api.patch(`/root/academias/${id}/status`, { status }),
 
-  getUsuarios: () => api.get<any[]>('/root/usuarios'),
+  getUsuarios: (params?: { page?: number; limit?: number; search?: string; sortBy?: string; order?: string; role?: string; ativo?: boolean }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.search) qs.set('search', params.search)
+    if (params?.sortBy) qs.set('sortBy', params.sortBy)
+    if (params?.order) qs.set('order', params.order)
+    if (params?.role) qs.set('role', params.role)
+    if (params?.ativo !== undefined) qs.set('ativo', String(params.ativo))
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/usuarios${query ? `?${query}` : ''}`)
+  },
+
+  toggleUsuarioStatus: (id: string, ativo: boolean) =>
+    api.patch<{ id: string; ativo: boolean }>(`/root/usuarios/${id}/status`, { ativo }),
 
   resetPassword: (id: string, senha: string) =>
     api.post(`/root/usuarios/${id}/reset-password`, { senha }),
 
-  getRootAcademias: () => api.get<any[]>('/root/academias'),
+  getRootAcademias: (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.search) qs.set('search', params.search)
+    if (params?.status) qs.set('status', params.status)
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/academias${query ? `?${query}` : ''}`)
+  },
   updateRootAcademia: (id: string, data: any) => api.put(`/root/academias/${id}`, data),
   deleteRootAcademia: (id: string) => api.delete(`/root/academias/${id}`),
 
-  getRootProfessores: () => api.get<any[]>('/root/professores'),
+  getRootProfessores: (params?: { page?: number; limit?: number; search?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.search) qs.set('search', params.search)
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/professores${query ? `?${query}` : ''}`)
+  },
   updateRootProfessor: (id: string, data: any) => api.put(`/root/professores/${id}`, data),
   deleteRootProfessor: (id: string) => api.delete(`/root/professores/${id}`),
 
-  getRootAlunos: () => api.get<any[]>('/root/alunos'),
+  getRootAlunos: (params?: { page?: number; limit?: number; search?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.search) qs.set('search', params.search)
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/alunos${query ? `?${query}` : ''}`)
+  },
   updateRootAluno: (id: string, data: any) => api.put(`/root/alunos/${id}`, data),
   deleteRootAluno: (id: string) => api.delete(`/root/alunos/${id}`),
+
+  getRootVinculos: (params?: { page?: number; limit?: number; status?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.status) qs.set('status', params.status)
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/vinculos${query ? `?${query}` : ''}`)
+  },
+
+  // ─── Root — Social Moderation ─────────────────────
+  getRootSocialMural: (params?: { page?: number; limit?: number; search?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.search) qs.set('search', params.search)
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/social/mural${query ? `?${query}` : ''}`)
+  },
+  deleteRootPost: (postId: string) => api.delete(`/root/social/mural/${postId}`),
+
+  getRootSocialClubes: (params?: { page?: number; limit?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/social/clubes${query ? `?${query}` : ''}`)
+  },
+  deleteRootClube: (id: string) => api.delete(`/root/social/clubes/${id}`),
+
+  getRootSocialAmizades: (params?: { page?: number; limit?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    const query = qs.toString()
+    return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/social/amizades${query ? `?${query}` : ''}`)
+  },
 
   // ─── Academia ──────────────────────────────────────
   getDashboardAcademia: () =>

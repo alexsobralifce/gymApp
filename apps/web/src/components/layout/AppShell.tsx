@@ -124,6 +124,7 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/', label: 'Painel Global', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
         { to: '/vinculos', label: 'Vinculos Pendentes', icon: <LinkIcon className="h-5 w-5" /> },
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
+        { to: '/social', label: 'Moderacao Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
       ]
     default:
       return []
