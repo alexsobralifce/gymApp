@@ -335,6 +335,73 @@ export async function clonarTreino(treinoId: string, alunoDestinoId: string, ato
   })
 }
 
+export async function clonarTreinoEmLote(treinoId: string, alunoIds: string[], atorId: string, atorTipo: TreinoAtor) {
+  const treino = await prisma.treino.findUnique({
+    where: { id: treinoId },
+    include: {
+      exercicios: { orderBy: { ordem: 'asc' } },
+      aluno: { select: { professor_id: true, academia_id: true } },
+    },
+  })
+  if (!treino) throw new NotFoundError('Treino')
+
+  if (atorTipo === TreinoAtor.PROFESSOR) {
+    if (treino.aluno.professor_id !== atorId) throw new TenantAccessError()
+  } else if (atorTipo === TreinoAtor.ACADEMIA) {
+    if (treino.aluno.academia_id !== atorId) throw new TenantAccessError()
+  }
+
+  const alunos = await prisma.aluno.findMany({
+    where: { id: { in: alunoIds } },
+  })
+
+  if (alunos.length !== alunoIds.length) throw new NotFoundError('Um ou mais alunos destino')
+
+  for (const a of alunos) {
+    if (atorTipo === TreinoAtor.PROFESSOR) {
+      if (a.professor_id !== atorId) throw new TenantAccessError()
+    } else if (atorTipo === TreinoAtor.ACADEMIA) {
+      if (a.academia_id !== atorId) throw new TenantAccessError()
+    }
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const treinos = []
+
+    for (const alunoId of alunoIds) {
+      const novoTreino = await tx.treino.create({
+        data: {
+          aluno_id: alunoId,
+          nome: treino.nome,
+          dias_semana: treino.dias_semana,
+          status: TreinoStatus.CADASTRADO,
+          exercicios: {
+            create: treino.exercicios.map((e) => ({
+              exercicio_id: e.exercicio_id,
+              ordem: e.ordem,
+              series: e.series,
+              repeticoes: e.repeticoes,
+              carga_sugerida_kg: e.carga_sugerida_kg,
+            })),
+          },
+          historico: {
+            create: {
+              status_anterior: TreinoStatus.CADASTRADO,
+              status_novo: TreinoStatus.CADASTRADO,
+              ator_id: atorId,
+              ator_tipo: atorTipo,
+            },
+          },
+        },
+        include: { exercicios: true },
+      })
+      treinos.push(novoTreino)
+    }
+
+    return treinos
+  })
+}
+
 // ─── UC-14: Dashboard professor ───────────────────────────────────────────────
 
 export async function dashboardProfessor(professorId: string, academiaId?: string) {
@@ -357,6 +424,7 @@ export async function dashboardProfessor(professorId: string, academiaId?: strin
           iniciado_em: true,
           finalizado_em: true,
           atualizado_em: true,
+          is_template: true,
         },
       },
     },

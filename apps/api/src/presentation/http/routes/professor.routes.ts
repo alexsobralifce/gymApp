@@ -412,4 +412,34 @@ export async function professorRoutes(app: FastifyInstance) {
 
     return reply.status(200).send(alunos)
   })
+
+  /** GET /professores/templates — lista treinos marcados como template */
+  app.get('/templates', { preHandler }, async (request, reply) => {
+    const professor = await resolveProfessor(request.currentUser.sub)
+    const { academiaId } = z.object({ academiaId: z.string().optional() }).parse(request.query)
+
+    const alunoWhere: Record<string, any> = { professor_id: professor.id }
+    if (academiaId) alunoWhere.academia_id = academiaId
+
+    const alunosDoProfessor = await prisma.aluno.findMany({
+      where: alunoWhere,
+      select: { id: true },
+    })
+
+    const templates = await prisma.treino.findMany({
+      where: {
+        is_template: true,
+        aluno_id: { in: alunosDoProfessor.map((a) => a.id) },
+      },
+      include: {
+        exercicios: {
+          include: { exercicio: true },
+          orderBy: { ordem: 'asc' },
+        },
+      },
+      orderBy: { atualizado_em: 'desc' },
+    })
+
+    return reply.status(200).send(templates)
+  })
 }

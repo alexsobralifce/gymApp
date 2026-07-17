@@ -18,6 +18,7 @@ export interface Treino {
   nome: string
   dias_semana: number[]
   status: TreinoStatus
+  is_template?: boolean
   iniciado_em?: string | null
   finalizado_em?: string | null
   criado_em: string
@@ -176,6 +177,7 @@ export interface ProfessorDashboard {
     nome: string
     status: TreinoStatus
     dias_semana: number[]
+    is_template?: boolean
     iniciado_em?: string | null
     finalizado_em?: string | null
     atualizado_em: string

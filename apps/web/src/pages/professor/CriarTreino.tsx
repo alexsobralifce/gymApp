@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { Exercicio, ProfessorDashboard, Vinculo } from '../../types/api'
+import type { Exercicio, ProfessorDashboard, Treino, Vinculo } from '../../types/api'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -115,6 +115,8 @@ export default function ProfessorCriarTreino() {
   const [busca, setBusca] = useState('')
   const [vinculos, setVinculos] = useState<Vinculo[]>([])
   const [academiaId, setAcademiaId] = useState('')
+  const [templates, setTemplates] = useState<Treino[]>([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
 
   // Carregar alunos e exercícios
   useEffect(() => {
@@ -133,11 +135,13 @@ export default function ProfessorCriarTreino() {
     setLoading(true)
     Promise.all([
       api.getDashboard(academiaId || undefined),
-      api.getExercicios()
+      api.getExercicios(),
+      api.getTemplates(academiaId || undefined),
     ])
-      .then(([a, e]) => {
+      .then(([a, e, t]) => {
         setAlunos(a)
         setExercicios(e)
+        setTemplates(t)
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
@@ -277,6 +281,37 @@ export default function ProfessorCriarTreino() {
     }
   }
 
+  async function handleSelectTemplate(templateId: string) {
+    if (!templateId) {
+      setSelectedTemplateId('')
+      return
+    }
+    setSelectedTemplateId(templateId)
+    try {
+      const treino = await api.getTreino(templateId)
+      const exerciciosPreenchidos: ExercicioTreino[] = (treino.exercicios || []).map((te) => ({
+        exercicioId: te.exercicio_id,
+        nome: te.exercicio.nome,
+        ordem: te.ordem,
+        series: te.series,
+        repeticoes: te.repeticoes,
+        cargaSugeridaKg: te.carga_sugerida_kg ?? undefined,
+        imagemUrl: te.exercicio.imagem_url,
+        gifUrl: te.exercicio.gif_url,
+        grupoMuscular: te.exercicio.grupo_muscular,
+      }))
+      setFichas([{
+        nome: treino.nome,
+        diasSemana: treino.dias_semana || [],
+        exercicios: exerciciosPreenchidos,
+      }])
+      setFichaAtiva(0)
+      setAlunoId('')
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   const ficha = fichas[fichaAtiva]
@@ -330,6 +365,23 @@ export default function ProfessorCriarTreino() {
           ))}
         </select>
       </div>
+
+      {/* Seletor de Template */}
+      {templates.length > 0 && (
+        <div className="max-w-md bg-surface-card border border-amber-400/20 rounded-2xl p-4 shadow-sm">
+          <label className="mb-1.5 block text-xs font-semibold text-amber-400 uppercase tracking-wider">Criar a partir de Template</label>
+          <select
+            value={selectedTemplateId}
+            onChange={(e) => handleSelectTemplate(e.target.value)}
+            className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
+          >
+            <option value="">Nenhum (criar do zero)</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>{t.nome}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {alunoId && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

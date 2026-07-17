@@ -12,6 +12,7 @@ import {
   registrarExecucao,
   finalizarTreino,
   clonarTreino,
+  clonarTreinoEmLote,
 } from '../../../application/usecases/treino/TreinoService.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
@@ -184,6 +185,47 @@ export async function treinoRoutes(app: FastifyInstance) {
 
     const treino = await clonarTreino(id, alunoDestinoId, atorId, atorTipo)
     return reply.status(201).send(treino)
+  })
+
+  /** POST /treinos/:id/clonar-lote — Clona treino para múltiplos alunos */
+  app.post('/:id/clonar-lote', { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)] }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { alunoIds } = z.object({ alunoIds: z.array(z.string()).min(1) }).parse(request.body)
+
+    const { sub, role, tenantId } = request.currentUser
+
+    const atorId = role === Role.ACADEMIA ? tenantId! : (await resolveProfessor(sub)).id
+    const atorTipo = role === Role.ACADEMIA ? TreinoAtor.ACADEMIA : TreinoAtor.PROFESSOR
+
+    const treinos = await clonarTreinoEmLote(id, alunoIds, atorId, atorTipo)
+    return reply.status(201).send(treinos)
+  })
+
+  /** POST /treinos/:id/marcar-template — Marca/desmarca um treino como template */
+  app.post('/:id/marcar-template', { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)] }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { isTemplate } = z.object({ isTemplate: z.boolean() }).parse(request.body)
+
+    const treino = await prisma.treino.findUnique({
+      where: { id },
+      include: { aluno: { select: { professor_id: true, academia_id: true } } },
+    })
+    if (!treino) throw new NotFoundError('Treino')
+
+    const { sub, role, tenantId } = request.currentUser
+    if (role === Role.PROFESSOR) {
+      const professor = await resolveProfessor(sub)
+      if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
+    } else if (role === Role.ACADEMIA) {
+      if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
+    }
+
+    const updated = await prisma.treino.update({
+      where: { id },
+      data: { is_template: isTemplate },
+    })
+
+    return reply.status(200).send(updated)
   })
 
   /** GET /treinos/:id — Detalhe com exercícios (UC-21) */

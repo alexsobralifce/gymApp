@@ -28,6 +28,10 @@ export default function ProfessorTreinos() {
   const [cloningTreino, setCloningTreino] = useState<{ id: string; nome: string } | null>(null)
   const [alunosDestino, setAlunosDestino] = useState<{ id: string; usuario: { nome: string; email: string } }[]>([])
   const [alunoDestinoId, setAlunoDestinoId] = useState('')
+  const [cloningLote, setCloningLote] = useState<{ id: string; nome: string } | null>(null)
+  const [alunosLoteDisponiveis, setAlunosLoteDisponiveis] = useState<{ id: string; usuario: { nome: string; email: string } }[]>([])
+  const [selectedAlunoIds, setSelectedAlunoIds] = useState<string[]>([])
+  const [buscaAlunoLote, setBuscaAlunoLote] = useState('')
   const { showToast, ToastComponent } = useToast()
   const navigate = useNavigate()
 
@@ -105,6 +109,53 @@ export default function ProfessorTreinos() {
     }
   }
 
+  const handleToggleTemplate = async (treinoId: string, isTemplate: boolean) => {
+    try {
+      await api.marcarTemplate(treinoId, isTemplate)
+      showToast(isTemplate ? 'Template ativado!' : 'Template removido!')
+      const data = await api.getDashboard()
+      setAlunos(data)
+    } catch (e) {
+      showToast((e as Error).message, 'error')
+    }
+  }
+
+  const openCloneLoteModal = async (treinoId: string, treinoNome: string) => {
+    setCloningLote({ id: treinoId, nome: treinoNome })
+    setSelectedAlunoIds([])
+    setBuscaAlunoLote('')
+    try {
+      const lista = await api.getAlunosProfessor()
+      setAlunosLoteDisponiveis(lista)
+    } catch {
+      showToast('Erro ao carregar alunos', 'error')
+    }
+  }
+
+  const toggleAlunoLote = (id: string) => {
+    setSelectedAlunoIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  const handleCloneLote = async () => {
+    if (!cloningLote || selectedAlunoIds.length === 0) return
+    setSaving(true)
+    try {
+      const treinos = await api.clonarTreinoLote(cloningLote.id, selectedAlunoIds)
+      await Promise.all(treinos.map((t) => api.enviarTreino(t.id)))
+      showToast(`${treinos.length} treino(s) clonado(s) e enviado(s) com sucesso!`)
+      setCloningLote(null)
+      setSelectedAlunoIds([])
+      const data = await api.getDashboard()
+      setAlunos(data)
+    } catch (e) {
+      showToast((e as Error).message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
@@ -171,11 +222,18 @@ export default function ProfessorTreinos() {
               <h3 className="text-lg font-semibold text-text">Treinos de {viewingTreinos.alunoNome}</h3>
               <button onClick={() => setViewingTreinos(null)} className="text-text-muted hover:text-text text-lg cursor-pointer">&times;</button>
             </div>
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              {viewingTreinos.treinos.map((t) => (
-                <div key={t.id} className="flex items-center justify-between rounded-lg border border-surface-input bg-surface p-3">
-                  <div>
-                    <p className="text-sm font-medium text-text">{t.nome}</p>
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {viewingTreinos.treinos.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-surface-input bg-surface p-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-text">{t.nome}</p>
+                        {t.is_template && (
+                          <span className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                            Template
+                          </span>
+                        )}
+                      </div>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
                         {t.status}
@@ -185,13 +243,27 @@ export default function ProfessorTreinos() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { setViewingTreinos(null); navigate(`/treino/${t.id}/inicio`) }}
-                      className="text-xs text-primary hover:underline cursor-pointer"
-                    >
-                      Exibir
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleToggleTemplate(t.id, !t.is_template)}
+                        className={`text-xs hover:underline cursor-pointer ${t.is_template ? 'text-amber-400' : 'text-amber-500'}`}
+                      >
+                        {t.is_template ? 'Desmarcar Template' : 'Template'}
+                      </button>
+                      {t.is_template && (
+                        <button
+                          onClick={() => { setViewingTreinos(null); openCloneLoteModal(t.id, t.nome) }}
+                          className="text-xs text-green-400 hover:underline cursor-pointer"
+                        >
+                          Clonar em Lote
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setViewingTreinos(null); navigate(`/treino/${t.id}/inicio`) }}
+                        className="text-xs text-primary hover:underline cursor-pointer"
+                      >
+                        Exibir
+                      </button>
                     <button
                       onClick={() => {
                         setViewingTreinos(null)
@@ -330,6 +402,81 @@ export default function ProfessorTreinos() {
                 className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
               >
                 {saving ? 'Clonando...' : 'Clonar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Clonar em Lote */}
+      {cloningLote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setCloningLote(null)} />
+          <div className="relative z-10 mx-4 w-full max-w-lg rounded-lg bg-surface-card p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-text">Clonar em Lote</h3>
+            <p className="mt-1 text-sm text-text-muted">
+              Clonando: <span className="text-text font-medium">{cloningLote.nome}</span>
+            </p>
+            <div className="mt-1 text-xs text-amber-400">
+              {selectedAlunoIds.length} aluno(s) selecionado(s)
+            </div>
+            <div className="mt-3">
+              <input
+                type="text"
+                placeholder="Buscar aluno..."
+                value={buscaAlunoLote}
+                onChange={(e) => setBuscaAlunoLote(e.target.value)}
+                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div className="mt-3 max-h-60 overflow-y-auto space-y-1">
+              {alunosLoteDisponiveis
+                .filter((a) =>
+                  buscaAlunoLote === '' ||
+                  a.usuario.nome.toLowerCase().includes(buscaAlunoLote.toLowerCase()) ||
+                  a.usuario.email.toLowerCase().includes(buscaAlunoLote.toLowerCase())
+                )
+                .map((a) => (
+                  <label key={a.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedAlunoIds.includes(a.id)}
+                      onChange={() => toggleAlunoLote(a.id)}
+                      className="rounded border-surface-input"
+                    />
+                    <span className="text-sm text-text">{a.usuario.nome}</span>
+                    <span className="text-xs text-text-muted ml-auto">{a.usuario.email}</span>
+                  </label>
+                ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setSelectedAlunoIds(alunosLoteDisponiveis.map((a) => a.id))}
+                className="text-xs text-primary hover:underline cursor-pointer"
+              >
+                Selecionar todos
+              </button>
+              <button
+                onClick={() => setSelectedAlunoIds([])}
+                className="text-xs text-text-muted hover:underline cursor-pointer"
+              >
+                Limpar
+              </button>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setCloningLote(null)}
+                disabled={saving}
+                className="rounded border border-surface-input bg-surface px-4 py-2 text-sm text-text-muted hover:text-text disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCloneLote}
+                disabled={saving || selectedAlunoIds.length === 0}
+                className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
+              >
+                {saving ? 'Clonando...' : `Clonar para ${selectedAlunoIds.length} alunos`}
               </button>
             </div>
           </div>

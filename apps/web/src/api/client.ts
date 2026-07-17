@@ -233,6 +233,15 @@ export const api = {
   clonarTreino: (treinoId: string, alunoDestinoId: string) =>
     api.post<Treino>(`/treinos/${treinoId}/clonar`, { alunoDestinoId }),
 
+  clonarTreinoLote: (treinoId: string, alunoIds: string[]) =>
+    api.post<Treino[]>(`/treinos/${treinoId}/clonar-lote`, { alunoIds }),
+
+  marcarTemplate: (treinoId: string, isTemplate: boolean) =>
+    api.post<Treino>(`/treinos/${treinoId}/marcar-template`, { isTemplate }),
+
+  getTemplates: (academiaId?: string) =>
+    api.get<Treino[]>(`/professores/templates${academiaId ? `?academiaId=${academiaId}` : ''}`),
+
   responderTreino: (id: string, acao: 'ACEITAR' | 'RECUSAR') =>
     api.patch<Treino>(`/treinos/${id}/responder`, { acao }),
 
