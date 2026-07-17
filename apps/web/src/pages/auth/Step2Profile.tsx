@@ -9,6 +9,8 @@ interface Step2ProfileProps {
   setAltura: (v: string) => void
   sexo: string
   setSexo: (v: string) => void
+  consentiuSocial: boolean
+  setConsentiuSocial: (v: boolean) => void
 }
 
 interface FieldError {
@@ -35,7 +37,7 @@ function validateAltura(v: string): string | undefined {
 export default function Step2Profile({
   dataNascimento, setDataNascimento,
   peso, setPeso, altura, setAltura,
-  sexo, setSexo,
+  sexo, setSexo, consentiuSocial, setConsentiuSocial,
 }: Step2ProfileProps) {
   const [errors, setErrors] = useState<FieldError>({})
   const [touched, setTouched] = useState<{ peso: boolean; altura: boolean }>({ peso: false, altura: false })
@@ -112,6 +114,15 @@ export default function Step2Profile({
           <option value="FEMININO">Feminino</option>
         </select>
       </div>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={consentiuSocial}
+          onChange={(e) => setConsentiuSocial(e.target.checked)}
+          className="rounded border-surface-input"
+        />
+        <span className="text-xs text-text-muted">Desejo que meus amigos vejam quando eu treino</span>
+      </label>
       {hasErrors && (
         <p className="text-xs text-red-400 text-center">Corrija os campos acima para continuar</p>
       )}

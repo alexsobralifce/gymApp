@@ -30,6 +30,7 @@ export async function alunoRoutes(app: FastifyInstance) {
       pesoKg: z.number().positive().optional(),
       alturaCm: z.number().positive().optional(),
       sexo: z.enum(['MASCULINO', 'FEMININO']).optional(),
+      consentiuFeedSocial: z.boolean().optional(),
     }).parse(request.body || {})
 
     const existente = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
@@ -45,6 +46,7 @@ export async function alunoRoutes(app: FastifyInstance) {
           peso_kg: body.pesoKg !== undefined ? body.pesoKg : undefined,
           altura_cm: body.alturaCm !== undefined ? body.alturaCm : undefined,
           sexo: body.sexo !== undefined ? body.sexo : undefined,
+          consentiu_feed_social_em: body.consentiuFeedSocial ? new Date() : undefined,
         },
       })
 
@@ -85,6 +87,7 @@ export async function alunoRoutes(app: FastifyInstance) {
         peso_kg: body.pesoKg,
         altura_cm: body.alturaCm,
         sexo: body.sexo,
+        consentiu_feed_social_em: body.consentiuFeedSocial ? new Date() : undefined,
       },
     })
 
@@ -112,6 +115,20 @@ export async function alunoRoutes(app: FastifyInstance) {
       where: { id: aluno.id },
       data: { academia_id: academiaId },
     })
+
+    try {
+      const club = await prisma.socialClub.findUnique({ where: { academia_id: academiaId } })
+      if (club) {
+        await prisma.socialClubMember.upsert({
+          where: { clube_id_aluno_id: { clube_id: club.id, aluno_id: aluno.id } },
+          create: { clube_id: club.id, aluno_id: aluno.id },
+          update: {},
+        })
+      }
+    } catch {
+      // best-effort
+    }
+
     return reply.status(200).send(updated)
   })
 

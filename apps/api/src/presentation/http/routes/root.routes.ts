@@ -47,6 +47,19 @@ export async function rootRoutes(app: FastifyInstance) {
     }).parse(request.body)
 
     const academia = await aprovacaoAcademia(id, acao, motivo)
+
+    if (acao === 'APROVAR') {
+      try {
+        await prisma.socialClub.upsert({
+          where: { academia_id: id },
+          create: { academia_id: id, nome: academia.nome, tipo: 'ACADEMIA' },
+          update: {},
+        })
+      } catch {
+        // club creation is best-effort, never block approval
+      }
+    }
+
     return reply.status(200).send(academia)
   })
 

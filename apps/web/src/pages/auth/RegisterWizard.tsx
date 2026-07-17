@@ -23,6 +23,7 @@ export default function RegisterWizard() {
   const [peso, setPeso] = useState('')
   const [altura, setAltura] = useState('')
   const [sexo, setSexo] = useState('')
+  const [consentiuSocial, setConsentiuSocial] = useState(false)
   const { register, loading, error } = useAuthStore()
   const navigate = useNavigate()
 
@@ -74,6 +75,7 @@ export default function RegisterWizard() {
       peso ? Number(peso) : undefined,
       altura ? Number(altura) : undefined,
       sexo || undefined,
+      consentiuSocial,
     )
     navigate('/welcome')
   }
@@ -99,7 +101,7 @@ export default function RegisterWizard() {
           <Step2Profile
             dataNascimento={dataNascimento} setDataNascimento={setDataNascimento}
             peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
-            sexo={sexo} setSexo={setSexo}
+            sexo={sexo} setSexo={setSexo} consentiuSocial={consentiuSocial} setConsentiuSocial={setConsentiuSocial}
           />
         )}
 

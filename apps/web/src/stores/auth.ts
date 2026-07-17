@@ -8,7 +8,7 @@ export interface AuthState {
   error: string | null
 
   login: (email: string, senha: string) => Promise<void>
-  register: (nome: string, email: string, senha: string, role: string, academiaId?: string, telefone?: string, dataNascimento?: string, pesoKg?: number, alturaCm?: number, sexo?: string) => Promise<void>
+  register: (nome: string, email: string, senha: string, role: string, academiaId?: string, telefone?: string, dataNascimento?: string, pesoKg?: number, alturaCm?: number, sexo?: string, consentiuSocial?: boolean) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
   updatePushSubscription: (subscription: PushSubscriptionJSON | null) => Promise<void>
@@ -33,13 +33,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (nome, email, senha, role, academiaId, telefone, dataNascimento, pesoKg, alturaCm, sexo) => {
+  register: async (nome, email, senha, role, academiaId, telefone, dataNascimento, pesoKg, alturaCm, sexo, consentiuSocial) => {
     set({ loading: true, error: null })
     try {
       await api.register(nome, email, senha, role, telefone)
       await get().login(email, senha)
       if (role === 'ALUNO') {
-        await api.criarPerfilAluno({ dataNascimento, pesoKg, alturaCm, sexo: sexo as 'MASCULINO' | 'FEMININO' | undefined })
+        await api.criarPerfilAluno({ dataNascimento, pesoKg, alturaCm, sexo: sexo as 'MASCULINO' | 'FEMININO' | undefined, consentiuFeedSocial: consentiuSocial })
         if (academiaId && academiaId !== 'AUTOGESTAO') {
           await api.vincularAcademiaAluno(academiaId)
         }
