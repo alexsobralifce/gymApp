@@ -88,6 +88,26 @@ export async function professorRoutes(app: FastifyInstance) {
     return reply.status(204).send()
   })
 
+  /** GET /professores/alunos — lista leve de alunos (só id + nome + email) */
+  app.get('/alunos', { preHandler }, async (request, reply) => {
+    const professor = await resolveProfessor(request.currentUser.sub)
+    const { academiaId } = z.object({ academiaId: z.string().optional() }).parse(request.query)
+
+    const where: Record<string, any> = { professor_id: professor.id }
+    if (academiaId) where.academia_id = academiaId
+
+    const alunos = await prisma.aluno.findMany({
+      where,
+      select: {
+        id: true,
+        usuario: { select: { nome: true, email: true } },
+      },
+      orderBy: { usuario: { nome: 'asc' } },
+    })
+
+    return reply.status(200).send(alunos)
+  })
+
   /** POST /professores/alunos — UC-10 */
   app.post('/alunos', { preHandler }, async (request, reply) => {
     const body = z.object({

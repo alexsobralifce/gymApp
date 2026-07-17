@@ -25,6 +25,9 @@ export default function AcademiaTreinos() {
   const [viewingTreinos, setViewingTreinos] = useState<{ treinos: AlunoAcademia['treinos']; alunoNome: string } | null>(null)
   const [form, setForm] = useState({ nome: '', diasSemana: [] as number[] })
   const [saving, setSaving] = useState(false)
+  const [cloningTreino, setCloningTreino] = useState<{ id: string; nome: string } | null>(null)
+  const [alunosDestino, setAlunosDestino] = useState<{ id: string; usuario: { nome: string; email: string } }[]>([])
+  const [alunoDestinoId, setAlunoDestinoId] = useState('')
   const { showToast, ToastComponent } = useToast()
   const navigate = useNavigate()
 
@@ -65,6 +68,34 @@ export default function AcademiaTreinos() {
       await api.deleteTreino(deletingTreino.id)
       showToast('Treino removido com sucesso!')
       setDeletingTreino(null)
+      const data = await api.getAlunosAcademia()
+      setAlunos(data as AlunoAcademia[])
+    } catch (e) {
+      showToast((e as Error).message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const openCloneModal = async (treinoId: string, treinoNome: string) => {
+    setCloningTreino({ id: treinoId, nome: treinoNome })
+    setAlunoDestinoId('')
+    try {
+      const lista = await api.getAlunosAcademiaResumo()
+      setAlunosDestino(lista)
+    } catch {
+      showToast('Erro ao carregar alunos', 'error')
+    }
+  }
+
+  const handleCloneTreino = async () => {
+    if (!cloningTreino || !alunoDestinoId) return
+    setSaving(true)
+    try {
+      const treino = await api.clonarTreino(cloningTreino.id, alunoDestinoId)
+      await api.enviarTreino(treino.id)
+      showToast('Treino clonado com sucesso!')
+      setCloningTreino(null)
       const data = await api.getAlunosAcademia()
       setAlunos(data as AlunoAcademia[])
     } catch (e) {
@@ -165,6 +196,15 @@ export default function AcademiaTreinos() {
                       </button>
                       <button
                         onClick={() => {
+                          setViewingTreinos(null)
+                          openCloneModal(t.id, t.nome)
+                        }}
+                        className="text-xs text-blue-400 hover:underline cursor-pointer"
+                      >
+                        Clonar
+                      </button>
+                      <button
+                        onClick={() => {
                           setEditingTreino({
                             treino: { ...t, aluno_id: '', criado_em: '' } as Treino,
                             alunoId: aluno?.id || '',
@@ -256,6 +296,48 @@ export default function AcademiaTreinos() {
           onCancel={() => setDeletingTreino(null)}
           loading={saving}
         />
+      )}
+
+      {/* Modal: Clonar Treino */}
+      {cloningTreino && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setCloningTreino(null)} />
+          <div className="relative z-10 mx-4 w-full max-w-md rounded-lg bg-surface-card p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-text">Clonar Treino</h3>
+            <p className="mt-1 text-sm text-text-muted">
+              Clonando: <span className="text-text font-medium">{cloningTreino.nome}</span>
+            </p>
+            <div className="mt-4">
+              <label className="block text-xs text-text-muted mb-1">Aluno destino</label>
+              <select
+                value={alunoDestinoId}
+                onChange={(e) => setAlunoDestinoId(e.target.value)}
+                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+              >
+                <option value="">Selecione um aluno...</option>
+                {alunosDestino.map((a) => (
+                  <option key={a.id} value={a.id}>{a.usuario.nome} ({a.usuario.email})</option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setCloningTreino(null)}
+                disabled={saving}
+                className="rounded border border-surface-input bg-surface px-4 py-2 text-sm text-text-muted hover:text-text disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCloneTreino}
+                disabled={saving || !alunoDestinoId}
+                className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
+              >
+                {saving ? 'Clonando...' : 'Clonar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

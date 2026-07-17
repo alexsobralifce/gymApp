@@ -278,6 +278,63 @@ export async function finalizarTreino(treinoId: string, alunoId: string) {
   })
 }
 
+// ─── Clonar Treino ─────────────────────────────────────────────────────────────
+
+export async function clonarTreino(treinoId: string, alunoDestinoId: string, atorId: string, atorTipo: TreinoAtor) {
+  const treino = await prisma.treino.findUnique({
+    where: { id: treinoId },
+    include: {
+      exercicios: {
+        orderBy: { ordem: 'asc' },
+      },
+      aluno: { select: { professor_id: true, academia_id: true } },
+    },
+  })
+  if (!treino) throw new NotFoundError('Treino')
+
+  if (atorTipo === TreinoAtor.PROFESSOR) {
+    if (treino.aluno.professor_id !== atorId) throw new TenantAccessError()
+  } else if (atorTipo === TreinoAtor.ACADEMIA) {
+    if (treino.aluno.academia_id !== atorId) throw new TenantAccessError()
+  }
+
+  const alunoDestino = await prisma.aluno.findUnique({ where: { id: alunoDestinoId } })
+  if (!alunoDestino) throw new NotFoundError('Aluno destino')
+
+  if (atorTipo === TreinoAtor.PROFESSOR) {
+    if (alunoDestino.professor_id !== atorId) throw new TenantAccessError()
+  } else if (atorTipo === TreinoAtor.ACADEMIA) {
+    if (alunoDestino.academia_id !== atorId) throw new TenantAccessError()
+  }
+
+  return prisma.treino.create({
+    data: {
+      aluno_id: alunoDestinoId,
+      nome: `${treino.nome} (cópia)`,
+      dias_semana: treino.dias_semana,
+      status: TreinoStatus.CADASTRADO,
+      exercicios: {
+        create: treino.exercicios.map((e) => ({
+          exercicio_id: e.exercicio_id,
+          ordem: e.ordem,
+          series: e.series,
+          repeticoes: e.repeticoes,
+          carga_sugerida_kg: e.carga_sugerida_kg,
+        })),
+      },
+      historico: {
+        create: {
+          status_anterior: TreinoStatus.CADASTRADO,
+          status_novo: TreinoStatus.CADASTRADO,
+          ator_id: atorId,
+          ator_tipo: atorTipo,
+        },
+      },
+    },
+    include: { exercicios: true },
+  })
+}
+
 // ─── UC-14: Dashboard professor ───────────────────────────────────────────────
 
 export async function dashboardProfessor(professorId: string, academiaId?: string) {

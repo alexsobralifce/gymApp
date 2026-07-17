@@ -48,6 +48,7 @@ enum TreinoStatus {
 enum TreinoAtor {
   ALUNO
   PROFESSOR
+  ACADEMIA
   SISTEMA
 }
 

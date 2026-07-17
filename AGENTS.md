@@ -66,7 +66,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 ### TreinoHistorico (`treino_historico`) — Log imutável append-only
 `id (cuid), treino_id (FK), status_anterior (TreinoStatus), status_novo (TreinoStatus), ator_id (String), ator_tipo (TreinoAtor), timestamp`
 - Toda transição de estado do Treino deve ser registrada nesta tabela
-- `TreinoAtor`: `ALUNO | PROFESSOR | SISTEMA`
+- `TreinoAtor`: `ALUNO | PROFESSOR | ACADEMIA | SISTEMA`
 
 ### Notificacao (`notificacoes`)
 `id (cuid), aluno_id (FK), tipo (NotificacaoTipo), mensagem (String), dados (Json?), lida (Boolean, default false), criado_em`
@@ -98,54 +98,368 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 
 ---
 
-## 3. Fluxos de Negócio & Casos de Uso (UC)
+## 3. Regras de Negócio Detalhadas
 
-### Usuário ROOT
-- **UC-01** Aprovar/rejeitar academia
-- **UC-02** Configurar limite de professores
-- **UC-03** Aprovar vínculo professor-academia (2ª camada)
-- **UC-04** Painel global
-- **UC-04b** Gerenciar alunos (editar nome, email, telefone, data nascimento, peso, altura, academia, professor)
+### 3.1 Treino — Máquina de Estados & Regras de Transição
 
-### Usuário Academia
-- **UC-05** Cadastrar academia (nome + CNPJ)
-- **UC-06** Autorizar professor (1ª camada)
-- **UC-07** Remover vínculo ativo de professor
-- **UC-08** Dashboard com alunos da academia
-- **UC-08b** Gerenciar alunos (vincular professor)
-- **UC-08c** Criar treinos para alunos da academia
+#### Estados
+`CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CONCLUIDO`
+`CADASTRADO → ACEITO` (autogestão)
+`ENVIADO → RECUSADO` (terminal)
+`CONCLUIDO → ACEITO` (reciclagem automática)
 
-### Usuário Professor
-- **UC-09** Vincular-se a academia
-- **UC-10** Vincular alunos ao perfil
-- **UC-11** Criar fichas de treino (A/B/C)
-- **UC-12** Cadastrar exercícios personalizados
-- **UC-13** Enviar treino para aceite do aluno
-- **UC-14** Dashboard com status dos alunos
-- **UC-15** Alerta de inatividade (worker)
-- **UC-16** Correlações de desempenho
+#### Transições Válidas
+| De | Para | Ator | Condição |
+|---|---|---|---|
+| `CADASTRADO` | `ENVIADO` | `PROFESSOR`, `SISTEMA` | Professor envia treino ou migração automática |
+| `CADASTRADO` | `ACEITO` | `ALUNO` | Autogestão apenas (`professor_id = null`) |
+| `ENVIADO` | `ACEITO`, `RECUSADO` | `ALUNO` | Aluno responde ao treino recebido |
+| `ACEITO` | `EM_EXECUCAO`, `EM_ABERTO` | `ALUNO`, `SISTEMA` | Aluno inicia ou worker marca como não iniciado |
+| `EM_ABERTO` | `EM_EXECUCAO` | `ALUNO` | Aluno retoma treino pendente |
+| `EM_EXECUCAO` | `CONCLUIDO` | `ALUNO` | Aluno finaliza treino |
+| `CONCLUIDO` | `ACEITO` | `SISTEMA` | Reciclagem automática ao tentar iniciar treino concluído |
 
-### Usuário Aluno
-- **UC-17** Cadastro (cria Usuario + Aluno via register, com peso e altura obrigatórios, academia ou autogestão)
-- **UC-18** Autogestão de treinos
-- **UC-19** Aceitar/recusar treino do professor
-- **UC-20** Iniciar execução do treino
-- **UC-21** Ver instruções do exercício
-- **UC-22** Registrar execução por série
-- **UC-23** Finalizar treino
-- **UC-24** Registrar medidas corporais (peso, altura, %BF, massa magra) com cálculo automático do IMC e preenchimento automático do peso/altura do perfil
-- **UC-24b** Visualizar classificação IMC (OMS) com barra de escala colorida e destaque da categoria atual do aluno
-- **UC-25** Gráficos de evolução
-- **UC-26** Push notifications motivacionais
-- **UC-27** Ler resumos científicos
+#### Regras de Transição
+- **T1**: Toda transição deve ser validada por `assertTransicaoValida()` antes de executar.
+- **T2**: Transição inválida → `InvalidStateTransitionError` (HTTP 422, code `INVALID_STATE_TRANSITION`).
+- **T3**: Toda transição bem-sucedida DEVE ser registrada em `TreinoHistorico` (log imutável append-only com `status_anterior`, `status_novo`, `ator_id`, `ator_tipo`, `timestamp`).
+- **T4**: `RECUSADO` é estado terminal — nenhuma transição adicional é permitida.
 
-### Workers BullMQ (Background)
-- **UC-28** Push notifications motivacionais rotativas
-- **UC-29** Monitorar treinos abandonados (>30min)
-- **UC-30** Alertar professor sobre inatividade
-- **UC-31** Marcar treinos não iniciados como "em aberto"
-- **UC-32** Calcular correlações volume vs evolução
-- **UC-33** Resetar ciclo de mensagens motivacionais
+#### Reciclagem Automática (CONCLUIDO → ACEITO)
+- **T5**: Ao chamar `POST /treinos/:id/iniciar`, se o treino estiver `CONCLUIDO`, o sistema recicla para `ACEITO` (reseta `iniciado_em` e `finalizado_em` para null) e imediatamente transiciona para `EM_EXECUCAO`.
+- **T6**: Ambas as transições (CONCLUIDO→ACEITO e ACEITO→EM_EXECUCAO) são registradas no histórico.
+- **T7**: No startup da API, todos os treinos `CONCLUIDO` existentes são migrados para `ACEITO`.
+
+#### Migração Automática (CADASTRADO → ENVIADO)
+- **T8**: No startup da API, todos os treinos `CADASTRADO` existentes são migrados para `ENVIADO`, com criação de notificação `NOVO_TREINO` para o aluno.
+
+#### Criação de Treino (Professor)
+- **T9**: Requer `alunoId`, `nome` (mín. 2 caracteres), `diasSemana` (array de 0-6, mínimo 1 dia), `exercicios` (mín. 1). Cada exercício: `exercicioId`, `ordem` (mín. 1), `series` (default 3, mín. 1), `repeticoes` (default 12, mín. 1).
+- **T10**: Tenant check: `aluno.professor_id === professor.id`. Violação → `TenantAccessError` (403).
+
+#### Autogestão (Aluno sem Professor)
+- **T11**: Rota `/treinos/autogestao` — permitida apenas se `aluno.professor_id === null`.
+- **T12**: Treino é criado com status `ACEITO` (pula fluxo de envio/aceite).
+
+#### Envio de Treino (Professor → Aluno)
+- **T13**: `POST /treinos/:id/enviar` — transiciona `CADASTRADO` → `ENVIADO`.
+- **T14**: Após transição, notificação `NOVO_TREINO` é criada automaticamente para o aluno.
+
+#### Resposta do Aluno
+- **T15**: `PATCH /treinos/:id/responder` com `acao: 'ACEITAR'` ou `'RECUSAR'`.
+- **T16**: Apenas o aluno dono do treino pode responder.
+
+#### Iniciar Treino
+- **T17**: `POST /treinos/:id/iniciar` — apenas ALUNO. Status permitidos: `ACEITO`, `EM_ABERTO`.
+- **T18**: Se já `EM_EXECUCAO`, retorna o treino atual sem erro (no-op).
+- **T19**: Se `CONCLUIDO`, aplica reciclagem automática (T5).
+
+#### Registrar Execução
+- **T20**: `POST /treinos/:id/execucoes` — ALUNO. Campos: `exercicioId`, `serieNumero` (mín 1), `repeticoes` (mín 1), `cargaKg` (mín 0).
+- **T21**: Não altera status do treino.
+
+#### Finalizar Treino
+- **T22**: `POST /treinos/:id/finalizar` — ALUNO. Transiciona `EM_EXECUCAO` → `CONCLUIDO`.
+- **T23**: Opcional: `avaliacao` com valores `FACIL | MODERADO | INTENSO | MUITO_INTENSO`.
+- **T24**: Após finalizar, o treino é automaticamente reciclado para `ACEITO` (T5) para reuso em novo dia.
+
+#### Editar/Excluir Treino
+- **T25**: `PATCH /treinos/:id` — apenas PROFESSOR ou ACADEMIA. Substitui exercícios completamente (delete all + recreate).
+- **T26**: `DELETE /treinos/:id` — apenas PROFESSOR ou ACADEMIA. Cascade: execuções → histórico → treino_exercicios → treino.
+
+#### Clonar Treino
+- **T27**: `POST /treinos/:id/clonar` — apenas PROFESSOR ou ACADEMIA. Body: `{ alunoDestinoId }`.
+- **T28**: Tenant check duplo: valida que o ator é dono tanto do treino fonte quanto do aluno destino.
+- **T29**: Copia nome com sufixo `" (cópia)"`, `dias_semana` e `exercicios` (ordem, series, repeticoes, carga_sugerida_kg). Status sempre `CADASTRADO`.
+- **T30**: Histórico registrado com ator `PROFESSOR` ou `ACADEMIA`. Execuções e histórico do treino fonte NÃO são copiados.
+- **T31**: No frontend, após clonar, chama `POST /treinos/:id/enviar` automaticamente (auto-envio).
+
+---
+
+### 3.2 Aluno — Regras de Negócio
+
+#### Perfil
+- **A1**: `POST /alunos/perfil` — upsert por `usuario_id`. Campos: `dataNascimento`, `pesoKg` (positivo), `alturaCm` (positivo).
+- **A2**: Na criação inicial com peso+altura, uma `MedidaCorporal` é criada automaticamente com IMC calculado.
+- **A3**: Ao atualizar perfil com peso+altura, se nenhuma medida existir, faz auto-backfill da medida.
+- **A4**: `GET /alunos/perfil` — retorna perfil com professor e academia vinculados.
+
+#### Medidas Corporais
+- **A5**: `POST /alunos/medidas` — campos: `pesoKg`, `alturaCm`, `percentualBf` (0-100), `massaMagraKg` (positivo), `observacao`. IMC calculado automaticamente.
+- **A6**: `GET /alunos/medidas` — ordem crescente por data. Se não houver medidas mas perfil tiver peso+altura, auto-cria uma medida.
+- **A7**: `PATCH /alunos/medidas/:id` — edita medida, recalcula IMC se peso/altura mudarem.
+- **A8**: Escopo: apenas medidas do próprio aluno.
+
+#### Cálculo do IMC
+- **A9**: `IMC = pesoKg / (alturaCm / 100)²`, arredondado para 2 casas decimais.
+- **A10**: Retorna `null` se `alturaCm <= 0` ou qualquer valor ausente.
+
+#### Classificação IMC (OMS)
+- **A11**:
+  | Faixa | Classificação | Cor (Frontend) |
+  |---|---|---|
+  | < 18.5 | Abaixo do peso | Azul |
+  | 18.5 – 24.9 | Peso normal | Verde |
+  | 25 – 29.9 | Sobrepeso | Amarelo |
+  | 30 – 34.9 | Obesidade grau I | Laranja |
+  | 35 – 39.9 | Obesidade grau II | Vermelho |
+  | ≥ 40 | Obesidade grau III | Vermelho escuro |
+
+#### Academia
+- **A12**: `PATCH /alunos/academia` — aluno pode auto-vincular-se a uma academia ativa.
+
+#### Notificações
+- **A13**: `GET /alunos/notificacoes` — retorna apenas notificações não lidas, ordenadas por criação decrescente.
+- **A14**: `POST /alunos/notificacoes/visualizar` — marca TODAS como lidas.
+
+#### Listagem de Treinos
+- **A15**: `GET /alunos/treinos` — retorna TODOS os treinos (sem filtro de status). Filtro é feito no frontend.
+- **A16**: `GET /alunos/treinos/historico-dias?mes=YYYY-MM` — calendário de execuções agrupado por dia, treino e grupos musculares.
+
+#### Visibilidade no Frontend
+- **A17**: **Dashboard** (`/`): `ENVIADO` → "Fichas Recebidas" (Aceitar/Recusar); `ACEITO`/`EM_ABERTO` → "Meus Treinos Ativos" (Iniciar).
+- **A18**: **Meus Treinos** (`/meus-treinos`): `CADASTRADO` → "Em preparação"; `ENVIADO` → "Pendente" (Aceitar/Recusar); `ACEITO`/`EM_ABERTO`/`EM_EXECUCAO` → "Ativo" (Iniciar); `CONCLUIDO` → "Concluído" (Fazer Novamente).
+- **A19**: `RECUSADO` não é exibido em nenhuma tela do aluno.
+- **A20**: Treinos ordenados por nome (A, B, C) no Dashboard e Meus Treinos.
+
+#### Fluxo de Cadastro
+- **A21**: Register + Login → se ALUNO: `POST /alunos/perfil` com peso e altura obrigatórios.
+- **A22**: Se `academiaId !== 'AUTOGESTAO'`: `PATCH /alunos/academia` para vincular.
+- **A23**: Opções de academia: lista de academias ativas + "Autogestão (sem academia)".
+- **A24**: Telefone usa máscara `(XX) XXXXX-XXXX`.
+
+---
+
+### 3.3 Professor — Regras de Negócio
+
+#### Perfil
+- **P1**: `POST /professores/perfil` — upsert por `usuario_id`. Campo opcional: `cref`.
+
+#### Vínculo com Academia
+- **P2**: `POST /professores/vincular/:academiaId` — cria vínculo `PENDENTE_ACADEMIA`.
+- **P3**: Proteção race condition: verifica existência prévia; se P2002, retorna vínculo existente.
+- **P4**: `GET /professores/vinculos` — lista todos os vínculos do professor.
+- **P5**: `DELETE /professores/vinculos/:academiaId` — remove vínculo E desvincula todos os alunos daquela academia (`professor_id = null`).
+
+#### Vincular Aluno
+- **P6**: `POST /professores/alunos` — aceita `usuarioId` ou `email`.
+- **P7**: Se por email: verifica se usuário existe e tem role `ALUNO`.
+- **P8**: Se `academiaId` informado: verifica vínculo ATIVO do professor com a academia.
+- **P9**: Usa `upsert` para criar/atualizar `professor_id` e `academia_id` do aluno.
+- **P10**: Após vincular, cria notificação `PROFESSOR_ATRIBUIDO` para o aluno.
+
+#### Dashboard
+- **P11**: `GET /professores/dashboard` — retorna todos os alunos com treinos, ordenados por `atualizado_em` desc.
+- **P12**: Filtro opcional por `academiaId`.
+
+#### Fichas de Treino (Criação em Lote)
+- **P13**: `POST /professores/fichas` — array de treinos para um aluno.
+- **P14**: Validação: `nome`, `diasSemana` (0-6, mín 1), `exercicios` (cada: `exercicioId`, `ordem`, `series` mín 1, `repeticoes` mín 1).
+- **P15**: Tenant check: `aluno.professor_id === professor.id`.
+- **P16**: Exercícios com campo `nome` são auto-upsert na tabela `exercicios`.
+- **P17**: Treinos criados com status `CADASTRADO`.
+- **P18**: No frontend, após criar fichas, chama `POST /treinos/:id/enviar` para cada treino (auto-envio).
+
+#### Correlações
+- **P19**: `GET /professores/alunos/:alunoId/correlacoes` — professor visualiza correlações. Tenant check: `aluno.professor_id === professor.id`.
+
+#### Exercícios
+- **P20**: `GET /professores/exercicios` — lista com filtros opcionais (grupo muscular, nome, equipamento, nível).
+- **P21**: `GET /professores/workoutx/exercicios?bodyPart=X` — busca externa. Traduz bodyPart EN → PT.
+
+---
+
+### 3.4 Academia — Regras de Negócio
+
+#### Cadastro
+- **AC1**: Única academia por usuário (`usuario_id` unique).
+- **AC2**: CNPJ único. Validado como exatamente 14 dígitos (`/^\d{14}$/`).
+- **AC3**: `nome` mínimo 2 caracteres.
+- **AC4**: Criada com `status: PENDENTE`.
+
+#### Máquina de Estados da Academia
+- **AC5**: `PENDENTE → ATIVO | REJEITADO` (por ROOT).
+- **AC6**: `REJEITADO` não pode ser reativado (apenas alteração manual de status).
+
+#### Dashboard
+- **AC7**: `GET /academias/dashboard` — retorna: nome, CNPJ, email, telefone, status, totalProfessores ATIVOS, totalAlunos, professoresPendentes (PENDENTE_ACADEMIA).
+
+#### Autorização de Professor (1ª Camada)
+- **AC8**: Academia deve estar `ATIVO` para autorizar.
+- **AC9**: Limite: `_count.professores (ATIVO) >= max_professores` → `LimiteProfessoresExcedidoError` (422).
+- **AC10**: Se vínculo já existe e é `ATIVO` → `ConflictError`.
+- **AC11**: Se vínculo existe em outro status → atualiza para `PENDENTE_ROOT`.
+- **AC12**: Se não existe → cria com `PENDENTE_ROOT`.
+
+#### Remoção de Professor
+- **AC13**: Remove apenas vínculos `ATIVO`. Status → `REMOVIDO`.
+- **AC14**: Em transação: remove vínculo E atualiza alunos com `professor_id = null`.
+
+#### Gerenciar Alunos
+- **AC15**: `PATCH /academias/alunos/:alunoId/professor` — academia só pode alterar professor de alunos vinculados a ela.
+- **AC16**: Se `professorId` informado, professor deve ter vínculo ATIVO com a academia.
+- **AC17**: `professorId` pode ser null (desvincula professor do aluno).
+
+#### Fichas (Academia)
+- **AC18**: `POST /academias/fichas` — mesma validação do professor. Tenant check: `aluno.academia_id === academiaId`.
+
+#### Listagem Pública
+- **AC19**: `GET /academias` (sem auth) — retorna apenas academias com `status: ATIVO`.
+
+---
+
+### 3.5 ROOT — Regras Administrativas
+
+#### Aprovação de Academia
+- **R1**: Apenas academias `PENDENTE` podem ser aprovadas/rejeitadas.
+- **R2**: `APROVAR` → status `ATIVO`; `REJEITAR` → status `REJEITADO` com `motivo` opcional.
+
+#### Limite de Professores
+- **R3**: Valor entre 1 e 500.
+
+#### Aprovação de Vínculo (2ª Camada)
+- **R4**: Apenas vínculos `PENDENTE_ROOT` podem ser aprovados/rejeitados.
+- **R5**: `APROVAR` → `ATIVO`; `REJEITAR` → `REJEITADO`.
+
+#### Reset de Senha
+- **R6**: Não pode resetar senha de outro ROOT (`ForbiddenError`).
+- **R7**: Nova senha mínimo 8 caracteres.
+
+#### CRUD de Academia
+- **R8**: `PUT /root/academias/:id` — atualiza nome, CNPJ, max_professores, status, email. Valida unicidade de email e CNPJ se alterados.
+- **R9**: `DELETE /root/academias/:id` — cascade: remove vínculos de professor → alunos (academia_id = null) → academia → usuário.
+
+#### CRUD de Professor
+- **R10**: `PUT /root/professores/:id` — atualiza nome, email, cref, e substitui vínculos de academia (delete all + recreate ATIVO).
+- **R11**: `DELETE /root/professores/:id` — cascade: alunos (professor_id = null) → professor_academia → professor → usuário.
+
+#### CRUD de Aluno
+- **R12**: `PUT /root/alunos/:id` — atualiza nome, email, telefone, data_nascimento, peso_kg, altura_cm, academia_id, professor_id.
+- **R13**: `DELETE /root/alunos/:id` — cascade: execuções → treino_exercicios → treino_historico → treinos → medidas → notificações → mensagens_enviadas → correlações → aluno → usuário.
+
+---
+
+### 3.6 Autenticação — Regras
+
+#### Registro
+- **AU1**: `nome` (2-100 chars), `email` (válido), `senha` (mín 8 chars), `role` (`ACADEMIA|PROFESSOR|ALUNO` — ROOT não permitido).
+- **AU2**: `telefone` opcional.
+- **AU3**: Email único. Duplicidade → `ConflictError` (409).
+- **AU4**: Senha hash com bcrypt, salt rounds = 12.
+
+#### Login
+- **AU5**: Email não encontrado → `UnauthorizedError` "E-mail ou senha inválidos" (genérico, sem vazamento de informação).
+- **AU6**: Senha incorreta → mesma mensagem genérica.
+- **AU7**: JWT payload: `sub` (usuario_id), `role`, `tenantId`.
+- **AU8**: Refresh token persistido em DB, expira em 7 dias (configurável).
+- **AU9**: Access token expira em 15 min (configurável via `JWT_EXPIRES_IN`).
+
+#### Refresh Token
+- **AU10**: Token inválido/expirado → `UnauthorizedError`.
+- **AU11**: Rotação de token: refresh antigo é deletado, novo par é gerado.
+
+#### Logout
+- **AU12**: Invalida refresh token deletando do banco.
+
+#### Middleware JWT
+- **AU13**: `authenticate` — verifica Bearer token, injeta `currentUser`.
+- **AU14**: `requireRole(...roles)` — verifica se role do usuário está na lista. Falha → `ForbiddenError`.
+- **AU15**: Auto-refresh no frontend: em 401, tenta refresh; se falhar, redireciona para `/login`.
+
+---
+
+### 3.7 Workers (BullMQ) — Regras de Background
+
+#### Inatividade 30min
+- **W1**: Executa a cada 5 minutos.
+- **W2**: Busca treinos `EM_EXECUCAO` com `iniciado_em >= 30min` e `finalizado_em = null`.
+- **W3**: Envia push (Expo + WebPush) para o aluno: "Seu treino está parado há mais de 30 minutos."
+- **W4**: Se aluno tem professor, também notifica o professor: "{nome} está com o treino parado há mais de 30 minutos."
+
+#### Marcar como EM_ABERTO
+- **W5**: Executa diariamente às 23:30 (cron: `30 23 * * *`).
+- **W6**: Busca treinos `ACEITO` cujo `dias_semana` inclui o dia atual e `iniciado_em = null`.
+- **W7**: Transiciona cada um para `EM_ABERTO` (ator SISTEMA) com registro no histórico.
+- **W8**: Se aluno tem professor, notifica: "{nome} não iniciou o treino programado para hoje."
+
+#### Mensagens Motivacionais
+- **W9**: Job com `{ alunoId }`. Seleciona mensagem aleatória não enviada ao aluno.
+- **W10**: Se todas já foram enviadas, reseta o ciclo (deleta todos os registros de envio do aluno).
+- **W11**: Cria registro de envio e dispara push dual-channel com `url_estudo` nos dados.
+
+#### Correlação de Desempenho
+- **W12**: Job com `{ alunoId }`. Chama `calcularEAtualizar()` com Pearson.
+- **W13**: Dados insuficientes (< 2 medidas ou < 2 semanas de volume) → salva apenas volume_semanal.
+
+#### Push Notification Dual-Channel
+- **W14**: Expo + WebPush em paralelo (`Promise.allSettled`). Erros isolados por canal.
+- **W15**: Expo: verifica `Expo.isExpoPushToken()` antes de enviar. Tokens inválidos são ignorados (log warning).
+- **W16**: Web Push: 410/404 → subscription expirada, ignorado silenciosamente. Se VAPID não configurado, pulado.
+
+---
+
+### 3.8 Correlação de Desempenho — Regras de Cálculo
+
+- **C1**: Pearson calculado para 3 pares: `peso_volume_r`, `bf_volume_r`, `massa_magra_volume_r`.
+- **C2**: Volume semanal = soma de `carga_kg * repeticoes` agregado por ISO week.
+- **C3**: Mínimo: 2 medidas + 2 semanas de volume. Senão, apenas volume_semanal é salvo.
+- **C4**: Pearson requer n ≥ 2 e denominador ≠ 0; senão retorna `null`.
+- **C5**: Resultados cacheados em `CorrelacaoDesempenho` (único por aluno).
+- **C6**: Cache expira após 30 dias (flag `sugerirAtualizacao`).
+- **C7**: Interpretação do r de Pearson:
+  | r | ≥ 0.7 | ≥ 0.5 | ≥ 0.3 | < 0.3 |
+  |---|---|---|---|---|
+  | Positivo | Forte | Moderada | Fraca | Desprezível |
+  | Negativo | Forte (neg) | Moderada (neg) | Fraca (neg) | Desprezível |
+
+---
+
+### 3.9 Sistema — Regras Transversais
+
+#### Vínculo Professor-Academia
+- **S1**: Fluxo: `PENDENTE_ACADEMIA → (Academia aprova) → PENDENTE_ROOT → (Root aprova) → ATIVO`.
+- **S2**: Estados terminais: `REJEITADO`, `REMOVIDO`.
+
+#### Tipos de Notificação
+- **S3**: `PROFESSOR_ATRIBUIDO` — quando professor vincula aluno.
+- **S4**: `NOVO_TREINO` — quando treino é enviado ao aluno.
+
+#### Resolve Helpers (Autoresolução)
+- **S5**: `resolveProfessor()` — upsert para evitar 404 em contas órfãs.
+- **S6**: `resolveAluno()` — upsert para evitar 404 em contas órfãs.
+
+#### Mapa de Erros
+| Erro | HTTP | Code |
+|---|---|---|
+| `UnauthorizedError` | 401 | `UNAUTHORIZED` |
+| `ForbiddenError` | 403 | `FORBIDDEN` |
+| `TenantAccessError` | 403 | `TENANT_ACCESS_DENIED` |
+| `NotFoundError` | 404 | `NOT_FOUND` |
+| `ConflictError` | 409 | `CONFLICT` |
+| `InvalidStateTransitionError` | 422 | `INVALID_STATE_TRANSITION` |
+| `LimiteProfessoresExcedidoError` | 422 | `LIMITE_PROFESSORES_EXCEDIDO` |
+| `ZodError` | 422 | `VALIDATION_ERROR` (com detalhes) |
+| Erros não mapeados | 500 | (detalhes ocultos em produção) |
+
+#### Isolamento de Tenant
+- **S7**: Toda query deve filtrar por `professor_id`, `academia_id` ou `tenantId` do JWT.
+- **S8**: Violação → `TenantAccessError` (403).
+
+#### Race Conditions
+- **S9**: Operações de criação com verificação prévia devem usar `upsert` ou `try-catch` com tratamento de P2002.
+
+#### Constraint de Unique (Schema)
+- **S10**: `usuario.email`, `academia.cnpj`, `academia.usuario_id`, `professor.usuario_id`, `aluno.usuario_id`, `professor_academia.[professor_id, academia_id]`, `treino_exercicios.[treino_id, ordem]`, `correlacao_desempenho.aluno_id`, `refresh_token.token`.
+
+#### Default Values (Schema)
+- **S11**: `academia.max_professores = 20`, `academia.status = PENDENTE`, `treino.status = CADASTRADO`, `notificacao.lida = false`.
+
+#### Ciclo de Mensagens Motivacionais
+- **S12**: Rotativo circular: cada aluno tem registro das mensagens já recebidas.
+- **S13**: Quando todas as mensagens foram enviadas, o ciclo reseta (deleta todos os registros do aluno).
+
+#### Roles no Cadastro
+- **S14**: ROOT não pode ser cadastrado via registro público. Apenas via seed ou diretamente no banco.
 
 ---
 
@@ -168,6 +482,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | POST | `/alunos/perfil` | Criar/atualizar perfil Aluno (body: dataNascimento?, pesoKg?, alturaCm?). Update parcial permitido. |
 | GET | `/alunos/perfil` | Perfil do aluno com professor e academia |
 | GET | `/alunos/treinos` | Listar treinos do aluno (todos os status, sem filtro no backend) |
+| GET | `/alunos/treinos/historico-dias` | Calendário de dias treinados no mês (query: mes=YYYY-MM) |
 | GET | `/alunos/medidas` | Listar medidas (auto-backfill do perfil se nenhuma existir) |
 | POST | `/alunos/medidas` | Registrar medida com cálculo automático de IMC |
 | PATCH | `/alunos/medidas/:id` | Editar medida existente (recalcula IMC) |
@@ -185,6 +500,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | GET | `/professores/vinculos` | Listar vínculos |
 | DELETE | `/professores/vinculos/:academiaId` | Desvincular-se |
 | POST | `/professores/alunos` | Vincular aluno ao professor |
+| GET | `/professores/alunos` | Lista leve de alunos (id, nome, email), opcional `?academiaId` |
 | GET | `/professores/dashboard` | Dashboard alunos + treinos |
 | GET | `/professores/fichas` | Fichas de treino por aluno |
 | POST | `/professores/fichas` | Criar fichas em lote |
@@ -201,7 +517,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | GET | `/academias/professores` | Listar professores com status |
 | POST | `/academias/professores/:id/autorizar` | Autorizar professor (1ª camada) |
 | DELETE | `/academias/professores/:id` | Remover professor |
-| GET | `/academias/alunos` | Listar alunos com treinos |
+| GET | `/academias/alunos` | Listar alunos com treinos. Query `?resumo=true` retorna apenas id + nome + email |
 | PATCH | `/academias/alunos/:id/professor` | Atribuir professor ao aluno |
 | POST | `/academias/fichas` | Criar fichas em lote (academia) |
 
@@ -220,6 +536,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | GET | `/treinos/:id` | Detalhe do treino | auth |
 | PATCH | `/treinos/:id` | Editar treino (nome, dias_semana, exercicios) | PROFESSOR/ACADEMIA |
 | DELETE | `/treinos/:id` | Remover treino + execuções + histórico | PROFESSOR/ACADEMIA |
+| POST | `/treinos/:id/clonar` | Clonar treino para outro aluno | PROFESSOR/ACADEMIA |
 
 ### Root (`/root`) — role ROOT
 | Método | Rota | Descrição |
@@ -294,12 +611,31 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 | `AppShell` | `components/layout/AppShell.tsx` |
 | `Toast` | `components/ui/Toast.tsx` |
 | `ConfirmModal` | `components/ui/ConfirmModal.tsx` |
+| `StatusBadge` | `components/ui/StatusBadge.tsx` — badge reutilizável com 7 variantes (pending/active/success/danger/warning/info/neutral) + helpers `getTreinoStatusVariant()` e `getTreinoStatusLabel()` |
+| `LoadingSpinner` | `components/ui/LoadingSpinner.tsx` — spinner animado + `SkeletonCard` + `SkeletonText` para skeleton loading |
+| `Icon` | `components/icons/Icon.tsx` — 20+ ícones SVG inline (Home, Dumbbell, Ruler, ChartLine, Menu, Users, etc.) |
+
+### Design System (`index.css`)
+- **Fonte**: Inter (UI sans-serif)
+- **Paleta**: primary (vermelho #dc2626), surface (#18181b), surface-card (#27272a), surface-input (#3f3f46), text (#f4f4f5), text-muted (#a1a1aa), success (verde), warning (amarelo), info (azul)
+- **Animações globais**: `fade-in`, `slide-up`, `slide-down`, `slide-right`, `modal-pop`, `pulse-soft`, `scale-in`
+- **Utilities**: `glass` (backdrop-blur + fundo semi-transparente), `gradient-primary` (gradiente vermelho), `scrollbar-hide`
+- **Ring colors por role**: ALUNO=verde, PROFESSOR=azul, ACADEMIA=amber, ROOT=vermelho
+
+### Navegação (App.tsx)
+- Rotas aninhadas por role com `<AppShell>` como wrapper
+- ALUNO: Dashboard, Meus Treinos, Início/Execução/Conclusão Treino, Medidas, Evolução, Alterar Senha
+- PROFESSOR: Dashboard, Treinos, Criar Treino, Exercícios, Academias, Vincular Aluno, Fichas, Correlações, Alterar Senha
+- ACADEMIA: Dashboard, Professores, Alunos, Treinos, Criar Treino, Alterar Senha
+- ROOT: Painel, Vínculos, Usuários
+- Login/Register redirecionam para `/` se já autenticado
+- Catch-all `*` redireciona para `/` (autenticado) ou `/login` (não autenticado)
 
 ### Visibilidade dos Treinos para o Aluno (Frontend)
 - **Dashboard** (`/`): mostra treinos `ENVIADO` como "Fichas de Treino Recebidas" com botões Aceitar/Recusar, e `ACEITO`/`EM_ABERTO` como "Meus Treinos Ativos" com botão Iniciar
-- **Meus Treinos** (`/meus-treinos`): mostra `ENVIADO` (badge azul "Pendente" + Aceitar/Recusar), `CADASTRADO` (badge amarelo "Em preparação" + mensagem), e `ACEITO`/`EM_ABERTO`/`EM_EXECUCAO` (badge verde "Ativo" + Iniciar)
+- **Meus Treinos** (`/meus-treinos`): mostra `ENVIADO` (badge azul "Pendente" + Aceitar/Recusar), `CADASTRADO` (badge amarelo "Em preparação" + mensagem), e `ACEITO`/`EM_ABERTO`/`EM_EXECUCAO` (badge verde "Ativo" + Iniciar), `CONCLUIDO` (badge verde "Concluído" + "Fazer Novamente")
 - **Importante**: `GET /alunos/treinos` retorna TODOS os status sem filtro. O filtro é feito no frontend para controlar o que cada tela exibe.
-- Status não exibidos em nenhuma tela do aluno: `RECUSADO`, `CONCLUIDO`
+- Status não exibidos em nenhuma tela do aluno: `RECUSADO`
 
 ### Fluxo de Criação de Treino (Professor/Academia)
 1. Professor acessa Dashboard → "Montar Treino" → `CriarTreino.tsx`
@@ -308,6 +644,12 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 4. **Auto-envio**: o frontend chama `POST /treinos/:id/enviar` para cada ficha criada, transicionando para `ENVIADO` e gerando notificação
 5. Aluno vê na Dashboard como "Ficha de Treino Recebida" e pode Aceitar ou Recusar
 6. Ao aceitar: status vai para `ACEITO`, treino aparece em Meus Treinos como disponível para iniciar
+
+### Fluxo de Clonagem de Treino (Professor/Academia)
+1. Na tela Treinos, clica em "Ver treinos" → lista os treinos do aluno
+2. Clica em "Clonar" ao lado do treino desejado
+3. Modal abre com dropdown de alunos destino (via `GET /professores/alunos` ou `GET /academias/alunos?resumo=true`)
+4. Confirma → `POST /treinos/:id/clonar` + `POST /treinos/:id/enviar` (auto-envio)
 
 ### Arquivos Não Utilizados (Dead Code)
 - `pages/aluno/Estudo.tsx` — arquivo existe no disco mas não está mapeado em nenhuma rota do `App.tsx`
@@ -326,12 +668,13 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 6. **Race conditions**: Operações de criação com verificação + criação devem usar `upsert` ou `try-catch` com tratamento de `P2002`
 7. **Fastify body parsing**: POST/PATCH sem corpo não devem ter `Content-Type: application/json`
 8. **Zod**: Validação de body/query/params com zod em todas as rotas
+9. **Delete aluno cascade**: Ao excluir aluno via ROOT, deletar notificações → mensagens enviadas → correlações → medidas → aluno (nesta ordem) para evitar erro de FK
 
 ### Frontend (`apps/web`)
 1. **API Client**: Centralizado em `src/api/client.ts` — objeto `api` com métodos nomeados, auto-refresh em 401
 2. **Estado**: Zustand stores em `src/stores/`
 3. **Tipos**: `src/types/api.ts` — interfaces para todas as respostas da API
-4. **Layout**: `AppShell.tsx` — sidebar desktop com seções colapsáveis + barra superior com avatar dropdown (Dados do Aluno + Sair) + bottom tabs mobile para ALUNO
+4. **Layout**: `AppShell.tsx` — sidebar desktop com seções colapsáveis + barra superior com avatar dropdown (Dados do Aluno + Sair) + drawer lateral mobile para PROFESSOR/ACADEMIA/ROOT + bottom tabs mobile para ALUNO com indicador ativo
 5. **Avatar dropdown**: Avatar no canto direito da barra superior com menu contendo nome, email, "Dados do Aluno" e "Sair". Fecha ao clicar fora.
 6. **Estilos**: TailwindCSS v4 com design system (cores: surface, surface-card, surface-input, primary, text, text-muted, success)
 7. **Navegação**: React Router v7 com rotas aninhadas por role
@@ -339,6 +682,9 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 9. **Toast**: Use `useToast()` hook para feedback de sucesso/erro
 10. **Phone mask**: Use `formatPhone()` de `src/lib/phone.ts` (máscara (XX) XXXXX-XXXX). Aplicar em todo input de telefone.
 11. **Utilitários compartilhados**: `src/lib/` — helpers reutilizáveis (ex: formatPhone)
+12. **StatusBadge**: Use `getTreinoStatusVariant(status)` para obter a variante correta de badge por status do treino. Use `getTreinoStatusLabel(status)` para o label em português.
+13. **Skeleton loading**: Use `SkeletonCard` e `SkeletonText` de `LoadingSpinner.tsx` para estados de carregamento.
+14. **Ícones**: Use `Icon` de `components/icons/Icon.tsx` com nome do ícone (ex: `<Icon name="home" />`).
 
 ### Registro de Usuário (Fluxo)
 1. `POST /auth/register` → cria Usuario (base)

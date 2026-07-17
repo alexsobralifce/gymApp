@@ -217,6 +217,9 @@ export const api = {
 
   getFichas: () => api.get<any[]>('/professores/fichas'),
 
+  getAlunosProfessor: (academiaId?: string) =>
+    api.get<{ id: string; usuario: { nome: string; email: string } }[]>(`/professores/alunos${academiaId ? `?academiaId=${academiaId}` : ''}`),
+
   enviarTreino: (id: string) => api.post<Treino>(`/treinos/${id}/enviar`),
 
   updateTreino: (id: string, data: {
@@ -226,6 +229,9 @@ export const api = {
   }) => api.patch<Treino>(`/treinos/${id}`, data),
 
   deleteTreino: (id: string) => api.delete(`/treinos/${id}`),
+
+  clonarTreino: (treinoId: string, alunoDestinoId: string) =>
+    api.post<Treino>(`/treinos/${treinoId}/clonar`, { alunoDestinoId }),
 
   responderTreino: (id: string, acao: 'ACEITAR' | 'RECUSAR') =>
     api.patch<Treino>(`/treinos/${id}/responder`, { acao }),
@@ -278,6 +284,9 @@ export const api = {
     api.delete(`/academias/professores/${professorId}`),
 
   getAlunosAcademia: () => api.get('/academias/alunos'),
+
+  getAlunosAcademiaResumo: () =>
+    api.get<{ id: string; usuario: { nome: string; email: string } }[]>('/academias/alunos?resumo=true'),
 
   getProfessoresAcademia: () => api.get<any[]>('/academias/professores'),
 

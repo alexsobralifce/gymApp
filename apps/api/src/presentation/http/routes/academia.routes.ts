@@ -81,6 +81,20 @@ export async function academiaRoutes(app: FastifyInstance) {
   /** GET /academias/alunos — UC-08 */
   app.get('/alunos', { preHandler }, async (request, reply) => {
     const academiaId = request.currentUser.tenantId!
+    const { resumo } = z.object({ resumo: z.string().optional() }).parse(request.query)
+
+    if (resumo === 'true') {
+      const alunos = await prisma.aluno.findMany({
+        where: { academia_id: academiaId },
+        select: {
+          id: true,
+          usuario: { select: { nome: true, email: true } },
+        },
+        orderBy: { usuario: { nome: 'asc' } },
+      })
+      return reply.status(200).send(alunos)
+    }
+
     const alunos = await dashboardAlunosAcademia(academiaId)
     return reply.status(200).send(alunos)
   })

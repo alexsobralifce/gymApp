@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role } from '@prisma/client'
+import { Role, TreinoAtor } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import {
@@ -11,6 +11,7 @@ import {
   iniciarTreino,
   registrarExecucao,
   finalizarTreino,
+  clonarTreino,
 } from '../../../application/usecases/treino/TreinoService.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
@@ -169,6 +170,20 @@ export async function treinoRoutes(app: FastifyInstance) {
       await prisma.treino.update({ where: { id }, data: { avaliacao_dificuldade: avaliacao } })
     }
     return reply.status(200).send(treino)
+  })
+
+  /** POST /treinos/:id/clonar — Clona treino para outro aluno */
+  app.post('/:id/clonar', { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)] }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { alunoDestinoId } = z.object({ alunoDestinoId: z.string().min(1) }).parse(request.body)
+
+    const { sub, role, tenantId } = request.currentUser
+
+    const atorId = role === Role.ACADEMIA ? tenantId! : (await resolveProfessor(sub)).id
+    const atorTipo = role === Role.ACADEMIA ? TreinoAtor.ACADEMIA : TreinoAtor.PROFESSOR
+
+    const treino = await clonarTreino(id, alunoDestinoId, atorId, atorTipo)
+    return reply.status(201).send(treino)
   })
 
   /** GET /treinos/:id — Detalhe com exercícios (UC-21) */
