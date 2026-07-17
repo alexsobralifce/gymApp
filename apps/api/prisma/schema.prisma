@@ -26,6 +26,11 @@ enum AcademiaStatus {
   REJEITADO
 }
 
+enum Sexo {
+  MASCULINO
+  FEMININO
+}
+
 /// Aprovação em duas camadas: Academia → Root
 enum VinculoStatus {
   PENDENTE_ACADEMIA // aguarda academia aprovar
@@ -150,6 +155,7 @@ model Aluno {
   data_nascimento DateTime?
   peso_kg         Float?
   altura_cm       Float?
+  sexo            Sexo?
   criado_em       DateTime  @default(now())
   atualizado_em   DateTime  @updatedAt
 

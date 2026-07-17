@@ -412,6 +412,7 @@ export async function dashboardProfessor(professorId: string, academiaId?: strin
     where,
     select: {
       id: true,
+      sexo: true,
       usuario: { select: { nome: true, email: true, telefone: true } },
       academia: { select: { nome: true, id: true } },
       treinos: {

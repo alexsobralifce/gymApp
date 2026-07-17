@@ -16,6 +16,7 @@ export default function Register() {
   const [dataNascimento, setDataNascimento] = useState('')
   const [peso, setPeso] = useState('')
   const [altura, setAltura] = useState('')
+  const [sexo, setSexo] = useState('')
   const { register, loading, error } = useAuthStore()
   const navigate = useNavigate()
 
@@ -34,6 +35,7 @@ export default function Register() {
       dataNascimento || undefined,
       peso ? Number(peso) : undefined,
       altura ? Number(altura) : undefined,
+      sexo || undefined,
     )
     navigate('/')
   }
@@ -100,6 +102,18 @@ export default function Register() {
                   required
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-xs text-text-muted mb-1">Sexo</label>
+              <select
+                value={sexo} onChange={(e) => setSexo(e.target.value)}
+                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                required
+              >
+                <option value="">Selecionar...</option>
+                <option value="MASCULINO">Masculino</option>
+                <option value="FEMININO">Feminino</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs text-text-muted mb-1">Academia</label>

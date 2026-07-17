@@ -29,6 +29,7 @@ export async function alunoRoutes(app: FastifyInstance) {
       dataNascimento: z.string().optional(),
       pesoKg: z.number().positive().optional(),
       alturaCm: z.number().positive().optional(),
+      sexo: z.enum(['MASCULINO', 'FEMININO']).optional(),
     }).parse(request.body || {})
 
     const existente = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
@@ -43,6 +44,7 @@ export async function alunoRoutes(app: FastifyInstance) {
           data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : undefined,
           peso_kg: body.pesoKg !== undefined ? body.pesoKg : undefined,
           altura_cm: body.alturaCm !== undefined ? body.alturaCm : undefined,
+          sexo: body.sexo !== undefined ? body.sexo : undefined,
         },
       })
 
@@ -82,6 +84,7 @@ export async function alunoRoutes(app: FastifyInstance) {
         data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : undefined,
         peso_kg: body.pesoKg,
         altura_cm: body.alturaCm,
+        sexo: body.sexo,
       },
     })
 

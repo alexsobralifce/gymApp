@@ -163,6 +163,7 @@ export interface PerfilAluno {
   data_nascimento?: string | null
   peso_kg?: number | null
   altura_cm?: number | null
+  sexo?: 'MASCULINO' | 'FEMININO' | null
   criado_em: string
   professor?: { usuario: { nome: string; email: string; telefone?: string | null } } | null
   academia?: { nome: string } | null
@@ -170,6 +171,7 @@ export interface PerfilAluno {
 
 export interface ProfessorDashboard {
   id: string
+  sexo?: 'MASCULINO' | 'FEMININO' | null
   usuario: { nome: string; email: string; telefone: string | null }
   academia?: { nome: string; id: string } | null
   treinos: Array<{
