@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry } from '../types/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -305,4 +305,39 @@ export const api = {
   // ─── WorkoutX ──────────────────────────────────────
   getWorkoutXExercicios: (bodyPart?: string) =>
     api.get<any[]>(bodyPart ? `/professores/workoutx/exercicios?bodyPart=${bodyPart}` : '/professores/workoutx/exercicios'),
+
+  // ─── Social — Feed ─────────────────────────────────
+  getMural: (cursor?: string, limit?: number) => {
+    const qs = new URLSearchParams()
+    if (cursor) qs.set('cursor', cursor)
+    if (limit) qs.set('limit', String(limit))
+    const query = qs.toString()
+    return api.get<MuralResponse>(`/social/mural${query ? `?${query}` : ''}`)
+  },
+
+  curtirPost: (postId: string) => api.post<{ postId: string }>(`/social/mural/${postId}/curtir`),
+  descurtirPost: (postId: string) => api.delete(`/social/mural/${postId}/curtir`),
+  comentarPost: (postId: string, texto: string) => api.post<SocialComment>(`/social/mural/${postId}/comentar`, { texto }),
+  getComentarios: (postId: string, cursor?: string, limit?: number) => {
+    const qs = new URLSearchParams()
+    if (cursor) qs.set('cursor', cursor)
+    if (limit) qs.set('limit', String(limit))
+    const query = qs.toString()
+    return api.get<{ items: SocialComment[]; nextCursor: string | null }>(`/social/mural/${postId}/comentarios${query ? `?${query}` : ''}`)
+  },
+
+  // ─── Social — Amizades ─────────────────────────────
+  solicitarAmizade: (email: string) => api.post<{ message: string }>('/social/amizades/solicitar', { email }),
+  responderAmizade: (id: string, acao: 'ACEITAR' | 'RECUSAR') => api.patch(`/social/amizades/${id}/responder`, { acao }),
+  getAmizades: () => api.get<Amizade[]>('/social/amizades'),
+  getAmizadesPendentes: () => api.get<AmizadePendente[]>('/social/amizades/pendentes'),
+  desfazerAmizade: (id: string) => api.delete(`/social/amizades/${id}`),
+
+  // ─── Social — Privacidade ──────────────────────────
+  getPrivacidade: () => api.get<PrivacidadeSettings>('/alunos/privacidade'),
+  updatePrivacidade: (data: { visibilidadePadrao?: string; permiteBuscaEmail?: boolean }) => api.patch('/alunos/privacidade', data),
+
+  // ─── Social — Clubes ───────────────────────────────
+  getClube: (id: string) => api.get<Clube>(`/social/clubes/${id}`),
+  getLeaderboard: (id: string) => api.get<LeaderboardEntry[]>(`/social/clubes/${id}/leaderboard`),
 }

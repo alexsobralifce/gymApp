@@ -22,6 +22,10 @@ import {
   MenuIcon,
   XIcon,
   ChevronRightIcon,
+  MessageCircleIcon,
+  UserSearchIcon,
+  ShieldIcon,
+  TrophyIcon,
 } from '../icons/Icon'
 
 interface NavItem {
@@ -75,8 +79,11 @@ function getNavItems(role: string): NavEntry[] {
       return [
         { to: '/', label: 'Dashboard', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
         { to: '/meus-treinos', label: 'Meus Treinos', icon: <ClipboardListIcon className="h-5 w-5" /> },
+        { to: '/mural', label: 'Mural', icon: <MessageCircleIcon className="h-5 w-5" /> },
+        { to: '/amizades', label: 'Amigos', icon: <UserSearchIcon className="h-5 w-5" /> },
         { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/evolucao', label: 'Evolucao', icon: <ChartLineIcon className="h-5 w-5" /> },
+        { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
         { to: '/alterar-senha', label: 'Alterar Senha', icon: <KeyIcon className="h-5 w-5" /> },
       ]
     case 'PROFESSOR':
@@ -125,7 +132,7 @@ function getNavItems(role: string): NavEntry[] {
 const alunoBottomTabs = [
   { to: '/', label: 'Inicio', icon: HomeIcon, end: true },
   { to: '/meus-treinos', label: 'Treinos', icon: DumbbellIcon },
-  { to: '/medidas', label: 'Medidas', icon: RulerIcon },
+  { to: '/mural', label: 'Mural', icon: MessageCircleIcon },
   { to: '/evolucao', label: 'Evolucao', icon: ChartLineIcon },
 ]
 
@@ -288,13 +295,22 @@ export default function AppShell() {
 
       <div className="border-t border-surface-input p-3 space-y-1">
         {isAluno && (
-          <button
-            onClick={handleDados}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text-muted hover:bg-white/5 hover:text-text transition-all duration-200 cursor-pointer"
-          >
-            <UserCircleIcon className="h-5 w-5" />
-            <span>Dados do Aluno</span>
-          </button>
+          <>
+            <button
+              onClick={handleDados}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text-muted hover:bg-white/5 hover:text-text transition-all duration-200 cursor-pointer"
+            >
+              <UserCircleIcon className="h-5 w-5" />
+              <span>Dados do Aluno</span>
+            </button>
+            <button
+              onClick={() => { setDrawerOpen(false); navigate('/privacidade') }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text-muted hover:bg-white/5 hover:text-text transition-all duration-200 cursor-pointer"
+            >
+              <ShieldIcon className="h-5 w-5" />
+              <span>Privacidade</span>
+            </button>
+          </>
         )}
         <button
           onClick={handleLogout}
@@ -403,13 +419,22 @@ export default function AppShell() {
 
                   <div className="py-1">
                     {isAluno && (
-                      <button
-                        onClick={handleDados}
-                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
-                      >
-                        <UserCircleIcon className="h-4 w-4 text-text-muted" />
-                        Dados do Aluno
-                      </button>
+                      <>
+                        <button
+                          onClick={handleDados}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                        >
+                          <UserCircleIcon className="h-4 w-4 text-text-muted" />
+                          Dados do Aluno
+                        </button>
+                        <button
+                          onClick={() => { setMenuOpen(false); navigate('/privacidade') }}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                        >
+                          <ShieldIcon className="h-4 w-4 text-text-muted" />
+                          Privacidade
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={handleLogout}

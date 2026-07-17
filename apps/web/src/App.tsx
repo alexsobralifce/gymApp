@@ -30,6 +30,10 @@ import AcademiaAlunos from './pages/academia/Alunos'
 import AcademiaCriarTreino from './pages/academia/CriarTreinoAcademia'
 import AcademiaTreinos from './pages/academia/Treinos'
 import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
+import AlunoMural from './pages/aluno/Mural'
+import AlunoAmizades from './pages/aluno/Amizades'
+import AlunoPrivacidade from './pages/aluno/Privacidade'
+import AlunoClubes from './pages/aluno/Clubes'
 import WelcomeCards from './pages/aluno/WelcomeCards'
 import AlterarSenha from './pages/auth/AlterarSenha'
 
@@ -72,6 +76,10 @@ export default function App() {
           <Route path="treino/:id/conclusao" element={<AlunoTreinoConclusao />} />
           <Route path="medidas" element={<AlunoMedidas />} />
           <Route path="evolucao" element={<AlunoEvolucao />} />
+          <Route path="mural" element={<AlunoMural />} />
+          <Route path="amizades" element={<AlunoAmizades />} />
+          <Route path="privacidade" element={<AlunoPrivacidade />} />
+          <Route path="clubes" element={<AlunoClubes />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>

@@ -166,7 +166,7 @@ export interface PerfilAluno {
   sexo?: 'MASCULINO' | 'FEMININO' | null
   criado_em: string
   professor?: { usuario: { nome: string; email: string; telefone?: string | null } } | null
-  academia?: { nome: string } | null
+  academia?: { nome: string; id?: string } | null
 }
 
 export interface ProfessorDashboard {
@@ -242,4 +242,74 @@ export interface DiaTreino {
 export interface HistoricoDia {
   data: string
   treinos: DiaTreino[]
+}
+
+// ─── Social ──────────────────────────────────────────
+
+export type PostTipo = 'TREINO_INICIADO' | 'TREINO_CONCLUIDO' | 'RECORDE_PESSOAL' | 'BADGE_CONQUISTADO' | 'DESAFIO_COMPLETO'
+export type Visibilidade = 'AMIGOS' | 'PUBLICO' | 'PRIVADO'
+export type FriendshipStatus = 'PENDENTE' | 'ACEITO' | 'BLOQUEADO'
+
+export interface SocialPost {
+  id: string
+  alunoId: string
+  treinoId?: string | null
+  clubeId?: string | null
+  autorNome: string
+  autorFotoUrl?: string | null
+  grupoMuscularResumo?: string | null
+  tipo: PostTipo
+  visibilidade: Visibilidade
+  midiaUrl?: string | null
+  curtidasCount: number
+  comentariosCount: number
+  criadoEm: string
+  curtiu?: boolean
+}
+
+export interface SocialComment {
+  id: string
+  postId: string
+  alunoId: string
+  autorNome: string
+  texto: string
+  criadoEm: string
+}
+
+export interface MuralResponse {
+  items: SocialPost[]
+  nextCursor: string | null
+}
+
+export interface Amizade {
+  id: string
+  nome: string
+  fotoUrl?: string | null
+}
+
+export interface AmizadePendente {
+  id: string
+  nome: string
+  status: FriendshipStatus
+  solicitante?: boolean
+}
+
+export interface PrivacidadeSettings {
+  visibilidadePadrao: Visibilidade
+  permiteBuscaEmail: boolean
+  consentiuFeedSocialEm?: string | null
+}
+
+export interface Clube {
+  id: string
+  nome: string
+  tipo: 'ACADEMIA' | 'TEMATICO'
+  totalMembros: number
+}
+
+export interface LeaderboardEntry {
+  alunoId: string
+  nome: string
+  fotoUrl?: string | null
+  xpSemana: number
 }
