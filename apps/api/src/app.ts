@@ -17,6 +17,7 @@ import { alunoRoutes } from './presentation/http/routes/aluno.routes.js'
 import { treinoRoutes } from './presentation/http/routes/treino.routes.js'
 import { rootRoutes } from './presentation/http/routes/root.routes.js'
 import { friendshipRoutes } from './modules/social/friendships/friendship.routes.js'
+import { feedRoutes } from './modules/social/feed/feed.routes.js'
 
 // Plugins / Middlewares
 import { jwtAuthPlugin } from './presentation/middlewares/jwtAuth.js'
@@ -96,6 +97,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(alunoRoutes, { prefix: '/alunos' })
   await app.register(treinoRoutes, { prefix: '/treinos' })
   await app.register(friendshipRoutes)
+  await app.register(feedRoutes)
 
   // ─── Health check ────────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }))
