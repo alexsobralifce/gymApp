@@ -1,32 +1,62 @@
-import { eventBus, DomainEvent } from '../../../shared/events/event-bus.js'
+import { eventBus } from '../../../shared/events/event-bus.js'
+import { socialFanoutQueue, socialBadgeQueue } from '../../../jobs/social/queues.js'
 
 export function registerSocialEventListeners() {
   eventBus.on('treino.iniciado', async (event) => {
     if (event.type !== 'treino.iniciado') return
     try {
-      // Prompt 3: enfileirar job BullMQ aqui
-      // await socialFanoutQueue.add('fanout-post', event.payload, { ... })
+      await socialFanoutQueue.add('fanout-post', {
+        treinoId: event.payload.treinoId,
+        alunoId: event.payload.alunoId,
+        gruposMusculares: event.payload.gruposMusculares,
+        timestamp: event.payload.timestamp,
+        eventType: 'treino.iniciado',
+      }, {
+        jobId: `fanout:${event.payload.treinoId}:iniciado`,
+      })
     } catch (err) {
-      console.warn('[Social] Falha ao processar treino.iniciado:', err)
+      console.warn('[Social] Falha ao enfileirar treino.iniciado:', err)
     }
   })
 
   eventBus.on('treino.concluido', async (event) => {
     if (event.type !== 'treino.concluido') return
     try {
-      // Prompt 3: enfileirar job BullMQ aqui
-      // await socialFanoutQueue.add('fanout-post', event.payload, { ... })
+      await socialFanoutQueue.add('fanout-post', {
+        treinoId: event.payload.treinoId,
+        alunoId: event.payload.alunoId,
+        gruposMusculares: [],
+        timestamp: event.payload.timestamp,
+        eventType: 'treino.concluido',
+      }, {
+        jobId: `fanout:${event.payload.treinoId}:concluido`,
+      })
+
+      await socialBadgeQueue.add('award-badge', {
+        alunoId: event.payload.alunoId,
+        badgeTipo: 'primeiros_10_treinos',
+      }, {
+        jobId: `badge:${event.payload.alunoId}:10treinos`,
+      })
     } catch (err) {
-      console.warn('[Social] Falha ao processar treino.concluido:', err)
+      console.warn('[Social] Falha ao enfileirar treino.concluido:', err)
     }
   })
 
   eventBus.on('aluno.recorde_pessoal', async (event) => {
     if (event.type !== 'aluno.recorde_pessoal') return
     try {
-      // Prompt 3: enfileirar job BullMQ aqui
+      await socialFanoutQueue.add('fanout-post', {
+        treinoId: '',
+        alunoId: event.payload.alunoId,
+        gruposMusculares: [],
+        timestamp: new Date().toISOString(),
+        eventType: 'treino.concluido',
+      }, {
+        jobId: `fanout:${event.payload.alunoId}:${event.payload.exercicioId}:recorde`,
+      })
     } catch (err) {
-      console.warn('[Social] Falha ao processar aluno.recorde_pessoal:', err)
+      console.warn('[Social] Falha ao enfileirar recorde_pessoal:', err)
     }
   })
 }

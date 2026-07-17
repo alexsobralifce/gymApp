@@ -7,6 +7,10 @@ import { sendWebPush } from '../../infrastructure/push/webPush.js'
 import { calcularEAtualizar } from '../../application/usecases/correlacao/CorrelacaoService.js'
 import { env } from '../../shared/env.js'
 import type { PushSubscription } from 'web-push'
+import { connection as socialConnection } from '../../jobs/social/queues.js'
+import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
+import { handleNotifyFriends } from '../../jobs/social/notify-friends.worker.js'
+import { handleAwardBadges } from '../../jobs/social/award-badges.worker.js'
 
 let connection: { url: string } | null = null
 
@@ -19,6 +23,10 @@ let inatividade30minWorker: Worker | null = null
 let treinoEmAbertoWorker: Worker | null = null
 let mensagemMotivacionalWorker: Worker | null = null
 let correlacaoWorker: Worker | null = null
+
+let socialFanoutWorker: Worker | null = null
+let socialNotifyWorker: Worker | null = null
+let socialBadgeWorker: Worker | null = null
 
 let started = false
 
@@ -227,6 +235,14 @@ export async function startWorkers() {
   mensagemMotivacionalWorker = new Worker('mensagem-motivacional', handleMensagemMotivacional, { connection })
   correlacaoWorker = new Worker('correlacao-desempenho', handleCorrelacaoDesempenho, { connection })
 
+  socialFanoutWorker = new Worker('social-fanout', handleFanoutPost, { connection: socialConnection })
+  socialNotifyWorker = new Worker('social-notify', handleNotifyFriends, { connection: socialConnection })
+  socialBadgeWorker = new Worker('social-badge', handleAwardBadges, { connection: socialConnection })
+
+  socialFanoutWorker.on('failed', (job, err) => console.error('[Social Fanout] Job failed after retries:', job?.id, err.message))
+  socialNotifyWorker.on('failed', (job, err) => console.error('[Social Notify] Job failed after retries:', job?.id, err.message))
+  socialBadgeWorker.on('failed', (job, err) => console.error('[Social Badge] Job failed after retries:', job?.id, err.message))
+
   await scheduleRecurringJobs()
 }
 
@@ -234,7 +250,8 @@ export async function stopWorkers() {
   if (!started) return
   started = false
 
-  const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker]
+  const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker,
+    socialFanoutWorker, socialNotifyWorker, socialBadgeWorker]
   const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue]
 
   await Promise.all([
