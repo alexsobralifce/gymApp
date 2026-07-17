@@ -29,6 +29,7 @@ import AcademiaAlunos from './pages/academia/Alunos'
 import AcademiaCriarTreino from './pages/academia/CriarTreinoAcademia'
 import AcademiaTreinos from './pages/academia/Treinos'
 import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
+import WelcomeCards from './pages/aluno/WelcomeCards'
 import AlterarSenha from './pages/auth/AlterarSenha'
 
 export default function App() {
@@ -58,7 +59,9 @@ export default function App() {
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
 
       {user?.role === 'ALUNO' && (
-        <Route element={<AppShell />}>
+        <>
+          <Route path="welcome" element={<WelcomeCards />} />
+          <Route element={<AppShell />}>
           <Route index element={<AlunoDashboard />} />
           <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
@@ -69,6 +72,7 @@ export default function App() {
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
+        </>
       )}
 
       {user?.role === 'PROFESSOR' && (

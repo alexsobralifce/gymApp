@@ -5,6 +5,7 @@ import type { Treino, Exercicio, TreinoExercicio, HistoricoDia } from '../../typ
 import StatusBadge, { getTreinoStatusVariant, getTreinoStatusLabel } from '../../components/ui/StatusBadge'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons/Icon'
+import EmptyState from '../../components/ui/EmptyState'
 
 function formatMes(ano: number, mes: number) {
   return `${ano}-${String(mes + 1).padStart(2, '0')}`
@@ -19,6 +20,7 @@ export default function AlunoMeusTreinos() {
   const [fichaAtiva, setFichaAtiva] = useState(0)
   const [selectedExercicio, setSelectedExercicio] = useState<Exercicio | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [hasProfessor, setHasProfessor] = useState<boolean | null>(null)
   const navigate = useNavigate()
 
   const hoje = useMemo(() => new Date(), [])
@@ -28,7 +30,11 @@ export default function AlunoMeusTreinos() {
 
   const carregarTreinos = useCallback(async () => {
     try {
-      const data = await api.getAlunoTreinos()
+      const [data, perfil] = await Promise.all([
+        api.getAlunoTreinos(),
+        api.getPerfilAluno().catch(() => null),
+      ])
+      setHasProfessor(perfil ? !!perfil.professor_id : null)
       const disponiveis = data
         .filter(
           (t) => t.status === 'ENVIADO' || t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO' || t.status === 'CADASTRADO' || t.status === 'CONCLUIDO'
@@ -123,19 +129,25 @@ export default function AlunoMeusTreinos() {
   )
 
   if (treinos.length === 0) {
+    if (hasProfessor === false) {
+      return (
+        <EmptyState
+          icon="✏️"
+          title="Crie seu primeiro treino"
+          description="No modo autogestão, você monta seus próprios treinos. Comece agora mesmo!"
+          actionLabel="Criar Treino"
+          onAction={() => navigate('/treino/novo')}
+        />
+      )
+    }
     return (
-      <div className="px-4 py-8 max-w-xl mx-auto w-full text-center space-y-4">
-        <h1 className="text-xl font-bold text-text">Meus Treinos</h1>
-        <p className="text-sm text-text-muted bg-surface-card rounded-2xl p-6 border border-surface-input">
-          Nenhum treino disponível no momento. Seu professor ainda não enviou nenhuma ficha ou você ainda não aceitou nenhuma.
-        </p>
-        <button
-          onClick={() => navigate('/')}
-          className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow"
-        >
-          Voltar ao Início
-        </button>
-      </div>
+      <EmptyState
+        icon="📋"
+        title="Nenhum treino ativo"
+        description="Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Fique de olho nas notificações!"
+        actionLabel="Voltar ao Início"
+        onAction={() => navigate('/')}
+      />
     )
   }
 

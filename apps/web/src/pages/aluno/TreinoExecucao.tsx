@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons/Icon'
+import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 
 const DIFICULDADE_OPCOES = [
   { value: 'FACIL', label: 'Facil', emoji: '😊', cor: 'border-green-500/30 bg-green-500/10 text-green-400' },
@@ -87,6 +88,7 @@ export default function AlunoTreinoExecucao() {
   const [showAvaliacao, setShowAvaliacao] = useState(false)
   const [avaliando, setAvaliando] = useState(false)
   const [showTimer, setShowTimer] = useState(false)
+  const coach = useCoachMark(!!treinoAtual)
 
   useEffect(() => {
     intervalRef.current = setInterval(tick, 1000)
@@ -172,6 +174,7 @@ export default function AlunoTreinoExecucao() {
           </div>
           <button
             onClick={() => setShowTimer(!showTimer)}
+            data-coach="timer"
             className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-primary hover:bg-primary/10 transition-colors cursor-pointer"
           >
             {String(Math.floor(timer / 60)).padStart(2, '0')}:{String(timer % 60).padStart(2, '0')}
@@ -256,7 +259,7 @@ export default function AlunoTreinoExecucao() {
                   const isLogged = !!log
 
                   return (
-                    <div key={sNum} className="flex items-center gap-2">
+                    <div key={sNum} data-coach={exIdx === 0 && sIdx === 0 ? 'serie' : undefined} className="flex items-center gap-2">
                       <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isLogged ? 'bg-success/20 text-success' : 'bg-surface-input text-text-muted'}`}>
                         {isLogged ? <CheckIcon className="h-3.5 w-3.5" /> : sNum}
                       </span>
@@ -306,6 +309,7 @@ export default function AlunoTreinoExecucao() {
           <button
             onClick={() => setShowAvaliacao(true)}
             disabled={loading || avaliando}
+            data-coach="finalizar"
             className="w-full rounded-2xl bg-red-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
           >
             Finalizar Treino
@@ -382,6 +386,18 @@ export default function AlunoTreinoExecucao() {
           Sair
         </button>
       </div>
+
+      {coach.visible && (
+        <CoachMarkOverlay
+          rect={coach.targetRect}
+          title={coach.coach.title}
+          message={coach.coach.message}
+          step={coach.step}
+          totalSteps={coach.totalSteps}
+          onNext={coach.next}
+          onDismiss={coach.dismiss}
+        />
+      )}
     </div>
   )
 }
