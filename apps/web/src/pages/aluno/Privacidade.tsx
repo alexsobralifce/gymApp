@@ -21,8 +21,8 @@ export default function Privacidade() {
     setSaving(true)
     try {
       await api.updatePrivacidade({
-        visibilidadePadrao: settings.visibilidadePadrao,
-        permiteBuscaEmail: settings.permiteBuscaEmail,
+        visibilidade_padrao: settings.visibilidade_padrao,
+        permite_busca_email: settings.permite_busca_email,
       })
       setFeedback('Configuracoes salvas!')
       setTimeout(() => setFeedback(null), 2500)
@@ -68,15 +68,15 @@ export default function Privacidade() {
               <label
                 key={value}
                 className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-all ${
-                  settings?.visibilidadePadrao === value ? 'border-primary bg-primary/5' : 'border-surface-input hover:border-text-muted'
+                  settings?.visibilidade_padrao === value ? 'border-primary bg-primary/5' : 'border-surface-input hover:border-text-muted'
                 }`}
               >
                 <input
                   type="radio"
                   name="visibilidade"
                   value={value}
-                  checked={settings?.visibilidadePadrao === value}
-                  onChange={() => setSettings((s) => s ? { ...s, visibilidadePadrao: value as PrivacidadeSettings['visibilidadePadrao'] } : null)}
+checked={settings?.visibilidade_padrao === value}
+                    onChange={() => setSettings((s) => s ? { ...s, visibilidade_padrao: value as PrivacidadeSettings['visibilidade_padrao'] } : null)}
                   className="accent-primary"
                 />
                 <div>
@@ -96,14 +96,14 @@ export default function Privacidade() {
               <p className="text-xs text-text-muted">Outros alunos podem te encontrar pelo email para solicitar amizade.</p>
             </div>
             <button
-              onClick={() => setSettings((s) => s ? { ...s, permiteBuscaEmail: !s.permiteBuscaEmail } : null)}
+              onClick={() => setSettings((s) => s ? { ...s, permite_busca_email: !s.permite_busca_email } : null)}
               className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer ${
-                settings?.permiteBuscaEmail ? 'bg-primary' : 'bg-surface-input'
+                settings?.permite_busca_email ? 'bg-primary' : 'bg-surface-input'
               }`}
             >
               <span
                 className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                  settings?.permiteBuscaEmail ? 'translate-x-5' : ''
+                  settings?.permite_busca_email ? 'translate-x-5' : ''
                 }`}
               />
             </button>

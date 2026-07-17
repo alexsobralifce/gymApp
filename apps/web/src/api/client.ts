@@ -335,7 +335,7 @@ export const api = {
 
   // ─── Social — Privacidade ──────────────────────────
   getPrivacidade: () => api.get<PrivacidadeSettings>('/alunos/privacidade'),
-  updatePrivacidade: (data: { visibilidadePadrao?: string; permiteBuscaEmail?: boolean }) => api.patch('/alunos/privacidade', data),
+  updatePrivacidade: (data: { visibilidade_padrao?: string; permite_busca_email?: boolean }) => api.patch('/alunos/privacidade', data),
 
   // ─── Social — Clubes ───────────────────────────────
   getClube: (id: string) => api.get<Clube>(`/social/clubes/${id}`),

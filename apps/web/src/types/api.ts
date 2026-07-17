@@ -252,28 +252,28 @@ export type FriendshipStatus = 'PENDENTE' | 'ACEITO' | 'BLOQUEADO'
 
 export interface SocialPost {
   id: string
-  alunoId: string
-  treinoId?: string | null
-  clubeId?: string | null
-  autorNome: string
-  autorFotoUrl?: string | null
-  grupoMuscularResumo?: string | null
+  aluno_id: string
+  treino_id?: string | null
+  clube_id?: string | null
+  autor_nome: string
+  autor_foto_url?: string | null
+  grupo_muscular_resumo?: string | null
   tipo: PostTipo
   visibilidade: Visibilidade
-  midiaUrl?: string | null
-  curtidasCount: number
-  comentariosCount: number
-  criadoEm: string
+  midia_url?: string | null
+  curtidas_count: number
+  comentarios_count: number
+  criado_em: string
   curtiu?: boolean
 }
 
 export interface SocialComment {
   id: string
-  postId: string
-  alunoId: string
-  autorNome: string
+  post_id: string
+  aluno_id: string
+  autor_nome: string
   texto: string
-  criadoEm: string
+  criado_em: string
 }
 
 export interface MuralResponse {
@@ -284,32 +284,32 @@ export interface MuralResponse {
 export interface Amizade {
   id: string
   nome: string
-  fotoUrl?: string | null
+  foto_url?: string | null
 }
 
 export interface AmizadePendente {
   id: string
   nome: string
-  status: FriendshipStatus
+  status: string
   solicitante?: boolean
 }
 
 export interface PrivacidadeSettings {
-  visibilidadePadrao: Visibilidade
-  permiteBuscaEmail: boolean
-  consentiuFeedSocialEm?: string | null
+  visibilidade_padrao: Visibilidade
+  permite_busca_email: boolean
+  consentiu_feed_social_em?: string | null
 }
 
 export interface Clube {
   id: string
   nome: string
   tipo: 'ACADEMIA' | 'TEMATICO'
-  totalMembros: number
+  total_membros: number
 }
 
 export interface LeaderboardEntry {
-  alunoId: string
+  aluno_id: string
   nome: string
-  fotoUrl?: string | null
-  xpSemana: number
+  foto_url?: string | null
+  xp_semana: number
 }
