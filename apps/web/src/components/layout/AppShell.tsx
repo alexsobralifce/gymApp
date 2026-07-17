@@ -257,15 +257,7 @@ export default function AppShell() {
   const renderDrawerContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-4 border-b border-surface-input">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-white ring-2 ring-offset-2 ring-offset-surface ${ringColor}`}>
-            {user ? getInitials(user.nome) : '?'}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
-            <p className="text-xs text-text-muted">{getRoleLabel(role)}</p>
-          </div>
-        </div>
+        <span className="text-sm font-semibold text-text">Navegacao</span>
         <button
           onClick={() => setDrawerOpen(false)}
           className="rounded-lg p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
@@ -293,25 +285,7 @@ export default function AppShell() {
         )}
       </nav>
 
-      <div className="border-t border-surface-input p-3 space-y-1">
-        {isAluno && (
-          <>
-            <button
-              onClick={handleDados}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text-muted hover:bg-white/5 hover:text-text transition-all duration-200 cursor-pointer"
-            >
-              <UserCircleIcon className="h-5 w-5" />
-              <span>Dados do Aluno</span>
-            </button>
-            <button
-              onClick={() => { setDrawerOpen(false); navigate('/privacidade') }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text-muted hover:bg-white/5 hover:text-text transition-all duration-200 cursor-pointer"
-            >
-              <ShieldIcon className="h-5 w-5" />
-              <span>Privacidade</span>
-            </button>
-          </>
-        )}
+      <div className="border-t border-surface-input p-3">
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-all duration-200 cursor-pointer"
@@ -340,12 +314,6 @@ export default function AppShell() {
 
       {/* Sidebar — Desktop */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-surface-input bg-surface/50 md:flex">
-        <div className="flex items-center gap-3 p-4 border-b border-surface-input">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
-            G
-          </div>
-          <span className="text-lg font-bold text-text tracking-tight">GymApp</span>
-        </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {navItems.map((entry, i) =>
             isSection(entry) ? (
@@ -358,17 +326,6 @@ export default function AppShell() {
             )
           )}
         </nav>
-        <div className="border-t border-surface-input p-3">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-white ring-2 ring-offset-2 ring-offset-surface ${ringColor}`}>
-              {user ? getInitials(user.nome) : '?'}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-text truncate">{user?.nome}</p>
-              <p className="text-[10px] text-text-muted">{getRoleLabel(role)}</p>
-            </div>
-          </div>
-        </div>
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0">
