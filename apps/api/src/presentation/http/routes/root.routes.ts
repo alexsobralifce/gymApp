@@ -28,30 +28,45 @@ export async function rootRoutes(app: FastifyInstance) {
 
   /** GET /root/vinculos — lista vínculos com paginação */
   app.get('/vinculos', { preHandler }, async (request, reply) => {
-    const { page, limit, status } = z.object({
+    const rawQuery = request.query as Record<string, string>
+    const hasPagination = rawQuery.page !== undefined
+    const parsed = z.object({
       page: z.coerce.number().int().min(1).default(1),
       limit: z.coerce.number().int().min(1).max(100).default(20),
       status: z.enum(['PENDENTE_ACADEMIA', 'PENDENTE_ROOT', 'ATIVO', 'REJEITADO', 'REMOVIDO']).optional(),
     }).parse(request.query)
 
-    const where: Prisma.ProfessorAcademiaWhereInput = status ? { status } : { status: VinculoStatus.PENDENTE_ROOT }
+    const where: Prisma.ProfessorAcademiaWhereInput = parsed.status
+      ? { status: parsed.status }
+      : { status: VinculoStatus.PENDENTE_ROOT }
 
-    const skip = (page - 1) * limit
-    const [vinculos, total] = await Promise.all([
-      prisma.professorAcademia.findMany({
-        where,
-        include: {
-          professor: { include: { usuario: { select: { nome: true, email: true } } } },
-          academia: { select: { id: true, nome: true } },
-        },
-        orderBy: { criado_em: 'asc' },
-        skip,
-        take: limit,
-      }),
-      prisma.professorAcademia.count({ where }),
-    ])
+    if (hasPagination) {
+      const skip = (parsed.page - 1) * parsed.limit
+      const [vinculos, total] = await Promise.all([
+        prisma.professorAcademia.findMany({
+          where,
+          include: {
+            professor: { include: { usuario: { select: { nome: true, email: true } } } },
+            academia: { select: { id: true, nome: true } },
+          },
+          orderBy: { criado_em: 'asc' },
+          skip,
+          take: parsed.limit,
+        }),
+        prisma.professorAcademia.count({ where }),
+      ])
+      return reply.status(200).send({ items: vinculos, total, page: parsed.page, limit: parsed.limit, totalPages: Math.ceil(total / parsed.limit) })
+    }
 
-    return reply.status(200).send({ items: vinculos, total, page, limit, totalPages: Math.ceil(total / limit) })
+    const vinculos = await prisma.professorAcademia.findMany({
+      where,
+      include: {
+        professor: { include: { usuario: { select: { nome: true, email: true } } } },
+        academia: { select: { id: true, nome: true } },
+      },
+      orderBy: { criado_em: 'asc' },
+    })
+    return reply.status(200).send(vinculos)
   })
 
   /** PATCH /root/academias/:id/aprovacao — UC-01 */
@@ -108,7 +123,9 @@ export async function rootRoutes(app: FastifyInstance) {
 
   /** GET /root/usuarios — lista usuários com paginação, busca e ordenação */
   app.get('/usuarios', { preHandler }, async (request, reply) => {
-    const { page, limit, search, sortBy, order, role, ativo } = z.object({
+    const rawQuery = request.query as Record<string, string>
+    const hasPagination = rawQuery.page !== undefined
+    const parsed = z.object({
       page: z.coerce.number().int().min(1).default(1),
       limit: z.coerce.number().int().min(1).max(100).default(20),
       search: z.string().optional(),
@@ -119,38 +136,42 @@ export async function rootRoutes(app: FastifyInstance) {
     }).parse(request.query)
 
     const where: Prisma.UsuarioWhereInput = {}
-    if (search) {
+    if (parsed.search) {
       where.OR = [
-        { nome: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { nome: { contains: parsed.search, mode: 'insensitive' } },
+        { email: { contains: parsed.search, mode: 'insensitive' } },
       ]
     }
-    if (role) where.role = role
-    if (ativo !== undefined) where.ativo = ativo
+    if (parsed.role) where.role = parsed.role
+    if (parsed.ativo !== undefined) where.ativo = parsed.ativo
 
-    const skip = (page - 1) * limit
-    const [usuarios, total] = await Promise.all([
-      prisma.usuario.findMany({
-        where,
-        include: {
-          academia: true,
-          professor: true,
-          aluno: true,
-        },
-        orderBy: { [sortBy]: order },
-        skip,
-        take: limit,
-      }),
-      prisma.usuario.count({ where }),
-    ])
+    if (hasPagination) {
+      const skip = (parsed.page - 1) * parsed.limit
+      const [usuarios, total] = await Promise.all([
+        prisma.usuario.findMany({
+          where,
+          include: { academia: true, professor: true, aluno: true },
+          orderBy: { [parsed.sortBy]: parsed.order },
+          skip,
+          take: parsed.limit,
+        }),
+        prisma.usuario.count({ where }),
+      ])
+      return reply.status(200).send({
+        items: usuarios,
+        total,
+        page: parsed.page,
+        limit: parsed.limit,
+        totalPages: Math.ceil(total / parsed.limit),
+      })
+    }
 
-    return reply.status(200).send({
-      items: usuarios,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+    const usuarios = await prisma.usuario.findMany({
+      where,
+      include: { academia: true, professor: true, aluno: true },
+      orderBy: { criado_em: 'desc' },
     })
+    return reply.status(200).send(usuarios)
   })
 
   /** PATCH /root/usuarios/:id/status — ativa ou desativa usuário */
@@ -190,7 +211,9 @@ export async function rootRoutes(app: FastifyInstance) {
 
   /** GET /root/academias — lista academias com paginação */
   app.get('/academias', { preHandler }, async (request, reply) => {
-    const { page, limit, search, status } = z.object({
+    const rawQuery = request.query as Record<string, string>
+    const hasPagination = rawQuery.page !== undefined
+    const parsed = z.object({
       page: z.coerce.number().int().min(1).default(1),
       limit: z.coerce.number().int().min(1).max(100).default(20),
       search: z.string().optional(),
@@ -198,30 +221,41 @@ export async function rootRoutes(app: FastifyInstance) {
     }).parse(request.query)
 
     const where: Prisma.AcademiaWhereInput = {}
-    if (search) {
+    if (parsed.search) {
       where.OR = [
-        { nome: { contains: search, mode: 'insensitive' } },
-        { cnpj: { contains: search, mode: 'insensitive' } },
+        { nome: { contains: parsed.search, mode: 'insensitive' } },
+        { cnpj: { contains: parsed.search, mode: 'insensitive' } },
       ]
     }
-    if (status) where.status = status
+    if (parsed.status) where.status = parsed.status
 
-    const skip = (page - 1) * limit
-    const [academias, total] = await Promise.all([
-      prisma.academia.findMany({
-        where,
-        include: {
-          usuario: { select: { id: true, email: true, nome: true } },
-          _count: { select: { professores: true, alunos: true } },
-        },
-        orderBy: { criado_em: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.academia.count({ where }),
-    ])
+    if (hasPagination) {
+      const skip = (parsed.page - 1) * parsed.limit
+      const [academias, total] = await Promise.all([
+        prisma.academia.findMany({
+          where,
+          include: {
+            usuario: { select: { id: true, email: true, nome: true } },
+            _count: { select: { professores: true, alunos: true } },
+          },
+          orderBy: { criado_em: 'desc' },
+          skip,
+          take: parsed.limit,
+        }),
+        prisma.academia.count({ where }),
+      ])
+      return reply.status(200).send({ items: academias, total, page: parsed.page, limit: parsed.limit, totalPages: Math.ceil(total / parsed.limit) })
+    }
 
-    return reply.status(200).send({ items: academias, total, page, limit, totalPages: Math.ceil(total / limit) })
+    const academias = await prisma.academia.findMany({
+      where,
+      include: {
+        usuario: { select: { id: true, email: true, nome: true } },
+        _count: { select: { professores: true, alunos: true } },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(academias)
   })
 
   /** PUT /root/academias/:id — atualiza academia */
@@ -294,40 +328,56 @@ export async function rootRoutes(app: FastifyInstance) {
 
   /** GET /root/professores — lista professores com paginação */
   app.get('/professores', { preHandler }, async (request, reply) => {
-    const { page, limit, search } = z.object({
+    const rawQuery = request.query as Record<string, string>
+    const hasPagination = rawQuery.page !== undefined
+    const parsed = z.object({
       page: z.coerce.number().int().min(1).default(1),
       limit: z.coerce.number().int().min(1).max(100).default(20),
       search: z.string().optional(),
     }).parse(request.query)
 
     const where: Prisma.ProfessorWhereInput = {}
-    if (search) {
+    if (parsed.search) {
       where.OR = [
-        { usuario: { nome: { contains: search, mode: 'insensitive' } } },
-        { usuario: { email: { contains: search, mode: 'insensitive' } } },
-        { cref: { contains: search, mode: 'insensitive' } },
+        { usuario: { nome: { contains: parsed.search, mode: 'insensitive' } } },
+        { usuario: { email: { contains: parsed.search, mode: 'insensitive' } } },
+        { cref: { contains: parsed.search, mode: 'insensitive' } },
       ]
     }
 
-    const skip = (page - 1) * limit
-    const [professores, total] = await Promise.all([
-      prisma.professor.findMany({
-        where,
-        include: {
-          usuario: { select: { id: true, email: true, nome: true } },
-          academias: {
-            include: { academia: { select: { id: true, nome: true } } },
+    if (hasPagination) {
+      const skip = (parsed.page - 1) * parsed.limit
+      const [professores, total] = await Promise.all([
+        prisma.professor.findMany({
+          where,
+          include: {
+            usuario: { select: { id: true, email: true, nome: true } },
+            academias: {
+              include: { academia: { select: { id: true, nome: true } } },
+            },
+            _count: { select: { alunos: true } },
           },
-          _count: { select: { alunos: true } },
-        },
-        orderBy: { criado_em: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.professor.count({ where }),
-    ])
+          orderBy: { criado_em: 'desc' },
+          skip,
+          take: parsed.limit,
+        }),
+        prisma.professor.count({ where }),
+      ])
+      return reply.status(200).send({ items: professores, total, page: parsed.page, limit: parsed.limit, totalPages: Math.ceil(total / parsed.limit) })
+    }
 
-    return reply.status(200).send({ items: professores, total, page, limit, totalPages: Math.ceil(total / limit) })
+    const professores = await prisma.professor.findMany({
+      where,
+      include: {
+        usuario: { select: { id: true, email: true, nome: true } },
+        academias: {
+          include: { academia: { select: { id: true, nome: true } } },
+        },
+        _count: { select: { alunos: true } },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(professores)
   })
 
   /** PUT /root/professores/:id — atualiza professor */
@@ -418,37 +468,51 @@ export async function rootRoutes(app: FastifyInstance) {
 
   /** GET /root/alunos — lista alunos com paginação */
   app.get('/alunos', { preHandler }, async (request, reply) => {
-    const { page, limit, search } = z.object({
+    const rawQuery = request.query as Record<string, string>
+    const hasPagination = rawQuery.page !== undefined
+    const parsed = z.object({
       page: z.coerce.number().int().min(1).default(1),
       limit: z.coerce.number().int().min(1).max(100).default(20),
       search: z.string().optional(),
     }).parse(request.query)
 
     const where: Prisma.AlunoWhereInput = {}
-    if (search) {
+    if (parsed.search) {
       where.OR = [
-        { usuario: { nome: { contains: search, mode: 'insensitive' } } },
-        { usuario: { email: { contains: search, mode: 'insensitive' } } },
+        { usuario: { nome: { contains: parsed.search, mode: 'insensitive' } } },
+        { usuario: { email: { contains: parsed.search, mode: 'insensitive' } } },
       ]
     }
 
-    const skip = (page - 1) * limit
-    const [alunos, total] = await Promise.all([
-      prisma.aluno.findMany({
-        where,
-        include: {
-          usuario: { select: { id: true, email: true, nome: true, telefone: true } },
-          academia: { select: { id: true, nome: true } },
-          professor: { select: { id: true, usuario: { select: { nome: true } } } },
-        },
-        orderBy: { criado_em: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.aluno.count({ where }),
-    ])
+    if (hasPagination) {
+      const skip = (parsed.page - 1) * parsed.limit
+      const [alunos, total] = await Promise.all([
+        prisma.aluno.findMany({
+          where,
+          include: {
+            usuario: { select: { id: true, email: true, nome: true, telefone: true } },
+            academia: { select: { id: true, nome: true } },
+            professor: { select: { id: true, usuario: { select: { nome: true } } } },
+          },
+          orderBy: { criado_em: 'desc' },
+          skip,
+          take: parsed.limit,
+        }),
+        prisma.aluno.count({ where }),
+      ])
+      return reply.status(200).send({ items: alunos, total, page: parsed.page, limit: parsed.limit, totalPages: Math.ceil(total / parsed.limit) })
+    }
 
-    return reply.status(200).send({ items: alunos, total, page, limit, totalPages: Math.ceil(total / limit) })
+    const alunos = await prisma.aluno.findMany({
+      where,
+      include: {
+        usuario: { select: { id: true, email: true, nome: true, telefone: true } },
+        academia: { select: { id: true, nome: true } },
+        professor: { select: { id: true, usuario: { select: { nome: true } } } },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+    return reply.status(200).send(alunos)
   })
 
   /** PUT /root/alunos/:id — atualiza aluno */
