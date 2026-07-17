@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Role, TreinoAtor } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
+import { eventBus } from '../../../shared/events/event-bus.js'
 import {
   criarTreino,
   criarTreinoAutogestao,
@@ -139,6 +140,11 @@ export async function treinoRoutes(app: FastifyInstance) {
     if (!aluno) throw new NotFoundError('Aluno')
 
     const treino = await iniciarTreino(id, aluno.id)
+    try {
+      eventBus.emit({ type: 'treino.iniciado', payload: { treinoId: id, alunoId: aluno.id, gruposMusculares: [], timestamp: new Date().toISOString() } })
+    } catch (err) {
+      request.log.warn({ err }, '[Social] Erro ao emitir treino.iniciado')
+    }
     return reply.status(200).send(treino)
   })
 
@@ -169,6 +175,11 @@ export async function treinoRoutes(app: FastifyInstance) {
     const treino = await finalizarTreino(id, aluno.id)
     if (avaliacao) {
       await prisma.treino.update({ where: { id }, data: { avaliacao_dificuldade: avaliacao } })
+    }
+    try {
+      eventBus.emit({ type: 'treino.concluido', payload: { treinoId: id, alunoId: aluno.id, timestamp: new Date().toISOString() } })
+    } catch (err) {
+      request.log.warn({ err }, '[Social] Erro ao emitir treino.concluido')
     }
     return reply.status(200).send(treino)
   })

@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { buildApp } from './app.js'
 import { env } from './shared/env.js'
 import { PrismaClient, TreinoStatus, TreinoAtor } from '@prisma/client'
+import { registerSocialEventListeners } from './modules/social/events/social-event-listeners.js'
 
 async function migrarTreinosCadastrados() {
   const prisma = new PrismaClient()
@@ -87,6 +88,8 @@ async function migrarTreinosConcluidos() {
 async function start() {
   await migrarTreinosCadastrados()
   await migrarTreinosConcluidos()
+
+  registerSocialEventListeners()
 
   const app = await buildApp()
 
