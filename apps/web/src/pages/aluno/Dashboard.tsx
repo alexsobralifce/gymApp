@@ -23,10 +23,10 @@ function calcularIMC(pesoKg: number | null | undefined, alturaCm: number | null 
 function classificarIMC(imc: number): { label: string; cor: string } {
   if (imc < 18.5) return { label: 'Abaixo do peso', cor: 'text-blue-400' }
   if (imc < 25) return { label: 'Peso normal', cor: 'text-green-400' }
-  if (imc < 30) return { label: 'Sobrepeso', cor: 'text-yellow-400' }
-  if (imc < 35) return { label: 'Obesidade grau I', cor: 'text-orange-400' }
-  if (imc < 40) return { label: 'Obesidade grau II', cor: 'text-red-400' }
-  return { label: 'Obesidade grau III', cor: 'text-red-400' }
+  if (imc < 30) return { label: 'Sobrepeso', cor: 'text-accent' }
+  if (imc < 35) return { label: 'Obesidade grau I', cor: 'text-primary-light' }
+  if (imc < 40) return { label: 'Obesidade grau II', cor: 'text-primary' }
+  return { label: 'Obesidade grau III', cor: 'text-primary' }
 }
 
 function calcularIdade(dataNascimento: string | null | undefined): number | null {
@@ -115,7 +115,7 @@ export default function AlunoDashboard() {
       {/* Modal de Notificacao */}
       {modalNotificacao && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleFecharNotificacao} />
+          <div className="absolute inset-0 bg-surface/60 backdrop-blur-sm" onClick={handleFecharNotificacao} />
           <div className="relative z-10 mx-4 w-full max-w-sm rounded-2xl bg-surface-card p-6 shadow-2xl border border-surface-input animate-modal-pop">
             <div className="text-center">
               <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl mb-3 ${modalNotificacao.tipo === 'NOVO_TREINO' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
@@ -205,7 +205,7 @@ export default function AlunoDashboard() {
 
       {feedback && (
         <div className={`rounded-xl p-3 text-sm text-center font-medium animate-slide-up ${
-          feedback.includes('Erro') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-success/10 text-success border border-success/20'
+          feedback.includes('Erro') ? 'bg-primary/10 text-primary-light border border-primary/20' : 'bg-success/10 text-success border border-success/20'
         }`}>
           {feedback}
         </div>
@@ -275,7 +275,7 @@ export default function AlunoDashboard() {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => handleResponder(t.id, 'RECUSAR')}
-                    className="flex-1 rounded-xl border border-red-500/20 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 active:scale-[0.98] transition-all cursor-pointer"
+                    className="flex-1 rounded-xl border border-primary/20 py-2.5 text-sm font-semibold text-primary-light hover:bg-primary/10 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     Recusar
                   </button>

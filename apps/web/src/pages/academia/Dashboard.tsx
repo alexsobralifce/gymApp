@@ -59,7 +59,7 @@ export default function AcademiaDashboard() {
         {/* Header */}
         <div className="rounded-2xl gradient-card border border-surface-input p-5 shadow-lg">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/20 text-accent">
               <Building2Icon className="h-7 w-7" />
             </div>
             <div className="min-w-0">
@@ -71,7 +71,7 @@ export default function AcademiaDashboard() {
             <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase ${
               data.status === 'ATIVO'
                 ? 'bg-green-500/15 text-green-400 border border-green-500/20'
-                : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20'
+                : 'bg-accent/15 text-accent border border-accent/20'
             }`}>
               {data.status === 'ATIVO' ? (
                 <CheckCircleIcon className="h-3.5 w-3.5 inline mr-1" />
@@ -100,9 +100,9 @@ export default function AcademiaDashboard() {
               </div>
             </div>
             {data.professoresPendentes > 0 && (
-              <div className="flex items-center gap-1.5 rounded-lg bg-amber-500/10 border border-amber-500/10 px-2.5 py-1.5">
-                <UserPlusIcon className="h-3.5 w-3.5 text-amber-400" />
-                <span className="text-xs font-semibold text-amber-400">
+              <div className="flex items-center gap-1.5 rounded-lg bg-accent/10 border border-accent/10 px-2.5 py-1.5">
+                <UserPlusIcon className="h-3.5 w-3.5 text-accent" />
+                <span className="text-xs font-semibold text-accent">
                   {data.professoresPendentes} pendente{data.professoresPendentes > 1 ? 's' : ''} de aprovacao
                 </span>
               </div>
@@ -133,7 +133,7 @@ export default function AcademiaDashboard() {
         <div className={`mb-4 rounded-xl p-4 text-sm font-medium ${
           cadastrada
             ? 'bg-success/10 text-success border border-success/20'
-            : 'bg-red-500/10 text-red-400 border border-red-500/20'
+            : 'bg-primary/10 text-primary-light border border-primary/20'
         }`}>
           {feedback}
         </div>

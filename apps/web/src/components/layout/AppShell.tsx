@@ -51,10 +51,10 @@ function getInitials(nome: string): string {
 
 function getRoleRingColor(role: string): string {
   switch (role) {
-    case 'ALUNO': return 'ring-green-500'
+    case 'ALUNO': return 'ring-accent'
     case 'PROFESSOR': return 'ring-blue-500'
-    case 'ACADEMIA': return 'ring-amber-500'
-    case 'ROOT': return 'ring-red-500'
+    case 'ACADEMIA': return 'ring-success'
+    case 'ROOT': return 'ring-primary'
     default: return 'ring-text-muted'
   }
 }
@@ -298,7 +298,7 @@ export default function AppShell() {
         )}
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-all duration-200 cursor-pointer"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-all duration-200 cursor-pointer"
         >
           <LogOutIcon className="h-5 w-5" />
           <span>Sair</span>
@@ -413,7 +413,7 @@ export default function AppShell() {
                     )}
                     <button
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-colors cursor-pointer"
                     >
                       <LogOutIcon className="h-4 w-4" />
                       Sair

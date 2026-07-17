@@ -8,12 +8,12 @@ interface StatusBadgeProps {
 }
 
 const variants: Record<BadgeVariant, string> = {
-  pending: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+  pending: 'bg-accent/10 border-accent/20 text-accent',
   active: 'bg-primary/10 border-primary/20 text-primary',
   success: 'bg-success/10 border-success/20 text-success',
-  danger: 'bg-red-500/10 border-red-500/20 text-red-400',
-  warning: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
-  info: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+  danger: 'bg-primary/10 border-primary/20 text-primary-light',
+  warning: 'bg-accent/10 border-accent/20 text-accent',
+  info: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
   neutral: 'bg-surface-input border-surface-input text-text-muted',
 }
 
@@ -45,12 +45,12 @@ export function getTreinoStatusVariant(status: string): BadgeVariant {
 
 export function getTreinoStatusLabel(status: string): string {
   switch (status) {
-    case 'CADASTRADO': return 'Em preparação'
+    case 'CADASTRADO': return 'Em preparacao'
     case 'ENVIADO': return 'Pendente'
     case 'ACEITO': return 'Aceito'
     case 'EM_ABERTO': return 'Em aberto'
-    case 'EM_EXECUCAO': return 'Em execução'
-    case 'CONCLUIDO': return 'Concluído'
+    case 'EM_EXECUCAO': return 'Em execucao'
+    case 'CONCLUIDO': return 'Concluido'
     case 'RECUSADO': return 'Recusado'
     default: return status
   }

@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/auth'
 import { useNotifications } from './hooks/useNotifications'
 import AppShell from './components/layout/AppShell'
 import LoadingSpinner from './components/ui/LoadingSpinner'
+import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import AlunoDashboard from './pages/aluno/Dashboard'
@@ -57,6 +58,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+
+      {!user && <Route index element={<Landing />} />}
 
       {user?.role === 'ALUNO' && (
         <>
