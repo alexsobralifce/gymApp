@@ -156,6 +156,9 @@ model Aluno {
   peso_kg         Float?
   altura_cm       Float?
   sexo            Sexo?
+  visibilidade_padrao       Visibilidade @default(AMIGOS)
+  permite_busca_email       Boolean      @default(true)
+  consentiu_feed_social_em  DateTime?
   criado_em       DateTime  @default(now())
   atualizado_em   DateTime  @updatedAt
 
@@ -306,6 +309,33 @@ enum NotificacaoTipo {
   NOVO_TREINO
 }
 
+// ─── Módulo Social ──────────────────────────────────────────────────────────
+
+enum FriendshipStatus {
+  PENDENTE
+  ACEITO
+  BLOQUEADO
+}
+
+enum PostTipo {
+  TREINO_INICIADO
+  TREINO_CONCLUIDO
+  RECORDE_PESSOAL
+  BADGE_CONQUISTADO
+  DESAFIO_COMPLETO
+}
+
+enum Visibilidade {
+  AMIGOS
+  PUBLICO
+  PRIVADO
+}
+
+enum ClubTipo {
+  ACADEMIA
+  TEMATICO
+}
+
 // ─── Mensagens Motivacionais ──────────────────────────────────────────────────
 
 model MensagemMotivacional {
@@ -350,4 +380,83 @@ model CorrelacaoDesempenho {
   aluno Aluno @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
 
   @@map("correlacoes_desempenho")
+}
+
+// ─── Módulo Social ───────────────────────────────────────────────────────────
+
+model SocialFriendship {
+  id        String           @id @default(cuid())
+  aluno_id  String
+  amigo_id  String
+  status    FriendshipStatus @default(PENDENTE)
+  criado_em DateTime         @default(now())
+
+  @@unique([aluno_id, amigo_id])
+  @@index([amigo_id, status])
+  @@map("social_friendships")
+}
+
+model SocialPost {
+  id                    String       @id @default(cuid())
+  aluno_id              String
+  treino_id             String?      // referência lógica, sem FK formal
+  clube_id              String?
+  autor_nome            String
+  autor_foto_url        String?
+  grupo_muscular_resumo String?
+  tipo                  PostTipo
+  visibilidade          Visibilidade
+  midia_url             String?
+  curtidas_count        Int          @default(0)
+  comentarios_count     Int          @default(0)
+  criado_em             DateTime     @default(now())
+
+  @@index([aluno_id, criado_em])
+  @@index([clube_id, criado_em])
+  @@index([visibilidade, criado_em])
+  @@map("social_posts")
+}
+
+model SocialLike {
+  id       String @id @default(cuid())
+  post_id  String
+  aluno_id String
+
+  @@unique([post_id, aluno_id])
+  @@index([post_id])
+  @@map("social_likes")
+}
+
+model SocialComment {
+  id         String   @id @default(cuid())
+  post_id    String
+  aluno_id   String
+  autor_nome String
+  texto      String   @db.VarChar(280)
+  criado_em  DateTime @default(now())
+
+  @@index([post_id, criado_em])
+  @@map("social_comments")
+}
+
+model SocialClub {
+  id           String    @id @default(cuid())
+  academia_id  String?   @unique  // 1:1 com academia, null se TEMATICO
+  nome         String
+  tipo         ClubTipo  @default(ACADEMIA)
+  criado_em    DateTime  @default(now())
+
+  @@map("social_clubs")
+}
+
+model SocialClubMember {
+  id        String   @id @default(cuid())
+  clube_id  String
+  aluno_id  String
+  xp_semana Int      @default(0)
+  criado_em DateTime @default(now())
+
+  @@unique([clube_id, aluno_id])
+  @@index([clube_id, xp_semana])
+  @@map("social_club_members")
 }
