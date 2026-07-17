@@ -310,7 +310,7 @@ export async function clonarTreino(treinoId: string, alunoDestinoId: string, ato
   return prisma.treino.create({
     data: {
       aluno_id: alunoDestinoId,
-      nome: `${treino.nome} (cópia)`,
+      nome: treino.nome,
       dias_semana: treino.dias_semana,
       status: TreinoStatus.CADASTRADO,
       exercicios: {

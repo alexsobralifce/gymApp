@@ -170,7 +170,7 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 #### Clonar Treino
 - **T27**: `POST /treinos/:id/clonar` — apenas PROFESSOR ou ACADEMIA. Body: `{ alunoDestinoId }`.
 - **T28**: Tenant check duplo: valida que o ator é dono tanto do treino fonte quanto do aluno destino.
-- **T29**: Copia nome com sufixo `" (cópia)"`, `dias_semana` e `exercicios` (ordem, series, repeticoes, carga_sugerida_kg). Status sempre `CADASTRADO`.
+- **T29**: Copia `nome`, `dias_semana` e `exercicios` (ordem, series, repeticoes, carga_sugerida_kg). Status sempre `CADASTRADO`.
 - **T30**: Histórico registrado com ator `PROFESSOR` ou `ACADEMIA`. Execuções e histórico do treino fonte NÃO são copiados.
 - **T31**: No frontend, após clonar, chama `POST /treinos/:id/enviar` automaticamente (auto-envio).
 
