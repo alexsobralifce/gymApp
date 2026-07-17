@@ -161,7 +161,7 @@ export default function AlunoDashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-medium text-text-muted uppercase tracking-wider">
-                {getSaudacao()} {user.nome.split(' ')[0]}
+                {getSaudacao()} {user?.nome?.split(' ')[0] || ''}
               </p>
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {idade && (
@@ -360,7 +360,8 @@ export default function AlunoDashboard() {
   )
 }
 
-function getInitialsName(nome: string): string {
+function getInitialsName(nome?: string): string {
+  if (!nome) return '?'
   const parts = nome.trim().split(/\s+/)
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   return nome.slice(0, 2).toUpperCase()

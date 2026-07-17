@@ -40,7 +40,8 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
 
   const badge = tipoBadge[post.tipo] || { label: post.tipo, color: 'text-text-muted' }
 
-  const getInitials = (nome: string) => {
+  const getInitials = (nome?: string) => {
+    if (!nome) return '?'
     const parts = nome.split(' ')
     if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
     return nome.slice(0, 2).toUpperCase()

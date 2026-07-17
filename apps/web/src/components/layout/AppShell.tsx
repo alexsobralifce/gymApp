@@ -47,7 +47,8 @@ function isSection(entry: NavEntry): entry is NavSection {
   return 'children' in entry
 }
 
-function getInitials(nome: string): string {
+function getInitials(nome?: string): string {
+  if (!nome) return '?'
   const parts = nome.trim().split(/\s+/)
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   return nome.slice(0, 2).toUpperCase()
