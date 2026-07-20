@@ -2,6 +2,9 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import path from 'path'
+import fs from 'fs/promises'
+import { fileURLToPath } from 'url'
 import { AuthService } from '../../../application/usecases/auth/AuthService.js'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 
@@ -71,7 +74,7 @@ export async function authRoutes(app: FastifyInstance) {
     const { sub: id, role, tenantId } = request.currentUser
     const usuario = await prisma.usuario.findUnique({
       where: { id },
-      select: { nome: true, email: true, telefone: true, expo_push_token: true },
+      select: { nome: true, email: true, telefone: true, foto_url: true, expo_push_token: true },
     })
     if (!usuario) return reply.status(404).send({ message: 'Usuário não encontrado' })
     return reply.status(200).send({
@@ -79,6 +82,7 @@ export async function authRoutes(app: FastifyInstance) {
       nome: usuario.nome,
       email: usuario.email,
       telefone: usuario.telefone ?? null,
+      fotoUrl: usuario.foto_url ?? null,
       role,
       tenantId,
       expoPushToken: usuario.expo_push_token ?? null,
@@ -94,6 +98,7 @@ export async function authRoutes(app: FastifyInstance) {
       webPushSubscription: z.any().nullable().optional(),
       nome: z.string().min(2).max(100).optional(),
       telefone: z.string().nullable().optional(),
+      fotoUrl: z.string().nullable().optional(),
     }).parse(request.body)
 
     const data: Record<string, unknown> = {}
@@ -101,6 +106,7 @@ export async function authRoutes(app: FastifyInstance) {
     if (body.webPushSubscription !== undefined) data.web_push_subscription = body.webPushSubscription
     if (body.nome !== undefined) data.nome = body.nome
     if (body.telefone !== undefined) data.telefone = body.telefone || null
+    if (body.fotoUrl !== undefined) data.foto_url = body.fotoUrl || null
 
     const usuario = await prisma.usuario.update({
       where: { id: request.currentUser.sub },
@@ -109,6 +115,48 @@ export async function authRoutes(app: FastifyInstance) {
     })
 
     return reply.status(200).send(usuario)
+  })
+
+  /**
+   * POST /auth/avatar — Upload de foto de perfil
+   */
+  app.post('/avatar', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const data = await request.file()
+
+    if (!data) {
+      return reply.status(400).send({ message: 'Nenhum arquivo enviado.' })
+    }
+
+    const mimetype = data.mimetype
+    if (!mimetype.startsWith('image/')) {
+      return reply.status(400).send({ message: 'Apenas imagens são permitidas.' })
+    }
+
+    const buffer = await data.toBuffer()
+    const extMap: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+    }
+    const ext = extMap[mimetype] || '.jpg'
+    const filename = `${request.currentUser.sub}_${Date.now()}${ext}`
+
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+    const uploadDir = path.join(__dirname, '..', '..', '..', '..', 'public', 'uploads', 'avatars')
+    await fs.mkdir(uploadDir, { recursive: true })
+
+    const filePath = path.join(uploadDir, filename)
+    await fs.writeFile(filePath, buffer)
+
+    const fotoUrl = `/uploads/avatars/${filename}`
+    await prisma.usuario.update({
+      where: { id: request.currentUser.sub },
+      data: { foto_url: fotoUrl },
+    })
+
+    return reply.status(200).send({ fotoUrl })
   })
 
   /**

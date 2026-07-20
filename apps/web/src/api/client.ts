@@ -101,8 +101,11 @@ export const api = {
 
   getMe: () => api.get<User>('/auth/me'),
 
-  updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null; nome?: string; telefone?: string | null }) =>
+  updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null; nome?: string; telefone?: string | null; fotoUrl?: string | null }) =>
     api.patch<User>('/auth/me', data),
+
+  uploadAvatar: (formData: FormData) =>
+    api.post<{ fotoUrl: string }>('/auth/avatar', formData, true),
 
   alterarSenha: (senhaAtual: string, novaSenha: string) =>
     api.post('/auth/change-password', { senhaAtual, novaSenha }),
@@ -118,6 +121,8 @@ export const api = {
   atualizarProfessorAluno: (professorId: string | null) => api.patch<import('../types/api').PerfilAluno>('/alunos/professor', { professorId }),
 
   getPerfilAluno: () => api.get<import('../types/api').PerfilAluno>('/alunos/perfil'),
+
+  getColegasAcademia: () => api.get<Array<{ id: string; nome: string; fotoUrl: string | null }>>('/alunos/academia/colegas'),
 
   // ─── Treinos ───────────────────────────────────────
   getAlunoTreinos: () => api.get<Treino[]>('/alunos/treinos'),
@@ -417,6 +422,7 @@ export const api = {
   responderAmizade: (id: string, acao: 'ACEITAR' | 'RECUSAR') => api.patch(`/social/amizades/${id}/responder`, { acao }),
   getAmizades: () => api.get<Amizade[]>('/social/amizades'),
   getAmizadesPendentes: () => api.get<AmizadePendente[]>('/social/amizades/pendentes'),
+  solicitarAmizadePorId: (alunoId: string) => api.post<{ message: string }>('/social/amizades/solicitar-por-id', { alunoId }),
   desfazerAmizade: (id: string) => api.delete(`/social/amizades/${id}`),
 
   // ─── Social — Upload ───────────────────────────────

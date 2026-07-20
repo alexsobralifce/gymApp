@@ -334,4 +334,47 @@ export async function alunoRoutes(app: FastifyInstance) {
     const resultado = await obterCorrelacoes(aluno.id)
     return reply.status(200).send(resultado)
   })
+
+  /** GET /alunos/academia/colegas — alunos da mesma academia não seguidos */
+  app.get('/academia/colegas', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    if (!aluno.academia_id) {
+      return reply.status(200).send([])
+    }
+
+    const colegas = await prisma.aluno.findMany({
+      where: {
+        academia_id: aluno.academia_id,
+        id: { not: aluno.id },
+      },
+      include: {
+        usuario: { select: { nome: true, foto_url: true } },
+      },
+      orderBy: { usuario: { nome: 'asc' } },
+    })
+
+    const colegaIds = colegas.map((c) => c.id)
+
+    const friendships = await prisma.socialFriendship.findMany({
+      where: {
+        OR: [
+          { aluno_id: aluno.id, amigo_id: { in: colegaIds } },
+          { amigo_id: aluno.id, aluno_id: { in: colegaIds } },
+        ],
+      },
+    })
+
+    const amigoIds = new Set(friendships.map((f) => (f.aluno_id === aluno.id ? f.amigo_id : f.aluno_id)))
+
+    const naoSeguidos = colegas
+      .filter((c) => !amigoIds.has(c.id))
+      .map((c) => ({
+        id: c.id,
+        nome: c.usuario.nome,
+        fotoUrl: c.usuario.foto_url ?? null,
+      }))
+
+    return reply.status(200).send(naoSeguidos)
+  })
 }

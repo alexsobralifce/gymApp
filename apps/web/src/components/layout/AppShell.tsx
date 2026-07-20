@@ -27,6 +27,7 @@ import {
   ShieldIcon,
   TrophyIcon,
 } from '../icons/Icon'
+import AcademySidebar from '../social/AcademySidebar'
 
 interface NavItem {
   to: string
@@ -286,6 +287,8 @@ export default function AppShell() {
         )}
       </nav>
 
+      <AcademySidebar />
+
       <div className="border-t border-surface-input p-3">
         <button
           onClick={handleLogout}
@@ -327,6 +330,7 @@ export default function AppShell() {
             )
           )}
         </nav>
+        <AcademySidebar />
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0">

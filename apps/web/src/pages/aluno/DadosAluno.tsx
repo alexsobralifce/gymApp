@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
@@ -39,6 +39,9 @@ export default function DadosAluno() {
   // Formulário 1: Dados Pessoais
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
+  const [fotoUrl, setFotoUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const [salvandoPessoais, setSalvandoPessoais] = useState(false)
   const [feedbackPessoais, setFeedbackPessoais] = useState<string | null>(null)
 
@@ -76,6 +79,7 @@ export default function DadosAluno() {
         const usuarioTel = pData.usuario?.telefone || user?.telefone || ''
         setNome(usuarioNome)
         setTelefone(formatPhone(usuarioTel))
+        setFotoUrl(user?.fotoUrl || null)
 
         if (pData.peso_kg) setPesoKg(String(pData.peso_kg))
         if (pData.altura_cm) setAlturaCm(String(pData.altura_cm))
@@ -95,6 +99,22 @@ export default function DadosAluno() {
   const aNum = parseFloat(alturaCm)
   const imcCalculado = calcularIMC(isNaN(pNum) ? null : pNum, isNaN(aNum) ? null : aNum)
   const imcBadge = imcCalculado ? classificarIMC(imcCalculado) : null
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { fotoUrl: url } = await api.uploadAvatar(formData)
+      setFotoUrl(url)
+    } catch {
+      // silent
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
 
   async function handleSalvarPessoais(e: React.FormEvent) {
     e.preventDefault()
@@ -219,6 +239,41 @@ export default function DadosAluno() {
         )}
 
         <form onSubmit={handleSalvarPessoais} className="space-y-3">
+          {/* Avatar */}
+          <div className="flex justify-center mb-2">
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="relative group cursor-pointer"
+            >
+              {fotoUrl ? (
+                <img
+                  src={fotoUrl}
+                  alt="Avatar"
+                  className="h-20 w-20 rounded-full object-cover border-2 border-surface-input group-hover:border-primary transition-colors"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-full gradient-primary flex items-center justify-center text-2xl font-bold text-white border-2 border-surface-input group-hover:border-primary transition-colors">
+                  {nome?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+              disabled={uploadingAvatar}
+            />
+          </div>
+          {uploadingAvatar && (
+            <p className="text-xs text-text-muted text-center">Enviando foto...</p>
+          )}
+
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Nome Completo</label>
             <input

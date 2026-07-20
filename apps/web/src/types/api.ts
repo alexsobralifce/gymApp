@@ -3,6 +3,7 @@ export interface User {
   nome: string
   email: string
   telefone?: string | null
+  fotoUrl?: string | null
   role: 'ROOT' | 'ACADEMIA' | 'PROFESSOR' | 'ALUNO'
   tenantId?: string | null
   expoPushToken?: string | null

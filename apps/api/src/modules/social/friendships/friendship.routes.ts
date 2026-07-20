@@ -48,6 +48,37 @@ export async function friendshipRoutes(app: FastifyInstance) {
     return reply.status(200).send({ message: 'Solicitação enviada.' })
   })
 
+  /** POST /social/amizades/solicitar-por-id — envia solicitação por alunoId */
+  app.post('/social/amizades/solicitar-por-id', { preHandler }, async (request, reply) => {
+    const { alunoId } = z.object({ alunoId: z.string() }).parse(request.body)
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    if (alunoId === aluno.id) {
+      return reply.status(400).send({ message: 'Não pode solicitar amizade consigo mesmo.' })
+    }
+
+    const target = await prisma.aluno.findUnique({ where: { id: alunoId } })
+    if (!target) {
+      return reply.status(404).send({ message: 'Aluno não encontrado.' })
+    }
+
+    try {
+      await prisma.socialFriendship.upsert({
+        where: { aluno_id_amigo_id: { aluno_id: aluno.id, amigo_id: target.id } },
+        create: { aluno_id: aluno.id, amigo_id: target.id, status: 'PENDENTE' },
+        update: { status: 'PENDENTE' },
+      })
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        // race condition — já existe, ok
+      } else {
+        throw err
+      }
+    }
+
+    return reply.status(200).send({ message: 'Solicitação enviada.' })
+  })
+
   /** PATCH /social/amizades/:id/responder — aceita ou recusa */
   app.patch('/social/amizades/:id/responder', { preHandler }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)

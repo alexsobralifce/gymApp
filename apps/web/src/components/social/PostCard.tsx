@@ -103,9 +103,17 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
     <div className="rounded-2xl bg-surface-card border border-surface-input p-4 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-white">
-          {getInitials(post.autor_nome)}
-        </div>
+        {post.autor_foto_url ? (
+          <img
+            src={post.autor_foto_url}
+            alt={post.autor_nome}
+            className="h-10 w-10 shrink-0 rounded-full object-cover border border-surface-input"
+          />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-white">
+            {getInitials(post.autor_nome)}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-text">{post.autor_nome}</p>
           <p className="text-xs text-text-muted">{tempoRelativo(post.criado_em)}</p>
