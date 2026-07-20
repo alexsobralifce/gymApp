@@ -4,9 +4,19 @@ interface EmptyStateProps {
   description: string
   actionLabel?: string
   onAction?: () => void
+  secondaryActionLabel?: string
+  onSecondaryAction?: () => void
 }
 
-export default function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
+export default function EmptyState({
+  icon,
+  title,
+  description,
+  actionLabel,
+  onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
+}: EmptyStateProps) {
   return (
     <div className="px-4 py-8 max-w-xl mx-auto w-full text-center space-y-4">
       <div className="text-5xl">{icon}</div>
@@ -14,14 +24,24 @@ export default function EmptyState({ icon, title, description, actionLabel, onAc
       <p className="text-sm text-text-muted bg-surface-card rounded-2xl p-6 border border-surface-input leading-relaxed">
         {description}
       </p>
-      {actionLabel && onAction && (
-        <button
-          onClick={onAction}
-          className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:brightness-110 transition-all cursor-pointer"
-        >
-          {actionLabel}
-        </button>
-      )}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+        {actionLabel && onAction && (
+          <button
+            onClick={onAction}
+            className="w-full sm:w-auto rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-md"
+          >
+            {actionLabel}
+          </button>
+        )}
+        {secondaryActionLabel && onSecondaryAction && (
+          <button
+            onClick={onSecondaryAction}
+            className="w-full sm:w-auto rounded-xl border border-surface-input bg-surface-card px-6 py-2.5 text-sm font-semibold text-text hover:bg-surface-input active:scale-[0.98] transition-all cursor-pointer"
+          >
+            {secondaryActionLabel}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

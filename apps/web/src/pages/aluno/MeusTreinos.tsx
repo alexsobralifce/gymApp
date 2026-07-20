@@ -129,24 +129,19 @@ export default function AlunoMeusTreinos() {
   )
 
   if (treinos.length === 0) {
-    if (hasProfessor === false) {
-      return (
-        <EmptyState
-          icon="✏️"
-          title="Crie seu primeiro treino"
-          description="No modo autogestão, você monta seus próprios treinos. Comece agora mesmo!"
-          actionLabel="Criar Treino"
-          onAction={() => navigate('/treino/novo')}
-        />
-      )
-    }
     return (
       <EmptyState
         icon="📋"
         title="Nenhum treino ativo"
-        description="Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Fique de olho nas notificações!"
-        actionLabel="Voltar ao Início"
-        onAction={() => navigate('/')}
+        description={
+          hasProfessor
+            ? "Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Você também pode montar seus próprios treinos a qualquer momento!"
+            : "No modo autogestão, você monta seus próprios treinos. Comece agora mesmo!"
+        }
+        actionLabel="Criar Treino"
+        onAction={() => navigate('/treino/novo')}
+        secondaryActionLabel="Voltar ao Início"
+        onSecondaryAction={() => navigate('/')}
       />
     )
   }

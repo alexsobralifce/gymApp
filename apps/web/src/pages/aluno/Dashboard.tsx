@@ -296,11 +296,17 @@ export default function AlunoDashboard() {
       <div className="space-y-3">
         <h2 className="text-sm font-bold text-text uppercase tracking-wider">Meus Treinos Ativos</h2>
         {disponiveis.length === 0 ? (
-          <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center">
-            <DumbbellIcon className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-30" />
+          <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center space-y-3">
+            <DumbbellIcon className="h-8 w-8 text-text-muted mx-auto opacity-30" />
             <p className="text-sm text-text-muted">
-              Nenhum treino disponivel. Aguarde o envio das fichas pelo professor ou crie no modo autogestao.
+              Nenhum treino ativo disponível. Aguarde o envio do seu professor ou crie sua própria ficha agora!
             </p>
+            <button
+              onClick={() => navigate('/treino/novo')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Criar Treino
+            </button>
           </div>
         ) : (
           <div className="grid gap-3">
