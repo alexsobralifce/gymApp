@@ -160,6 +160,32 @@ export async function authRoutes(app: FastifyInstance) {
   })
 
   /**
+   * GET /uploads/avatars/:filename — serve foto de perfil
+   */
+  app.get('/uploads/avatars/:filename', async (request, reply) => {
+    const { filename } = z.object({ filename: z.string() }).parse(request.params)
+
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+    const filePath = path.join(__dirname, '..', '..', '..', '..', 'public', 'uploads', 'avatars', filename)
+
+    try {
+      const buffer = await fs.readFile(filePath)
+      const ext = path.extname(filename).toLowerCase()
+      const mimeMap: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif',
+      }
+      return reply.header('Content-Type', mimeMap[ext] || 'image/jpeg').header('Cache-Control', 'public, max-age=86400').send(buffer)
+    } catch {
+      return reply.status(404).send({ message: 'Foto não encontrada' })
+    }
+  })
+
+  /**
    * POST /auth/change-password — Permite ao usuário logado alterar sua própria senha
    */
   app.post('/change-password', { preHandler: [app.authenticate] }, async (request, reply) => {

@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { z } from 'zod'
 import { Role } from '@prisma/client'
 import path from 'path'
 import fs from 'fs/promises'
@@ -55,5 +56,33 @@ export async function uploadRoutes(app: FastifyInstance) {
     const url = `/uploads/feed/${year}/${month}/${filename}`
 
     return reply.status(200).send({ url })
+  })
+
+  /** GET /uploads/feed/:year/:month/:filename — serve foto do feed */
+  app.get('/uploads/feed/:year/:month/:filename', async (request, reply) => {
+    const { year, month, filename } = z.object({
+      year: z.string(),
+      month: z.string(),
+      filename: z.string(),
+    }).parse(request.params)
+
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+    const filePath = path.join(__dirname, '..', '..', '..', '..', 'public', 'uploads', 'feed', year, month, filename)
+
+    try {
+      const buffer = await fs.readFile(filePath)
+      const ext = path.extname(filename).toLowerCase()
+      const mimeMap: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif',
+      }
+      return reply.header('Content-Type', mimeMap[ext] || 'image/jpeg').header('Cache-Control', 'public, max-age=86400').send(buffer)
+    } catch {
+      return reply.status(404).send({ message: 'Foto não encontrada' })
+    }
   })
 }
