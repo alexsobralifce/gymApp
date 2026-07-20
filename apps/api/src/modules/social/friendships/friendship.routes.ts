@@ -96,6 +96,35 @@ export async function friendshipRoutes(app: FastifyInstance) {
     return reply.status(200).send(result)
   })
 
+  /** GET /social/amizades/pendentes — solicitações recebidas */
+  app.get('/social/amizades/pendentes', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const pendentes = await prisma.socialFriendship.findMany({
+      where: { amigo_id: aluno.id, status: 'PENDENTE' },
+      orderBy: { criado_em: 'desc' },
+    })
+
+    const solicitanteIds = pendentes.map((p) => p.aluno_id)
+
+    const solicitantes = await prisma.aluno.findMany({
+      where: { id: { in: solicitanteIds } },
+      include: { usuario: { select: { nome: true, foto_url: true } } },
+    })
+
+    const result = pendentes.map((p) => {
+      const s = solicitantes.find((a) => a.id === p.aluno_id)
+      return {
+        id: p.id,
+        nome: s?.usuario.nome ?? 'Usuário',
+        foto_url: s?.usuario.foto_url ?? null,
+        criado_em: p.criado_em,
+      }
+    })
+
+    return reply.status(200).send(result)
+  })
+
   /** DELETE /social/amizades/:id — desfaz amizade */
   app.delete('/social/amizades/:id', { preHandler }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)

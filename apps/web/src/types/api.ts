@@ -258,6 +258,7 @@ export interface SocialPost {
   autor_nome: string
   autor_foto_url?: string | null
   grupo_muscular_resumo?: string | null
+  academia_nome?: string | null
   tipo: PostTipo
   visibilidade: Visibilidade
   midia_url?: string | null
@@ -290,8 +291,8 @@ export interface Amizade {
 export interface AmizadePendente {
   id: string
   nome: string
-  status: string
-  solicitante?: boolean
+  foto_url?: string | null
+  criado_em: string
 }
 
 export interface PrivacidadeSettings {

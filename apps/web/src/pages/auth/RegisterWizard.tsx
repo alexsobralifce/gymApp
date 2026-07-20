@@ -19,6 +19,7 @@ export default function RegisterWizard() {
   const [role, setRole] = useState('ALUNO')
   const [academias, setAcademias] = useState<Academia[]>([])
   const [academiaId, setAcademiaId] = useState('')
+  const [modoVinculo, setModoVinculo] = useState<'AUTOGESTAO' | 'ACADEMIA' | ''>('')
   const [dataNascimento, setDataNascimento] = useState('')
   const [peso, setPeso] = useState('')
   const [altura, setAltura] = useState('')
@@ -48,7 +49,9 @@ export default function RegisterWizard() {
              sexo !== ''
     }
     if (step === 2 && isAluno) {
-      return academiaId !== ''
+      if (modoVinculo === '') return false
+      if (modoVinculo === 'ACADEMIA') return academiaId !== ''
+      return true
     }
     return true
   }
@@ -69,7 +72,7 @@ export default function RegisterWizard() {
     }
     await register(
       nome, email, senha, role,
-      isAluno ? academiaId : undefined,
+      isAluno ? (modoVinculo === 'AUTOGESTAO' ? 'AUTOGESTAO' : academiaId) : undefined,
       telefone.replace(/\D/g, '') || undefined,
       dataNascimento || undefined,
       peso ? Number(peso) : undefined,
@@ -107,6 +110,7 @@ export default function RegisterWizard() {
 
         {step === 2 && isAluno && (
           <Step3Academia
+            modoVinculo={modoVinculo} setModoVinculo={setModoVinculo}
             academiaId={academiaId} setAcademiaId={setAcademiaId} academias={academias}
           />
         )}

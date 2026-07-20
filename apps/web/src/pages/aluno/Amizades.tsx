@@ -21,12 +21,12 @@ export default function Amizades() {
 
   async function carregar() {
     try {
-      const [amigosRes] = await Promise.all([
+      const [amigosRes, pendentesRes] = await Promise.all([
         api.getAmizades(),
         api.getAmizadesPendentes().catch(() => []),
       ])
       setAmigos(amigosRes)
-      setPendentes([])
+      setPendentes(pendentesRes)
     } catch { /* ok */ }
     setLoading(false)
   }
@@ -70,7 +70,7 @@ export default function Amizades() {
       <div className="flex rounded-xl bg-surface-card border border-surface-input overflow-hidden">
         {[
           { key: 'amigos', label: 'Amigos', icon: UsersIcon },
-          { key: 'solicitacoes', label: 'Solicitacoes', icon: UserSearchIcon },
+          { key: 'solicitacoes', label: `Solicitacoes${pendentes.length > 0 ? ` (${pendentes.length})` : ''}`, icon: UserSearchIcon },
           { key: 'adicionar', label: 'Adicionar', icon: UserSearchIcon },
         ].map(({ key, label, icon: Icon }) => (
           <button

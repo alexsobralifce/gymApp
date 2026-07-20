@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useTrainingStore } from '../../stores/training'
 import { TrophyIcon, TimerIcon } from '../../components/icons/Icon'
+import { api } from '../../api/client'
+import { useEffect, useState } from 'react'
+import PostPhotoUpload from '../../components/social/PostPhotoUpload'
 
 const CONQUISTAS = [
   { msg: 'Cada repeticao conta! Continue assim e os resultados virao.', emoji: '🏆' },
@@ -13,6 +16,13 @@ const CONQUISTAS = [
 export default function AlunoTreinoConclusao() {
   const navigate = useNavigate()
   const { timerFinalizado } = useTrainingStore()
+  const [postId, setPostId] = useState<string | null>(null)
+
+  useEffect(() => {
+    api.getMeuUltimoPostTreino()
+      .then((res) => setPostId(res.postId))
+      .catch(() => {})
+  }, [])
 
   const min = Math.floor(timerFinalizado / 60)
   const sec = timerFinalizado % 60
@@ -55,6 +65,12 @@ export default function AlunoTreinoConclusao() {
         >
           Ver Minha Evolucao
         </button>
+
+        {postId && (
+          <div className="mt-6 w-full max-w-xs">
+            <PostPhotoUpload postId={postId} />
+          </div>
+        )}
       </div>
     </div>
   )

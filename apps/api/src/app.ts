@@ -3,6 +3,7 @@ import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyJwt from '@fastify/jwt'
 import fastifyStatic from '@fastify/static'
+import fastifyMultipart from '@fastify/multipart'
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
 import path from 'path'
@@ -20,6 +21,7 @@ import { friendshipRoutes } from './modules/social/friendships/friendship.routes
 import { feedRoutes } from './modules/social/feed/feed.routes.js'
 import { privacyRoutes } from './modules/social/privacy/privacy.routes.js'
 import { clubRoutes } from './modules/social/clubs/club.routes.js'
+import { uploadRoutes } from './modules/social/upload/upload.routes.js'
 
 // Plugins / Middlewares
 import { jwtAuthPlugin } from './presentation/middlewares/jwtAuth.js'
@@ -52,6 +54,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(fastifyCors, {
     origin: env.NODE_ENV === 'development' ? true : origins,
     credentials: true,
+  })
+
+  // ─── Multipart (file uploads) ───────────────────────────────────────────
+  await app.register(fastifyMultipart, {
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   })
 
   // ─── Static Files (Exercise Assets) ─────────────────────────────────────
@@ -102,6 +109,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(feedRoutes)
   await app.register(privacyRoutes)
   await app.register(clubRoutes)
+  await app.register(uploadRoutes)
 
   // ─── Health check ────────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }))

@@ -52,6 +52,37 @@ export async function feedRoutes(app: FastifyInstance) {
     return reply.status(200).send({ items, nextCursor })
   })
 
+  /** PATCH /social/mural/:postId/foto — aluno adiciona foto ao próprio post */
+  app.patch('/social/mural/:postId/foto', { preHandler }, async (request, reply) => {
+    const { postId } = z.object({ postId: z.string() }).parse(request.params)
+    const { midiaUrl } = z.object({ midiaUrl: z.string().url() }).parse(request.body)
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const post = await prisma.socialPost.findUnique({ where: { id: postId } })
+    if (!post) throw new NotFoundError('Post')
+    if (post.aluno_id !== aluno.id) throw new ForbiddenError()
+
+    await prisma.socialPost.update({ where: { id: postId }, data: { midia_url: midiaUrl } })
+    return reply.status(200).send({ midiaUrl })
+  })
+
+  /** GET /social/mural/meu-ultimo-post — último post TREINO_INICIADO do aluno nas últimas 2h */
+  app.get('/social/mural/meu-ultimo-post', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const desde = new Date(Date.now() - 2 * 60 * 60 * 1000)
+
+    const post = await prisma.socialPost.findFirst({
+      where: {
+        aluno_id: aluno.id,
+        tipo: 'TREINO_INICIADO',
+        criado_em: { gte: desde },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+
+    return reply.status(200).send({ postId: post?.id ?? null })
+  })
+
   /** POST /social/mural/:postId/curtir */
   app.post('/social/mural/:postId/curtir', { preHandler }, async (request, reply) => {
     const { postId } = z.object({ postId: z.string() }).parse(request.params)

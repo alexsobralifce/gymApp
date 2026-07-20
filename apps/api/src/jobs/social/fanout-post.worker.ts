@@ -16,7 +16,10 @@ export async function handleFanoutPost(job: Job<FanoutPayload>) {
 
   const aluno = await prisma.aluno.findUnique({
     where: { id: alunoId },
-    include: { usuario: { select: { nome: true, foto_url: true } } },
+    include: {
+      usuario: { select: { nome: true, foto_url: true } },
+      academia: { select: { nome: true } },
+    },
   })
 
   if (!aluno) throw new Error(`Aluno ${alunoId} não encontrado`)
@@ -34,6 +37,7 @@ export async function handleFanoutPost(job: Job<FanoutPayload>) {
       treino_id: treinoId,
       autor_nome: aluno.usuario.nome,
       autor_foto_url: aluno.usuario.foto_url,
+      academia_nome: aluno.academia?.nome ?? null,
       grupo_muscular_resumo: resumo,
       tipo,
       visibilidade: aluno.visibilidade_padrao,

@@ -405,6 +405,7 @@ model SocialPost {
   autor_nome            String
   autor_foto_url        String?
   grupo_muscular_resumo String?
+  academia_nome         String?   // desnormalizado para evitar JOIN no feed
   tipo                  PostTipo
   visibilidade          Visibilidade
   midia_url             String?

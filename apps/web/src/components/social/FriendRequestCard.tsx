@@ -21,26 +21,22 @@ export default function FriendRequestCard({ amizade, onResponder }: FriendReques
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-text">{amizade.nome}</p>
-        <p className="text-xs text-text-muted">
-          {amizade.solicitante ? 'Voce enviou uma solicitacao' : 'Quer ser seu amigo'}
-        </p>
+        <p className="text-xs text-text-muted">Quer ser seu amigo</p>
       </div>
-      {!amizade.solicitante && (
-        <div className="flex gap-2">
-          <button
-            onClick={() => onResponder(amizade.id, 'ACEITAR')}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-success text-white hover:brightness-110 transition-all cursor-pointer"
-          >
-            <CheckIcon className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onResponder(amizade.id, 'RECUSAR')}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 text-primary-light hover:bg-primary/10 transition-all cursor-pointer"
-          >
-            <XIcon className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      <div className="flex gap-2">
+        <button
+          onClick={() => onResponder(amizade.id, 'ACEITAR')}
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-success text-white hover:brightness-110 transition-all cursor-pointer"
+        >
+          <CheckIcon className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onResponder(amizade.id, 'RECUSAR')}
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 text-primary-light hover:bg-primary/10 transition-all cursor-pointer"
+        >
+          <XIcon className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   )
 }

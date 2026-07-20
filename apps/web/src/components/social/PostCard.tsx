@@ -14,6 +14,18 @@ function tempoRelativo(data: string): string {
   return new Date(data).toLocaleDateString('pt-BR')
 }
 
+function gerarMensagemPost(post: SocialPost): string {
+  if (post.tipo === 'TREINO_INICIADO') {
+    return post.academia_nome
+      ? `está treinando na ${post.academia_nome} 🔥`
+      : 'está realizando seu treino 🔥'
+  }
+  if (post.tipo === 'TREINO_CONCLUIDO') {
+    return 'concluiu o treino! 💪'
+  }
+  return ''
+}
+
 interface PostCardProps {
   post: SocialPost
   onCurtir: (postId: string) => void
@@ -103,11 +115,31 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
         </span>
       </div>
 
-      {/* Grupo muscular */}
+      {/* Content */}
       {post.grupo_muscular_resumo && (
-        <p className="text-xs text-text-muted mb-2">
-          Grupos: {post.grupo_muscular_resumo}
-        </p>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {post.grupo_muscular_resumo.split(', ').map((g) => (
+            <span key={g} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+              {g}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <p className="text-sm text-text-muted mb-3">
+        <strong className="text-text">{post.autor_nome}</strong> {gerarMensagemPost(post)}
+      </p>
+
+      {post.midia_url && (
+        <div className="mb-3 overflow-hidden rounded-xl">
+          <img
+            src={post.midia_url}
+            alt="Foto do treino"
+            className="w-full h-auto object-cover"
+            style={{ maxHeight: 'min(60vw, 320px)', aspectRatio: '4/3' }}
+            loading="lazy"
+          />
+        </div>
       )}
 
       {/* Actions */}

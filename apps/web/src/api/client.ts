@@ -9,7 +9,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...((options.headers as Record<string, string>) || {}),
   }
 
-  if (options.body && !headers['Content-Type']) {
+  if (options.body && !headers['Content-Type'] && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
   }
 
@@ -81,8 +81,11 @@ export class ApiError extends Error {
 
 export const api = {
   get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+  post: <T>(path: string, body?: unknown, isFormData?: boolean) =>
+    request<T>(path, {
+      method: 'POST',
+      body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
+    }),
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   put: <T>(path: string, body?: unknown) =>
@@ -405,6 +408,16 @@ export const api = {
   getAmizades: () => api.get<Amizade[]>('/social/amizades'),
   getAmizadesPendentes: () => api.get<AmizadePendente[]>('/social/amizades/pendentes'),
   desfazerAmizade: (id: string) => api.delete(`/social/amizades/${id}`),
+
+  // ─── Social — Upload ───────────────────────────────
+  uploadFotoFeed: (formData: FormData) =>
+    api.post<{ url: string }>('/social/upload/foto', formData, true),
+
+  adicionarFotoPost: (postId: string, midiaUrl: string) =>
+    api.patch(`/social/mural/${postId}/foto`, { midiaUrl }),
+
+  getMeuUltimoPostTreino: () =>
+    api.get<{ postId: string | null }>('/social/mural/meu-ultimo-post'),
 
   // ─── Social — Privacidade ──────────────────────────
   getPrivacidade: () => api.get<PrivacidadeSettings>('/alunos/privacidade'),

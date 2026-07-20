@@ -38,11 +38,19 @@ export async function handleNotifyFriends(job: Job<NotifyPayload>) {
       sendPushNotification(
         amigo.usuario.expo_push_token,
         '🏋️ Amigo treinando!',
-        `${post.autor_nome} ${post.tipo === 'TREINO_CONCLUIDO' ? 'concluiu' : 'iniciou'} um treino!`,
+        post.tipo === 'TREINO_INICIADO'
+          ? post.academia_nome
+            ? `${post.autor_nome} está treinando na ${post.academia_nome}! 🔥`
+            : `${post.autor_nome} está realizando seu treino! 🔥`
+          : `${post.autor_nome} concluiu o treino! 💪`,
       ).catch(() => {})
     }
     if (webSub) {
-      sendWebPush(webSub, '🏋️ Amigo treinando!', `${post.autor_nome} ${post.tipo === 'TREINO_CONCLUIDO' ? 'concluiu' : 'iniciou'} um treino!`).catch(() => {})
+      sendWebPush(webSub, '🏋️ Amigo treinando!', post.tipo === 'TREINO_INICIADO'
+        ? post.academia_nome
+          ? `${post.autor_nome} está treinando na ${post.academia_nome}! 🔥`
+          : `${post.autor_nome} está realizando seu treino! 🔥`
+        : `${post.autor_nome} concluiu o treino! 💪`).catch(() => {})
     }
   }
 }
