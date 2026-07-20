@@ -39,16 +39,16 @@ export default function AcademySidebar() {
   }
 
   return (
-    <div className="border-t border-surface-input p-3">
-      <div className="flex items-center gap-2 mb-2 px-2">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-input">
         <Building2Icon className="h-4 w-4 text-text-muted" />
-        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Alunos da Academia</span>
+        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Alunos da Academia</span>
       </div>
-      <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-hide">
-        {colegas.slice(0, 15).map((c) => (
+      <div className="flex-1 overflow-y-auto p-2 space-y-0.5 scrollbar-hide">
+        {colegas.map((c) => (
           <div
             key={c.id}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-input/50 transition-colors"
+            className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-surface-input/50 transition-colors"
           >
             {c.fotoUrl ? (
               <img

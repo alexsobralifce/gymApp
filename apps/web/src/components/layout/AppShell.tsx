@@ -330,7 +330,6 @@ export default function AppShell() {
             )
           )}
         </nav>
-        <AcademySidebar />
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0">
@@ -412,9 +411,15 @@ export default function AppShell() {
           </header>
         )}
 
-        <main className="flex-1 pb-20 md:pb-0">
-          <Outlet />
-        </main>
+        <div className="flex flex-1 min-h-0">
+          <main className="flex-1 pb-20 md:pb-0 min-w-0">
+            <Outlet />
+          </main>
+          {/* Academy sidebar — right panel desktop */}
+          <aside className="hidden xl:block w-56 shrink-0 border-l border-surface-input bg-surface/50">
+            <AcademySidebar />
+          </aside>
+        </div>
 
         {/* Bottom tabs — mobile ALUNO */}
         {isAluno && !hideNav && (
