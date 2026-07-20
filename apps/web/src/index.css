@@ -52,7 +52,14 @@
   --animate-scale-in: scale-in 0.2s ease-out;
 }
 
+/* Glass background variable per theme — overridden below */
+:root {
+  --color-glass-bg: rgba(17, 38, 96, 0.85);
+}
+
 [data-theme="red"] {
+  --color-glass-bg: rgba(26, 26, 26, 0.85);
+
   --color-primary: #F20C0C;
   --color-primary-dark: #BF213E;
   --color-primary-hover: #F23D3D;
@@ -85,6 +92,8 @@
 }
 
 [data-theme="violet"] {
+  --color-glass-bg: rgba(13, 13, 13, 0.85);
+
   --color-primary: #7D39EB;
   --color-primary-dark: #6020C8;
   --color-primary-hover: #9552F5;
@@ -181,25 +190,25 @@
 }
 
 @utility glass {
-  background: rgba(17, 38, 96, 0.85);
+  background: var(--color-glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 @utility gradient-primary {
-  background: linear-gradient(135deg, #9DD802 0%, #78AA00 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
 }
 
 @utility gradient-card {
-  background: linear-gradient(135deg, #112660 0%, #1D3270 100%);
+  background: linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-surface-input) 100%);
 }
 
 @utility gradient-hero {
-  background: linear-gradient(135deg, #0B1F4B 0%, #1D3270 70%, #9DD802 100%);
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-input) 60%, var(--color-primary) 100%);
 }
 
 @utility gradient-accent {
-  background: linear-gradient(135deg, #9DD802 0%, #78AA00 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
 }
 
 @utility safe-bottom {
