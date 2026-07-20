@@ -169,6 +169,18 @@ Regras: T1-T31 conforme documentação original. Destaques:
 - `MeusTreinos.tsx`: 2 cenários — autogestão ("Crie seu primeiro treino") vs com professor ("Nenhum treino ativo")
 - Ilustração via emoji grande + texto contextual + CTA diferente por cenário
 
+#### Dados do Aluno & Gestão de Vínculos (novo)
+- Rota `/dados` (`DadosAluno.tsx`) para alteração de dados pessoais (nome, telefone via `PATCH /auth/me`), dados físicos (data nascimento, peso, altura, sexo com recálculo visual de IMC via `POST /alunos/perfil`), troca/remoção de academia (`DELETE /alunos/academia`) e gestão de professor/autogestão (`PATCH /alunos/professor`).
+
+#### Gestão Própria & Edição de Treinos pelo Aluno (novo)
+- Aluno pode criar treinos próprios (`/treino/novo` via `CriarTreinoAluno.tsx`) e editar/excluir treinos que possui (`PATCH /treinos/:id` e `DELETE /treinos/:id`), inclusive aqueles recebidos de professores.
+- Botão `+ Criar Treino` visível no cabeçalho de `MeusTreinos.tsx` para todos os alunos.
+
+#### Conclusão em Lote por Exercício na Execução (novo)
+- Botão "✓ Concluir Exercício" no rodapé do card de cada exercício em `TreinoExecucao.tsx`.
+- Registra de uma só vez todas as séries pendentes do exercício enviando os valores informados nos inputs ou os valores padrão (carga sugerida / repetições do treino).
+- Ocultado automaticamente quando todas as séries do exercício forem concluídas.
+
 ### 3.3 Professor — Regras de Negócio
 
 #### Templates (novo)
@@ -212,20 +224,22 @@ Conforme documentação original: vínculos, notificações, resolve helpers, ma
 | POST | `/auth/login` | Login → tokens | - |
 | POST | `/auth/refresh` | Renovar tokens | - |
 | POST | `/auth/logout` | Invalidar refresh | auth |
-| GET | `/auth/me` | Dados do usuário | auth |
-| PATCH | `/auth/me` | Push tokens | auth |
+| GET | `/auth/me` | Dados do usuário (inclui telefone) | auth |
+| PATCH | `/auth/me` | Atualizar nome, telefone, push tokens | auth |
 | POST | `/auth/change-password` | Alterar senha | auth |
 
 ### Aluno (`/alunos`) — role ALUNO
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | POST | `/alunos/perfil` | Upsert perfil (dataNascimento?, pesoKg?, alturaCm?, sexo?) |
-| GET | `/alunos/perfil` | Perfil com professor, academia e sexo |
+| GET | `/alunos/perfil` | Perfil com professor, academia, sexo e usuario (nome, email, telefone) |
 | GET | `/alunos/treinos` | Todos os treinos (sem filtro) |
 | GET | `/alunos/treinos/historico-dias?mes=` | Calendário mensal |
 | GET/POST/PATCH | `/alunos/medidas[/:id]` | CRUD medidas |
 | GET/POST | `/alunos/correlacoes` | Cache + recálculo |
 | PATCH | `/alunos/academia` | Vincular a academia |
+| DELETE | `/alunos/academia` | Desvincular da academia atual |
+| PATCH | `/alunos/professor` | Vincular ou desvincular (null) professor |
 | GET/POST | `/alunos/notificacoes[/visualizar]` | Listar/marcar lidas |
 
 ### Professor (`/professores`) — role PROFESSOR
@@ -265,8 +279,8 @@ Conforme documentação original: vínculos, notificações, resolve helpers, ma
 | POST | `/treinos/:id/execucoes` | Registrar execução | ALUNO |
 | POST | `/treinos/:id/finalizar` | Finalizar | ALUNO |
 | GET | `/treinos/:id` | Detalhe | auth |
-| PATCH | `/treinos/:id` | Editar | PROF/ACAD |
-| DELETE | `/treinos/:id` | Remover | PROF/ACAD |
+| PATCH | `/treinos/:id` | Editar | PROF / ACAD / ALUNO |
+| DELETE | `/treinos/:id` | Remover | PROF / ACAD / ALUNO |
 | POST | `/treinos/:id/clonar` | Clonar p/ 1 aluno | PROF/ACAD |
 | POST | `/treinos/:id/clonar-lote` | **Clonar p/ múltiplos alunos** | PROF/ACAD |
 | POST | `/treinos/:id/marcar-template` | **Toggle is_template** | PROF/ACAD |
@@ -287,6 +301,8 @@ Conforme documentação original: painel, CRUD academias/professores/alunos, apr
 | `ALUNO` | Boas-Vindas | `/welcome` | `pages/aluno/WelcomeCards.tsx` |
 | `ALUNO` | Dashboard | `/` | `pages/aluno/Dashboard.tsx` |
 | `ALUNO` | Meus Treinos | `/meus-treinos` | `pages/aluno/MeusTreinos.tsx` |
+| `ALUNO` | Criar Treino Aluno | `/treino/novo` | `pages/aluno/CriarTreinoAluno.tsx` |
+| `ALUNO` | Dados do Aluno | `/dados` | `pages/aluno/DadosAluno.tsx` |
 | `ALUNO` | Início do Treino | `/treino/:id/inicio` | `pages/aluno/TreinoInicio.tsx` |
 | `ALUNO` | Execução | `/treino/:id/execucao` | `pages/aluno/TreinoExecucao.tsx` |
 | `ALUNO` | Conclusão | `/treino/:id/conclusao` | `pages/aluno/TreinoConclusao.tsx` |
