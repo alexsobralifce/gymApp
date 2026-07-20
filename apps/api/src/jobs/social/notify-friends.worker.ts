@@ -42,7 +42,9 @@ export async function handleNotifyFriends(job: Job<NotifyPayload>) {
           ? post.academia_nome
             ? `${post.autor_nome} está treinando na ${post.academia_nome}! 🔥`
             : `${post.autor_nome} está realizando seu treino! 🔥`
-          : `${post.autor_nome} concluiu o treino! 💪`,
+          : post.academia_nome
+            ? `${post.autor_nome} concluiu o treino na ${post.academia_nome}! 💪`
+            : `${post.autor_nome} concluiu o treino! 💪`,
       ).catch(() => {})
     }
     if (webSub) {
@@ -50,7 +52,9 @@ export async function handleNotifyFriends(job: Job<NotifyPayload>) {
         ? post.academia_nome
           ? `${post.autor_nome} está treinando na ${post.academia_nome}! 🔥`
           : `${post.autor_nome} está realizando seu treino! 🔥`
-        : `${post.autor_nome} concluiu o treino! 💪`).catch(() => {})
+        : post.academia_nome
+          ? `${post.autor_nome} concluiu o treino na ${post.academia_nome}! 💪`
+          : `${post.autor_nome} concluiu o treino! 💪`).catch(() => {})
     }
   }
 }

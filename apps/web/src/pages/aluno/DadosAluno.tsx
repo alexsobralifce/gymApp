@@ -109,6 +109,7 @@ export default function DadosAluno() {
       formData.append('file', file)
       const { fotoUrl: url } = await api.uploadAvatar(formData)
       setFotoUrl(url)
+      await fetchUser()
     } catch {
       // silent
     } finally {

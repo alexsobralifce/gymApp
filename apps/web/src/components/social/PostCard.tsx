@@ -21,7 +21,9 @@ function gerarMensagemPost(post: SocialPost): string {
       : 'está realizando seu treino 🔥'
   }
   if (post.tipo === 'TREINO_CONCLUIDO') {
-    return 'concluiu o treino! 💪'
+    return post.academia_nome
+      ? `concluiu o treino na ${post.academia_nome}! 💪`
+      : 'concluiu o treino! 💪'
   }
   return ''
 }
