@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
+import { ChevronLeftIcon } from '../../components/icons/Icon'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -179,7 +180,7 @@ export default function AlunoCriarTreino() {
 
     try {
       setEnviando(true)
-      const treino = await api.criarTreinoAutogestao({
+      await api.criarTreinoAutogestao({
         nome,
         diasSemana,
         exercicios: exerciciosTreino.map((e) => ({
@@ -191,8 +192,8 @@ export default function AlunoCriarTreino() {
         })),
       })
 
-      setFeedback('Treino criado com sucesso!')
-      setTimeout(() => navigate(`/treino/${treino.id}/inicio`), 2000)
+      setFeedback('Treino salvo com sucesso! Redirecionando para Meus Treinos...')
+      setTimeout(() => navigate('/meus-treinos'), 1200)
     } catch {
       setFeedback('Erro ao criar treino.')
     } finally {
@@ -204,9 +205,18 @@ export default function AlunoCriarTreino() {
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text">Criar Treino</h1>
-        <p className="text-sm text-text-muted">Monte seu treino personalizado com exercícios da biblioteca</p>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/meus-treinos')}
+          className="rounded-xl border border-surface-input bg-surface p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+          title="Voltar"
+        >
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-text">Criar Treino</h1>
+          <p className="text-sm text-text-muted">Monte seu treino personalizado com exercícios da biblioteca</p>
+        </div>
       </div>
 
       {feedback && (

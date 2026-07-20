@@ -132,14 +132,50 @@ export async function alunoRoutes(app: FastifyInstance) {
     return reply.status(200).send(updated)
   })
 
-  /** GET /alunos/perfil — Retorna perfil do aluno com professor e academia */
+  /** DELETE /alunos/academia — Desvincula o aluno logado da sua academia atual */
+  app.delete('/academia', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+    if (!aluno.academia_id) return reply.status(200).send({ message: 'Aluno já sem academia.' })
+
+    const updated = await prisma.aluno.update({
+      where: { id: aluno.id },
+      data: { academia_id: null },
+    })
+    return reply.status(204).send()
+  })
+
+  /** PATCH /alunos/professor — Troca ou remove vínculo com professor */
+  app.patch('/professor', { preHandler }, async (request, reply) => {
+    const { professorId } = z.object({ professorId: z.string().nullable() }).parse(request.body)
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    if (professorId !== null) {
+      const professor = await prisma.professor.findUnique({ where: { id: professorId } })
+      if (!professor) throw new NotFoundError('Professor não encontrado')
+    }
+
+    const updated = await prisma.aluno.update({
+      where: { id: aluno.id },
+      data: { professor_id: professorId },
+      include: {
+        professor: { select: { id: true, usuario: { select: { nome: true, email: true, telefone: true } } } },
+        academia: { select: { id: true, nome: true } },
+        usuario: { select: { nome: true, email: true, telefone: true } },
+      },
+    })
+
+    return reply.status(200).send(updated)
+  })
+
+  /** GET /alunos/perfil — Retorna perfil do aluno com professor, academia e dados do usuário */
   app.get('/perfil', { preHandler }, async (request, reply) => {
     await resolveAluno(request.currentUser.sub)
     const aluno = await prisma.aluno.findUnique({
       where: { usuario_id: request.currentUser.sub },
       include: {
-        professor: { select: { usuario: { select: { nome: true, email: true, telefone: true } } } },
-        academia: { select: { nome: true } },
+        professor: { select: { id: true, usuario: { select: { nome: true, email: true, telefone: true } } } },
+        academia: { select: { id: true, nome: true } },
+        usuario: { select: { nome: true, email: true, telefone: true } },
       },
     })
     if (!aluno) throw new NotFoundError('Aluno')

@@ -101,8 +101,8 @@ export const api = {
 
   getMe: () => api.get<User>('/auth/me'),
 
-  updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null }) =>
-    api.patch<{ id: string }>('/auth/me', data),
+  updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null; nome?: string; telefone?: string | null }) =>
+    api.patch<User>('/auth/me', data),
 
   alterarSenha: (senhaAtual: string, novaSenha: string) =>
     api.post('/auth/change-password', { senhaAtual, novaSenha }),
@@ -112,6 +112,10 @@ export const api = {
     api.post('/alunos/perfil', data),
 
   vincularAcademiaAluno: (academiaId: string) => api.patch('/alunos/academia', { academiaId }),
+
+  desvincularAcademiaAluno: () => api.delete('/alunos/academia'),
+
+  atualizarProfessorAluno: (professorId: string | null) => api.patch<import('../types/api').PerfilAluno>('/alunos/professor', { professorId }),
 
   getPerfilAluno: () => api.get<import('../types/api').PerfilAluno>('/alunos/perfil'),
 
@@ -135,6 +139,12 @@ export const api = {
 
   criarTreinoAutogestao: (data: { nome: string; diasSemana: number[]; exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }> }) =>
     api.post<Treino>('/treinos/autogestao', data),
+
+  editarTreino: (id: string, data: { nome?: string; diasSemana?: number[]; exercicios?: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }> }) =>
+    api.patch<Treino>(`/treinos/${id}`, data),
+
+  deletarTreino: (id: string) =>
+    api.delete(`/treinos/${id}`),
 
   // ─── Medidas ───────────────────────────────────────
   getMedidas: () => api.get<MedidaCorporal[]>('/alunos/medidas'),

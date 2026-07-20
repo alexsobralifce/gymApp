@@ -1,6 +1,12 @@
-# GymApp Agent Instruction & Documentation Guidelines (AGENTS.md)
+ar# GymApp Agent Instruction & Documentation Guidelines (AGENTS.md)
 
 Este arquivo serve como base de conhecimento para qualquer assistente de IA/LLM operando neste repositório. Resume arquitetura, regras de negócio, modelo de dados, casos de uso e padrões de código do ecossistema **GymApp**.
+
+---
+
+## 0. Instrução Obrigatória
+
+**Antes de executar qualquer comando, ler todas as skills dentro de `.agent/skills/`.** Só prossiga com comandos ou edições após carregar e considerar o conteúdo dessas skills.
 
 ---
 

@@ -71,13 +71,14 @@ export async function authRoutes(app: FastifyInstance) {
     const { sub: id, role, tenantId } = request.currentUser
     const usuario = await prisma.usuario.findUnique({
       where: { id },
-      select: { nome: true, email: true, expo_push_token: true },
+      select: { nome: true, email: true, telefone: true, expo_push_token: true },
     })
     if (!usuario) return reply.status(404).send({ message: 'Usuário não encontrado' })
     return reply.status(200).send({
       id,
       nome: usuario.nome,
       email: usuario.email,
+      telefone: usuario.telefone ?? null,
       role,
       tenantId,
       expoPushToken: usuario.expo_push_token ?? null,
@@ -85,22 +86,26 @@ export async function authRoutes(app: FastifyInstance) {
   })
 
   /**
-   * PATCH /auth/me — Atualiza dados do perfil (ex: push token)
+   * PATCH /auth/me — Atualiza dados do perfil (ex: push token, nome, telefone)
    */
   app.patch('/me', { preHandler: [app.authenticate] }, async (request, reply) => {
     const body = z.object({
       expoPushToken: z.string().nullable().optional(),
       webPushSubscription: z.any().nullable().optional(),
+      nome: z.string().min(2).max(100).optional(),
+      telefone: z.string().nullable().optional(),
     }).parse(request.body)
 
     const data: Record<string, unknown> = {}
     if (body.expoPushToken !== undefined) data.expo_push_token = body.expoPushToken
     if (body.webPushSubscription !== undefined) data.web_push_subscription = body.webPushSubscription
+    if (body.nome !== undefined) data.nome = body.nome
+    if (body.telefone !== undefined) data.telefone = body.telefone || null
 
     const usuario = await prisma.usuario.update({
       where: { id: request.currentUser.sub },
       data,
-      select: { id: true, expo_push_token: true },
+      select: { id: true, nome: true, email: true, telefone: true, expo_push_token: true },
     })
 
     return reply.status(200).send(usuario)

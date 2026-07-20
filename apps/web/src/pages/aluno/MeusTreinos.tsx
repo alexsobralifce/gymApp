@@ -4,7 +4,7 @@ import { api } from '../../api/client'
 import type { Treino, Exercicio, TreinoExercicio, HistoricoDia } from '../../types/api'
 import StatusBadge, { getTreinoStatusVariant, getTreinoStatusLabel } from '../../components/ui/StatusBadge'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
-import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons/Icon'
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../components/icons/Icon'
 import EmptyState from '../../components/ui/EmptyState'
 
 function formatMes(ano: number, mes: number) {
@@ -166,9 +166,18 @@ export default function AlunoMeusTreinos() {
         .animate-gif-enter { animation: gif-enter 0.4s ease forwards; }
       `}</style>
 
-      <div>
-        <h1 className="text-2xl font-bold text-text">Meus Treinos</h1>
-        <p className="text-xs text-text-muted">Veja as fichas montadas pelo seu treinador</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text">Meus Treinos</h1>
+          <p className="text-xs text-text-muted">Veja e gerencie suas fichas de treino</p>
+        </div>
+        <button
+          onClick={() => navigate('/treino/novo')}
+          className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+        >
+          <PlusIcon className="h-4 w-4" />
+          Criar Treino
+        </button>
       </div>
 
       {feedback && (

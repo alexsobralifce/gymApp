@@ -80,6 +80,7 @@ function getNavItems(role: string): NavEntry[] {
       return [
         { to: '/', label: 'Dashboard', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
         { to: '/meus-treinos', label: 'Meus Treinos', icon: <ClipboardListIcon className="h-5 w-5" /> },
+        { to: '/dados', label: 'Meu Perfil', icon: <UserCircleIcon className="h-5 w-5" /> },
         { to: '/mural', label: 'Mural', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/amizades', label: 'Amigos', icon: <UserSearchIcon className="h-5 w-5" /> },
         { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
@@ -251,9 +252,7 @@ export default function AppShell() {
   function handleDados() {
     setMenuOpen(false)
     setDrawerOpen(false)
-    if (isAluno) {
-      navigate('/medidas')
-    }
+    navigate('/dados')
   }
 
   const renderDrawerContent = () => (

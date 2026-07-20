@@ -32,6 +32,7 @@ import AcademiaCriarTreino from './pages/academia/CriarTreinoAcademia'
 import AcademiaTreinos from './pages/academia/Treinos'
 import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
 import AlunoCriarTreino from './pages/aluno/CriarTreinoAluno'
+import AlunoDados from './pages/aluno/DadosAluno'
 import AlunoMural from './pages/aluno/Mural'
 import AlunoAmizades from './pages/aluno/Amizades'
 import AlunoPrivacidade from './pages/aluno/Privacidade'
@@ -73,6 +74,7 @@ export default function App() {
           <Route element={<AppShell />}>
           <Route index element={<AlunoDashboard />} />
           <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
+          <Route path="dados" element={<AlunoDados />} />
           <Route path="treino/novo" element={<AlunoCriarTreino />} />
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
           <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />

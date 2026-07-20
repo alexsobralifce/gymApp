@@ -267,7 +267,7 @@ export async function treinoRoutes(app: FastifyInstance) {
   })
 
   /** PATCH /treinos/:id — Editar treino (nome, dias_semana, exercícios) */
-  app.patch('/:id', { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)] }, async (request, reply) => {
+  app.patch('/:id', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
     const body = z.object({
       nome: z.string().min(2).optional(),
@@ -283,12 +283,14 @@ export async function treinoRoutes(app: FastifyInstance) {
 
     const treino = await prisma.treino.findUnique({
       where: { id },
-      include: { aluno: { select: { professor_id: true, academia_id: true } } },
+      include: { aluno: { select: { id: true, usuario_id: true, professor_id: true, academia_id: true } } },
     })
     if (!treino) throw new NotFoundError('Treino')
 
     const { sub, role, tenantId } = request.currentUser
-    if (role === Role.PROFESSOR) {
+    if (role === Role.ALUNO) {
+      if (treino.aluno.usuario_id !== sub) throw new TenantAccessError()
+    } else if (role === Role.PROFESSOR) {
       const professor = await resolveProfessor(sub)
       if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
     } else if (role === Role.ACADEMIA) {
@@ -330,17 +332,19 @@ export async function treinoRoutes(app: FastifyInstance) {
   })
 
   /** DELETE /treinos/:id — Remove treino e dados relacionados */
-  app.delete('/:id', { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)] }, async (request, reply) => {
+  app.delete('/:id', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
 
     const treino = await prisma.treino.findUnique({
       where: { id },
-      include: { aluno: { select: { professor_id: true, academia_id: true } } },
+      include: { aluno: { select: { id: true, usuario_id: true, professor_id: true, academia_id: true } } },
     })
     if (!treino) throw new NotFoundError('Treino')
 
     const { sub, role, tenantId } = request.currentUser
-    if (role === Role.PROFESSOR) {
+    if (role === Role.ALUNO) {
+      if (treino.aluno.usuario_id !== sub) throw new TenantAccessError()
+    } else if (role === Role.PROFESSOR) {
       const professor = await resolveProfessor(sub)
       if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
     } else if (role === Role.ACADEMIA) {

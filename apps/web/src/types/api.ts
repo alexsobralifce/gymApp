@@ -2,6 +2,7 @@ export interface User {
   id: string
   nome: string
   email: string
+  telefone?: string | null
   role: 'ROOT' | 'ACADEMIA' | 'PROFESSOR' | 'ALUNO'
   tenantId?: string | null
   expoPushToken?: string | null
@@ -165,8 +166,9 @@ export interface PerfilAluno {
   altura_cm?: number | null
   sexo?: 'MASCULINO' | 'FEMININO' | null
   criado_em: string
-  professor?: { usuario: { nome: string; email: string; telefone?: string | null } } | null
-  academia?: { nome: string; id?: string } | null
+  professor?: { id?: string; usuario: { nome: string; email: string; telefone?: string | null } } | null
+  academia?: { id?: string; nome: string } | null
+  usuario?: { nome: string; email: string; telefone?: string | null }
 }
 
 export interface ProfessorDashboard {
