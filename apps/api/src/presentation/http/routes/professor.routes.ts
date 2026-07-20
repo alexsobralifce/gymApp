@@ -16,7 +16,7 @@ async function resolveProfessor(usuarioId: string) {
 
 export async function professorRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.PROFESSOR)]
-  const preHandlerExercicios = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA)]
+  const preHandlerExercicios = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA, Role.ALUNO)]
 
   /** POST /professores/perfil — cria perfil professor após registro */
   app.post('/perfil', { preHandler: [app.authenticate] }, async (request, reply) => {
