@@ -298,7 +298,7 @@ export default function AppShell() {
     setMenuOpen(false)
     setDrawerOpen(false)
     logout()
-    navigate('/login')
+    navigate('/')
   }
 
   function handleDados() {
