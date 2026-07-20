@@ -1,7 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { z } from 'zod'
 import { Role } from '@prisma/client'
-import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
@@ -14,11 +12,18 @@ async function resolveAluno(usuarioId: string) {
   return aluno
 }
 
+const EXTENSOES: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+}
+
 export async function uploadRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
 
   app.post('/social/upload/foto', { preHandler }, async (request, reply) => {
-    const aluno = await resolveAluno(request.currentUser.sub)
+    await resolveAluno(request.currentUser.sub)
     const data = await request.file()
 
     if (!data) {
@@ -35,7 +40,8 @@ export async function uploadRoutes(app: FastifyInstance) {
     const now = new Date()
     const year = now.getFullYear().toString()
     const month = String(now.getMonth() + 1).padStart(2, '0')
-    const filename = `${aluno.id}_${Date.now()}.webp`
+    const ext = EXTENSOES[mimetype] || '.jpg'
+    const filename = `${Date.now()}${ext}`
 
     const __filename = fileURLToPath(import.meta.url)
     const __dirname = path.dirname(__filename)
@@ -44,11 +50,7 @@ export async function uploadRoutes(app: FastifyInstance) {
     await fs.mkdir(uploadDir, { recursive: true })
 
     const filePath = path.join(uploadDir, filename)
-
-    await sharp(buffer)
-      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 70 })
-      .toFile(filePath)
+    await fs.writeFile(filePath, buffer)
 
     const url = `/uploads/feed/${year}/${month}/${filename}`
 
