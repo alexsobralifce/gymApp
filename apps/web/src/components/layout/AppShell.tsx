@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
+import { api } from '../../api/client'
 import { useThemeStore } from '../../stores/theme'
 import {
   HomeIcon,
@@ -217,6 +218,7 @@ export default function AppShell() {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [atividadeMural, setAtividadeMural] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -234,6 +236,19 @@ export default function AppShell() {
   useEffect(() => {
     setDrawerOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (user?.role !== 'ALUNO') return
+    api.getAtividadeMural()
+      .then((r) => setAtividadeMural(r.totalComentarios))
+      .catch(() => {})
+    const interval = setInterval(() => {
+      api.getAtividadeMural()
+        .then((r) => setAtividadeMural(r.totalComentarios))
+        .catch(() => {})
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const role = user?.role || 'ALUNO'
   const isAluno = role === 'ALUNO'
@@ -286,6 +301,11 @@ export default function AppShell() {
             >
               {entry.icon}
               <span>{entry.label}</span>
+              {entry.label === 'Mural' && atividadeMural > 0 && (
+                <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {atividadeMural}
+                </span>
+              )}
             </NavLink>
           )
         )}
@@ -338,6 +358,11 @@ export default function AppShell() {
               <NavLink key={entry.to} to={entry.to} end={entry.end} className={linkClass}>
                 {entry.icon}
                 <span>{entry.label}</span>
+                {entry.label === 'Mural' && atividadeMural > 0 && (
+                  <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+                    {atividadeMural}
+                  </span>
+                )}
               </NavLink>
             )
           )}

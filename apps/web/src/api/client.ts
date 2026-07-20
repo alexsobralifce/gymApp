@@ -435,6 +435,9 @@ export const api = {
   getMeuUltimoPostTreino: () =>
     api.get<{ postId: string | null }>('/social/mural/meu-ultimo-post'),
 
+  getAtividadeMural: () =>
+    api.get<{ totalComentarios: number }>('/social/mural/atividade'),
+
   // ─── Social — Privacidade ──────────────────────────
   getPrivacidade: () => api.get<PrivacidadeSettings>('/alunos/privacidade'),
   updatePrivacidade: (data: { visibilidade_padrao?: string; permite_busca_email?: boolean }) => api.patch('/alunos/privacidade', data),

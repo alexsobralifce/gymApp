@@ -33,21 +33,32 @@ export async function feedRoutes(app: FastifyInstance) {
 
     const amigoIds = friendships.map((f) => (f.aluno_id === aluno.id ? f.amigo_id : f.aluno_id))
 
+    const cursorWhere: Record<string, unknown> = {}
+    if (cursor) {
+      const [cursorDate, cursorId] = cursor.split('|')
+      cursorWhere.OR = [
+        { criado_em: { lt: new Date(cursorDate) } },
+        { criado_em: { equals: new Date(cursorDate) }, id: { lt: cursorId } },
+      ]
+    }
+
     const posts = await prisma.socialPost.findMany({
       where: {
-        ...(cursor ? { id: { lt: cursor } } : {}),
+        ...cursorWhere,
         OR: [
+          { aluno_id: aluno.id },
           { aluno_id: { in: amigoIds }, visibilidade: { in: ['AMIGOS', 'PUBLICO'] } },
           { visibilidade: 'PUBLICO' },
         ],
       },
-      orderBy: { criado_em: 'desc' },
+      orderBy: [{ criado_em: 'desc' }, { id: 'desc' }],
       take: limit + 1,
     })
 
     const hasMore = posts.length > limit
     const items = hasMore ? posts.slice(0, limit) : posts
-    const nextCursor = hasMore ? items[items.length - 1]?.id : null
+    const lastPost = items[items.length - 1]
+    const nextCursor = hasMore && lastPost ? `${lastPost.criado_em.toISOString()}|${lastPost.id}` : null
 
     return reply.status(200).send({ items, nextCursor })
   })
@@ -81,6 +92,18 @@ export async function feedRoutes(app: FastifyInstance) {
     })
 
     return reply.status(200).send({ postId: post?.id ?? null })
+  })
+
+  /** GET /social/mural/atividade — contagem de comentários nas postagens do aluno */
+  app.get('/social/mural/atividade', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const resultado = await prisma.socialPost.aggregate({
+      where: { aluno_id: aluno.id },
+      _sum: { comentarios_count: true },
+    })
+
+    return reply.status(200).send({ totalComentarios: resultado._sum.comentarios_count ?? 0 })
   })
 
   /** POST /social/mural/:postId/curtir */

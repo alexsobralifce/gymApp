@@ -212,7 +212,7 @@ async function main() {
     nascimento.setFullYear(nascimento.getFullYear() - idade)
 
     const tipoVisibilidade = pickW<Visibilidade>([Visibilidade.AMIGOS, Visibilidade.PUBLICO, Visibilidade.PRIVADO], [60, 30, 10])
-    const permiteBusca = Math.random() < 0.8
+    const permiteBusca = true
     const consentiuSocial = Math.random() < 0.7
 
     const user = await prisma.usuario.create({

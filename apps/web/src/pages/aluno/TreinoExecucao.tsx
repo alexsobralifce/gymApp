@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
+import ConfirmModal from '../../components/ui/ConfirmModal'
 
 const DIFICULDADE_OPCOES = [
   { value: 'FACIL', label: 'Facil', emoji: '😊', cor: 'border-green-500/30 bg-green-500/10 text-green-400' },
@@ -88,6 +89,7 @@ export default function AlunoTreinoExecucao() {
   const [showAvaliacao, setShowAvaliacao] = useState(false)
   const [avaliando, setAvaliando] = useState(false)
   const [showTimer, setShowTimer] = useState(false)
+  const [showSairModal, setShowSairModal] = useState(false)
   const coach = useCoachMark(!!treinoAtual)
 
   useEffect(() => {
@@ -408,14 +410,22 @@ export default function AlunoTreinoExecucao() {
       )}
 
       {/* Sair (bottom safe area) */}
-      <div className="fixed bottom-[72px] left-0 right-0 z-10 flex justify-center pointer-events-none">
+      <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center pointer-events-none md:hidden">
         <button
-          onClick={() => { if (confirm('Sair do treino? O progresso sera perdido.')) navigate('/') }}
-          className="pointer-events-auto mb-1 rounded-full bg-surface-input/80 backdrop-blur px-4 py-1.5 text-xs text-text-muted active:scale-95 transition-transform cursor-pointer"
+          onClick={() => setShowSairModal(true)}
+          className="pointer-events-auto rounded-full bg-surface-input/80 backdrop-blur px-4 py-1.5 text-xs text-text-muted active:scale-95 transition-transform cursor-pointer"
         >
           Sair
         </button>
       </div>
+
+      <ConfirmModal
+        open={showSairModal}
+        title="Sair do treino"
+        message="O progresso será perdido. Deseja sair?"
+        onConfirm={() => { setShowSairModal(false); navigate('/') }}
+        onCancel={() => setShowSairModal(false)}
+      />
 
       {coach.visible && (
         <CoachMarkOverlay

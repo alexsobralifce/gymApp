@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import type { Treino } from '../../types/api'
 import { useTrainingStore } from '../../stores/training'
-import { DumbbellIcon, TimerIcon, TrophyIcon, ActivityIcon } from '../../components/icons/Icon'
+import { DumbbellIcon, TimerIcon, TrophyIcon, ActivityIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 
 export default function AlunoTreinoInicio() {
   const { id } = useParams<{ id: string }>()
@@ -31,6 +31,18 @@ export default function AlunoTreinoInicio() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
+      {/* Top bar with back button */}
+      <header className="flex items-center gap-2 px-4 py-3 border-b border-surface-input">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+        >
+          <ChevronLeftIcon className="h-4 w-4" />
+          Voltar
+        </button>
+        <span className="text-sm font-semibold text-text-muted">Iniciar Treino</span>
+      </header>
+
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         {/* Icon Area */}
         <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl gradient-primary shadow-xl shadow-primary/20 animate-modal-pop">
