@@ -141,6 +141,24 @@ export default function AlunoTreinoExecucao() {
     }
   }
 
+  async function handleConcluirExercicio(ex: any) {
+    const seriesPendentes = Array.from({ length: ex.series }, (_, i) => i + 1).filter(
+      (sNum) => !execucoes.find((e) => e.exercicio_id === ex.exercicio_id && e.serie_numero === sNum)
+    )
+    for (const sNum of seriesPendentes) {
+      const key = `${ex.exercicio_id}-${sNum}`
+      const val = inputs[key] || {
+        carga: ex.carga_sugerida_kg ? String(ex.carga_sugerida_kg) : '0',
+        reps: String(ex.repeticoes ?? 10),
+      }
+      try {
+        await registrarExecucao(ex.exercicio_id, sNum, Number(val.reps) || 0, Number(val.carga) || 0)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+  }
+
   async function handleFinalizar(avaliacao?: string) {
     setAvaliando(true)
     try {
@@ -298,6 +316,18 @@ export default function AlunoTreinoExecucao() {
                   )
                 })}
               </div>
+
+              {!exercicioCompleto && (
+                <div className="px-3 pb-3">
+                  <button
+                    onClick={() => handleConcluirExercicio(ex)}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-success/30 bg-success/10 py-2 text-xs font-semibold text-success hover:bg-success/20 active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    <CheckIcon className="h-3.5 w-3.5" />
+                    Concluir Exercício
+                  </button>
+                </div>
+              )}
             </div>
           )
         })}
