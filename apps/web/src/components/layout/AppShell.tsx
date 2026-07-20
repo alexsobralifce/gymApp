@@ -31,6 +31,7 @@ import {
   PaletteIcon,
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
+import { resolveMediaUrl } from '../../lib/media'
 
 interface NavItem {
   to: string
@@ -76,6 +77,37 @@ function getRoleLabel(role: string): string {
     case 'ROOT': return 'Root'
     default: return role
   }
+}
+
+function UserAvatar({
+  nome,
+  fotoUrl,
+  size = 'sm',
+  ringClass = '',
+}: {
+  nome?: string | null
+  fotoUrl?: string | null
+  size?: 'sm' | 'md'
+  ringClass?: string
+}) {
+  const dim = size === 'md' ? 'h-11 w-11 text-sm' : 'h-9 w-9 text-xs'
+  const src = resolveMediaUrl(fotoUrl)
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={nome || 'Avatar'}
+        className={`${dim} shrink-0 rounded-full object-cover ring-2 ring-offset-2 ring-offset-surface ${ringClass}`}
+      />
+    )
+  }
+
+  return (
+    <div className={`flex ${dim} shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white ring-2 ring-offset-2 ring-offset-surface ${ringClass}`}>
+      {nome ? getInitials(nome) : '?'}
+    </div>
+  )
 }
 
 function getNavItems(role: string): NavEntry[] {
@@ -406,17 +438,15 @@ export default function AppShell() {
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-white ring-2 ring-offset-2 ring-offset-surface ${ringColor} hover:brightness-110 transition-all cursor-pointer`}
+                  className="rounded-full hover:brightness-110 active:scale-95 transition-all cursor-pointer overflow-hidden"
                 >
-                  {user ? getInitials(user.nome) : '?'}
+                  <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="sm" ringClass={ringColor} />
                 </button>
 
                 {menuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-surface-input bg-surface-card shadow-xl z-30 overflow-hidden animate-scale-in">
                     <div className="flex items-center gap-3 px-4 py-4 border-b border-surface-input">
-                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white ring-2 ring-offset-2 ring-offset-surface-card ${ringColor}`}>
-                        {user ? getInitials(user.nome) : '?'}
-                      </div>
+                      <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="md" ringClass={`${ringColor} ring-offset-surface-card`} />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
                         <p className="text-xs text-text-muted truncate">{user?.email || ''}</p>
