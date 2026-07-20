@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import type { PerfilAluno, Academia } from '../../types/api'
+import { formatPhone } from '../../lib/phone'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import {
@@ -74,7 +75,7 @@ export default function DadosAluno() {
         const usuarioNome = pData.usuario?.nome || user?.nome || ''
         const usuarioTel = pData.usuario?.telefone || user?.telefone || ''
         setNome(usuarioNome)
-        setTelefone(usuarioTel)
+        setTelefone(formatPhone(usuarioTel))
 
         if (pData.peso_kg) setPesoKg(String(pData.peso_kg))
         if (pData.altura_cm) setAlturaCm(String(pData.altura_cm))
@@ -100,7 +101,7 @@ export default function DadosAluno() {
     setFeedbackPessoais(null)
     setSalvandoPessoais(true)
     try {
-      await api.updateMe({ nome, telefone })
+      await api.updateMe({ nome, telefone: telefone.replace(/\D/g, '') || undefined })
       await fetchUser()
       setFeedbackPessoais('Informações pessoais atualizadas com sucesso!')
       setTimeout(() => setFeedbackPessoais(null), 3000)
@@ -245,7 +246,7 @@ export default function DadosAluno() {
             <input
               type="tel"
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) => setTelefone(formatPhone(e.target.value))}
               className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
               placeholder="(11) 99999-9999"
             />
