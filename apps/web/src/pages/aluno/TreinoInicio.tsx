@@ -98,11 +98,11 @@ export default function AlunoTreinoInicio() {
         <button
           onClick={handleIniciar}
           disabled={loading}
-          className="mt-8 w-full max-w-xs rounded-2xl gradient-primary py-4 text-base font-extrabold text-white shadow-xl shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+          className="mt-8 w-full max-w-xs rounded-2xl gradient-primary py-4 text-base font-extrabold text-surface shadow-xl shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              <span className="h-4 w-4 rounded-full border-2 border-surface/30 border-t-surface animate-spin" />
               Iniciando...
             </span>
           ) : (

@@ -307,7 +307,7 @@ export default function AlunoTreinoExecucao() {
                       ) : (
                         <button
                           onClick={() => handleRegistrar(ex.exercicio_id, sNum)}
-                          className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold active:scale-90 transition-all cursor-pointer"
+                          className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-surface font-extrabold active:scale-90 transition-all cursor-pointer"
                         >
                           ✓
                         </button>
@@ -340,7 +340,7 @@ export default function AlunoTreinoExecucao() {
             onClick={() => setShowAvaliacao(true)}
             disabled={loading || avaliando}
             data-coach="finalizar"
-            className="w-full rounded-2xl bg-red-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+            className="w-full rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-surface shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
           >
             Finalizar Treino
           </button>

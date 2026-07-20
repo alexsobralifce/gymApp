@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
+import { useThemeStore } from '../../stores/theme'
 import {
   HomeIcon,
   DumbbellIcon,
@@ -26,6 +27,7 @@ import {
   UserSearchIcon,
   ShieldIcon,
   TrophyIcon,
+  PaletteIcon,
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
 
@@ -208,6 +210,8 @@ function NavSectionComponent({ section, collapsed = false, onClick }: { section:
 export default function AppShell() {
   const logout = useAuthStore((s: AuthState) => s.logout)
   const user = useAuthStore((s: AuthState) => s.user)
+  const theme = useThemeStore((s) => s.theme)
+  const toggleTheme = useThemeStore((s) => s.toggleTheme)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -289,7 +293,15 @@ export default function AppShell() {
 
       <AcademySidebar />
 
-      <div className="border-t border-surface-input p-3">
+      <div className="border-t border-surface-input p-3 space-y-1">
+        <button
+          onClick={toggleTheme}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+        >
+          <PaletteIcon className="h-5 w-5 text-primary" />
+          <span>Tema: {theme === 'lime' ? 'Lima & Navy' : 'Vermelho & Preto'}</span>
+        </button>
+
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-all duration-200 cursor-pointer"
@@ -355,58 +367,83 @@ export default function AppShell() {
               )}
             </div>
 
-            <div className="relative" ref={menuRef}>
+            <div className="flex items-center gap-2">
+              {/* Theme toggle button */}
               <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className={`flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-white ring-2 ring-offset-2 ring-offset-surface ${ringColor} hover:brightness-110 transition-all cursor-pointer`}
+                onClick={toggleTheme}
+                title={`Tema atual: ${theme === 'lime' ? 'Verde Lima & Navy' : 'Vermelho & Preto'}. Clique para alterar.`}
+                className="flex items-center gap-1.5 rounded-xl border border-surface-input bg-surface-card px-2.5 py-1.5 text-xs font-semibold text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer"
               >
-                {user ? getInitials(user.nome) : '?'}
+                <PaletteIcon className="h-4 w-4 text-primary" />
+                <span className="hidden sm:inline">{theme === 'lime' ? 'Lima & Navy' : 'Vermelho'}</span>
               </button>
 
-              {menuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-surface-input bg-surface-card shadow-xl z-30 overflow-hidden animate-scale-in">
-                  <div className="flex items-center gap-3 px-4 py-4 border-b border-surface-input">
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white ring-2 ring-offset-2 ring-offset-surface-card ${ringColor}`}>
-                      {user ? getInitials(user.nome) : '?'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
-                      <p className="text-xs text-text-muted truncate">{user?.email || ''}</p>
-                      <span className="inline-block mt-0.5 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-text-muted">
-                        {getRoleLabel(role)}
-                      </span>
-                    </div>
-                  </div>
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-white ring-2 ring-offset-2 ring-offset-surface ${ringColor} hover:brightness-110 transition-all cursor-pointer`}
+                >
+                  {user ? getInitials(user.nome) : '?'}
+                </button>
 
-                  <div className="py-1">
-                    {isAluno && (
-                      <>
-                        <button
-                          onClick={handleDados}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
-                        >
-                          <UserCircleIcon className="h-4 w-4 text-text-muted" />
-                          Dados do Aluno
-                        </button>
-                        <button
-                          onClick={() => { setMenuOpen(false); navigate('/privacidade') }}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
-                        >
-                          <ShieldIcon className="h-4 w-4 text-text-muted" />
-                          Privacidade
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-colors cursor-pointer"
-                    >
-                      <LogOutIcon className="h-4 w-4" />
-                      Sair
-                    </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-surface-input bg-surface-card shadow-xl z-30 overflow-hidden animate-scale-in">
+                    <div className="flex items-center gap-3 px-4 py-4 border-b border-surface-input">
+                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white ring-2 ring-offset-2 ring-offset-surface-card ${ringColor}`}>
+                        {user ? getInitials(user.nome) : '?'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
+                        <p className="text-xs text-text-muted truncate">{user?.email || ''}</p>
+                        <span className="inline-block mt-0.5 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-text-muted">
+                          {getRoleLabel(role)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="py-1">
+                      <button
+                        onClick={toggleTheme}
+                        className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <PaletteIcon className="h-4 w-4 text-primary" />
+                          <span>Alternar Tema</span>
+                        </div>
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                          {theme === 'lime' ? 'Lima/Navy' : 'Vermelho'}
+                        </span>
+                      </button>
+
+                      {isAluno && (
+                        <>
+                          <button
+                            onClick={handleDados}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                          >
+                            <UserCircleIcon className="h-4 w-4 text-text-muted" />
+                            Dados do Aluno
+                          </button>
+                          <button
+                            onClick={() => { setMenuOpen(false); navigate('/privacidade') }}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                          >
+                            <ShieldIcon className="h-4 w-4 text-text-muted" />
+                            Privacidade
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-colors cursor-pointer"
+                      >
+                        <LogOutIcon className="h-4 w-4" />
+                        Sair
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </header>
         )}

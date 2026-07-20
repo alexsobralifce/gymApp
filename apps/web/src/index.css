@@ -3,8 +3,56 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'DM Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
+  --color-primary: #9DD802;
+  --color-primary-dark: #78AA00;
+  --color-primary-hover: #B0F000;
+  --color-primary-active: #88C702;
+  --color-primary-light: #D4F57A;
+
+  --color-surface: #0B1F4B;
+  --color-surface-card: #112660;
+  --color-surface-input: #1D3270;
+
+  --color-text: #F5F5F5;
+  --color-text-muted: #9BA8C0;
+  --color-text-disabled: #616161;
+
+  --color-accent: #9DD802;
+
+  --color-success: #22c55e;
+  --color-warning: #F2C230;
+  --color-info: #3b82f6;
+
+  --color-white: #FFFFFF;
+
+  --color-background: #0B1F4B;
+  --color-foreground: #F5F5F5;
+  --color-card: #112660;
+  --color-card-foreground: #F5F5F5;
+  --color-secondary: #1D3270;
+  --color-secondary-foreground: #F5F5F5;
+  --color-muted: #112660;
+  --color-muted-foreground: #9BA8C0;
+  --color-accent-foreground: #0B1F4B;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #1D3270;
+  --color-input: #1D3270;
+  --color-ring: #9DD802;
+  --color-primary-foreground: #0B1F4B;
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-down: slide-down 0.3s ease-out;
+  --animate-slide-right: slide-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-modal-pop: modal-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+  --animate-scale-in: scale-in 0.2s ease-out;
+}
+
+[data-theme="red"] {
   --color-primary: #F20C0C;
   --color-primary-dark: #BF213E;
   --color-primary-hover: #F23D3D;
@@ -21,12 +69,6 @@
 
   --color-accent: #F2C230;
 
-  --color-success: #22c55e;
-  --color-warning: #F2C230;
-  --color-info: #3b82f6;
-
-  --color-white: #FFFFFF;
-
   --color-background: #0D0D0D;
   --color-foreground: #F2F2F2;
   --color-card: #1A1A1A;
@@ -36,20 +78,10 @@
   --color-muted: #1A1A1A;
   --color-muted-foreground: #BFBFBF;
   --color-accent-foreground: #0D0D0D;
-  --color-destructive: #F20C0C;
-  --color-destructive-foreground: #FFFFFF;
   --color-border: #2A2A2A;
   --color-input: #2A2A2A;
   --color-ring: #F20C0C;
   --color-primary-foreground: #FFFFFF;
-
-  --animate-fade-in: fade-in 0.3s ease-out;
-  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-slide-down: slide-down 0.3s ease-out;
-  --animate-slide-right: slide-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-modal-pop: modal-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
-  --animate-scale-in: scale-in 0.2s ease-out;
 }
 
 @keyframes fade-in {
@@ -117,25 +149,25 @@
 }
 
 @utility glass {
-  background: rgba(26, 26, 26, 0.85);
+  background: rgba(17, 38, 96, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 @utility gradient-primary {
-  background: linear-gradient(135deg, #F20C0C 0%, #BF213E 100%);
+  background: linear-gradient(135deg, #9DD802 0%, #78AA00 100%);
 }
 
 @utility gradient-card {
-  background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
+  background: linear-gradient(135deg, #112660 0%, #1D3270 100%);
 }
 
 @utility gradient-hero {
-  background: linear-gradient(135deg, #0D0D0D 0%, #BF213E 80%, #F20C0C 100%);
+  background: linear-gradient(135deg, #0B1F4B 0%, #1D3270 70%, #9DD802 100%);
 }
 
 @utility gradient-accent {
-  background: linear-gradient(135deg, #F2C230 0%, #F20C0C 100%);
+  background: linear-gradient(135deg, #9DD802 0%, #78AA00 100%);
 }
 
 @utility safe-bottom {
