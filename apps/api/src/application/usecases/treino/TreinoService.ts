@@ -65,7 +65,6 @@ export async function criarTreinoAutogestao(alunoId: string, input: {
 }) {
   const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
   if (!aluno) throw new NotFoundError('Aluno')
-  if (aluno.professor_id !== null) throw new TenantAccessError()
 
   assertTransicaoValida(TreinoStatus.CADASTRADO, TreinoStatus.ACEITO, TreinoAtor.ALUNO)
 
