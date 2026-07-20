@@ -5,6 +5,14 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 import { historicoDiasTreino } from '../../../application/usecases/treino/TreinoService.js'
+import { env } from '../../../shared/env.js'
+
+function absolutizeMedia(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/')) return `${env.API_BASE_URL}${url}`
+  return `${env.API_BASE_URL}/${url}`
+}
 
 function calcularIMC(pesoKg: number, alturaCm: number): number | null {
   if (!pesoKg || !alturaCm || alturaCm <= 0) return null
@@ -372,7 +380,7 @@ export async function alunoRoutes(app: FastifyInstance) {
       .map((c) => ({
         id: c.id,
         nome: c.usuario.nome,
-        fotoUrl: c.usuario.foto_url ?? null,
+        fotoUrl: absolutizeMedia(c.usuario.foto_url),
       }))
 
     return reply.status(200).send(naoSeguidos)

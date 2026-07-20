@@ -4,9 +4,10 @@ import { Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import path from 'path'
 import fs from 'fs/promises'
-import { fileURLToPath } from 'url'
 import { AuthService } from '../../../application/usecases/auth/AuthService.js'
 import { prisma } from '../../../infrastructure/database/prisma.js'
+import { env } from '../../../shared/env.js'
+import { ensureDir, getAvatarsDir } from '../../../infrastructure/storage/paths.js'
 
 const registerBodySchema = z.object({
   nome: z.string().min(2).max(100),
@@ -77,12 +78,17 @@ export async function authRoutes(app: FastifyInstance) {
       select: { nome: true, email: true, telefone: true, foto_url: true, expo_push_token: true },
     })
     if (!usuario) return reply.status(404).send({ message: 'Usuário não encontrado' })
+    let fotoUrl = usuario.foto_url ?? null
+    if (fotoUrl && fotoUrl.startsWith('/')) {
+      fotoUrl = `${env.API_BASE_URL}${fotoUrl}`
+    }
+
     return reply.status(200).send({
       id,
       nome: usuario.nome,
       email: usuario.email,
       telefone: usuario.telefone ?? null,
-      fotoUrl: usuario.foto_url ?? null,
+      fotoUrl,
       role,
       tenantId,
       expoPushToken: usuario.expo_push_token ?? null,
@@ -142,47 +148,20 @@ export async function authRoutes(app: FastifyInstance) {
     const ext = extMap[mimetype] || '.jpg'
     const filename = `${request.currentUser.sub}_${Date.now()}${ext}`
 
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = path.dirname(__filename)
-    const uploadDir = path.join(__dirname, '..', '..', '..', '..', 'public', 'uploads', 'avatars')
-    await fs.mkdir(uploadDir, { recursive: true })
+    const uploadDir = getAvatarsDir()
+    await ensureDir(uploadDir)
 
     const filePath = path.join(uploadDir, filename)
     await fs.writeFile(filePath, buffer)
 
-    const fotoUrl = `/uploads/avatars/${filename}`
+    // URL absoluta da API — o frontend roda em outro domínio no Railway
+    const fotoUrl = `${env.API_BASE_URL}/uploads/avatars/${filename}`
     await prisma.usuario.update({
       where: { id: request.currentUser.sub },
       data: { foto_url: fotoUrl },
     })
 
     return reply.status(200).send({ fotoUrl })
-  })
-
-  /**
-   * GET /uploads/avatars/:filename — serve foto de perfil
-   */
-  app.get('/uploads/avatars/:filename', async (request, reply) => {
-    const { filename } = z.object({ filename: z.string() }).parse(request.params)
-
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = path.dirname(__filename)
-    const filePath = path.join(__dirname, '..', '..', '..', '..', 'public', 'uploads', 'avatars', filename)
-
-    try {
-      const buffer = await fs.readFile(filePath)
-      const ext = path.extname(filename).toLowerCase()
-      const mimeMap: Record<string, string> = {
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.webp': 'image/webp',
-        '.gif': 'image/gif',
-      }
-      return reply.header('Content-Type', mimeMap[ext] || 'image/jpeg').header('Cache-Control', 'public, max-age=86400').send(buffer)
-    } catch {
-      return reply.status(404).send({ message: 'Foto não encontrada' })
-    }
   })
 
   /**

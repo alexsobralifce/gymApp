@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import type { PerfilAluno, Academia } from '../../types/api'
 import { formatPhone } from '../../lib/phone'
+import { resolveMediaUrl } from '../../lib/media'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import {
@@ -79,7 +80,7 @@ export default function DadosAluno() {
         const usuarioTel = pData.usuario?.telefone || user?.telefone || ''
         setNome(usuarioNome)
         setTelefone(formatPhone(usuarioTel))
-        setFotoUrl(user?.fotoUrl || null)
+        setFotoUrl(resolveMediaUrl(user?.fotoUrl) || null)
 
         if (pData.peso_kg) setPesoKg(String(pData.peso_kg))
         if (pData.altura_cm) setAlturaCm(String(pData.altura_cm))
@@ -108,7 +109,7 @@ export default function DadosAluno() {
       const formData = new FormData()
       formData.append('file', file)
       const { fotoUrl: url } = await api.uploadAvatar(formData)
-      setFotoUrl(url)
+      setFotoUrl(resolveMediaUrl(url) || url)
       await fetchUser()
     } catch {
       // silent

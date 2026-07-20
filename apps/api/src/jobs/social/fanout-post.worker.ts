@@ -2,6 +2,14 @@ import { Job } from 'bullmq'
 import { PostTipo, Visibilidade } from '@prisma/client'
 import { prisma } from '../../infrastructure/database/prisma.js'
 import { socialNotifyQueue } from './queues.js'
+import { env } from '../../shared/env.js'
+
+function absolutizeMedia(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/')) return `${env.API_BASE_URL}${url}`
+  return `${env.API_BASE_URL}/${url}`
+}
 
 interface FanoutPayload {
   treinoId: string
@@ -36,7 +44,7 @@ export async function handleFanoutPost(job: Job<FanoutPayload>) {
       aluno_id: alunoId,
       treino_id: treinoId,
       autor_nome: aluno.usuario.nome,
-      autor_foto_url: aluno.usuario.foto_url,
+      autor_foto_url: absolutizeMedia(aluno.usuario.foto_url),
       academia_nome: aluno.academia?.nome ?? null,
       grupo_muscular_resumo: resumo,
       tipo,

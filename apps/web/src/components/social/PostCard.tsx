@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { HeartIcon, MessageCircleIcon } from '../../components/icons/Icon'
 import type { SocialPost, SocialComment } from '../../types/api'
 import { api } from '../../api/client'
+import { resolveMediaUrl } from '../../lib/media'
 
 function tempoRelativo(data: string): string {
   const agora = Date.now()
@@ -105,9 +106,9 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
     <div className="rounded-2xl bg-surface-card border border-surface-input p-4 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        {post.autor_foto_url ? (
+        {resolveMediaUrl(post.autor_foto_url) ? (
           <img
-            src={post.autor_foto_url}
+            src={resolveMediaUrl(post.autor_foto_url)!}
             alt={post.autor_nome}
             className="h-10 w-10 shrink-0 rounded-full object-cover border border-surface-input"
           />
@@ -140,10 +141,10 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
         <strong className="text-text">{post.autor_nome}</strong> {gerarMensagemPost(post)}
       </p>
 
-      {post.midia_url && (
+      {resolveMediaUrl(post.midia_url) && (
         <div className="mb-3 overflow-hidden rounded-xl">
           <img
-            src={post.midia_url}
+            src={resolveMediaUrl(post.midia_url)!}
             alt="Foto do treino"
             className="w-full h-auto object-cover"
             style={{ maxHeight: 'min(60vw, 320px)', aspectRatio: '4/3' }}

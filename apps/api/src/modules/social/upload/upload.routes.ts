@@ -3,9 +3,10 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import path from 'path'
 import fs from 'fs/promises'
-import { fileURLToPath } from 'url'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
+import { env } from '../../../shared/env.js'
+import { ensureDir, getAvatarsDir, getFeedDir } from '../../../infrastructure/storage/paths.js'
 
 async function resolveAluno(usuarioId: string) {
   const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
@@ -18,6 +19,18 @@ const EXTENSOES: Record<string, string> = {
   'image/png': '.png',
   'image/webp': '.webp',
   'image/gif': '.gif',
+}
+
+const MIME_MAP: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+}
+
+function safeFilename(name: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(name) && !name.includes('..')
 }
 
 export async function uploadRoutes(app: FastifyInstance) {
@@ -44,43 +57,59 @@ export async function uploadRoutes(app: FastifyInstance) {
     const ext = EXTENSOES[mimetype] || '.jpg'
     const filename = `${Date.now()}${ext}`
 
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = path.dirname(__filename)
-    const uploadDir = path.join(__dirname, '..', '..', '..', '..', 'public', 'uploads', 'feed', year, month)
-
-    await fs.mkdir(uploadDir, { recursive: true })
+    const uploadDir = getFeedDir(year, month)
+    await ensureDir(uploadDir)
 
     const filePath = path.join(uploadDir, filename)
     await fs.writeFile(filePath, buffer)
 
-    const url = `/uploads/feed/${year}/${month}/${filename}`
+    const url = `${env.API_BASE_URL}/uploads/feed/${year}/${month}/${filename}`
 
     return reply.status(200).send({ url })
+  })
+
+  /** GET /uploads/avatars/:filename — serve foto de perfil (sem prefixo /auth) */
+  app.get('/uploads/avatars/:filename', async (request, reply) => {
+    const { filename } = z.object({ filename: z.string() }).parse(request.params)
+    if (!safeFilename(filename)) {
+      return reply.status(400).send({ message: 'Nome de arquivo inválido' })
+    }
+
+    const filePath = path.join(getAvatarsDir(), filename)
+    try {
+      const buffer = await fs.readFile(filePath)
+      const ext = path.extname(filename).toLowerCase()
+      return reply
+        .header('Content-Type', MIME_MAP[ext] || 'image/jpeg')
+        .header('Cache-Control', 'public, max-age=86400')
+        .header('Cross-Origin-Resource-Policy', 'cross-origin')
+        .send(buffer)
+    } catch {
+      return reply.status(404).send({ message: 'Foto não encontrada' })
+    }
   })
 
   /** GET /uploads/feed/:year/:month/:filename — serve foto do feed */
   app.get('/uploads/feed/:year/:month/:filename', async (request, reply) => {
     const { year, month, filename } = z.object({
-      year: z.string(),
-      month: z.string(),
+      year: z.string().regex(/^\d{4}$/),
+      month: z.string().regex(/^\d{2}$/),
       filename: z.string(),
     }).parse(request.params)
 
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = path.dirname(__filename)
-    const filePath = path.join(__dirname, '..', '..', '..', '..', 'public', 'uploads', 'feed', year, month, filename)
+    if (!safeFilename(filename)) {
+      return reply.status(400).send({ message: 'Nome de arquivo inválido' })
+    }
 
+    const filePath = path.join(getFeedDir(year, month), filename)
     try {
       const buffer = await fs.readFile(filePath)
       const ext = path.extname(filename).toLowerCase()
-      const mimeMap: Record<string, string> = {
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.webp': 'image/webp',
-        '.gif': 'image/gif',
-      }
-      return reply.header('Content-Type', mimeMap[ext] || 'image/jpeg').header('Cache-Control', 'public, max-age=86400').send(buffer)
+      return reply
+        .header('Content-Type', MIME_MAP[ext] || 'image/jpeg')
+        .header('Cache-Control', 'public, max-age=86400')
+        .header('Cross-Origin-Resource-Policy', 'cross-origin')
+        .send(buffer)
     } catch {
       return reply.status(404).send({ message: 'Foto não encontrada' })
     }

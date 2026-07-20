@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import { Building2Icon } from '../icons/Icon'
+import { resolveMediaUrl } from '../../lib/media'
 
 interface Colega {
   id: string
@@ -50,9 +51,9 @@ export default function AcademySidebar() {
             key={c.id}
             className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-surface-input/50 transition-colors"
           >
-            {c.fotoUrl ? (
+            {resolveMediaUrl(c.fotoUrl) ? (
               <img
-                src={c.fotoUrl}
+                src={resolveMediaUrl(c.fotoUrl)!}
                 alt={c.nome}
                 className="h-7 w-7 rounded-full object-cover border border-surface-input shrink-0"
               />

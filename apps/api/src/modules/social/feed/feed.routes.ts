@@ -3,6 +3,14 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
+import { env } from '../../../shared/env.js'
+
+function absolutizeMedia(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/')) return `${env.API_BASE_URL}${url}`
+  return `${env.API_BASE_URL}/${url}`
+}
 
 async function resolveAluno(usuarioId: string) {
   const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
@@ -56,9 +64,15 @@ export async function feedRoutes(app: FastifyInstance) {
     })
 
     const hasMore = posts.length > limit
-    const items = hasMore ? posts.slice(0, limit) : posts
-    const lastPost = items[items.length - 1]
+    const rawItems = hasMore ? posts.slice(0, limit) : posts
+    const lastPost = rawItems[rawItems.length - 1]
     const nextCursor = hasMore && lastPost ? `${lastPost.criado_em.toISOString()}|${lastPost.id}` : null
+
+    const items = rawItems.map((p) => ({
+      ...p,
+      autor_foto_url: absolutizeMedia(p.autor_foto_url),
+      midia_url: absolutizeMedia(p.midia_url),
+    }))
 
     return reply.status(200).send({ items, nextCursor })
   })

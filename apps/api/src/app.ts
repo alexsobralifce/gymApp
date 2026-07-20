@@ -44,6 +44,15 @@ export async function buildApp(): Promise<FastifyInstance> {
   // ─── Security ───────────────────────────────────────────────────────────
   await app.register(fastifyHelmet, {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+        styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        fontSrc: ["'self'", 'https:', 'data:'],
+      },
+    },
   })
 
   const origins: string[] = [env.API_BASE_URL]
