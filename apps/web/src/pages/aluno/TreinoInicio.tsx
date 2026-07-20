@@ -19,8 +19,12 @@ export default function AlunoTreinoInicio() {
 
   async function handleIniciar() {
     if (!id) return
-    await iniciarTreino(id)
-    navigate(`/treino/${id}/execucao`)
+    try {
+      await iniciarTreino(id)
+      navigate(`/treino/${id}/execucao`)
+    } catch {
+      // error já está no store
+    }
   }
 
   const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']

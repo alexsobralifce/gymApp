@@ -81,8 +81,19 @@ function CircularTimer({ seconds }: { seconds: number }) {
 export default function AlunoTreinoExecucao() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { treinoAtual, registrarExecucao, finalizarTreino, timer, tick, loading, execucoes } = useTrainingStore()
+  const {
+    treinoAtual,
+    registrarExecucao,
+    finalizarTreino,
+    retomarTreino,
+    timer,
+    tick,
+    loading,
+    execucoes,
+    error,
+  } = useTrainingStore()
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
+  const registrandoRef = useRef<Set<string>>(new Set())
 
   const [inputs, setInputs] = useState<Record<string, { carga: string; reps: string }>>({})
   const [previewExercicio, setPreviewExercicio] = useState<any | null>(null)
@@ -90,12 +101,27 @@ export default function AlunoTreinoExecucao() {
   const [avaliando, setAvaliando] = useState(false)
   const [showTimer, setShowTimer] = useState(false)
   const [showSairModal, setShowSairModal] = useState(false)
+  const [resuming, setResuming] = useState(false)
   const coach = useCoachMark(!!treinoAtual)
+
+  useEffect(() => {
+    if (!id || treinoAtual?.id === id) return
+    let cancelled = false
+    setResuming(true)
+    retomarTreino(id)
+      .catch(() => {
+        if (!cancelled) navigate(`/treino/${id}/inicio`, { replace: true })
+      })
+      .finally(() => {
+        if (!cancelled) setResuming(false)
+      })
+    return () => { cancelled = true }
+  }, [id])
 
   useEffect(() => {
     intervalRef.current = setInterval(tick, 1000)
     return () => clearInterval(intervalRef.current)
-  }, [])
+  }, [tick])
 
   useEffect(() => {
     if (treinoAtual?.exercicios) {
@@ -112,12 +138,14 @@ export default function AlunoTreinoExecucao() {
     }
   }, [treinoAtual])
 
-  if (!treinoAtual) {
+  if (!treinoAtual || resuming) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-          <p className="text-sm text-text-muted">Carregando treino...</p>
+          <p className="text-sm text-text-muted">
+            {error || 'Carregando treino...'}
+          </p>
         </div>
       </div>
     )
@@ -125,7 +153,8 @@ export default function AlunoTreinoExecucao() {
 
   const exercicios = treinoAtual.exercicios ?? []
   const totalSeries = exercicios.reduce((acc, ex) => acc + ex.series, 0)
-  const concluidoSeries = execucoes.length
+  const seriesUnicas = new Set(execucoes.map((e) => `${e.exercicio_id}-${e.serie_numero}`))
+  const concluidoSeries = seriesUnicas.size
   const progressoPercent = totalSeries > 0 ? Math.min(100, (concluidoSeries / totalSeries) * 100) : 0
 
   function handleInputChange(exercicioId: string, serieNumero: number, field: 'carga' | 'reps', value: string) {
@@ -135,11 +164,20 @@ export default function AlunoTreinoExecucao() {
 
   async function handleRegistrar(exercicioId: string, serieNumero: number) {
     const key = `${exercicioId}-${serieNumero}`
+    if (registrandoRef.current.has(key)) return
+    if (execucoes.find((e) => e.exercicio_id === exercicioId && e.serie_numero === serieNumero)) return
+
     const val = inputs[key] || { carga: '0', reps: '10' }
+    const reps = Math.max(1, Number(val.reps) || 0)
+    const carga = Math.max(0, Number(val.carga) || 0)
+
+    registrandoRef.current.add(key)
     try {
-      await registrarExecucao(exercicioId, serieNumero, Number(val.reps) || 0, Number(val.carga) || 0)
+      await registrarExecucao(exercicioId, serieNumero, reps, carga)
     } catch (err) {
       console.error(err)
+    } finally {
+      registrandoRef.current.delete(key)
     }
   }
 
@@ -149,14 +187,20 @@ export default function AlunoTreinoExecucao() {
     )
     for (const sNum of seriesPendentes) {
       const key = `${ex.exercicio_id}-${sNum}`
+      if (registrandoRef.current.has(key)) continue
       const val = inputs[key] || {
         carga: ex.carga_sugerida_kg ? String(ex.carga_sugerida_kg) : '0',
         reps: String(ex.repeticoes ?? 10),
       }
+      const reps = Math.max(1, Number(val.reps) || 0)
+      const carga = Math.max(0, Number(val.carga) || 0)
+      registrandoRef.current.add(key)
       try {
-        await registrarExecucao(ex.exercicio_id, sNum, Number(val.reps) || 0, Number(val.carga) || 0)
+        await registrarExecucao(ex.exercicio_id, sNum, reps, carga)
       } catch (err) {
         console.error(err)
+      } finally {
+        registrandoRef.current.delete(key)
       }
     }
   }
@@ -422,7 +466,7 @@ export default function AlunoTreinoExecucao() {
       <ConfirmModal
         open={showSairModal}
         title="Sair do treino"
-        message="O progresso será perdido. Deseja sair?"
+        message="As séries já confirmadas ficam salvas. Você pode retomar depois. Deseja sair?"
         onConfirm={() => { setShowSairModal(false); navigate('/') }}
         onCancel={() => setShowSairModal(false)}
       />

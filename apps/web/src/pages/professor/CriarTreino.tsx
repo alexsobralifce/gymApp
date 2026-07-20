@@ -1,32 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Exercicio, ProfessorDashboard, Treino, Vinculo } from '../../types/api'
+import { GRUPOS_MUSCULARES, EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-
-const GRUPOS_MUSCULARES = [
-  { value: 'Peito', label: 'Peito' },
-  { value: 'Costas', label: 'Costas' },
-  { value: 'Ombros', label: 'Ombros' },
-  { value: 'Bracos', label: 'Braços' },
-  { value: 'Coxas', label: 'Coxas' },
-  { value: 'Panturrilhas / Tibiais', label: 'Panturrilhas' },
-  { value: 'Abdomen / Lombar', label: 'Abdômen / Lombar' },
-  { value: 'Antebraccos', label: 'Antebraços' },
-  { value: 'Cardio', label: 'Cardio' },
-  { value: 'Pescoco', label: 'Pescoço' }
-]
-
-const EQUIPAMENTOS = [
-  { value: 'Barra', label: 'Barra' },
-  { value: 'Halteres', label: 'Halteres' },
-  { value: 'Polia', label: 'Cabo/Polia' },
-  { value: 'Máquina', label: 'Máquina' },
-  { value: 'Peso Corporal', label: 'Peso Corporal' },
-  { value: 'Kettlebell', label: 'Kettlebell' },
-  { value: 'Elásticos', label: 'Elásticos' }
-]
 
 interface ExercicioTreino {
   exercicioId: string
@@ -94,7 +72,7 @@ function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void })
 
 export default function ProfessorCriarTreino() {
   const [alunos, setAlunos] = useState<ProfessorDashboard[]>([])
-  const [exercicios, setExercicios] = useState<Exercicio[]>([])
+  const [todosExercicios, setTodosExercicios] = useState<Exercicio[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -118,6 +96,15 @@ export default function ProfessorCriarTreino() {
   const [templates, setTemplates] = useState<Treino[]>([])
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
 
+  const exercicios = useMemo(
+    () => filtrarExercicios(todosExercicios, {
+      grupo: filtroGrupo,
+      equipamento: filtroEquip,
+      busca,
+    }),
+    [todosExercicios, filtroGrupo, filtroEquip, busca],
+  )
+
   // Carregar alunos e exercícios
   useEffect(() => {
     Promise.all([
@@ -140,26 +127,12 @@ export default function ProfessorCriarTreino() {
     ])
       .then(([a, e, t]) => {
         setAlunos(a)
-        setExercicios(e)
+        setTodosExercicios(e)
         setTemplates(t)
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
   }, [academiaId])
-
-  // Recarregar exercícios sob filtros
-  useEffect(() => {
-    if (loading) return
-    api.getExercicios({
-      grupo_muscular: filtroGrupo || undefined,
-      equipamento: filtroEquip || undefined,
-      busca: busca || undefined
-    })
-      .then((data) => {
-        setExercicios(data)
-      })
-      .catch((err) => console.error(err))
-  }, [filtroGrupo, filtroEquip, busca, loading])
 
   function adicionarFicha() {
     const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'

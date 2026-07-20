@@ -1,7 +1,17 @@
 import { TreinoStatus, TreinoAtor } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
+import {
+  NotFoundError,
+  TenantAccessError,
+  ValidationError,
+  ConflictError,
+} from '../../../domain/errors/AppError.js'
 import { assertTransicaoValida } from '../../../domain/entities/TreinoStateMachine.js'
+
+function execucoesDaSessao(iniciadoEm: Date | null | undefined) {
+  if (!iniciadoEm) return {}
+  return { registrado_em: { gte: iniciadoEm } }
+}
 
 // ─── UC-11: Criar ficha de treino ─────────────────────────────────────────────
 
@@ -156,13 +166,29 @@ export async function responderTreino(treinoId: string, alunoId: string, acao: '
 
 // ─── UC-20: Iniciar treino ────────────────────────────────────────────────────
 
+async function carregarTreinoComSessao(treinoId: string, iniciadoEm?: Date | null) {
+  const treino = await prisma.treino.findUnique({
+    where: { id: treinoId },
+    include: {
+      exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } },
+      execucoes: {
+        where: execucoesDaSessao(iniciadoEm),
+        orderBy: { registrado_em: 'asc' },
+      },
+    },
+  })
+  if (!treino) throw new NotFoundError('Treino')
+  return treino
+}
+
 export async function iniciarTreino(treinoId: string, alunoId: string) {
   const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
   if (!treino) throw new NotFoundError('Treino')
   if (treino.aluno_id !== alunoId) throw new TenantAccessError()
 
+  // Retoma sessão em andamento sem resetar timer/iniciado_em
   if (treino.status === TreinoStatus.EM_EXECUCAO) {
-    return treino
+    return carregarTreinoComSessao(treinoId, treino.iniciado_em)
   }
 
   if (treino.status === TreinoStatus.CONCLUIDO) {
@@ -175,7 +201,9 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
     TreinoAtor.ALUNO,
   )
 
-  return prisma.$transaction(async (tx) => {
+  const iniciadoEm = new Date()
+
+  await prisma.$transaction(async (tx) => {
     if (treino.status === TreinoStatus.CONCLUIDO) {
       await tx.treino.update({
         where: { id: treinoId },
@@ -192,9 +220,9 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
       })
     }
 
-    const atualizado = await tx.treino.update({
+    await tx.treino.update({
       where: { id: treinoId },
-      data: { status: TreinoStatus.EM_EXECUCAO, iniciado_em: new Date() },
+      data: { status: TreinoStatus.EM_EXECUCAO, iniciado_em: iniciadoEm },
     })
     await tx.treinoHistorico.create({
       data: {
@@ -205,8 +233,9 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
         ator_tipo: TreinoAtor.ALUNO,
       },
     })
-    return atualizado
   })
+
+  return carregarTreinoComSessao(treinoId, iniciadoEm)
 }
 
 // ─── UC-22: Registrar carga/repetições ───────────────────────────────────────
@@ -217,9 +246,42 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
   repeticoes: number
   cargaKg: number
 }) {
-  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  const treino = await prisma.treino.findUnique({
+    where: { id: treinoId },
+    include: { exercicios: true },
+  })
   if (!treino) throw new NotFoundError('Treino')
   if (treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  if (treino.status !== TreinoStatus.EM_EXECUCAO) {
+    throw new ValidationError('Só é possível registrar séries com o treino em execução')
+  }
+
+  const treinoExercicio = treino.exercicios.find((e) => e.exercicio_id === input.exercicioId)
+  if (!treinoExercicio) {
+    throw new ValidationError('Exercício não pertence a este treino')
+  }
+  if (input.serieNumero < 1 || input.serieNumero > treinoExercicio.series) {
+    throw new ValidationError(`Série inválida (máx. ${treinoExercicio.series})`)
+  }
+  if (input.repeticoes < 1) {
+    throw new ValidationError('Repetições devem ser no mínimo 1')
+  }
+  if (input.cargaKg < 0) {
+    throw new ValidationError('Carga não pode ser negativa')
+  }
+
+  const jaRegistrada = await prisma.execucaoExercicio.findFirst({
+    where: {
+      treino_id: treinoId,
+      exercicio_id: input.exercicioId,
+      serie_numero: input.serieNumero,
+      ...execucoesDaSessao(treino.iniciado_em),
+    },
+  })
+  if (jaRegistrada) {
+    throw new ConflictError('Série já registrada nesta sessão')
+  }
 
   return prisma.execucaoExercicio.create({
     data: {
@@ -234,7 +296,7 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
 
 // ─── UC-23: Finalizar treino ──────────────────────────────────────────────────
 
-export async function finalizarTreino(treinoId: string, alunoId: string) {
+export async function finalizarTreino(treinoId: string, alunoId: string, avaliacao?: string) {
   const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
   if (!treino) throw new NotFoundError('Treino')
   if (treino.aluno_id !== alunoId) throw new TenantAccessError()
@@ -244,7 +306,11 @@ export async function finalizarTreino(treinoId: string, alunoId: string) {
   return prisma.$transaction(async (tx) => {
     await tx.treino.update({
       where: { id: treinoId },
-      data: { status: TreinoStatus.CONCLUIDO, finalizado_em: new Date() },
+      data: {
+        status: TreinoStatus.CONCLUIDO,
+        finalizado_em: new Date(),
+        ...(avaliacao ? { avaliacao_dificuldade: avaliacao } : {}),
+      },
     })
     await tx.treinoHistorico.create({
       data: {
@@ -256,6 +322,7 @@ export async function finalizarTreino(treinoId: string, alunoId: string) {
       },
     })
 
+    // Recicla ficha para reuso (CONCLUIDO → ACEITO), preservando avaliacao
     await tx.treino.update({
       where: { id: treinoId },
       data: { status: TreinoStatus.ACEITO, iniciado_em: null, finalizado_em: null },
@@ -272,7 +339,7 @@ export async function finalizarTreino(treinoId: string, alunoId: string) {
 
     return tx.treino.findUnique({
       where: { id: treinoId },
-      include: { exercicios: { include: { exercicio: true } } },
+      include: { exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } } },
     })
   })
 }

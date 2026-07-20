@@ -263,12 +263,25 @@ export async function professorRoutes(app: FastifyInstance) {
       where.grupo_muscular = { contains: grupo_muscular, mode: 'insensitive' }
     }
 
+    // Aliases cobrem variantes do sync (Máquina/Maquina/Smith/Alavanca, Elásticos/Elastico…)
     if (equipamento) {
-      where.equipamento = { equals: equipamento, mode: 'insensitive' }
+      const EQUIP_ALIASES: Record<string, string[]> = {
+        Barra: ['Barra'],
+        Halteres: ['Halter'],
+        Polia: ['Polia', 'Cabo'],
+        Máquina: ['Máquina', 'Maquina', 'Alavanca', 'Smith'],
+        'Peso Corporal': ['Peso Corporal', 'Assistido'],
+        Kettlebell: ['Kettlebell'],
+        Elásticos: ['Elástic', 'Elastic', 'Faixa'],
+      }
+      const terms = EQUIP_ALIASES[equipamento] ?? [equipamento]
+      where.OR = terms.map((t) => ({
+        equipamento: { contains: t, mode: 'insensitive' as const },
+      }))
     }
 
     if (nivel) {
-      where.nivel = { equals: nivel, mode: 'insensitive' }
+      where.nivel = { contains: nivel, mode: 'insensitive' }
     }
 
     if (busca) {

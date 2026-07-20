@@ -26,6 +26,7 @@ export interface Treino {
   criado_em: string
   atualizado_em: string
   exercicios?: TreinoExercicio[]
+  execucoes?: ExecucaoExercicio[]
 }
 
 export type TreinoStatus =

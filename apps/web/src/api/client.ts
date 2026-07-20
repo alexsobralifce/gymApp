@@ -134,7 +134,7 @@ export const api = {
     api.get<Treino & { execucoes: ExecucaoExercicio[] }>(`/treinos/${id}`),
 
   iniciarTreino: (id: string) =>
-    api.post<Treino>(`/treinos/${id}/iniciar`),
+    api.post<Treino & { execucoes?: ExecucaoExercicio[] }>(`/treinos/${id}/iniciar`),
 
   registrarExecucao: (treinoId: string, data: { exercicioId: string; serieNumero: number; repeticoes: number; cargaKg: number }) =>
     api.post<ExecucaoExercicio>(`/treinos/${treinoId}/execucoes`, data),

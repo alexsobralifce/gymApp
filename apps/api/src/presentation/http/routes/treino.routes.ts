@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role, TreinoAtor } from '@prisma/client'
+import { Role, TreinoAtor, TreinoStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
+import { NotFoundError, TenantAccessError, ValidationError } from '../../../domain/errors/AppError.js'
 import { eventBus } from '../../../shared/events/event-bus.js'
 import {
   criarTreino,
@@ -45,6 +45,11 @@ export async function treinoRoutes(app: FastifyInstance) {
       })).min(1),
     }).parse(request.body)
 
+    const ordens = body.exercicios.map((e) => e.ordem)
+    if (ordens.length !== new Set(ordens).size) {
+      throw new ValidationError('Ordens de exercícios duplicadas')
+    }
+
     const treino = await criarTreino(professor.id, body)
     return reply.status(201).send(treino)
   })
@@ -67,6 +72,11 @@ export async function treinoRoutes(app: FastifyInstance) {
         cargaSugeridaKg: z.number().optional(),
       })).min(1),
     }).parse(request.body)
+
+    const ordens = body.exercicios.map((e) => e.ordem)
+    if (ordens.length !== new Set(ordens).size) {
+      throw new ValidationError('Ordens de exercícios duplicadas')
+    }
 
     const treino = await criarTreinoAutogestao(aluno.id, body)
     return reply.status(201).send(treino)
@@ -172,10 +182,7 @@ export async function treinoRoutes(app: FastifyInstance) {
     const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
     if (!aluno) throw new NotFoundError('Aluno')
 
-    const treino = await finalizarTreino(id, aluno.id)
-    if (avaliacao) {
-      await prisma.treino.update({ where: { id }, data: { avaliacao_dificuldade: avaliacao } })
-    }
+    const treino = await finalizarTreino(id, aluno.id, avaliacao)
     try {
       eventBus.emit({ type: 'treino.concluido', payload: { treinoId: id, alunoId: aluno.id, timestamp: new Date().toISOString() } })
     } catch (err) {
@@ -242,26 +249,43 @@ export async function treinoRoutes(app: FastifyInstance) {
   /** GET /treinos/:id — Detalhe com exercícios (UC-21) */
   app.get('/:id', { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const treino = await prisma.treino.findUnique({
+    const treinoBase = await prisma.treino.findUnique({
       where: { id },
-      include: {
-        exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } },
-        execucoes: { orderBy: { registrado_em: 'desc' } },
+      select: {
+        id: true,
+        aluno_id: true,
+        status: true,
+        iniciado_em: true,
         aluno: { select: { id: true, professor_id: true, academia_id: true } },
       },
     })
-    if (!treino) throw new NotFoundError('Treino')
+    if (!treinoBase) throw new NotFoundError('Treino')
 
     const { sub, role, tenantId } = request.currentUser
     if (role === Role.ALUNO) {
       const aluno = await prisma.aluno.findUnique({ where: { usuario_id: sub } })
-      if (!aluno || treino.aluno_id !== aluno.id) throw new TenantAccessError()
+      if (!aluno || treinoBase.aluno_id !== aluno.id) throw new TenantAccessError()
     } else if (role === Role.PROFESSOR) {
       const professor = await prisma.professor.findUnique({ where: { usuario_id: sub } })
-      if (!professor || treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
+      if (!professor || treinoBase.aluno.professor_id !== professor.id) throw new TenantAccessError()
     } else if (role === Role.ACADEMIA) {
-      if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
+      if (!tenantId || treinoBase.aluno.academia_id !== tenantId) throw new TenantAccessError()
     }
+
+    // Em execução: devolve só execuções da sessão atual (evita misturar treinos anteriores)
+    const filtroSessao =
+      treinoBase.status === TreinoStatus.EM_EXECUCAO && treinoBase.iniciado_em
+        ? { registrado_em: { gte: treinoBase.iniciado_em } }
+        : {}
+
+    const treino = await prisma.treino.findUnique({
+      where: { id },
+      include: {
+        exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } },
+        execucoes: { where: filtroSessao, orderBy: { registrado_em: 'asc' } },
+        aluno: { select: { id: true, professor_id: true, academia_id: true } },
+      },
+    })
 
     return reply.status(200).send(treino)
   })
@@ -295,6 +319,17 @@ export async function treinoRoutes(app: FastifyInstance) {
       if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
     } else if (role === Role.ACADEMIA) {
       if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
+    } else {
+      throw new TenantAccessError()
+    }
+
+    if (treino.status === TreinoStatus.EM_EXECUCAO) {
+      throw new ValidationError('Não é possível editar um treino em execução')
+    }
+
+    const ordens = body.exercicios?.map((e) => e.ordem) ?? []
+    if (ordens.length !== new Set(ordens).size) {
+      throw new ValidationError('Ordens de exercícios duplicadas')
     }
 
     const updated = await prisma.$transaction(async (tx) => {

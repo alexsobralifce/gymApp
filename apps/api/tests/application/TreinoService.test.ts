@@ -90,11 +90,15 @@ describe('criarTreinoAutogestao', () => {
       .rejects.toThrow(NotFoundError)
   })
 
-  it('lança TenantAccessError se aluno tem professor vinculado', async () => {
+  it('permite criar treino próprio mesmo com professor vinculado', async () => {
     mockPrisma.aluno.findUnique.mockResolvedValue(alunoComProfessor)
+    const treinoCriado = { id: 'treino-2', nome: inputBase.nome, status: TreinoStatus.ACEITO, exercicios: [] }
+    mockPrisma.treino.create.mockResolvedValue(treinoCriado)
 
-    await expect(criarTreinoAutogestao('aluno-2', inputBase))
-      .rejects.toThrow(TenantAccessError)
+    const result = await criarTreinoAutogestao('aluno-2', inputBase)
+
+    expect(result).toEqual(treinoCriado)
+    expect(mockPrisma.treino.create).toHaveBeenCalled()
   })
 })
 
@@ -133,7 +137,7 @@ describe('clonarTreino', () => {
   it('clona treino com sucesso (PROFESSOR)', async () => {
     mockPrisma.treino.findUnique.mockResolvedValue(treinoFonte)
     mockPrisma.aluno.findUnique.mockResolvedValue(alunoDestino)
-    const treinoClonado = { id: 'clone-1', nome: 'Treino A (cópia)', status: TreinoStatus.CADASTRADO, exercicios: [] }
+    const treinoClonado = { id: 'clone-1', nome: 'Treino A', status: TreinoStatus.CADASTRADO, exercicios: [] }
     mockPrisma.treino.create.mockResolvedValue(treinoClonado)
 
     const result = await clonarTreino('treino-fonte', 'aluno-2', 'prof-1', TreinoAtor.PROFESSOR)
@@ -147,7 +151,7 @@ describe('clonarTreino', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           aluno_id: 'aluno-2',
-          nome: 'Treino A (cópia)',
+          nome: 'Treino A',
           dias_semana: [1, 3, 5],
           status: TreinoStatus.CADASTRADO,
           exercicios: {
