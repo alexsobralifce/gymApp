@@ -111,7 +111,7 @@ export async function feedRoutes(app: FastifyInstance) {
     const aluno = await resolveAluno(request.currentUser.sub)
     const desde = new Date(Date.now() - 2 * 60 * 60 * 1000)
 
-    let post = await prisma.socialPost.findFirst({
+    const post = await prisma.socialPost.findFirst({
       where: {
         aluno_id: aluno.id,
         tipo: { in: ['TREINO_INICIADO', 'TREINO_CONCLUIDO'] },
@@ -120,21 +120,7 @@ export async function feedRoutes(app: FastifyInstance) {
       orderBy: { criado_em: 'desc' },
     })
 
-    // Se não houver post recente, cria um post de TREINO_CONCLUIDO garantido
-    if (!post) {
-      const usuario = await prisma.usuario.findUnique({ where: { id: request.currentUser.sub } })
-      post = await prisma.socialPost.create({
-        data: {
-          aluno_id: aluno.id,
-          autor_nome: usuario?.nome || 'Aluno',
-          autor_foto_url: usuario?.foto_url,
-          tipo: 'TREINO_CONCLUIDO',
-          visibilidade: aluno.visibilidade_padrao || 'AMIGOS',
-        },
-      })
-    }
-
-    return reply.status(200).send({ postId: post.id })
+    return reply.status(200).send({ postId: post?.id ?? null })
   })
 
   /** GET /social/mural/atividade — contagem de comentários nas postagens do aluno */
