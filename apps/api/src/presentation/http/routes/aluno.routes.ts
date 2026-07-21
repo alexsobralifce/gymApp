@@ -38,6 +38,9 @@ export async function alunoRoutes(app: FastifyInstance) {
       pesoKg: z.number().positive().optional(),
       alturaCm: z.number().positive().optional(),
       sexo: z.enum(['MASCULINO', 'FEMININO']).optional(),
+      objetivoTreino: z.string().optional(),
+      nivelTreino: z.string().optional(),
+      restricoes: z.array(z.string()).optional(),
       consentiuFeedSocial: z.boolean().optional(),
     }).parse(request.body || {})
 
@@ -54,6 +57,9 @@ export async function alunoRoutes(app: FastifyInstance) {
           peso_kg: body.pesoKg !== undefined ? body.pesoKg : undefined,
           altura_cm: body.alturaCm !== undefined ? body.alturaCm : undefined,
           sexo: body.sexo !== undefined ? body.sexo : undefined,
+          objetivo_treino: body.objetivoTreino !== undefined ? body.objetivoTreino : undefined,
+          nivel_treino: body.nivelTreino !== undefined ? body.nivelTreino : undefined,
+          restricoes: body.restricoes !== undefined ? body.restricoes : undefined,
           consentiu_feed_social_em: body.consentiuFeedSocial ? new Date() : undefined,
         },
       })

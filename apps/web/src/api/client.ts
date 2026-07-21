@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -111,7 +111,7 @@ export const api = {
     api.post('/auth/change-password', { senhaAtual, novaSenha }),
 
   // ─── Aluno ─────────────────────────────────────────
-  criarPerfilAluno: (data?: { dataNascimento?: string; pesoKg?: number; alturaCm?: number; sexo?: 'MASCULINO' | 'FEMININO'; consentiuFeedSocial?: boolean }) =>
+  criarPerfilAluno: (data?: { dataNascimento?: string; pesoKg?: number; alturaCm?: number; sexo?: 'MASCULINO' | 'FEMININO'; objetivoTreino?: string; nivelTreino?: string; restricoes?: string[]; consentiuFeedSocial?: boolean }) =>
     api.post('/alunos/perfil', data),
 
   vincularAcademiaAluno: (academiaId: string) => api.patch('/alunos/academia', { academiaId }),
@@ -445,4 +445,18 @@ export const api = {
   // ─── Social — Clubes ───────────────────────────────
   getClube: (id: string) => api.get<Clube>(`/social/clubes/${id}`),
   getLeaderboard: (id: string) => api.get<LeaderboardEntry[]>(`/social/clubes/${id}/leaderboard`),
+
+  // ─── Biblioteca de Planos ───────────────────────────
+  listarPlanos: (params?: { objetivo?: string; nivel?: string; sexo?: string; splitTipo?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.objetivo) qs.set('objetivo', params.objetivo)
+    if (params?.nivel) qs.set('nivel', params.nivel)
+    if (params?.sexo) qs.set('sexo', params.sexo)
+    if (params?.splitTipo) qs.set('splitTipo', params.splitTipo)
+    const query = qs.toString()
+    return api.get<PlanoBiblioteca[]>(`/planos${query ? `?${query}` : ''}`)
+  },
+  getPlanoDetalhe: (id: string) => api.get<PlanoBiblioteca>(`/planos/${id}`),
+  getPlanosRecomendados: () => api.get<PlanoBiblioteca[]>('/planos/recomendados'),
+  adotarPlano: (id: string) => api.post<{ plano: { id: string; nome: string }; treinosCriadosCount: number }>(`/planos/${id}/adotar`),
 }

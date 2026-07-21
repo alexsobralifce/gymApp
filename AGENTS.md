@@ -12,7 +12,7 @@ Este arquivo serve como base de conhecimento para qualquer assistente de IA/LLM 
 
 ## 1. Visão Geral do Sistema
 
-O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acompanhamento de treinos e análise evolutiva baseada em dados científicos para alunos e professores.
+O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acompanhamento de treinos e análise evolutiva baseada em dados científicos para alunos e professores, contando também com rede social fitness (Mural, Feed, Amizades e Clubes).
 
 ### Tech Stack
 - **Estrutura**: Monorepo NPM (`workspaces: ["apps/*", "packages/*"]`)
@@ -32,17 +32,21 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 
 ### Enums
 ```
-Role:       ROOT | ACADEMIA | PROFESSOR | ALUNO
-AcademiaStatus: PENDENTE | ATIVO | REJEITADO
-Sexo:       MASCULINO | FEMININO
-VinculoStatus: PENDENTE_ACADEMIA | PENDENTE_ROOT | ATIVO | REJEITADO | REMOVIDO
-TreinoStatus: CADASTRADO | ENVIADO | ACEITO | RECUSADO | EM_ABERTO | EM_EXECUCAO | CONCLUIDO
-TreinoAtor:  ALUNO | PROFESSOR | ACADEMIA | SISTEMA
-NotificacaoTipo: PROFESSOR_ATRIBUIDO | NOVO_TREINO
+Role:             ROOT | ACADEMIA | PROFESSOR | ALUNO
+AcademiaStatus:   PENDENTE | ATIVO | REJEITADO
+Sexo:             MASCULINO | FEMININO
+VinculoStatus:    PENDENTE_ACADEMIA | PENDENTE_ROOT | ATIVO | REJEITADO | REMOVIDO
+TreinoStatus:     CADASTRADO | ENVIADO | ACEITO | RECUSADO | EM_ABERTO | EM_EXECUCAO | CONCLUIDO
+TreinoAtor:       ALUNO | PROFESSOR | ACADEMIA | SISTEMA
+NotificacaoTipo:  PROFESSOR_ATRIBUIDO | NOVO_TREINO
+FriendshipStatus: PENDENTE | ACEITO | BLOQUEADO
+PostTipo:         TREINO_INICIADO | TREINO_CONCLUIDO | RECORDE_PESSOAL | BADGE_CONQUISTADO | DESAFIO_COMPLETO
+Visibilidade:     AMIGOS | PUBLICO | PRIVADO
+ClubTipo:         ACADEMIA | TEMATICO
 ```
 
 ### Usuario (`usuarios`)
-`id (cuid), email (unique), senha_hash, nome, role, telefone?, foto_url?, expo_push_token?, web_push_subscription?, criado_em, atualizado_em`
+`id (cuid), email (unique), senha_hash, nome, role, telefone?, foto_url?, ativo, expo_push_token?, web_push_subscription?, criado_em, atualizado_em`
 
 ### Academia (`academias`)
 `id (cuid), usuario_id (unique FK), nome, cnpj (unique), status, max_professores (default 20), rejeitado_motivo?, criado_em, atualizado_em`
@@ -51,10 +55,11 @@ NotificacaoTipo: PROFESSOR_ATRIBUIDO | NOVO_TREINO
 `id (cuid), usuario_id (unique FK), cref?, criado_em, atualizado_em`
 
 ### Aluno (`alunos`)
-`id (cuid), usuario_id (unique FK), professor_id?, academia_id?, data_nascimento?, peso_kg?, altura_cm?, sexo (Sexo?), criado_em, atualizado_em`
-- `professor_id = null` → modo autogestão
+`id (cuid), usuario_id (unique FK), professor_id?, academia_id?, data_nascimento?, peso_kg?, altura_cm?, sexo (Sexo?), objetivo_treino?, nivel_treino?, restricoes (String[]), visibilidade_padrao (Visibilidade), permite_busca_email (Boolean), consentiu_feed_social_em?, criado_em, atualizado_em`
+- `professor_id = null` → modo autogestão (alunos vinculados a professores também podem criar treinos de autogestão)
 - `academia_id = null` → aluno sem vínculo com academia
 - `sexo` → MASCULINO ou FEMININO, cadastrado no wizard de onboarding
+- `objetivo_treino` / `nivel_treino` / `restricoes` → preferências de treino para recomendação e substituição automática de exercícios na biblioteca de planos/IA
 
 ### ProfessorAcademia (`professor_academia`) — Vínculo M:N
 `id (cuid), professor_id, academia_id, status, criado_em, atualizado_em`
@@ -75,33 +80,41 @@ NotificacaoTipo: PROFESSOR_ATRIBUIDO | NOVO_TREINO
 `id (cuid), aluno_id, tipo, mensagem, dados?, lida (default false), criado_em`
 
 ### Exercicio (`exercicios`)
-`id (cuid), nome, grupo_muscular?, equipamento?, nivel?, imagem_url?, gif_url?, dica? (@db.Text), musculo_alvo?, musculos_secundarios? (String[]), passos_pt? (String[]), descricao_pt? (@db.Text), criado_em, atualizado_em`
+`id (cuid), nome, maquina?, dica? (@db.Text), imagem_url?, gif_url?, descricao_pt? (@db.Text), passos_pt? (String[]), musculo_alvo?, musculos_secundarios? (String[]), nivel?, grupo_muscular?, equipamento?, criado_em, atualizado_em`
 - 963 exercícios do GifDoTreino com GIFs, descrições PT completas e passos de execução
 - **Sexo não é filtrado** — homens e mulheres veem os mesmos exercícios
 
-### TreinoExercicio
+### TreinoExercicio (`treino_exercicios`)
 `id (cuid), treino_id, exercicio_id, ordem, series, repeticoes, carga_sugerida_kg?`
 - `@@unique([treino_id, ordem])`
 
-### ExecucaoExercicio
+### ExecucaoExercicio (`execucao_exercicios`)
 `id (cuid), treino_id, exercicio_id, serie_numero, repeticoes, carga_kg, registrado_em`
 
 ### MedidaCorporal (`medidas_corporais`)
 `id (cuid), aluno_id, peso_kg?, altura_cm?, percentual_bf?, massa_magra_kg?, imc? (calculado), data, observacao?`
 
-### CorrelacaoDesempenho
-`id (cuid), aluno_id (unique FK), dados (Json), calculado_em`
+### CorrelacaoDesempenho (`correlacoes_desempenho`)
+`id (cuid), aluno_id (unique FK), peso_volume_r?, bf_volume_r?, massa_magra_volume_r?, volume_semanal (Json), pontos (Json), calculado_em`
 
-### RefreshToken
-`token (String PK), usuario_id, expira_em, criado_em`
+### Modelos Sociais (`social_*`)
+- **SocialFriendship (`social_friendships`)**: `id, aluno_id, amigo_id, status (FriendshipStatus), criado_em` — `@@unique([aluno_id, amigo_id])`
+- **SocialPost (`social_posts`)**: `id, aluno_id, treino_id?, clube_id?, autor_nome, autor_foto_url?, grupo_muscular_resumo?, academia_nome?, tipo (PostTipo), visibilidade (Visibilidade), midia_url?, curtidas_count, comentarios_count, criado_em`
+- **SocialLike (`social_likes`)**: `id, post_id, aluno_id` — `@@unique([post_id, aluno_id])`
+- **SocialComment (`social_comments`)**: `id, post_id, aluno_id, autor_nome, texto (VarChar 280), criado_em`
+- **SocialClub (`social_clubs`)**: `id, academia_id? (unique), nome, tipo (ClubTipo), criado_em`
+- **SocialClubMember (`social_club_members`)**: `id, clube_id, aluno_id, xp_semana, criado_em` — `@@unique([clube_id, aluno_id])`
 
-### MensagemMotivacional, MensagemMotivacionalEnviada
+### Modelos da Biblioteca de Planos (`planos_*`)
+- **PlanoBiblioteca (`planos_biblioteca`)**: `id (cuid), codigo (unique), nome, descricao?, objetivo, nivel, sexo_alvo (MASCULINO|FEMININO|AMBOS), dias_por_semana, split_tipo, ativo, criado_em`
+- **PlanoSessao (`plano_sessoes`)**: `id (cuid), plano_id, nome, dia_label, ordem`
+- **PlanoSessaoExercicio (`plano_sessao_exercicios`)**: `id (cuid), sessao_id, exercicio_id, ordem, tipo, series, repeticoes_min, repeticoes_max, carga_sugerida_kg?, restricoes_incompativeis (String[]), alternativo_id?`
 
 ---
 
 ## 3. Regras de Negócio Detalhadas
 
-### 3.1 Treino — Máquina de Estados
+### 3.1 Treino — Máquina de Estados & Execução
 
 Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CONCLUIDO`
 
@@ -115,7 +128,11 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 | `EM_EXECUCAO` | `CONCLUIDO` | `ALUNO` | Finaliza |
 | `CONCLUIDO` | `ACEITO` | `SISTEMA` | Reciclagem automática |
 
-Regras: T1-T31 conforme documentação original. Destaques:
+#### Validações e Retomada de Sessão de Treino (novo)
+- Registro de séries via `POST /treinos/:id/execucoes` é estritamente restrito a treinos com `status = EM_EXECUCAO`.
+- Retomada de sessão de treino e isolamento de execuções por sessão (`TreinoService` + `useTrainingStore`).
+- Botão "Voltar" em `TreinoInicio` e modal de confirmação `ConfirmModal` (`z-40`) ao clicar em "Sair" em `TreinoExecucao`.
+- Filtro de biblioteca de exercícios com mapeamento de aliases para equipamentos (`apps/web/src/lib/exerciseFilters.ts`).
 
 #### Clonar Treino (T27-T31)
 - `POST /treinos/:id/clonar` — clone para 1 aluno. Copia nome (sem sufixo), dias_semana, exercícios. Status `CADASTRADO`.
@@ -169,11 +186,12 @@ Regras: T1-T31 conforme documentação original. Destaques:
 - `MeusTreinos.tsx`: 2 cenários — autogestão ("Crie seu primeiro treino") vs com professor ("Nenhum treino ativo")
 - Ilustração via emoji grande + texto contextual + CTA diferente por cenário
 
-#### Dados do Aluno & Gestão de Vínculos (novo)
-- Rota `/dados` (`DadosAluno.tsx`) para alteração de dados pessoais (nome, telefone via `PATCH /auth/me`), dados físicos (data nascimento, peso, altura, sexo com recálculo visual de IMC via `POST /alunos/perfil`), troca/remoção de academia (`DELETE /alunos/academia`) e gestão de professor/autogestão (`PATCH /alunos/professor`).
+#### Dados do Aluno, Upload de Avatar & Gestão de Vínculos (novo)
+- Rota `/dados` (`DadosAluno.tsx`) para alteração de dados pessoais (nome, telefone via `PATCH /auth/me`), upload de foto de perfil (`POST /auth/avatar`), dados físicos (data nascimento, peso, altura, sexo com recálculo visual de IMC via `POST /alunos/perfil`), troca/remoção de academia (`DELETE /alunos/academia`) e gestão de professor/autogestão (`PATCH /alunos/professor`).
 
 #### Gestão Própria & Edição de Treinos pelo Aluno (novo)
-- Aluno pode criar treinos próprios (`/treino/novo` via `CriarTreinoAluno.tsx`) e editar/excluir treinos que possui (`PATCH /treinos/:id` e `DELETE /treinos/:id`), inclusive aqueles recebidos de professores.
+- Aluno pode criar treinos próprios (`/treino/novo` via `CriarTreinoAluno.tsx` ou `POST /treinos/autogestao`) mesmo se tiver professor vinculado.
+- Permite editar e excluir treinos que possui (`PATCH /treinos/:id` e `DELETE /treinos/:id`), inclusive aqueles recebidos de professores.
 - Botão `+ Criar Treino` visível no cabeçalho de `MeusTreinos.tsx` para todos os alunos.
 
 #### Conclusão em Lote por Exercício na Execução (novo)
@@ -181,58 +199,56 @@ Regras: T1-T31 conforme documentação original. Destaques:
 - Registra de uma só vez todas as séries pendentes do exercício enviando os valores informados nos inputs ou os valores padrão (carga sugerida / repetições do treino).
 - Ocultado automaticamente quando todas as séries do exercício forem concluídas.
 
-### 3.3 Professor — Regras de Negócio
+### 3.3 Módulo Social, Amizades e Mídia (novo)
 
-#### Templates (novo)
-- `GET /professores/templates?academiaId=` — lista templates do professor com exercícios
-- Usado no dropdown "Criar a partir de Template" do `CriarTreino.tsx`
+#### Upload e Mídia de Fotos
+- `POST /auth/avatar` — faz upload da imagem do usuário para `public/uploads/avatars/`.
+- `GET /uploads/avatars/:filename` e `GET /uploads/feed/:year/:month/:filename` — rotas dedicadas para servir mídia com headers corretos e cache `public, max-age=86400`.
+- URLs de imagem retornam caminho absoluto (`API_BASE_URL`). O helper `resolveMediaUrl()` em `src/lib/media.ts` normaliza e garante exibição correta no frontend.
+- Fotos de perfil exibidas no Header (`AppShell`), menu do usuário, `DadosAluno`, `PostCard` e `AcademySidebar`.
 
-Restante (P1-P21) conforme documentação original: perfil, vínculo academia, alunos, dashboard, fichas, correlações, exercícios.
+#### Feed / Mural Social & Notificação de Atividades
+- Notificação de novidades no menu Mural: endpoint `GET /social/mural/atividade` com polling de 30s exibe um indicador/badge colorido no menu quando há novos posts.
+- Paginação do feed via cursor composto `data+id` com inclusão de posts próprios no feed do aluno.
+- Notificação de treino concluído em `notify-friends.worker.ts` e `PostCard` desnormaliza o nome da academia ("concluiu o treino na XYZ").
 
-### 3.4 Academia (AC1-AC19)
+#### Colegas da Academia (`AcademySidebar`)
+- `GET /alunos/academia/colegas` — retorna lista de alunos da mesma academia que o aluno ainda não segue.
+- `POST /social/amizades/solicitar-por-id` — permite seguir um colega diretamente por `alunoId`.
+- Componente `AcademySidebar` exibido no painel direito fixo (`w-56`) em telas XL+ (`>=1280px`) ao lado do conteúdo principal e no drawer mobile.
 
-Conforme documentação original: cadastro, aprovação, professores, alunos, fichas.
+### 3.4 Design System & Temas Dinâmicos (novo)
 
-### 3.5 ROOT (R1-R13)
-
-Conforme documentação original: aprovações, CRUD academias/professores/alunos.
-
-### 3.6 Autenticação (AU1-AU15)
-
-Conforme documentação original: registro, login, JWT, refresh token, middleware.
-
-### 3.7 Workers (W1-W16)
-
-Conforme documentação original: inatividade 30min, EM_ABERTO diário, mensagens motivacionais, correlações, push dual-channel.
-
-### 3.8 Correlação de Desempenho (C1-C7)
-
-Conforme documentação original: Pearson, volume semanal, cache 30 dias.
-
-### 3.9 Sistema (S1-S14)
-
-Conforme documentação original: vínculos, notificações, resolve helpers, mapa de erros, tenant isolation, race conditions, constraints.
+- **3 Temas de Cores Selecionáveis**:
+  1. `Vermelho & Preto` (padrão)
+  2. `Lima & Navy`
+  3. `Violeta & Preto`
+- Estado global gerenciado por `useThemeStore` (`src/stores/theme.ts`) e alterado dinamicamente via `AppShell.tsx`, persistido em `localStorage` (`gymapp_theme`).
+- `src/index.css` configurado com variáveis CSS dinâmicas (`--color-primary`, `--color-primary-rgb`, `--color-primary-dark`, `--color-surface`, etc.), mantendo isolamento de temas para componentes, glassmorphism e gradientes.
 
 ---
 
 ## 4. Rotas da API (Fastify)
 
-### Auth (`/auth`)
+### Auth & Uploads (`/auth` & `/uploads`)
 | Método | Rota | Descrição | Auth |
 |--------|------|-----------|------|
 | POST | `/auth/register` | Criar usuário | - |
 | POST | `/auth/login` | Login → tokens | - |
 | POST | `/auth/refresh` | Renovar tokens | - |
 | POST | `/auth/logout` | Invalidar refresh | auth |
-| GET | `/auth/me` | Dados do usuário (inclui telefone) | auth |
-| PATCH | `/auth/me` | Atualizar nome, telefone, push tokens | auth |
+| GET | `/auth/me` | Dados do usuário (inclui telefone e fotoUrl) | auth |
+| PATCH | `/auth/me` | Atualizar nome, telefone, fotoUrl, push tokens | auth |
+| POST | `/auth/avatar` | **Upload de foto de avatar** | auth |
 | POST | `/auth/change-password` | Alterar senha | auth |
+| GET | `/uploads/avatars/:filename` | **Servir foto de perfil (estático)** | - |
+| GET | `/uploads/feed/*` | **Servir imagens do feed (estático)** | - |
 
 ### Aluno (`/alunos`) — role ALUNO
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | POST | `/alunos/perfil` | Upsert perfil (dataNascimento?, pesoKg?, alturaCm?, sexo?) |
-| GET | `/alunos/perfil` | Perfil com professor, academia, sexo e usuario (nome, email, telefone) |
+| GET | `/alunos/perfil` | Perfil com professor, academia, sexo e usuario (nome, email, telefone, fotoUrl) |
 | GET | `/alunos/treinos` | Todos os treinos (sem filtro) |
 | GET | `/alunos/treinos/historico-dias?mes=` | Calendário mensal |
 | GET/POST/PATCH | `/alunos/medidas[/:id]` | CRUD medidas |
@@ -240,7 +256,15 @@ Conforme documentação original: vínculos, notificações, resolve helpers, ma
 | PATCH | `/alunos/academia` | Vincular a academia |
 | DELETE | `/alunos/academia` | Desvincular da academia atual |
 | PATCH | `/alunos/professor` | Vincular ou desvincular (null) professor |
+| GET | `/alunos/academia/colegas` | **Listar colegas da mesma academia** |
 | GET/POST | `/alunos/notificacoes[/visualizar]` | Listar/marcar lidas |
+
+### Social (`/social`)
+| Método | Rota | Descrição | Auth |
+|--------|------|-----------|------|
+| GET | `/social/mural` | Feed social paginado | auth |
+| GET | `/social/mural/atividade` | **Verificar atividade recente no feed (badge)** | auth |
+| POST | `/social/amizades/solicitar-por-id` | **Seguir colega por alunoId** | auth |
 
 ### Professor (`/professores`) — role PROFESSOR
 | Método | Rota | Descrição |
@@ -252,7 +276,7 @@ Conforme documentação original: vínculos, notificações, resolve helpers, ma
 | GET | `/professores/dashboard` | Dashboard alunos + treinos |
 | GET/POST | `/professores/fichas` | Listar/criar fichas em lote |
 | GET | `/professores/exercicios` | Listar com filtros |
-| GET | `/professores/templates` | **Listar templates do professor** |
+| GET | `/professores/templates` | Listar templates do professor |
 | GET | `/professores/workoutx/exercicios` | Busca externa |
 | GET | `/professores/alunos/:alunoId/correlacoes` | Correlações de aluno |
 
@@ -282,11 +306,8 @@ Conforme documentação original: vínculos, notificações, resolve helpers, ma
 | PATCH | `/treinos/:id` | Editar | PROF / ACAD / ALUNO |
 | DELETE | `/treinos/:id` | Remover | PROF / ACAD / ALUNO |
 | POST | `/treinos/:id/clonar` | Clonar p/ 1 aluno | PROF/ACAD |
-| POST | `/treinos/:id/clonar-lote` | **Clonar p/ múltiplos alunos** | PROF/ACAD |
-| POST | `/treinos/:id/marcar-template` | **Toggle is_template** | PROF/ACAD |
-
-### Root (`/root`) — role ROOT
-Conforme documentação original: painel, CRUD academias/professores/alunos, aprovações, vínculos, reset senha.
+| POST | `/treinos/:id/clonar-lote` | Clonar p/ múltiplos alunos | PROF/ACAD |
+| POST | `/treinos/:id/marcar-template` | Toggle is_template | PROF/ACAD |
 
 ---
 
@@ -323,21 +344,14 @@ Conforme documentação original: painel, CRUD academias/professores/alunos, apr
 | `ACADEMIA` | Criar Treino | `/treinos/criar` | `pages/academia/CriarTreinoAcademia.tsx` |
 | `ROOT` | Painel/Vínculos/Usuários | `/`, `/vinculos`, `/usuarios` | `pages/root/` |
 
-### Componentes do Wizard de Cadastro
+### Componentes Compartilhados
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|-----------------|
-| `RegisterWizard` | `pages/auth/RegisterWizard.tsx` | Container: estado `step`, navegação, submit |
-| `StepIndicator` | `pages/auth/StepIndicator.tsx` | Barra de progresso com 3 círculos |
-| `Step1Basics` | `pages/auth/Step1Basics.tsx` | Dados básicos (nome, email, senha, WhatsApp, role) |
-| `Step2Profile` | `pages/auth/Step2Profile.tsx` | Perfil físico + validação inline peso/altura/sexo |
-| `Step3Academia` | `pages/auth/Step3Academia.tsx` | Seleção academia/autogestão |
-
-### Componentes Compartilhados (novos)
-| Componente | Arquivo | Responsabilidade |
-|------------|---------|-----------------|
+| `AcademySidebar` | `components/social/AcademySidebar.tsx` | Lista de colegas de academia com botão Seguir |
+| `PostCard` | `components/social/PostCard.tsx` | Card de postagem social com curtir, comentar e foto |
 | `EmptyState` | `components/ui/EmptyState.tsx` | Estado vazio reutilizável: ícone, título, descrição, CTA |
 | `CoachMark` | `components/ui/CoachMark.tsx` | Tooltips de onboarding: hook `useCoachMark` + overlay `CoachMarkOverlay` |
-| `AppShell` | `components/layout/AppShell.tsx` | Layout com sidebar desktop + bottom tabs mobile |
+| `AppShell` | `components/layout/AppShell.tsx` | Layout com sidebar desktop, seletor de tema, drawer mobile e painel direito `AcademySidebar` |
 | `Toast` | `components/ui/Toast.tsx` | Feedback de sucesso/erro |
 | `ConfirmModal` | `components/ui/ConfirmModal.tsx` | Modal de confirmação |
 | `StatusBadge` | `components/ui/StatusBadge.tsx` | Badge com 7 variantes + helpers |
@@ -347,14 +361,13 @@ Conforme documentação original: painel, CRUD academias/professores/alunos, apr
 ### Stores (Zustand)
 | Store | Arquivo | Responsabilidade |
 |-------|---------|-----------------|
-| `useAuthStore` | `stores/auth.ts` | Auth: login, register (aceita sexo), logout, fetchUser, push |
+| `useAuthStore` | `stores/auth.ts` | Auth: login, register, logout, fetchUser, avatar, push |
 | `useTrainingStore` | `stores/training.ts` | Sessão de treino: iniciar, registrar, finalizar, timer |
+| `useThemeStore` | `stores/theme.ts` | Tema visual: alternância entre 3 paletas de cores |
 
-### Design System (`index.css`)
-- **Fonte**: Inter (UI sans-serif)
-- **Paleta**: primary (#dc2626), surface (#18181b), surface-card (#27272a), surface-input (#3f3f46), text (#f4f4f5), text-muted (#a1a1aa), success, warning, info
-- **Animações**: fade-in, slide-up, slide-down, modal-pop, pulse-soft, scale-in
-- **Utilities**: glass, gradient-primary, scrollbar-hide
+### Helpers & Utilities (`apps/web/src/lib`)
+- `media.ts`: `resolveMediaUrl()` para formar URLs absolutas de uploads
+- `exerciseFilters.ts`: Normalização e equivalência de aliases para filtros de equipamentos
 
 ---
 
@@ -368,13 +381,13 @@ Conforme documentação original: painel, CRUD academias/professores/alunos, apr
 5. Autoresolução: `resolveProfessor()` e `resolveAluno()` com upsert
 6. Race conditions: upsert ou try-catch P2002
 7. Zod em todas as rotas para body/query/params
-8. Delete cascade: ordem correta para evitar FK errors
+8. Uploads de imagem em `public/uploads/avatars` e `public/uploads/feed`, servidos via rotas dedicadas Fastify
 
 ### Frontend (`apps/web`)
 1. API Client centralizado em `src/api/client.ts` com auto-refresh em 401
 2. Zustand stores em `src/stores/`
 3. Tipos em `src/types/api.ts`
-4. TailwindCSS v4 com design system
+4. TailwindCSS v4 com design system via variáveis CSS
 5. React Router v7 com rotas aninhadas por role
 6. `ConfirmModal` para ações destrutivas, `Toast` para feedback
 7. `formatPhone()` para máscara de telefone
@@ -389,6 +402,7 @@ Conforme documentação original: painel, CRUD academias/professores/alunos, apr
 |-----|-----|
 | `gymapp_welcome_seen` | Tela de boas-vindas já foi exibida |
 | `gymapp_first_workout_done` | Coach marks da execução já foram exibidos |
+| `gymapp_theme` | Tema de cores selecionado (vermelho, lima, violeta) |
 
 ---
 
@@ -404,10 +418,9 @@ Conforme documentação original: painel, CRUD academias/professores/alunos, apr
 
 ### Deploy (Railway)
 - Push para `origin/main` aciona deploy automático
-- `railway-start.sh`: build → migrate → sync-gifdotreino → start
+- `railway-start.sh`: cria diretórios de upload `uploads/avatars` e `uploads/feed` → build → migrate → sync-gifdotreino → start
 - API: `https://api-production-3360.up.railway.app`
 - Web: `https://web-production-c2d3c.up.railway.app`
-- 13 migrations aplicadas, incluindo `add_sexo_to_aluno`, `add_is_template_to_treinos`
 
 ---
 

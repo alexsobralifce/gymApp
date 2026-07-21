@@ -54,6 +54,13 @@ export default function DadosAluno() {
   const [salvandoFisicos, setSalvandoFisicos] = useState(false)
   const [feedbackFisicos, setFeedbackFisicos] = useState<string | null>(null)
 
+  // Formulário 3: Preferências & Restrições
+  const [objetivoTreino, setObjetivoTreino] = useState<string>('')
+  const [nivelTreino, setNivelTreino] = useState<string>('')
+  const [restricoes, setRestricoes] = useState<string[]>([])
+  const [salvandoPreferencias, setSalvandoPreferencias] = useState(false)
+  const [feedbackPreferencias, setFeedbackPreferencias] = useState<string | null>(null)
+
   // Modais de Vínculo
   const [trocandoAcademia, setTrocandoAcademia] = useState(false)
   const [novaAcademiaId, setNovaAcademiaId] = useState('')
@@ -86,6 +93,10 @@ export default function DadosAluno() {
         if (pData.altura_cm) setAlturaCm(String(pData.altura_cm))
         if (pData.data_nascimento) setDataNascimento(pData.data_nascimento.slice(0, 10))
         if (pData.sexo) setSexo(pData.sexo)
+
+        if (pData.objetivo_treino) setObjetivoTreino(pData.objetivo_treino)
+        if (pData.nivel_treino) setNivelTreino(pData.nivel_treino)
+        if (pData.restricoes) setRestricoes(pData.restricoes)
       } catch (err) {
         console.error(err)
       } finally {
@@ -153,6 +164,32 @@ export default function DadosAluno() {
     } finally {
       setSalvandoFisicos(false)
     }
+  }
+
+  async function handleSalvarPreferencias(e: React.FormEvent) {
+    e.preventDefault()
+    setFeedbackPreferencias(null)
+    setSalvandoPreferencias(true)
+    try {
+      const updated = await api.criarPerfilAluno({
+        objetivoTreino: objetivoTreino || undefined,
+        nivelTreino: nivelTreino || undefined,
+        restricoes: restricoes,
+      }) as PerfilAluno
+      setPerfil(updated)
+      setFeedbackPreferencias('Preferências e restrições atualizadas!')
+      setTimeout(() => setFeedbackPreferencias(null), 3000)
+    } catch {
+      setFeedbackPreferencias('Erro ao salvar preferências.')
+    } finally {
+      setSalvandoPreferencias(false)
+    }
+  }
+
+  function toggleRestricao(item: string) {
+    setRestricoes((prev) =>
+      prev.includes(item) ? prev.filter((r) => r !== item) : [...prev, item]
+    )
   }
 
   async function handleTrocarAcademia() {
@@ -410,7 +447,98 @@ export default function DadosAluno() {
         </form>
       </div>
 
-      {/* 3. Vínculos: Academia e Professor */}
+      {/* 3. Preferências de Treino & Restrições */}
+      <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-2 border-b border-surface-input pb-3">
+          <span className="text-lg">🎯</span>
+          <h2 className="text-sm font-bold text-text uppercase tracking-wider">Preferências de Treino & Restrições</h2>
+        </div>
+
+        {feedbackPreferencias && (
+          <div className={`rounded-xl p-2.5 text-xs text-center font-medium ${
+            feedbackPreferencias.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-success/10 text-success'
+          }`}>
+            {feedbackPreferencias}
+          </div>
+        )}
+
+        <form onSubmit={handleSalvarPreferencias} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Objetivo Principal</label>
+              <select
+                value={objetivoTreino}
+                onChange={(e) => setObjetivoTreino(e.target.value)}
+                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2.5 text-xs text-text focus:border-primary focus:outline-none"
+              >
+                <option value="">Selecione um objetivo</option>
+                <option value="HIPERTROFIA">🔥 Hipertrofia (Ganho de massa)</option>
+                <option value="FORCA">💪 Força Máxima</option>
+                <option value="EMAGRECIMENTO">⚡ Emagrecimento / Queima Fat</option>
+                <option value="SAUDE">❤️ Saúde & Condicionamento</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Nível de Experiência</label>
+              <select
+                value={nivelTreino}
+                onChange={(e) => setNivelTreino(e.target.value)}
+                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2.5 text-xs text-text focus:border-primary focus:outline-none"
+              >
+                <option value="">Selecione seu nível</option>
+                <option value="INICIANTE">🌱 Iniciante (&lt; 6 meses)</option>
+                <option value="INTERMEDIARIO">⚡ Intermediário (6m a 2 anos)</option>
+                <option value="AVANCADO">🚀 Avançado (&gt; 2 anos)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+              Restrições ou Dores Articulares (Substituição Automática de Exercícios)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'joelho', label: '🦵 Joelho' },
+                { key: 'lombar', label: '🦴 Lombar' },
+                { key: 'ombro', label: '🦾 Ombro' },
+                { key: 'punho', label: '✋ Punho' },
+                { key: 'costas', label: '🧘 Costas' },
+              ].map((item) => {
+                const selected = restricoes.includes(item.key)
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => toggleRestricao(item.key)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                      selected
+                        ? 'bg-amber-500/20 text-amber-500 border-amber-500/40 shadow-sm'
+                        : 'bg-surface border-surface-input text-text-muted hover:border-surface-input/80'
+                    }`}
+                  >
+                    {item.label} {selected ? '✓' : ''}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-[10px] text-text-muted mt-1.5">
+              Ao adotar um plano pronto, exercícios que sobrecarreguem essas articulações serão trocados por alternativas seguras.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={salvandoPreferencias}
+            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+          >
+            {salvandoPreferencias ? 'Salvando...' : 'Salvar Preferências'}
+          </button>
+        </form>
+      </div>
+
+      {/* 4. Vínculos: Academia e Professor */}
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2 border-b border-surface-input pb-3">
           <Building2Icon className="h-5 w-5 text-primary" />

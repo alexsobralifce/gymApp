@@ -157,6 +157,9 @@ model Aluno {
   peso_kg         Float?
   altura_cm       Float?
   sexo            Sexo?
+  objetivo_treino String?
+  nivel_treino    String?
+  restricoes      String[]  @default([])
   visibilidade_padrao       Visibilidade @default(AMIGOS)
   permite_busca_email       Boolean      @default(true)
   consentiu_feed_social_em  DateTime?
@@ -232,8 +235,10 @@ model Exercicio {
   criado_em            DateTime @default(now())
   atualizado_em        DateTime @updatedAt
 
-  treinos   TreinoExercicio[]
-  execucoes ExecucaoExercicio[]
+  treinos                 TreinoExercicio[]
+  execucoes               ExecucaoExercicio[]
+  planoSessaoExercicios   PlanoSessaoExercicio[] @relation("ExercicioBase")
+  planoSessaoAlternativos PlanoSessaoExercicio[] @relation("ExercicioAlternativo")
 
   @@map("exercicios")
 }
@@ -244,6 +249,7 @@ model TreinoExercicio {
   treino_id     String
   exercicio_id  String
   ordem         Int
+  tipo          String @default("PRINCIPAL") // AQUECIMENTO | PRINCIPAL | ALONGAMENTO
   series        Int    @default(3)
   repeticoes    Int    @default(12)
   carga_sugerida_kg Float?
@@ -253,6 +259,60 @@ model TreinoExercicio {
 
   @@unique([treino_id, ordem])
   @@map("treino_exercicios")
+}
+
+// ─── Biblioteca de Planos de Treino ──────────────────────────────────────────
+
+model PlanoBiblioteca {
+  id              String   @id @default(cuid())
+  codigo          String   @unique
+  nome            String
+  descricao       String?  @db.Text
+  objetivo        String   // HIPERTROFIA | FORCA | EMAGRECIMENTO | SAUDE
+  nivel           String   // INICIANTE | INTERMEDIARIO | AVANCADO
+  sexo_alvo       String   @default("AMBOS") // MASCULINO | FEMININO | AMBOS
+  dias_por_semana Int
+  split_tipo      String   // ABC | ABCD | FULL_BODY | UPPER_LOWER etc.
+  ativo           Boolean  @default(true)
+  criado_em       DateTime @default(now())
+
+  sessoes PlanoSessao[]
+
+  @@map("planos_biblioteca")
+}
+
+model PlanoSessao {
+  id        String @id @default(cuid())
+  plano_id  String
+  nome      String // "Treino A — Peito, Tríceps e Ombro"
+  dia_label String // "A" | "B" | "C"
+  ordem     Int
+
+  plano      PlanoBiblioteca        @relation(fields: [plano_id], references: [id], onDelete: Cascade)
+  exercicios PlanoSessaoExercicio[]
+
+  @@map("plano_sessoes")
+}
+
+model PlanoSessaoExercicio {
+  id                      String   @id @default(cuid())
+  sessao_id               String
+  exercicio_id            String
+  ordem                   Int
+  tipo                    String   @default("PRINCIPAL")
+  series                  Int      @default(3)
+  repeticoes_min          Int      @default(8)
+  repeticoes_max          Int      @default(12)
+  carga_sugerida_kg       Float?
+  restricoes_incompativeis String[] @default([])
+  alternativo_id          String?
+
+  sessao      PlanoSessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
+  exercicio   Exercicio   @relation("ExercicioBase", fields: [exercicio_id], references: [id])
+  alternativo Exercicio?  @relation("ExercicioAlternativo", fields: [alternativo_id], references: [id])
+
+  @@unique([sessao_id, ordem])
+  @@map("plano_sessao_exercicios")
 }
 
 /// Registro de execução real pelo aluno (carga e reps realizadas)

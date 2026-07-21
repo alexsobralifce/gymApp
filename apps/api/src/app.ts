@@ -16,6 +16,8 @@ import { academiaRoutes } from './presentation/http/routes/academia.routes.js'
 import { professorRoutes } from './presentation/http/routes/professor.routes.js'
 import { alunoRoutes } from './presentation/http/routes/aluno.routes.js'
 import { treinoRoutes } from './presentation/http/routes/treino.routes.js'
+import { treinoIARoutes } from './presentation/http/routes/treino-ia.routes.js'
+import { planosRoutes } from './presentation/http/routes/planos.routes.js'
 import { rootRoutes } from './presentation/http/routes/root.routes.js'
 import { friendshipRoutes } from './modules/social/friendships/friendship.routes.js'
 import { feedRoutes } from './modules/social/feed/feed.routes.js'
@@ -114,6 +116,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(professorRoutes, { prefix: '/professores' })
   await app.register(alunoRoutes, { prefix: '/alunos' })
   await app.register(treinoRoutes, { prefix: '/treinos' })
+  await app.register(treinoIARoutes, { prefix: '/treinos/ia' })
+  await app.register(planosRoutes, { prefix: '/planos' })
   await app.register(friendshipRoutes)
   await app.register(feedRoutes)
   await app.register(privacyRoutes)

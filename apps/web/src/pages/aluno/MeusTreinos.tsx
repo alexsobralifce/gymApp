@@ -161,18 +161,26 @@ export default function AlunoMeusTreinos() {
         .animate-gif-enter { animation: gif-enter 0.4s ease forwards; }
       `}</style>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-text">Meus Treinos</h1>
           <p className="text-xs text-text-muted">Veja e gerencie suas fichas de treino</p>
         </div>
-        <button
-          onClick={() => navigate('/treino/novo')}
-          className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Criar Treino
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/biblioteca-planos')}
+            className="flex items-center gap-1.5 rounded-xl bg-surface-input border border-surface-input px-3 py-2 text-xs font-bold text-text hover:border-primary/50 transition-all cursor-pointer"
+          >
+            📚 Biblioteca
+          </button>
+          <button
+            onClick={() => navigate('/treino/novo')}
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Criar
+          </button>
+        </div>
       </div>
 
       {feedback && (

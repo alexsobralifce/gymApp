@@ -155,7 +155,50 @@ export interface Aluno {
   usuario_id: string
   professor_id?: string | null
   academia_id?: string | null
+  sexo?: 'MASCULINO' | 'FEMININO' | null
+  objetivo_treino?: string | null
+  nivel_treino?: string | null
+  restricoes?: string[]
   usuario?: { nome: string; email: string }
+}
+
+export interface PlanoSessaoExercicio {
+  id: string
+  sessao_id: string
+  exercicio_id: string
+  ordem: number
+  tipo: string
+  series: number
+  repeticoes_min: number
+  repeticoes_max: number
+  carga_sugerida_kg?: number | null
+  restricoes_incompativeis?: string[]
+  alternativo_id?: string | null
+  exercicio?: Exercicio
+  alternativo?: Partial<Exercicio> | null
+}
+
+export interface PlanoSessao {
+  id: string
+  plano_id: string
+  nome: string
+  dia_label: string
+  ordem: number
+  exercicios?: PlanoSessaoExercicio[]
+}
+
+export interface PlanoBiblioteca {
+  id: string
+  codigo: string
+  nome: string
+  descricao?: string | null
+  objetivo: string
+  nivel: string
+  sexo_alvo: 'MASCULINO' | 'FEMININO' | 'AMBOS'
+  dias_por_semana: number
+  split_tipo: string
+  ativo: boolean
+  sessoes?: PlanoSessao[]
 }
 
 export interface PerfilAluno {
@@ -167,6 +210,9 @@ export interface PerfilAluno {
   peso_kg?: number | null
   altura_cm?: number | null
   sexo?: 'MASCULINO' | 'FEMININO' | null
+  objetivo_treino?: string | null
+  nivel_treino?: string | null
+  restricoes?: string[]
   criado_em: string
   professor?: { id?: string; usuario: { nome: string; email: string; telefone?: string | null } } | null
   academia?: { id?: string; nome: string } | null
