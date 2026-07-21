@@ -316,6 +316,7 @@ export interface SocialPost {
   comentarios_count: number
   criado_em: string
   curtiu?: boolean
+  curtido_em?: string | null
 }
 
 export interface SocialComment {

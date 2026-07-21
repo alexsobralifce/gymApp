@@ -68,22 +68,26 @@ export async function feedRoutes(app: FastifyInstance) {
     const lastPost = rawItems[rawItems.length - 1]
     const nextCursor = hasMore && lastPost ? `${lastPost.criado_em.toISOString()}|${lastPost.id}` : null
 
-    // Buscar likes do aluno atual para setar curtiu: boolean
+    // Buscar likes do aluno atual para setar curtiu: boolean e curtido_em
     const likesDesteAluno = rawItems.length > 0 ? await prisma.socialLike.findMany({
       where: {
         aluno_id: aluno.id,
         post_id: { in: rawItems.map((p) => p.id) },
       },
-      select: { post_id: true },
+      select: { post_id: true, criado_em: true },
     }) : []
-    const postsCurtidos = new Set(likesDesteAluno.map((l) => l.post_id))
+    const likeMap = new Map(likesDesteAluno.map((l) => [l.post_id, l.criado_em.toISOString()]))
 
-    const items = rawItems.map((p) => ({
-      ...p,
-      curtiu: postsCurtidos.has(p.id),
-      autor_foto_url: absolutizeMedia(p.autor_foto_url),
-      midia_url: absolutizeMedia(p.midia_url),
-    }))
+    const items = rawItems.map((p) => {
+      const curtidoEmDate = likeMap.get(p.id)
+      return {
+        ...p,
+        curtiu: !!curtidoEmDate,
+        curtido_em: curtidoEmDate || null,
+        autor_foto_url: absolutizeMedia(p.autor_foto_url),
+        midia_url: absolutizeMedia(p.midia_url),
+      }
+    })
 
     return reply.status(200).send({ items, nextCursor })
   })
@@ -153,21 +157,26 @@ export async function feedRoutes(app: FastifyInstance) {
     const post = await prisma.socialPost.findUnique({ where: { id: postId } })
     if (!post) throw new NotFoundError('Post')
 
+    let curtidoEm = new Date().toISOString()
     try {
-      await prisma.socialLike.create({ data: { post_id: postId, aluno_id: aluno.id } })
+      const newLike = await prisma.socialLike.create({ data: { post_id: postId, aluno_id: aluno.id } })
+      curtidoEm = newLike.criado_em.toISOString()
       await prisma.socialPost.update({
         where: { id: postId },
         data: { curtidas_count: { increment: 1 } },
       })
     } catch (err: any) {
       if (err?.code === 'P2002') {
-        // já curtido — ignora
+        const existing = await prisma.socialLike.findUnique({
+          where: { post_id_aluno_id: { post_id: postId, aluno_id: aluno.id } },
+        })
+        if (existing) curtidoEm = existing.criado_em.toISOString()
       } else {
         throw err
       }
     }
 
-    return reply.status(200).send({ message: 'Curtido' })
+    return reply.status(200).send({ message: 'Curtido', curtido_em: curtidoEm })
   })
 
   /** DELETE /social/mural/:postId/curtir */

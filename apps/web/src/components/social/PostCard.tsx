@@ -69,7 +69,7 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
   const [enviando, setEnviando] = useState(false)
   const [curtiu, setCurtiu] = useState(post.curtiu || false)
   const [curtidasCount, setCurtidasCount] = useState(post.curtidas_count)
-  const [curtidoEm, setCurtidoEm] = useState<string | null>(null)
+  const [curtidoEm, setCurtidoEm] = useState<string | null>(post.curtido_em ? formatHora(post.curtido_em) : null)
 
   const badge = tipoBadge[post.tipo] || { label: post.tipo, color: 'text-text-muted' }
 

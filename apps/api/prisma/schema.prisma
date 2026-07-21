@@ -480,9 +480,10 @@ model SocialPost {
 }
 
 model SocialLike {
-  id       String @id @default(cuid())
-  post_id  String
-  aluno_id String
+  id        String   @id @default(cuid())
+  post_id   String
+  aluno_id  String
+  criado_em DateTime @default(now())
 
   @@unique([post_id, aluno_id])
   @@index([post_id])
