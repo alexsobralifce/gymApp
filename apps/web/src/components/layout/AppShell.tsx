@@ -252,6 +252,7 @@ export default function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [moreSheetOpen, setMoreSheetOpen] = useState(false)
+  const [colegasSheetOpen, setColegasSheetOpen] = useState(false)
   const [atividadeMural, setAtividadeMural] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -270,6 +271,7 @@ export default function AppShell() {
   useEffect(() => {
     setDrawerOpen(false)
     setMoreSheetOpen(false)
+    setColegasSheetOpen(false)
   }, [location.pathname])
 
   useEffect(() => {
@@ -345,8 +347,6 @@ export default function AppShell() {
           )
         )}
       </nav>
-
-      <AcademySidebar />
 
       <div className="border-t border-surface-input p-3 space-y-1">
         <button
@@ -599,6 +599,34 @@ export default function AppShell() {
           </div>
         )}
 
+        {/* Bottom Sheet "Colegas da Academia" para Aluno no Mobile */}
+        {isAluno && colegasSheetOpen && (
+          <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in"
+              onClick={() => setColegasSheetOpen(false)}
+            />
+            <div className="relative bg-surface-card border-t border-surface-input rounded-t-3xl shadow-2xl animate-modal-pop z-10 safe-bottom overflow-hidden max-h-[75vh] flex flex-col">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-surface-input shrink-0">
+                <h3 className="text-base font-bold text-text flex items-center gap-2">
+                  <Building2Icon className="h-5 w-5 text-primary" />
+                  Alunos da Academia
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setColegasSheetOpen(false)}
+                  className="rounded-full bg-surface-input p-2 text-text-muted hover:text-text cursor-pointer"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2">
+                <AcademySidebar />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bottom tabs — mobile ALUNO */}
         {isAluno && !hideNav && (
           <nav className="fixed bottom-0 left-0 right-0 z-30 glass border-t border-surface-input safe-bottom md:hidden">
@@ -632,7 +660,22 @@ export default function AppShell() {
                 )
               })}
 
-              {/* 5ª Tab: Mais */}
+              {/* Tab: Colegas */}
+              <button
+                type="button"
+                onClick={() => setColegasSheetOpen(true)}
+                className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 min-w-0 cursor-pointer group ${
+                  colegasSheetOpen ? 'text-primary font-bold' : 'text-text-muted hover:text-text'
+                }`}
+              >
+                <UsersIcon className={`h-5 w-5 transition-all duration-200 ${colegasSheetOpen ? 'text-primary scale-110' : ''}`} />
+                <span className="text-[10px] font-medium">Colegas</span>
+                {colegasSheetOpen && (
+                  <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-7 rounded-full bg-primary animate-scale-in" />
+                )}
+              </button>
+
+              {/* Tab: Mais */}
               <button
                 type="button"
                 onClick={() => setMoreSheetOpen(true)}
