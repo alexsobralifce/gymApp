@@ -79,6 +79,7 @@ export default function App() {
           <Route path="biblioteca-planos" element={<BibliotecaPlanos />} />
           <Route path="dados" element={<AlunoDados />} />
           <Route path="treino/novo" element={<AlunoCriarTreino />} />
+          <Route path="treino/:id/editar" element={<AlunoCriarTreino />} />
           <Route path="treino/ia" element={<TreinoIA />} />
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
           <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />

@@ -1,9 +1,27 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
+import { GRUPOS_MUSCULARES } from '../../lib/exerciseFilters'
 import { ChevronLeftIcon } from '../../components/icons/Icon'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Toast from '../../components/ui/Toast'
+
+const SPLIT_ATALHOS = [
+  { id: 'FULL_BODY', label: '🏃 Corpo inteiro', grupos: ['Peito', 'Costas', 'Ombros', 'Bracos', 'Coxas', 'Abdomen / Lombar'] },
+  { id: 'PUSH', label: '💪 Empurrar (Push)', grupos: ['Peito', 'Ombros', 'Bracos'] },
+  { id: 'PULL', label: '🦾 Puxar (Pull)', grupos: ['Costas', 'Bracos'] },
+  { id: 'LEGS', label: '🦵 Pernas', grupos: ['Coxas', 'Panturrilhas / Tibiais'] },
+  { id: 'UPPER', label: '🔝 Superiores', grupos: ['Peito', 'Costas', 'Ombros', 'Bracos'] },
+  { id: 'LOWER', label: '⬇️ Inferiores', grupos: ['Coxas', 'Panturrilhas / Tibiais', 'Abdomen / Lombar'] },
+] as const
+
+const STEPS = [
+  { num: 1, label: 'Objetivo' },
+  { num: 2, label: 'Nível & Dias' },
+  { num: 3, label: 'Músculos' },
+  { num: 4, label: 'Restrições' },
+  { num: 5, label: 'Resultado' },
+]
 
 export default function TreinoIA() {
   const navigate = useNavigate()
@@ -13,6 +31,8 @@ export default function TreinoIA() {
   const [nivel, setNivel] = useState<string>('INICIANTE')
   const [diasPorSemana, setDiasPorSemana] = useState<number>(3)
   const [restricoes, setRestricoes] = useState<string[]>([])
+  const [gruposMusculares, setGruposMusculares] = useState<string[]>([])
+  const [splitPreferido, setSplitPreferido] = useState<string | null>(null)
 
   const [loading, setLoading] = useState(false)
   const [fichaGerada, setFichaGerada] = useState<any>(null)
@@ -24,25 +44,50 @@ export default function TreinoIA() {
 
   function toggleRestricao(item: string) {
     setRestricoes((prev) =>
-      prev.includes(item) ? prev.filter((r) => r !== item) : [...prev, item]
+      prev.includes(item) ? prev.filter((r) => r !== item) : [...prev, item],
     )
   }
 
+  function toggleGrupo(value: string) {
+    setSplitPreferido(null)
+    setGruposMusculares((prev) =>
+      prev.includes(value) ? prev.filter((g) => g !== value) : [...prev, value],
+    )
+  }
+
+  function aplicarSplit(splitId: string, grupos: readonly string[]) {
+    setSplitPreferido(splitId)
+    setGruposMusculares([...grupos])
+  }
+
   async function handleGerarPrescricao() {
+    if (gruposMusculares.length === 0 && !splitPreferido) {
+      setToast({ message: 'Selecione ao menos um grupo muscular ou atalho de split.', type: 'error' })
+      setStep(3)
+      return
+    }
+
     setLoading(true)
     try {
       const [res, libPlanos] = await Promise.all([
-        api.post<any>('/treinos/ia/gerar', {
+        api.gerarTreinoIA({
           objetivo,
           nivel,
           diasPorSemana,
           restricoes,
+          gruposMusculares,
+          splitPreferido: splitPreferido || undefined,
         }),
         api.listarPlanos().catch(() => []),
       ])
       setFichaGerada(res)
       setPlanosBiblioteca(libPlanos)
-      setStep(4)
+      if (splitPreferido === 'PUSH') setGrupoFiltro('ABC')
+      else if (splitPreferido === 'PULL') setGrupoFiltro('PULL')
+      else if (splitPreferido === 'LEGS') setGrupoFiltro('LEGS')
+      else if (splitPreferido === 'FULL_BODY') setGrupoFiltro('FULL_BODY')
+      else setGrupoFiltro('TODOS')
+      setStep(5)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao gerar treino por IA', type: 'error' })
     } finally {
@@ -58,9 +103,7 @@ export default function TreinoIA() {
         message: `🎉 Plano "${res.plano.nome}" ativado com sucesso! ${res.treinosCriadosCount} fichas criadas.`,
         type: 'success',
       })
-      setTimeout(() => {
-        navigate('/meus-treinos')
-      }, 1500)
+      setTimeout(() => navigate('/meus-treinos'), 1500)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao salvar treino', type: 'error' })
     } finally {
@@ -69,23 +112,34 @@ export default function TreinoIA() {
   }
 
   async function handleConfirmarESalvar() {
-    if (!fichaGerada?.planoId) return
+    const planoIds: string[] = fichaGerada?.planoIds?.length
+      ? fichaGerada.planoIds
+      : fichaGerada?.planoId
+        ? [fichaGerada.planoId]
+        : []
+
+    if (planoIds.length === 0) return
+
     setSalvando(true)
     try {
-      const res = await api.adotarPlano(fichaGerada.planoId)
+      const res = await api.gerarESalvarTreinoIA({
+        planoIds,
+        objetivo,
+        nivel,
+      })
       setToast({
-        message: `🎉 Treino "${res.plano.nome}" ativado com sucesso! ${res.treinosCriadosCount} fichas criadas.`,
+        message: `🎉 Treino ativado com sucesso! ${res.treinosCriadosCount} fichas criadas.`,
         type: 'success',
       })
-      setTimeout(() => {
-        navigate('/meus-treinos')
-      }, 1500)
+      setTimeout(() => navigate('/meus-treinos'), 1500)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao salvar treino prescrito', type: 'error' })
     } finally {
       setSalvando(false)
     }
   }
+
+  const podeAvancarMusculos = gruposMusculares.length > 0 || Boolean(splitPreferido)
 
   return (
     <div className="px-4 py-4 md:p-6 pb-24 md:pb-12 max-w-3xl mx-auto space-y-5">
@@ -104,32 +158,26 @@ export default function TreinoIA() {
           ✨ Prescrição de Treino por IA
         </h1>
         <p className="text-xs text-text-muted mt-1 leading-relaxed">
-          A IA analisa seu perfil físico, objetivo e restrições para gerar a melhor divisão de treino baseada em ciência.
+          Informe objetivo, frequência e grupos musculares para uma prescrição alinhada ao seu foco.
         </p>
       </div>
 
-      {/* Indicador de Passos */}
-      <div className="flex items-center justify-between px-3 py-2.5 bg-surface-card rounded-2xl border border-surface-input overflow-x-auto">
-        {[
-          { num: 1, label: 'Objetivo' },
-          { num: 2, label: 'Nível & Dias' },
-          { num: 3, label: 'Restrições' },
-          { num: 4, label: 'Resultado' },
-        ].map((s) => (
+      <div className="flex items-center justify-between px-2 py-2.5 bg-surface-card rounded-2xl border border-surface-input overflow-x-auto gap-1">
+        {STEPS.map((s) => (
           <div key={s.num} className="flex items-center gap-1.5 shrink-0 px-1">
             <div
               className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 step === s.num
                   ? 'bg-primary text-white shadow-md'
                   : step > s.num
-                  ? 'bg-success/20 text-success border border-success/40'
-                  : 'bg-surface-input text-text-muted'
+                    ? 'bg-success/20 text-success border border-success/40'
+                    : 'bg-surface-input text-text-muted'
               }`}
             >
               {step > s.num ? '✓' : s.num}
             </div>
             <span
-              className={`text-[11px] sm:text-xs font-semibold ${
+              className={`text-[10px] sm:text-xs font-semibold ${
                 step === s.num ? 'text-text font-bold' : 'text-text-muted'
               }`}
             >
@@ -139,7 +187,6 @@ export default function TreinoIA() {
         ))}
       </div>
 
-      {/* Passo 1: Objetivo */}
       {step === 1 && (
         <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
           <div>
@@ -203,13 +250,12 @@ export default function TreinoIA() {
         </div>
       )}
 
-      {/* Passo 2: Nível & Frequência */}
       {step === 2 && (
         <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
           <div>
             <h2 className="text-base font-bold text-text">Seu nível e frequência semanal</h2>
             <p className="text-xs text-text-muted mt-1">
-              A IA adapta a divisão muscular para garantir supercompensação sem risco de sobretreino.
+              A divisão muscular é adaptada para garantir recuperação sem sobretreino.
             </p>
           </div>
 
@@ -269,18 +315,90 @@ export default function TreinoIA() {
             onClick={() => setStep(3)}
             className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
           >
+            Próximo Passo: Grupos Musculares ➔
+          </button>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
+          <div>
+            <h2 className="text-base font-bold text-text">Quais grupos musculares você quer trabalhar?</h2>
+            <p className="text-xs text-text-muted mt-1">
+              Escolha um atalho de divisão ou selecione músculos individualmente (mínimo 1).
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
+              Atalhos de divisão
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {SPLIT_ATALHOS.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => aplicarSplit(s.id, s.grupos)}
+                  className={`p-3 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                    splitPreferido === s.id
+                      ? 'bg-primary/10 border-primary text-primary'
+                      : 'bg-surface-input/40 border-surface-input text-text-muted hover:border-primary/40'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
+              Grupos individuais
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {GRUPOS_MUSCULARES.filter((g) => g.value !== 'Pescoco' && g.value !== 'Cardio').map((g) => {
+                const selected = gruposMusculares.includes(g.value)
+                return (
+                  <button
+                    key={g.value}
+                    type="button"
+                    onClick={() => toggleGrupo(g.value)}
+                    className={`px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      selected
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-surface-input/40 border-surface-input text-text-muted hover:border-primary/40'
+                    }`}
+                  >
+                    {selected ? '✓ ' : '+ '}
+                    {g.label}
+                  </button>
+                )
+              })}
+            </div>
+            {gruposMusculares.length > 0 && (
+              <p className="text-[11px] text-text-muted mt-2">
+                Selecionados: {gruposMusculares.length} grupo(s)
+              </p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setStep(4)}
+            disabled={!podeAvancarMusculos}
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-40"
+          >
             Próximo Passo: Restrições ➔
           </button>
         </div>
       )}
 
-      {/* Passo 3: Restrições Articulares */}
-      {step === 3 && (
+      {step === 4 && (
         <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
           <div>
             <h2 className="text-base font-bold text-text">Você possui restrições ou dores articulares?</h2>
             <p className="text-xs text-text-muted mt-1">
-              Selecione quais articulações precisam de cuidados. Exercícios de alto impacto serão substituídos.
+              Selecione articulações que precisam de cuidado. Exercícios incompatíveis serão substituídos.
             </p>
           </div>
 
@@ -317,26 +435,53 @@ export default function TreinoIA() {
             disabled={loading}
             className="w-full py-3.5 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
           >
-            {loading ? <LoadingSpinner size="sm" /> : '✨ Prescrever Treino com IA Now'}
+            {loading ? <LoadingSpinner size="sm" /> : '✨ Prescrever Treino com IA'}
           </button>
         </div>
       )}
 
-      {/* Passo 4: Ficha Prescrita por IA */}
-      {step === 4 && fichaGerada && (
+      {step === 5 && fichaGerada && (
         <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
           <div className="border-b border-surface-input pb-4">
-            <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              {fichaGerada.grupo_treino}
-            </span>
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                {fichaGerada.grupo_treino}
+              </span>
+              {typeof fichaGerada.score_match === 'number' && (
+                <span className="text-xs font-bold text-success bg-success/10 px-2.5 py-1 rounded-full">
+                  Match {fichaGerada.score_match}
+                </span>
+              )}
+            </div>
             <h2 className="text-xl font-bold text-text mt-2">{fichaGerada.nome_treino}</h2>
             <p className="text-xs text-text-muted mt-1">{fichaGerada.resumo_prescricao}</p>
+            {fichaGerada.justificativa_match && (
+              <p className="text-[11px] text-text-muted mt-2 leading-relaxed bg-surface-input/40 rounded-xl p-2.5">
+                {fichaGerada.justificativa_match}
+              </p>
+            )}
+            {(fichaGerada.grupos_solicitados?.length > 0 || fichaGerada.split_preferido) && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {fichaGerada.split_preferido && (
+                  <span className="text-[10px] font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    {fichaGerada.split_preferido}
+                  </span>
+                )}
+                {(fichaGerada.grupos_solicitados || []).map((g: string) => (
+                  <span key={g} className="text-[10px] font-bold uppercase bg-surface-input text-text-muted px-2 py-0.5 rounded">
+                    {g}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Sessões do Treino Prescrito */}
           <div className="space-y-4">
             {fichaGerada.sessoes?.map((sessao: any) => (
-              <div key={sessao.id || sessao.dia_label} className="bg-surface-input/30 rounded-2xl p-4 border border-surface-input space-y-3">
+              <div
+                key={sessao.id || sessao.dia_label + sessao.nome}
+                className="bg-surface-input/30 rounded-2xl p-4 border border-surface-input space-y-3"
+              >
                 <h3 className="text-sm font-bold text-text flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center">
                     {sessao.dia_label}
@@ -346,7 +491,10 @@ export default function TreinoIA() {
 
                 <div className="space-y-2">
                   {sessao.exercicios?.map((exItem: any) => (
-                    <div key={exItem.id} className="flex items-center justify-between p-2.5 bg-surface rounded-xl border border-surface-input">
+                    <div
+                      key={exItem.id || exItem.exercicio_id}
+                      className="flex items-center justify-between p-2.5 bg-surface rounded-xl border border-surface-input"
+                    >
                       <div className="flex items-center gap-3">
                         {exItem.exercicio?.gif_url ? (
                           <img
@@ -379,6 +527,14 @@ export default function TreinoIA() {
             ))}
           </div>
 
+          {fichaGerada.observacoes?.length > 0 && (
+            <ul className="text-[11px] text-text-muted space-y-1 list-disc pl-4">
+              {fichaGerada.observacoes.map((o: string, i: number) => (
+                <li key={i}>{o}</li>
+              ))}
+            </ul>
+          )}
+
           <div className="flex gap-3">
             <button
               type="button"
@@ -397,18 +553,16 @@ export default function TreinoIA() {
             </button>
           </div>
 
-          {/* Seção Alternativa: Planos Prontos por Grupo Muscular */}
           <div className="pt-6 border-t border-surface-input space-y-4">
             <div>
               <h3 className="text-sm font-bold text-text flex items-center gap-2">
                 <span>📚</span> Ou escolha um plano pronto por Grupo Muscular
               </h3>
               <p className="text-xs text-text-muted mt-0.5">
-                Você pode optar por um dos nossos planos pré-estruturados por grupos musculares específicos.
+                Você pode optar por um dos nossos planos pré-estruturados.
               </p>
             </div>
 
-            {/* Chips de Grupos Musculares */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {[
                 { id: 'TODOS', label: 'Todos os Grupos' },
@@ -432,17 +586,20 @@ export default function TreinoIA() {
               ))}
             </div>
 
-            {/* Lista de Planos do Grupo */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               {planosBiblioteca
                 .filter((p) => {
                   if (grupoFiltro === 'TODOS') return true
-                  if (grupoFiltro === 'PULL') return p.codigo.includes('PULL')
-                  if (grupoFiltro === 'LEGS') return p.codigo.includes('LEGS')
+                  if (grupoFiltro === 'PULL') return p.codigo?.includes('PULL')
+                  if (grupoFiltro === 'LEGS') return p.codigo?.includes('LEGS')
+                  if (grupoFiltro === 'ABC') return p.codigo?.includes('PUSH') || p.split_tipo === 'ABC'
                   return p.split_tipo === grupoFiltro
                 })
                 .map((plano) => (
-                  <div key={plano.id} className="p-3.5 bg-surface-card rounded-2xl border border-surface-input space-y-2 flex flex-col justify-between hover:border-primary/40 transition-colors">
+                  <div
+                    key={plano.id}
+                    className="p-3.5 bg-surface-card rounded-2xl border border-surface-input space-y-2 flex flex-col justify-between hover:border-primary/40 transition-colors"
+                  >
                     <div>
                       <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">
                         {plano.split_tipo} · {plano.dias_por_semana}x/semana

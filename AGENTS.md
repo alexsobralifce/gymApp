@@ -191,8 +191,18 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 
 #### Gestão Própria & Edição de Treinos pelo Aluno (novo)
 - Aluno pode criar treinos próprios (`/treino/novo` via `CriarTreinoAluno.tsx` ou `POST /treinos/autogestao`) mesmo se tiver professor vinculado.
-- Permite editar e excluir treinos que possui (`PATCH /treinos/:id` e `DELETE /treinos/:id`), inclusive aqueles recebidos de professores.
+- **Edição de treino salvo**: rota `/treino/:id/editar` reutiliza `CriarTreinoAluno` em modo edit → `PATCH /treinos/:id` (`api.editarTreino`).
+- Botão **✎ Editar** em `MeusTreinos.tsx` para status ≠ `EM_EXECUCAO` (bloqueado em execução).
+- Permite excluir treinos que possui (`DELETE /treinos/:id`), inclusive aqueles recebidos de professores.
 - Botão `+ Criar Treino` visível no cabeçalho de `MeusTreinos.tsx` para todos os alunos.
+- Edição não apaga histórico de `execucao_exercicios` nem altera status da máquina de estados.
+
+#### Prescrição IA com Grupos Musculares (novo)
+- Wizard `/treino/ia` em 5 passos: Objetivo → Nível & Dias → **Grupos Musculares** → Restrições → Resultado.
+- Passo de músculos: atalhos (FULL_BODY, PUSH, PULL, LEGS, UPPER, LOWER) + chips multi-select de `GRUPOS_MUSCULARES`.
+- `POST /treinos/ia/gerar` aceita `gruposMusculares[]` e `splitPreferido`; ranking por score (dias, grupos, split, nível, restrições) — não usa mais `planos[0]`.
+- Pode retornar múltiplos `planoIds` complementares (ex.: Push+Pull+Legs); salvar via `POST /treinos/ia/gerar-e-salvar` com `planoIds`.
+- Restrições aplicadas com `alternativo_id` na prévia e no `adotarPlano`.
 
 #### Conclusão em Lote por Exercício na Execução (novo)
 - Botão "✓ Concluir Exercício" no rodapé do card de cada exercício em `TreinoExecucao.tsx`.
@@ -308,6 +318,8 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 | POST | `/treinos/:id/clonar` | Clonar p/ 1 aluno | PROF/ACAD |
 | POST | `/treinos/:id/clonar-lote` | Clonar p/ múltiplos alunos | PROF/ACAD |
 | POST | `/treinos/:id/marcar-template` | Toggle is_template | PROF/ACAD |
+| POST | `/treinos/ia/gerar` | Gerar ficha IA (gruposMusculares, splitPreferido) | ALUNO |
+| POST | `/treinos/ia/gerar-e-salvar` | Adotar plano(s) prescritos (`planoIds[]`) | ALUNO |
 
 ---
 
@@ -323,6 +335,8 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 | `ALUNO` | Dashboard | `/` | `pages/aluno/Dashboard.tsx` |
 | `ALUNO` | Meus Treinos | `/meus-treinos` | `pages/aluno/MeusTreinos.tsx` |
 | `ALUNO` | Criar Treino Aluno | `/treino/novo` | `pages/aluno/CriarTreinoAluno.tsx` |
+| `ALUNO` | Editar Treino | `/treino/:id/editar` | `pages/aluno/CriarTreinoAluno.tsx` (modo edit) |
+| `ALUNO` | Prescrição IA | `/treino/ia` | `pages/aluno/TreinoIA.tsx` |
 | `ALUNO` | Dados do Aluno | `/dados` | `pages/aluno/DadosAluno.tsx` |
 | `ALUNO` | Início do Treino | `/treino/:id/inicio` | `pages/aluno/TreinoInicio.tsx` |
 | `ALUNO` | Execução | `/treino/:id/execucao` | `pages/aluno/TreinoExecucao.tsx` |

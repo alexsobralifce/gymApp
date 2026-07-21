@@ -9,6 +9,15 @@ import {
   gerarESalvarTreinoIA,
 } from '../../../application/usecases/treino/PrescricaoIAService.js'
 
+const iaInputSchema = z.object({
+  objetivo: z.string().optional(),
+  nivel: z.string().optional(),
+  diasPorSemana: z.number().int().min(2).max(6).optional(),
+  restricoes: z.array(z.string()).optional(),
+  gruposMusculares: z.array(z.string()).min(1).optional(),
+  splitPreferido: z.string().optional(),
+})
+
 export async function treinoIARoutes(app: FastifyInstance) {
   const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO)]
 
@@ -19,15 +28,7 @@ export async function treinoIARoutes(app: FastifyInstance) {
     })
     if (!aluno) throw new NotFoundError('Aluno')
 
-    const body = z
-      .object({
-        objetivo: z.string().optional(),
-        nivel: z.string().optional(),
-        diasPorSemana: z.number().int().min(2).max(6).optional(),
-        restricoes: z.array(z.string()).optional(),
-      })
-      .parse(request.body || {})
-
+    const body = iaInputSchema.parse(request.body || {})
     const resultado = await classificarGrupo(aluno.id, body)
     return reply.send(resultado)
   })
@@ -45,6 +46,8 @@ export async function treinoIARoutes(app: FastifyInstance) {
         nivel: z.string().default('INICIANTE'),
         diasPorSemana: z.number().int().min(2).max(6).default(3),
         restricoes: z.array(z.string()).optional(),
+        gruposMusculares: z.array(z.string()).optional(),
+        splitPreferido: z.string().optional(),
       })
       .parse(request.body || {})
 
@@ -62,6 +65,7 @@ export async function treinoIARoutes(app: FastifyInstance) {
     const body = z
       .object({
         planoId: z.string().optional(),
+        planoIds: z.array(z.string()).optional(),
         objetivo: z.string().optional(),
         nivel: z.string().optional(),
       })

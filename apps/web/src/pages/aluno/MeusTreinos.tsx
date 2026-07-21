@@ -335,31 +335,62 @@ export default function AlunoMeusTreinos() {
         </div>
 
         {treino.status === 'ENVIADO' ? (
-          <div className="flex gap-2 pt-1">
+          <div className="space-y-2 pt-1">
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleResponder(treino.id, 'RECUSAR')}
+                className="flex-1 rounded-xl border border-red-500/30 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/10 active:scale-95 transition-all"
+              >
+                Recusar
+              </button>
+              <button
+                onClick={() => handleResponder(treino.id, 'ACEITAR')}
+                className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-500 active:scale-95 transition-all"
+              >
+                Aceitar Ficha
+              </button>
+            </div>
             <button
-              onClick={() => handleResponder(treino.id, 'RECUSAR')}
-              className="flex-1 rounded-xl border border-red-500/30 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/10 active:scale-95 transition-all"
+              onClick={() => navigate(`/treino/${treino.id}/editar`)}
+              className="w-full rounded-xl border border-surface-input py-2.5 text-sm font-bold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
             >
-              Recusar
-            </button>
-            <button
-              onClick={() => handleResponder(treino.id, 'ACEITAR')}
-              className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-500 active:scale-95 transition-all"
-            >
-              Aceitar Ficha
+              ✎ Editar antes de aceitar
             </button>
           </div>
         ) : treino.status === 'CADASTRADO' ? (
-          <p className="text-xs text-center text-text-muted italic py-2">
-            Esta ficha ainda está sendo preparada pelo professor e será enviada em breve.
-          </p>
-        ) : (
+          <div className="space-y-2 pt-1">
+            <p className="text-xs text-center text-text-muted italic py-2">
+              Esta ficha ainda está sendo preparada pelo professor e será enviada em breve.
+            </p>
+            <button
+              onClick={() => navigate(`/treino/${treino.id}/editar`)}
+              className="w-full rounded-xl border border-surface-input py-2.5 text-sm font-bold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+            >
+              ✎ Editar Treino
+            </button>
+          </div>
+        ) : treino.status === 'EM_EXECUCAO' ? (
           <button
             onClick={() => navigate(`/treino/${treino.id}/inicio`)}
             className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            {treino.status === 'CONCLUIDO' ? 'Fazer Novamente' : 'Iniciar Ficha de Treino'}
+            Continuar Treino
           </button>
+        ) : (
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => navigate(`/treino/${treino.id}/editar`)}
+              className="rounded-xl border border-surface-input px-4 py-3.5 text-sm font-bold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+            >
+              ✎ Editar
+            </button>
+            <button
+              onClick={() => navigate(`/treino/${treino.id}/inicio`)}
+              className="flex-1 rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            >
+              {treino.status === 'CONCLUIDO' ? 'Fazer Novamente' : 'Iniciar Ficha de Treino'}
+            </button>
+          </div>
         )}
       </div>
 

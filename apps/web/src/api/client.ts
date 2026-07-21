@@ -459,4 +459,26 @@ export const api = {
   getPlanoDetalhe: (id: string) => api.get<PlanoBiblioteca>(`/planos/${id}`),
   getPlanosRecomendados: () => api.get<PlanoBiblioteca[]>('/planos/recomendados'),
   adotarPlano: (id: string) => api.post<{ plano: { id: string; nome: string }; treinosCriadosCount: number }>(`/planos/${id}/adotar`),
+
+  // ─── Prescrição IA ─────────────────────────────────
+  gerarTreinoIA: (data: {
+    objetivo: string
+    nivel: string
+    diasPorSemana: number
+    restricoes?: string[]
+    gruposMusculares?: string[]
+    splitPreferido?: string
+  }) => api.post<Record<string, unknown>>('/treinos/ia/gerar', data),
+
+  gerarESalvarTreinoIA: (data: {
+    planoId?: string
+    planoIds?: string[]
+    objetivo?: string
+    nivel?: string
+  }) =>
+    api.post<{
+      plano: { id: string; nome: string }
+      planos?: Array<{ id: string; nome: string }>
+      treinosCriadosCount: number
+    }>('/treinos/ia/gerar-e-salvar', data),
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
 import { ChevronLeftIcon } from '../../components/icons/Icon'
@@ -65,6 +65,8 @@ function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void })
 }
 
 export default function AlunoCriarTreino() {
+  const { id: treinoId } = useParams<{ id?: string }>()
+  const isEdit = Boolean(treinoId)
   const [todosExercicios, setTodosExercicios] = useState<Exercicio[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
@@ -80,12 +82,52 @@ export default function AlunoCriarTreino() {
   const [busca, setBusca] = useState('')
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
-    api.getExercicios()
-      .then(setTodosExercicios)
-      .catch(() => setTodosExercicios([]))
-      .finally(() => setLoading(false))
-  }, [])
+
+    async function load() {
+      try {
+        const lista = await api.getExercicios().catch(() => [] as Exercicio[])
+        if (cancelled) return
+        setTodosExercicios(lista)
+
+        if (treinoId) {
+          const treino = await api.getTreino(treinoId)
+          if (cancelled) return
+          if (treino.status === 'EM_EXECUCAO') {
+            setFeedback('Não é possível editar um treino em execução.')
+            setTimeout(() => navigate('/meus-treinos'), 1500)
+            return
+          }
+          setNome(treino.nome)
+          setDiasSemana(treino.dias_semana?.length ? [...treino.dias_semana] : [1, 3, 5])
+          setExerciciosTreino(
+            (treino.exercicios || []).map((ex) => ({
+              exercicioId: ex.exercicio_id,
+              nome: ex.exercicio.nome,
+              ordem: ex.ordem,
+              series: ex.series,
+              repeticoes: ex.repeticoes,
+              cargaSugeridaKg: ex.carga_sugerida_kg ?? undefined,
+              imagemUrl: ex.exercicio.imagem_url,
+              gifUrl: ex.exercicio.gif_url,
+              grupoMuscular: ex.exercicio.grupo_muscular,
+            })),
+          )
+        }
+      } catch {
+        if (!cancelled) {
+          setFeedback(isEdit ? 'Erro ao carregar treino para edição.' : 'Erro ao carregar exercícios.')
+          if (isEdit) setTimeout(() => navigate('/meus-treinos'), 1500)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [treinoId, isEdit, navigate])
 
   const exercicios = useMemo(
     () => filtrarExercicios(todosExercicios, {
@@ -154,24 +196,30 @@ export default function AlunoCriarTreino() {
       return
     }
 
+    const payload = {
+      nome,
+      diasSemana,
+      exercicios: exerciciosTreino.map((e) => ({
+        exercicioId: e.exercicioId,
+        ordem: e.ordem,
+        series: e.series,
+        repeticoes: e.repeticoes,
+        cargaSugeridaKg: e.cargaSugeridaKg,
+      })),
+    }
+
     try {
       setEnviando(true)
-      await api.criarTreinoAutogestao({
-        nome,
-        diasSemana,
-        exercicios: exerciciosTreino.map((e) => ({
-          exercicioId: e.exercicioId,
-          ordem: e.ordem,
-          series: e.series,
-          repeticoes: e.repeticoes,
-          cargaSugeridaKg: e.cargaSugeridaKg,
-        })),
-      })
-
-      setFeedback('Treino salvo com sucesso! Redirecionando para Meus Treinos...')
+      if (isEdit && treinoId) {
+        await api.editarTreino(treinoId, payload)
+        setFeedback('Alterações salvas! Redirecionando para Meus Treinos...')
+      } else {
+        await api.criarTreinoAutogestao(payload)
+        setFeedback('Treino salvo com sucesso! Redirecionando para Meus Treinos...')
+      }
       setTimeout(() => navigate('/meus-treinos'), 1200)
     } catch {
-      setFeedback('Erro ao criar treino.')
+      setFeedback(isEdit ? 'Erro ao salvar alterações.' : 'Erro ao criar treino.')
     } finally {
       setEnviando(false)
     }
@@ -191,18 +239,24 @@ export default function AlunoCriarTreino() {
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-text">Criar Treino</h1>
-            <p className="text-sm text-text-muted">Monte seu treino personalizado ou prescreva com auxílio da IA</p>
+            <h1 className="text-2xl font-bold text-text">{isEdit ? 'Editar Treino' : 'Criar Treino'}</h1>
+            <p className="text-sm text-text-muted">
+              {isEdit
+                ? 'Ajuste nome, dias, exercícios, séries e cargas da ficha'
+                : 'Monte seu treino personalizado ou prescreva com auxílio da IA'}
+            </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate('/treino/ia')}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-        >
-          ✨ Criar com IA
-        </button>
+        {!isEdit && (
+          <button
+            type="button"
+            onClick={() => navigate('/treino/ia')}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+          >
+            ✨ Criar com IA
+          </button>
+        )}
       </div>
 
       {feedback && (
@@ -354,7 +408,7 @@ export default function AlunoCriarTreino() {
             disabled={enviando || exerciciosTreino.length === 0}
             className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-40 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            {enviando ? 'Salvando...' : 'Salvar Treino'}
+            {enviando ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Salvar Treino'}
           </button>
         </div>
 
