@@ -68,8 +68,19 @@ export async function feedRoutes(app: FastifyInstance) {
     const lastPost = rawItems[rawItems.length - 1]
     const nextCursor = hasMore && lastPost ? `${lastPost.criado_em.toISOString()}|${lastPost.id}` : null
 
+    // Buscar likes do aluno atual para setar curtiu: boolean
+    const likesDesteAluno = rawItems.length > 0 ? await prisma.socialLike.findMany({
+      where: {
+        aluno_id: aluno.id,
+        post_id: { in: rawItems.map((p) => p.id) },
+      },
+      select: { post_id: true },
+    }) : []
+    const postsCurtidos = new Set(likesDesteAluno.map((l) => l.post_id))
+
     const items = rawItems.map((p) => ({
       ...p,
+      curtiu: postsCurtidos.has(p.id),
       autor_foto_url: absolutizeMedia(p.autor_foto_url),
       midia_url: absolutizeMedia(p.midia_url),
     }))
@@ -80,7 +91,7 @@ export async function feedRoutes(app: FastifyInstance) {
   /** PATCH /social/mural/:postId/foto — aluno adiciona foto ao próprio post */
   app.patch('/social/mural/:postId/foto', { preHandler }, async (request, reply) => {
     const { postId } = z.object({ postId: z.string() }).parse(request.params)
-    const { midiaUrl } = z.object({ midiaUrl: z.string().url() }).parse(request.body)
+    const { midiaUrl } = z.object({ midiaUrl: z.string() }).parse(request.body)
     const aluno = await resolveAluno(request.currentUser.sub)
 
     const post = await prisma.socialPost.findUnique({ where: { id: postId } })
@@ -91,21 +102,35 @@ export async function feedRoutes(app: FastifyInstance) {
     return reply.status(200).send({ midiaUrl })
   })
 
-  /** GET /social/mural/meu-ultimo-post — último post TREINO_INICIADO do aluno nas últimas 2h */
+  /** GET /social/mural/meu-ultimo-post — último post de treino do aluno nas últimas 2h */
   app.get('/social/mural/meu-ultimo-post', { preHandler }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
     const desde = new Date(Date.now() - 2 * 60 * 60 * 1000)
 
-    const post = await prisma.socialPost.findFirst({
+    let post = await prisma.socialPost.findFirst({
       where: {
         aluno_id: aluno.id,
-        tipo: 'TREINO_INICIADO',
+        tipo: { in: ['TREINO_INICIADO', 'TREINO_CONCLUIDO'] },
         criado_em: { gte: desde },
       },
       orderBy: { criado_em: 'desc' },
     })
 
-    return reply.status(200).send({ postId: post?.id ?? null })
+    // Se não houver post recente, cria um post de TREINO_CONCLUIDO garantido
+    if (!post) {
+      const usuario = await prisma.usuario.findUnique({ where: { id: request.currentUser.sub } })
+      post = await prisma.socialPost.create({
+        data: {
+          aluno_id: aluno.id,
+          autor_nome: usuario?.nome || 'Aluno',
+          autor_foto_url: usuario?.foto_url,
+          tipo: 'TREINO_CONCLUIDO',
+          visibilidade: aluno.visibilidade_padrao || 'AMIGOS',
+        },
+      })
+    }
+
+    return reply.status(200).send({ postId: post.id })
   })
 
   /** GET /social/mural/atividade — contagem de comentários nas postagens do aluno */

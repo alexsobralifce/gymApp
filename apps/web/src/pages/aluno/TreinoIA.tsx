@@ -19,6 +19,9 @@ export default function TreinoIA() {
   const [salvando, setSalvando] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
+  const [planosBiblioteca, setPlanosBiblioteca] = useState<any[]>([])
+  const [grupoFiltro, setGrupoFiltro] = useState<string>('TODOS')
+
   function toggleRestricao(item: string) {
     setRestricoes((prev) =>
       prev.includes(item) ? prev.filter((r) => r !== item) : [...prev, item]
@@ -28,18 +31,40 @@ export default function TreinoIA() {
   async function handleGerarPrescricao() {
     setLoading(true)
     try {
-      const res = await api.post<any>('/treinos/ia/gerar', {
-        objetivo,
-        nivel,
-        diasPorSemana,
-        restricoes,
-      })
+      const [res, libPlanos] = await Promise.all([
+        api.post<any>('/treinos/ia/gerar', {
+          objetivo,
+          nivel,
+          diasPorSemana,
+          restricoes,
+        }),
+        api.listarPlanos().catch(() => []),
+      ])
       setFichaGerada(res)
+      setPlanosBiblioteca(libPlanos)
       setStep(4)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao gerar treino por IA', type: 'error' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleAdotarPlanoPronto(planoId: string) {
+    setSalvando(true)
+    try {
+      const res = await api.adotarPlano(planoId)
+      setToast({
+        message: `🎉 Plano "${res.plano.nome}" ativado com sucesso! ${res.treinosCriadosCount} fichas criadas.`,
+        type: 'success',
+      })
+      setTimeout(() => {
+        navigate('/meus-treinos')
+      }, 1500)
+    } catch (err: any) {
+      setToast({ message: err.message || 'Erro ao salvar treino', type: 'error' })
+    } finally {
+      setSalvando(false)
     }
   }
 
@@ -370,6 +395,72 @@ export default function TreinoIA() {
             >
               {salvando ? 'Ativando...' : '✓ Confirmar e Ativar este Treino'}
             </button>
+          </div>
+
+          {/* Seção Alternativa: Planos Prontos por Grupo Muscular */}
+          <div className="pt-6 border-t border-surface-input space-y-4">
+            <div>
+              <h3 className="text-sm font-bold text-text flex items-center gap-2">
+                <span>📚</span> Ou escolha um plano pronto por Grupo Muscular
+              </h3>
+              <p className="text-xs text-text-muted mt-0.5">
+                Você pode optar por um dos nossos planos pré-estruturados por grupos musculares específicos.
+              </p>
+            </div>
+
+            {/* Chips de Grupos Musculares */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {[
+                { id: 'TODOS', label: 'Todos os Grupos' },
+                { id: 'ABC', label: '💪 Push (Peito/Tríceps/Ombro)' },
+                { id: 'PULL', label: '🦾 Pull (Costas/Bíceps)' },
+                { id: 'LEGS', label: '🦵 Legs & Glúteos' },
+                { id: 'FULL_BODY', label: '🏃 Full Body' },
+              ].map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setGrupoFiltro(g.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                    grupoFiltro === g.id
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-surface-input text-text-muted hover:text-text'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Lista de Planos do Grupo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              {planosBiblioteca
+                .filter((p) => {
+                  if (grupoFiltro === 'TODOS') return true
+                  if (grupoFiltro === 'PULL') return p.codigo.includes('PULL')
+                  if (grupoFiltro === 'LEGS') return p.codigo.includes('LEGS')
+                  return p.split_tipo === grupoFiltro
+                })
+                .map((plano) => (
+                  <div key={plano.id} className="p-3.5 bg-surface-card rounded-2xl border border-surface-input space-y-2 flex flex-col justify-between hover:border-primary/40 transition-colors">
+                    <div>
+                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">
+                        {plano.split_tipo} · {plano.dias_por_semana}x/semana
+                      </span>
+                      <h4 className="text-xs font-bold text-text mt-1.5">{plano.nome}</h4>
+                      <p className="text-[11px] text-text-muted line-clamp-2 mt-1 leading-relaxed">{plano.descricao}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAdotarPlanoPronto(plano.id)}
+                      disabled={salvando}
+                      className="w-full py-2 bg-surface-input hover:bg-primary hover:text-white text-text text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
+                    >
+                      {salvando ? 'Ativando...' : 'Usar esta Ficha'}
+                    </button>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       )}
