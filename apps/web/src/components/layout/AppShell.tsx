@@ -29,6 +29,7 @@ import {
   ShieldIcon,
   TrophyIcon,
   PaletteIcon,
+  MoreHorizontalIcon,
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
 import { resolveMediaUrl } from '../../lib/media'
@@ -250,6 +251,7 @@ export default function AppShell() {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [moreSheetOpen, setMoreSheetOpen] = useState(false)
   const [atividadeMural, setAtividadeMural] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -267,6 +269,7 @@ export default function AppShell() {
 
   useEffect(() => {
     setDrawerOpen(false)
+    setMoreSheetOpen(false)
   }, [location.pathname])
 
   useEffect(() => {
@@ -406,15 +409,14 @@ export default function AppShell() {
         {!hideNav && (
           <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-surface-input glass px-4 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
-              {/* Hamburger for non-ALUNO on mobile */}
-              {!isAluno && (
-                <button
-                  onClick={() => setDrawerOpen(true)}
-                  className="md:hidden rounded-lg p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer -ml-2"
-                >
-                  <MenuIcon className="h-5 w-5" />
-                </button>
-              )}
+              {/* Hamburger for all users on mobile */}
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="md:hidden rounded-lg p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer -ml-2"
+                title="Abrir Menu"
+              >
+                <MenuIcon className="h-5 w-5" />
+              </button>
               <span className="text-sm font-bold text-primary md:hidden">GymApp</span>
               {pageTitle && (
                 <div className="hidden sm:flex items-center gap-2">
@@ -513,10 +515,94 @@ export default function AppShell() {
           </aside>
         </div>
 
+        {/* Bottom Sheet "Mais" para Aluno no Mobile */}
+        {isAluno && moreSheetOpen && (
+          <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in"
+              onClick={() => setMoreSheetOpen(false)}
+            />
+            <div className="relative bg-surface-card border-t border-surface-input rounded-t-3xl p-5 shadow-2xl space-y-4 animate-modal-pop z-10 safe-bottom">
+              <div className="flex items-center justify-between border-b border-surface-input pb-3">
+                <h3 className="text-base font-bold text-text flex items-center gap-2">
+                  <span>✨</span> Acesso Rápido & Recursos
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setMoreSheetOpen(false)}
+                  className="rounded-full bg-surface-input p-2 text-text-muted hover:text-text cursor-pointer"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
+                  { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescrição inteligente' },
+                  { to: '/amizades', label: 'Amigos', icon: '👥', desc: 'Rede social fitness' },
+                  { to: '/medidas', label: 'Minhas Medidas', icon: '📏', desc: 'Peso e dobras' },
+                  { to: '/clubes', label: 'Clubes', icon: '🏆', desc: 'Ranking & XP' },
+                  { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restrições' },
+                ].map((item) => (
+                  <button
+                    key={item.to}
+                    type="button"
+                    onClick={() => {
+                      setMoreSheetOpen(false)
+                      navigate(item.to)
+                    }}
+                    className="flex flex-col text-left p-3 rounded-2xl bg-surface border border-surface-input hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span className="text-xl mb-1">{item.icon}</span>
+                    <span className="text-xs font-bold text-text">{item.label}</span>
+                    <span className="text-[10px] text-text-muted">{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-2 border-t border-surface-input flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreSheetOpen(false)
+                    navigate('/alterar-senha')
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-text-muted hover:text-text cursor-pointer"
+                >
+                  <KeyIcon className="h-4 w-4" />
+                  <span>Alterar Senha</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreSheetOpen(false)
+                    navigate('/privacidade')
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-text-muted hover:text-text cursor-pointer"
+                >
+                  <ShieldIcon className="h-4 w-4" />
+                  <span>Privacidade</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10 rounded-xl transition-all cursor-pointer"
+                >
+                  <LogOutIcon className="h-4 w-4" />
+                  <span>Sair da Conta</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bottom tabs — mobile ALUNO */}
         {isAluno && !hideNav && (
           <nav className="fixed bottom-0 left-0 right-0 z-30 glass border-t border-surface-input safe-bottom md:hidden">
-            <div className="flex h-16 items-center justify-around px-2">
+            <div className="flex h-16 items-center justify-around px-1">
               {alunoBottomTabs.map((t) => {
                 const isActive = t.end ? location.pathname === t.to : location.pathname.startsWith(t.to)
                 const Icon = t.icon
@@ -525,18 +611,41 @@ export default function AppShell() {
                     key={t.to}
                     to={t.to}
                     end={t.end}
-                    className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-3 min-w-0 cursor-pointer group"
+                    className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 min-w-0 cursor-pointer group"
                   >
-                    <Icon className={`h-6 w-6 transition-all duration-200 ${isActive ? 'text-primary scale-110' : 'text-text-muted group-hover:text-text'}`} />
-                    <span className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? 'text-primary' : 'text-text-muted'}`}>
+                    <div className="relative">
+                      <Icon className={`h-5 w-5 transition-all duration-200 ${isActive ? 'text-primary scale-110' : 'text-text-muted group-hover:text-text'}`} />
+                      {t.label === 'Mural' && atividadeMural > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? 'text-primary font-bold' : 'text-text-muted'}`}>
                       {t.label}
                     </span>
                     {isActive && (
-                      <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-primary animate-scale-in" />
+                      <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-7 rounded-full bg-primary animate-scale-in" />
                     )}
                   </NavLink>
                 )
               })}
+
+              {/* 5ª Tab: Mais */}
+              <button
+                type="button"
+                onClick={() => setMoreSheetOpen(true)}
+                className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 min-w-0 cursor-pointer group ${
+                  moreSheetOpen ? 'text-primary font-bold' : 'text-text-muted hover:text-text'
+                }`}
+              >
+                <MoreHorizontalIcon className={`h-5 w-5 transition-all duration-200 ${moreSheetOpen ? 'text-primary scale-110' : ''}`} />
+                <span className="text-[10px] font-medium">Mais</span>
+                {moreSheetOpen && (
+                  <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-7 rounded-full bg-primary animate-scale-in" />
+                )}
+              </button>
             </div>
           </nav>
         )}

@@ -63,37 +63,37 @@ export default function TreinoIA() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
+    <div className="px-4 py-4 md:p-6 pb-24 md:pb-12 max-w-3xl mx-auto space-y-5">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="border-b border-surface-input pb-4">
+      <div className="border-b border-surface-input pb-3">
         <button
           type="button"
           onClick={() => (step > 1 ? setStep(step - 1) : navigate('/meus-treinos'))}
-          className="flex items-center gap-1 text-xs text-text-muted hover:text-text mb-2 transition-colors cursor-pointer"
+          className="flex items-center gap-1 text-xs text-text-muted hover:text-text mb-2 transition-colors cursor-pointer min-h-[36px]"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           {step > 1 ? 'Voltar Passo Anterior' : 'Voltar para Meus Treinos'}
         </button>
-        <h1 className="text-2xl font-extrabold text-text flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-text flex items-center gap-2">
           ✨ Prescrição de Treino por IA
         </h1>
-        <p className="text-xs text-text-muted mt-1">
+        <p className="text-xs text-text-muted mt-1 leading-relaxed">
           A IA analisa seu perfil físico, objetivo e restrições para gerar a melhor divisão de treino baseada em ciência.
         </p>
       </div>
 
       {/* Indicador de Passos */}
-      <div className="flex items-center justify-between px-4 py-3 bg-surface rounded-2xl border border-surface-input">
+      <div className="flex items-center justify-between px-3 py-2.5 bg-surface-card rounded-2xl border border-surface-input overflow-x-auto">
         {[
           { num: 1, label: 'Objetivo' },
           { num: 2, label: 'Nível & Dias' },
           { num: 3, label: 'Restrições' },
-          { num: 4, label: 'Ficha Prescrita' },
+          { num: 4, label: 'Resultado' },
         ].map((s) => (
-          <div key={s.num} className="flex items-center gap-2">
+          <div key={s.num} className="flex items-center gap-1.5 shrink-0 px-1">
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 step === s.num
                   ? 'bg-primary text-white shadow-md'
                   : step > s.num
@@ -104,7 +104,7 @@ export default function TreinoIA() {
               {step > s.num ? '✓' : s.num}
             </div>
             <span
-              className={`text-xs font-semibold hidden sm:inline ${
+              className={`text-[11px] sm:text-xs font-semibold ${
                 step === s.num ? 'text-text font-bold' : 'text-text-muted'
               }`}
             >

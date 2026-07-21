@@ -87,24 +87,24 @@ export default function BibliotecaPlanos() {
   }, [planos, filtroObjetivo, filtroNivel, filtroSexo, filtroSplit])
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-12">
+    <div className="px-4 py-4 md:p-6 pb-24 md:pb-12 max-w-6xl mx-auto space-y-5">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-input pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-input pb-4">
         <div>
           <button
             type="button"
             onClick={() => navigate('/meus-treinos')}
-            className="flex items-center gap-1 text-xs text-text-muted hover:text-text mb-2 transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs text-text-muted hover:text-text mb-2 transition-colors cursor-pointer min-h-[36px]"
           >
             <ChevronLeftIcon className="w-4 h-4" />
             Voltar para Meus Treinos
           </button>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text flex items-center gap-2">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-text flex items-center gap-2">
             📚 Biblioteca de Planos de Treino
           </h1>
-          <p className="text-sm text-text-muted mt-1">
+          <p className="text-xs sm:text-sm text-text-muted mt-1 leading-relaxed">
             Escolha um plano pronto alinhado ao seu objetivo, nível e rotina semanal.
           </p>
         </div>

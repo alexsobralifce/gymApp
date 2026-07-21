@@ -236,6 +236,68 @@ export default function AlunoDashboard() {
         />
       </div>
 
+      {/* Atalhos de Acesso Rápido */}
+      <div className="space-y-2">
+        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">Acesso Rápido</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <button
+            type="button"
+            onClick={() => navigate('/biblioteca-planos')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-surface-card border border-surface-input hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+              📚
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">Biblioteca</p>
+              <p className="text-[10px] text-text-muted truncate">30+ planos</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/treino/ia')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-surface-card border border-surface-input hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+              ✨
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">Treino IA</p>
+              <p className="text-[10px] text-text-muted truncate">Gerador IA</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/medidas')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-surface-card border border-surface-input hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+              📏
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">Medidas</p>
+              <p className="text-[10px] text-text-muted truncate">Histórico físico</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/evolucao')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-surface-card border border-surface-input hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+              📊
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-text truncate">Evolução</p>
+              <p className="text-[10px] text-text-muted truncate">Performance</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* Treinos Pendentes */}
       {pendentes.length > 0 && (
         <div className="space-y-3 animate-slide-up" style={{ animationDelay: '100ms' }}>
