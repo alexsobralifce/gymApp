@@ -125,6 +125,40 @@
   --color-primary-foreground: #FFFFFF;
 }
 
+[data-theme="orange"] {
+  --color-glass-bg: rgba(75, 75, 77, 0.85);
+
+  --color-primary: #FFA500;
+  --color-primary-dark: #E69400;
+  --color-primary-hover: #FFB84D;
+  --color-primary-active: #D98C00;
+  --color-primary-light: #FFB84D;
+
+  --color-surface: #2B2B2C;
+  --color-surface-card: #4B4B4D;
+  --color-surface-input: #5D5D60;
+
+  --color-text: #FFF7E6;
+  --color-text-muted: #D1C7B7;
+  --color-text-disabled: #8C857B;
+
+  --color-accent: #FFB84D;
+
+  --color-background: #2B2B2C;
+  --color-foreground: #FFF7E6;
+  --color-card: #4B4B4D;
+  --color-card-foreground: #FFF7E6;
+  --color-secondary: #5D5D60;
+  --color-secondary-foreground: #FFF7E6;
+  --color-muted: #4B4B4D;
+  --color-muted-foreground: #D1C7B7;
+  --color-accent-foreground: #1C1C1E;
+  --color-border: #5D5D60;
+  --color-input: #5D5D60;
+  --color-ring: #FFA500;
+  --color-primary-foreground: #1C1C1E;
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }

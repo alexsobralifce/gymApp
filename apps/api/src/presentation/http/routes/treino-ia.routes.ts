@@ -8,6 +8,7 @@ import {
   gerarTreinoIA,
   gerarESalvarTreinoIA,
 } from '../../../application/usecases/treino/PrescricaoIAService.js'
+import { salvarTreinoPorGrupos } from '../../../application/usecases/treino/GeradorTreinoService.js'
 
 const iaInputSchema = z.object({
   objetivo: z.string().optional(),
@@ -45,6 +46,7 @@ export async function treinoIARoutes(app: FastifyInstance) {
         objetivo: z.string().default('HIPERTROFIA'),
         nivel: z.string().default('INICIANTE'),
         diasPorSemana: z.number().int().min(2).max(6).default(3),
+        tempoMinutos: z.number().int().min(30).max(90).optional(),
         restricoes: z.array(z.string()).optional(),
         gruposMusculares: z.array(z.string()).optional(),
         splitPreferido: z.string().optional(),
@@ -68,10 +70,33 @@ export async function treinoIARoutes(app: FastifyInstance) {
         planoIds: z.array(z.string()).optional(),
         objetivo: z.string().optional(),
         nivel: z.string().optional(),
+        diasPorSemana: z.number().int().min(2).max(6).optional(),
+        tempoMinutos: z.number().int().min(30).max(90).optional(),
+        gruposMusculares: z.array(z.string()).optional(),
+        splitPreferido: z.string().optional(),
+        restricoes: z.array(z.string()).optional(),
       })
       .parse(request.body || {})
 
-    const resultado = await gerarESalvarTreinoIA(aluno.id, body)
+    if (body.gruposMusculares && body.gruposMusculares.length > 0) {
+      const resultado = await salvarTreinoPorGrupos(aluno.id, {
+        objetivo: body.objetivo || 'HIPERTROFIA',
+        nivel: body.nivel || 'INICIANTE',
+        diasPorSemana: body.diasPorSemana || 3,
+        tempoMinutos: body.tempoMinutos || 60,
+        gruposMusculares: body.gruposMusculares,
+        splitPreferido: body.splitPreferido || null,
+        restricoes: body.restricoes || [],
+      })
+      return reply.status(201).send(resultado)
+    }
+
+    const resultado = await gerarESalvarTreinoIA(aluno.id, {
+      planoId: body.planoId,
+      planoIds: body.planoIds,
+      objetivo: body.objetivo,
+      nivel: body.nivel,
+    })
     return reply.status(201).send(resultado)
   })
 }

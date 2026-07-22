@@ -1,6 +1,10 @@
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { adotarPlano, listarPlanos } from '../planos/PlanoService.js'
+import {
+  gerarTreinoPorGrupos,
+  type GerarPorGruposInput,
+} from './GeradorTreinoService.js'
 
 export interface ClassificarGrupoInput {
   objetivo?: string
@@ -323,9 +327,21 @@ export async function classificarGrupo(alunoId: string, input: ClassificarGrupoI
   }
 }
 
-export async function gerarTreinoIA(alunoId: string, input: GerarTreinoIAInput) {
+export async function gerarTreinoIA(alunoId: string, input: GerarTreinoIAInput & { tempoMinutos?: number }) {
   const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
   if (!aluno) throw new NotFoundError('Aluno')
+
+  if (input.gruposMusculares && input.gruposMusculares.length > 0) {
+    return gerarTreinoPorGrupos(alunoId, {
+      objetivo: input.objetivo,
+      nivel: input.nivel,
+      diasPorSemana: input.diasPorSemana,
+      tempoMinutos: input.tempoMinutos || 60,
+      gruposMusculares: input.gruposMusculares,
+      splitPreferido: input.splitPreferido || null,
+      restricoes: input.restricoes || aluno.restricoes || [],
+    })
+  }
 
   const sexo = aluno.sexo || 'AMBOS'
   const restricoes = input.restricoes || aluno.restricoes || []

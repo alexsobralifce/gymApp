@@ -465,6 +465,7 @@ export const api = {
     objetivo: string
     nivel: string
     diasPorSemana: number
+    tempoMinutos?: number
     restricoes?: string[]
     gruposMusculares?: string[]
     splitPreferido?: string
@@ -475,9 +476,14 @@ export const api = {
     planoIds?: string[]
     objetivo?: string
     nivel?: string
+    diasPorSemana?: number
+    tempoMinutos?: number
+    gruposMusculares?: string[]
+    splitPreferido?: string
+    restricoes?: string[]
   }) =>
     api.post<{
-      plano: { id: string; nome: string }
+      plano: { id: string; nome: string; codigo?: string }
       planos?: Array<{ id: string; nome: string }>
       treinosCriadosCount: number
     }>('/treinos/ia/gerar-e-salvar', data),

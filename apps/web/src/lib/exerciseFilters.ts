@@ -1,5 +1,18 @@
 import type { Exercicio } from '../types/api'
 
+export const GRUPOS_GRANULARES = [
+  { value: 'Peitoral', label: 'Peitoral' },
+  { value: 'Costas', label: 'Costas' },
+  { value: 'Ombro', label: 'Ombro' },
+  { value: 'Bíceps', label: 'Bíceps' },
+  { value: 'Tríceps', label: 'Tríceps' },
+  { value: 'Abdômen', label: 'Abdômen' },
+  { value: 'Glúteos', label: 'Glúteos' },
+  { value: 'Quadríceps', label: 'Quadríceps' },
+  { value: 'Isquiotibiais', label: 'Isquiotibiais' },
+  { value: 'Panturrilhas', label: 'Panturrilhas' },
+] as const
+
 export const GRUPOS_MUSCULARES = [
   { value: 'Peito', label: 'Peito' },
   { value: 'Costas', label: 'Costas' },
