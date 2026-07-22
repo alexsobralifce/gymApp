@@ -97,7 +97,13 @@ export const api = {
     api.post<AuthTokens>('/auth/login', { email, senha }),
 
   register: (nome: string, email: string, senha: string, role: string, telefone?: string) =>
-    api.post<User>('/auth/register', { nome, email, senha, role, telefone }),
+    api.post<{ message: string }>('/auth/register', { nome, email, senha, role, telefone }),
+
+  verifyEmail: (email: string, code: string) =>
+    api.post('/auth/verify-email', { email, code }),
+
+  resendCode: (email: string) =>
+    api.post('/auth/resend-code', { email }),
 
   getMe: () => api.get<User>('/auth/me'),
 

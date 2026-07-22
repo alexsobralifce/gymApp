@@ -10,13 +10,14 @@ async function main() {
   // ─── Root ───────────────────────────────────────────────────────────────
   const rootExists = await prisma.usuario.findUnique({ where: { email: 'root@gymapp.com' } })
   if (!rootExists) {
-    await prisma.usuario.create({
-      data: {
-        nome: 'Administrador Root',
-        email: 'root@gymapp.com',
-        senha_hash: await bcrypt.hash('Root@12345', 12),
-        role: Role.ROOT,
-      },
+      await prisma.usuario.create({
+        data: {
+          nome: 'Root',
+          email: 'root@gymapp.com',
+          senha_hash: await bcrypt.hash('Root@12345', 12),
+          role: Role.ROOT,
+          email_verified: true,
+        },
     })
     console.log('✅ Root criado: root@gymapp.com / Root@12345')
   }
@@ -168,6 +169,7 @@ async function main() {
         email: `academia${i + 1}@gymapp.com`,
         senha_hash: await bcrypt.hash('Academia@123', 12),
         role: Role.ACADEMIA,
+        email_verified: true,
       },
     })
 
@@ -193,8 +195,9 @@ async function main() {
         data: {
           nome: nomeProfessor,
           email: emailProfessor,
-          senha_hash: await bcrypt.hash('Professor@123', 12),
-          role: Role.PROFESSOR,
+        senha_hash: await bcrypt.hash('Professor@123', 12),
+        role: Role.PROFESSOR,
+        email_verified: true,
         },
       })
 

@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { ConflictError, NotFoundError, UnauthorizedError } from '../../../domain/errors/AppError.js'
+import { ConflictError, NotFoundError, UnauthorizedError, ForbiddenError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
+import { sendVerificationEmail } from '../../../infrastructure/email/mailer.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,8 @@ export class AuthService {
     }
 
     const senhaHash = await bcrypt.hash(input.senha, 12)
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const codeExpira = new Date(Date.now() + 15 * 60 * 1000) // 15 minutos
 
     const usuario = await prisma.usuario.create({
       data: {
@@ -57,11 +60,15 @@ export class AuthService {
         senha_hash: senhaHash,
         role: input.role,
         telefone: input.telefone || null,
+        email_verify_code: code,
+        email_verify_code_expira: codeExpira,
       },
-      select: { id: true, nome: true, email: true, role: true, telefone: true, criado_em: true },
+      select: { id: true, nome: true, email: true, role: true, criado_em: true },
     })
 
-    return usuario
+    await sendVerificationEmail(input.email, code)
+
+    return { message: 'Conta criada. Verifique seu e-mail para ativá-la.', usuario }
   }
 
   /**
@@ -70,6 +77,7 @@ export class AuthService {
   static async login(input: LoginInput, jwtSign: (payload: object, opts?: object) => string): Promise<AuthTokens> {
     const usuario = await prisma.usuario.findUnique({
       where: { email: input.email },
+      select: { id: true, nome: true, email: true, role: true, senha_hash: true, email_verified: true },
     })
 
     if (!usuario) {
@@ -79,6 +87,10 @@ export class AuthService {
     const senhaCorreta = await bcrypt.compare(input.senha, usuario.senha_hash)
     if (!senhaCorreta) {
       throw new UnauthorizedError('E-mail ou senha inválidos')
+    }
+
+    if (!usuario.email_verified) {
+      throw new ForbiddenError('E-mail não verificado. Verifique sua caixa de entrada.')
     }
 
     // Montar payload com tenantId dependendo do role
@@ -161,6 +173,48 @@ export class AuthService {
     })
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken }
+  }
+
+  /**
+   * Verifica o código enviado por e-mail
+   */
+  static async verifyEmail(email: string, code: string): Promise<void> {
+    const usuario = await prisma.usuario.findUnique({
+      where: { email },
+      select: { id: true, email_verified: true, email_verify_code: true, email_verify_code_expira: true },
+    })
+    if (!usuario) throw new NotFoundError('Usuário')
+    if (usuario.email_verified) throw new ConflictError('E-mail já verificado.')
+    if (usuario.email_verify_code !== code) throw new UnauthorizedError('Código inválido.')
+    if (!usuario.email_verify_code_expira || usuario.email_verify_code_expira < new Date()) {
+      throw new UnauthorizedError('Código expirado. Solicite um novo.')
+    }
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { email_verified: true, email_verify_code: null, email_verify_code_expira: null },
+    })
+  }
+
+  /**
+   * Reenvia código de verificação
+   */
+  static async resendCode(email: string): Promise<void> {
+    const usuario = await prisma.usuario.findUnique({
+      where: { email },
+      select: { id: true, email_verified: true },
+    })
+    if (!usuario) throw new NotFoundError('Usuário')
+    if (usuario.email_verified) throw new ConflictError('E-mail já verificado.')
+
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const codeExpira = new Date(Date.now() + 15 * 60 * 1000)
+
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { email_verify_code: code, email_verify_code_expira: codeExpira },
+    })
+
+    await sendVerificationEmail(email, code)
   }
 
   /**

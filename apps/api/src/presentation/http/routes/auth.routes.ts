@@ -33,8 +33,31 @@ export async function authRoutes(app: FastifyInstance) {
    */
   app.post('/register', async (request, reply) => {
     const body = registerBodySchema.parse(request.body)
-    const usuario = await AuthService.register(body)
-    return reply.status(201).send(usuario)
+    const result = await AuthService.register(body)
+    return reply.status(201).send(result)
+  })
+
+  /**
+   * POST /auth/verify-email
+   * Verifica o código enviado por e-mail
+   */
+  app.post('/verify-email', async (request, reply) => {
+    const body = z.object({
+      email: z.string().email(),
+      code: z.string().length(6),
+    }).parse(request.body)
+    await AuthService.verifyEmail(body.email, body.code)
+    return reply.status(200).send({ message: 'E-mail verificado com sucesso.' })
+  })
+
+  /**
+   * POST /auth/resend-code
+   * Reenvia o código de verificação
+   */
+  app.post('/resend-code', async (request, reply) => {
+    const body = z.object({ email: z.string().email() }).parse(request.body)
+    await AuthService.resendCode(body.email)
+    return reply.status(200).send({ message: 'Código reenviado.' })
   })
 
   /**

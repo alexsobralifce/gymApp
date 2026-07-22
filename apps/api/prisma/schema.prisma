@@ -70,6 +70,9 @@ model Usuario {
   ativo        Boolean  @default(true)
   expo_push_token       String?  // token Expo para push notifications
   web_push_subscription  Json?    // PushSubscription JSON (Web Push API)
+  email_verified         Boolean  @default(false)
+  email_verify_code      String?
+  email_verify_code_expira DateTime?
   criado_em    DateTime @default(now())
   atualizado_em DateTime @updatedAt
 

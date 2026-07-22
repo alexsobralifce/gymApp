@@ -25,7 +25,10 @@ export default function RegisterWizard() {
   const [altura, setAltura] = useState('')
   const [sexo, setSexo] = useState('')
   const [consentiuSocial, setConsentiuSocial] = useState(false)
-  const { register, loading, error } = useAuthStore()
+  const [code, setCode] = useState('')
+  const [verificationStep, setVerificationStep] = useState(false)
+  const [resending, setResending] = useState(false)
+  const { register, verifyEmail, completeRegistration, loading, error } = useAuthStore()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -70,10 +73,28 @@ export default function RegisterWizard() {
       next()
       return
     }
-    await register(
-      nome, email, senha, role,
+    if (!verificationStep) {
+      await register(
+        nome, email, senha, role,
+        isAluno ? (modoVinculo === 'AUTOGESTAO' ? 'AUTOGESTAO' : academiaId) : undefined,
+        telefone.replace(/\D/g, '') || undefined,
+        dataNascimento || undefined,
+        peso ? Number(peso) : undefined,
+        altura ? Number(altura) : undefined,
+        sexo || undefined,
+        consentiuSocial,
+      )
+      setVerificationStep(true)
+      return
+    }
+  }
+
+  async function handleVerify() {
+    if (code.length !== 6) return
+    await verifyEmail(email, code)
+    await completeRegistration(
+      email, senha, role,
       isAluno ? (modoVinculo === 'AUTOGESTAO' ? 'AUTOGESTAO' : academiaId) : undefined,
-      telefone.replace(/\D/g, '') || undefined,
       dataNascimento || undefined,
       peso ? Number(peso) : undefined,
       altura ? Number(altura) : undefined,
@@ -81,6 +102,67 @@ export default function RegisterWizard() {
       consentiuSocial,
     )
     navigate('/welcome')
+  }
+
+  async function handleResend() {
+    setResending(true)
+    try {
+      await api.resendCode(email)
+    } finally {
+      setResending(false)
+    }
+  }
+
+  const codeValid = code.replace(/\D/g, '').length === 6
+
+  if (verificationStep) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface px-4">
+        <div className="w-full max-w-sm space-y-5 rounded-lg bg-surface-card p-6 text-center">
+          <div className="text-4xl">📧</div>
+          <h1 className="text-xl font-bold text-text">Verifique seu e-mail</h1>
+          <p className="text-sm text-text-muted">
+            Enviamos um código de 6 dígitos para <strong className="text-text">{email}</strong>.
+            Insira abaixo para ativar sua conta.
+          </p>
+
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder="000000"
+            className="w-full rounded-xl border-2 border-surface-input bg-surface px-4 py-3 text-center text-2xl font-bold tracking-[0.5em] text-text placeholder:text-text-disabled focus:border-primary focus:outline-none"
+            autoFocus
+          />
+
+          {error && <p className="rounded bg-red-500/10 p-2 text-xs text-red-400">{error}</p>}
+
+          <button
+            type="button"
+            onClick={handleVerify}
+            disabled={loading || !codeValid}
+            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+          >
+            {loading ? 'Verificando...' : 'Confirmar Conta'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resending}
+            className="text-xs text-text-muted hover:text-primary transition-colors cursor-pointer"
+          >
+            {resending ? 'Reenviando...' : 'Reenviar código'}
+          </button>
+
+          <Link to="/login" className="block text-xs text-text-muted hover:text-text transition-colors">
+            Voltar para o login
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
