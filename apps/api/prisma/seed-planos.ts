@@ -1,263 +1,203 @@
 import { PrismaClient } from '@prisma/client'
+import {
+  CATALOGO,
+  SESSOES,
+  NIVEL_VOLUME,
+  PALAVRAS_PROIBIDAS,
+  type CatalogoExercicio,
+} from './catalogo-planos.js'
 
 const prisma = new PrismaClient()
 
-async function findExercicioBySearch(terms: string[]): Promise<string | null> {
-  for (const term of terms) {
-    const ex = await prisma.exercicio.findFirst({
+function normalize(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function isProibido(nome: string): boolean {
+  const n = normalize(nome)
+  return PALAVRAS_PROIBIDAS.some((p) => n.includes(normalize(p)))
+}
+
+async function findExercicioSeguro(ex: CatalogoExercicio): Promise<string | null> {
+  for (const termo of ex.termos) {
+    const candidatos = await prisma.exercicio.findMany({
       where: {
-        nome: {
-          contains: term,
-          mode: 'insensitive',
-        },
+        nome: { contains: termo, mode: 'insensitive' },
+        grupo_muscular: { contains: ex.grupo, mode: 'insensitive' },
       },
-      select: { id: true },
+      select: { id: true, nome: true, equipamento: true },
+      take: 10,
     })
-    if (ex) return ex.id
+
+    const filtrados = candidatos.filter((c) => !isProibido(c.nome))
+
+    if (ex.equipamentoPref?.length) {
+      const comEquip = filtrados.filter((c) =>
+        ex.equipamentoPref!.some((e) =>
+          (c.equipamento || '').toLowerCase().includes(e.toLowerCase()),
+        ),
+      )
+      if (comEquip.length > 0) return comEquip[0].id
+      if (filtrados.length > 0) return filtrados[0].id
+    } else if (filtrados.length > 0) {
+      return filtrados[0].id
+    }
   }
-  // Fallback: pega o primeiro exercício cadastrado se nenhum termo bater
-  const fallback = await prisma.exercicio.findFirst({ select: { id: true } })
-  return fallback ? fallback.id : null
+
+  console.error(`  ⚠ Exercício não encontrado: grupo=${ex.grupo} termos=${ex.termos.join('|')}`)
+  return null
+}
+
+interface PlanoSessaoDef {
+  nome: string
+  dia_label: string
+  ordem: number
+  exercicios: Array<{
+    exercicio_id: string
+    ordem: number
+    series: number
+    repeticoes_min: number
+    repeticoes_max: number
+    carga_sugerida_kg: number | null
+    restricoes: string[]
+    alternativo_id?: string | null
+  }>
+}
+
+interface PlanoDef {
+  codigo: string
+  nome: string
+  descricao: string
+  objetivo: string
+  nivel: string
+  sexo_alvo: string
+  dias_por_semana: number
+  split_tipo: string
+  sessoes: PlanoSessaoDef[]
 }
 
 async function main() {
   console.log('🌱 Iniciando seed da Biblioteca de Planos de Treino...')
 
-  // Limpa planos antigos se existirem
   await prisma.planoSessaoExercicio.deleteMany()
   await prisma.planoSessao.deleteMany()
   await prisma.planoBiblioteca.deleteMany()
 
-  // IDs de exercícios comuns
-  const exSupinoBarra = await findExercicioBySearch(['supino reto', 'supino com barra', 'supino'])
-  const exSupinoHalter = await findExercicioBySearch(['supino inclinado com halter', 'supino com halter', 'supino inclinado'])
-  const exCrucifixo = await findExercicioBySearch(['crucifixo', 'peck deck', 'voador'])
-  const exDesenvolvimento = await findExercicioBySearch(['desenvolvimento de ombros', 'desenvolvimento', 'press ombro'])
-  const exElevacaoLateral = await findExercicioBySearch(['elevação lateral', 'elevacao lateral'])
-  const exTricepsCorda = await findExercicioBySearch(['tríceps corda', 'triceps corda', 'tríceps'])
-  const exTricepsTesta = await findExercicioBySearch(['tríceps testa', 'triceps testa'])
-  
-  const exRemadaCurvada = await findExercicioBySearch(['remada curvada', 'remada'])
-  const exPuxadaFrontal = await findExercicioBySearch(['puxada frontal', 'puxada', 'pulldown'])
-  const exBarraFixa = await findExercicioBySearch(['barra fixa', 'puxada'])
-  const exRoscaDireta = await findExercicioBySearch(['rosca direta', 'rosca'])
-  const exRoscaAlternada = await findExercicioBySearch(['rosca alternada', 'rosca martelo'])
+  const niveis = ['INICIANTE', 'INTERMEDIARIO', 'AVANCADO'] as const
+  const splits = ['PUSH', 'PULL', 'LEGS'] as const
+  const planos: PlanoDef[] = []
 
-  const exAgachamento = await findExercicioBySearch(['agachamento livre', 'agachamento', 'squat'])
-  const exLegPress = await findExercicioBySearch(['leg press 45', 'leg press'])
-  const exExtensora = await findExercicioBySearch(['cadeira extensora', 'extensora'])
-  const exFlexora = await findExercicioBySearch(['mesa flexora', 'cadeira flexora', 'flexora'])
-  const exHipThrust = await findExercicioBySearch(['elevação pélvica', 'hip thrust', 'glúteo'])
-  const exStiff = await findExercicioBySearch(['stiff', 'levantamento terra romeno'])
-  const exAbducao = await findExercicioBySearch(['cadeira abdutora', 'abdução'])
-  const exAfundo = await findExercicioBySearch(['afundo', 'avanço', 'passada'])
+  for (const split of splits) {
+    const sessao = SESSOES[split]
+    const grupos = sessao.grupos
 
-  const exAbdominal = await findExercicioBySearch(['abdominal', 'crunch'])
-  const exPrancha = await findExercicioBySearch(['prancha', 'plank'])
+    for (const nivel of niveis) {
+      const vol = NIVEL_VOLUME[nivel]
+      const exs: Array<{
+        exercicio_id: string
+        ordem: number
+        series: number
+        repeticoes_min: number
+        repeticoes_max: number
+        carga_sugerida_kg: number | null
+        restricoes: string[]
+        alternativo_id?: string | null
+      }> = []
+      let ordem = 1
 
-  const plansData = [
-    // ─── PUSH (PEITO / TRÍCEPS / OMBRO) ──────────────────────────────────────
-    {
-      codigo: 'PUSH_HIPER_M_INIT',
-      nome: 'Push A — Peito, Tríceps e Ombro (Iniciante)',
-      descricao: 'Treino de empurrar para iniciantes focado em aprendizado motor e hipertrofia inicial.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INICIANTE',
-      sexo_alvo: 'MASCULINO',
-      dias_por_semana: 3,
-      split_tipo: 'ABC',
-      sessoes: [
-        {
-          nome: 'Treino A — Peito, Tríceps e Ombro',
-          dia_label: 'A',
-          ordem: 1,
-          exercicios: [
-            { exercicio_id: exSupinoBarra, ordem: 1, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 8, repeticoes_max: 12, restricoes: ['ombro', 'punho'], alternativo_id: exSupinoHalter },
-            { exercicio_id: exCrucifixo, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['ombro'] },
-            { exercicio_id: exDesenvolvimento, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['ombro'], alternativo_id: exElevacaoLateral },
-            { exercicio_id: exElevacaoLateral, ordem: 4, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-            { exercicio_id: exTricepsCorda, ordem: 5, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: [] },
-          ],
-        },
-      ],
-    },
-    {
-      codigo: 'PUSH_HIPER_M_INTER',
-      nome: 'Push A — Peito, Tríceps e Ombro (Intermediário)',
-      descricao: 'Volume moderado-alto com foco em massa muscular de peitoral e ombros.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INTERMEDIARIO',
-      sexo_alvo: 'MASCULINO',
-      dias_por_semana: 4,
-      split_tipo: 'ABCD',
-      sessoes: [
-        {
-          nome: 'Treino A — Empurrar (Peito/Ombro/Tríceps)',
-          dia_label: 'A',
-          ordem: 1,
-          exercicios: [
-            { exercicio_id: exSupinoBarra, ordem: 1, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 6, repeticoes_max: 10, restricoes: ['ombro'] },
-            { exercicio_id: exSupinoHalter, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 8, repeticoes_max: 12, restricoes: ['ombro'] },
-            { exercicio_id: exDesenvolvimento, ordem: 3, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 8, repeticoes_max: 10, restricoes: ['ombro'] },
-            { exercicio_id: exElevacaoLateral, ordem: 4, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-            { exercicio_id: exTricepsTesta, ordem: 5, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['punho'] },
-            { exercicio_id: exTricepsCorda, ordem: 6, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-          ],
-        },
-      ],
-    },
-    {
-      codigo: 'PUSH_HIPER_F_INIT',
-      nome: 'Push A — Peito, Tríceps e Ombro (Feminino)',
-      descricao: 'Treino adaptado para mulheres com intensidade moderada para tonificação de braços e ombros.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INICIANTE',
-      sexo_alvo: 'FEMININO',
-      dias_por_semana: 3,
-      split_tipo: 'ABC',
-      sessoes: [
-        {
-          nome: 'Treino A — Membros Superiores (Push)',
-          dia_label: 'A',
-          ordem: 1,
-          exercicios: [
-            { exercicio_id: exSupinoHalter, ordem: 1, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['ombro'] },
-            { exercicio_id: exDesenvolvimento, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['ombro'] },
-            { exercicio_id: exElevacaoLateral, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-            { exercicio_id: exTricepsCorda, ordem: 4, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-          ],
-        },
-      ],
-    },
+      let todosEncontrados = true
 
-    // ─── PULL (COSTAS / BÍCEPS) ──────────────────────────────────────────────
-    {
-      codigo: 'PULL_HIPER_M_INIT',
-      nome: 'Pull B — Costas e Bíceps (Iniciante)',
-      descricao: 'Desenvolvimento da musculatura das costas e flexores de cotovelo.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INICIANTE',
-      sexo_alvo: 'MASCULINO',
-      dias_por_semana: 3,
-      split_tipo: 'ABC',
-      sessoes: [
-        {
-          nome: 'Treino B — Costas e Bíceps',
-          dia_label: 'B',
-          ordem: 2,
-          exercicios: [
-            { exercicio_id: exPuxadaFrontal, ordem: 1, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['ombro'] },
-            { exercicio_id: exRemadaCurvada, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 8, repeticoes_max: 12, restricoes: ['lombar'], alternativo_id: exPuxadaFrontal },
-            { exercicio_id: exRoscaDireta, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['punho'], alternativo_id: exRoscaAlternada },
-            { exercicio_id: exRoscaAlternada, ordem: 4, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: [] },
-          ],
-        },
-      ],
-    },
-    {
-      codigo: 'PULL_HIPER_M_INTER',
-      nome: 'Pull B — Costas e Bíceps (Intermediário)',
-      descricao: 'Foco em largura e espessura das costas com trabalho isolado de bíceps.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INTERMEDIARIO',
-      sexo_alvo: 'MASCULINO',
-      dias_por_semana: 4,
-      split_tipo: 'ABCD',
-      sessoes: [
-        {
-          nome: 'Treino B — Puxar (Costas/Bíceps)',
-          dia_label: 'B',
-          ordem: 2,
-          exercicios: [
-            { exercicio_id: exBarraFixa, ordem: 1, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 6, repeticoes_max: 10, restricoes: ['ombro'] },
-            { exercicio_id: exRemadaCurvada, ordem: 2, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 8, repeticoes_max: 10, restricoes: ['lombar'] },
-            { exercicio_id: exPuxadaFrontal, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: [] },
-            { exercicio_id: exRoscaDireta, ordem: 4, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 8, repeticoes_max: 12, restricoes: ['punho'] },
-            { exercicio_id: exRoscaAlternada, ordem: 5, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: [] },
-          ],
-        },
-      ],
-    },
+      for (const grupoKey of grupos) {
+        const catalogoGrupo = CATALOGO[grupoKey]
+        if (!catalogoGrupo) {
+          console.error(`  ⚠ Grupo não encontrado no catálogo: ${grupoKey}`)
+          todosEncontrados = false
+          continue
+        }
 
-    // ─── LEGS MASCULINO ──────────────────────────────────────────────────────
-    {
-      codigo: 'LEGS_M_HIPER_INIT',
-      nome: 'Legs C — Membros Inferiores (Masculino Iniciante)',
-      descricao: 'Treino completo de coxas e panturrilhas para homens.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INICIANTE',
-      sexo_alvo: 'MASCULINO',
-      dias_por_semana: 3,
-      split_tipo: 'ABC',
-      sessoes: [
-        {
-          nome: 'Treino C — Membros Inferiores',
-          dia_label: 'C',
-          ordem: 3,
-          exercicios: [
-            { exercicio_id: exAgachamento, ordem: 1, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 8, repeticoes_max: 12, restricoes: ['joelho', 'lombar'], alternativo_id: exLegPress },
-            { exercicio_id: exLegPress, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['joelho'] },
-            { exercicio_id: exExtensora, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-            { exercicio_id: exFlexora, ordem: 4, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-          ],
-        },
-      ],
-    },
+        const exsGrupo = catalogoGrupo[nivel]
+        const selecionados = exsGrupo.slice(0, 3)
 
-    // ─── LEGS FEMININO (GLÚTEOS & PERNAS) ─────────────────────────────────────
-    {
-      codigo: 'LEGS_F_GLUTEO_INIT',
-      nome: 'Glúteos & Pernas D — Estético (Feminino Iniciante)',
-      descricao: 'Ênfase no desenvolvimento de glúteos e posteriores de coxa.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INICIANTE',
-      sexo_alvo: 'FEMININO',
-      dias_por_semana: 3,
-      split_tipo: 'ABC',
-      sessoes: [
-        {
-          nome: 'Treino D — Foco Glúteos e Posteriores',
-          dia_label: 'D',
-          ordem: 3,
-          exercicios: [
-            { exercicio_id: exHipThrust, ordem: 1, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 10, repeticoes_max: 12, restricoes: [] },
-            { exercicio_id: exStiff, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['lombar'] },
-            { exercicio_id: exAfundo, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['joelho'] },
-            { exercicio_id: exAbducao, ordem: 4, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 12, repeticoes_max: 15, restricoes: [] },
-          ],
-        },
-      ],
-    },
-    {
-      codigo: 'LEGS_F_GLUTEO_INTER',
-      nome: 'Glúteos & Pernas D — Estético (Feminino Intermediário)',
-      descricao: 'Alta densidade de estímulo muscular para hipertrofia máxima de glúteos.',
-      objetivo: 'HIPERTROFIA',
-      nivel: 'INTERMEDIARIO',
-      sexo_alvo: 'FEMININO',
-      dias_por_semana: 4,
-      split_tipo: 'ABCD',
-      sessoes: [
-        {
-          nome: 'Treino D — Glúteos e Coxas Avançado',
-          dia_label: 'D',
-          ordem: 3,
-          exercicios: [
-            { exercicio_id: exHipThrust, ordem: 1, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 8, repeticoes_max: 12, restricoes: [] },
-            { exercicio_id: exAgachamento, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 8, repeticoes_max: 10, restricoes: ['joelho', 'lombar'], alternativo_id: exLegPress },
-            { exercicio_id: exStiff, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['lombar'] },
-            { exercicio_id: exAfundo, ordem: 4, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['joelho'] },
-            { exercicio_id: exAbducao, ordem: 5, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 15, repeticoes_max: 20, restricoes: [] },
-          ],
-        },
-      ],
-    },
+        for (const template of selecionados) {
+          const id = await findExercicioSeguro(template)
+          if (!id) {
+            todosEncontrados = false
+            continue
+          }
 
-    // ─── FULL BODY & EMAGRECIMENTO ───────────────────────────────────────────
-    {
-      codigo: 'FULLBODY_INIT_UNISSEX',
-      nome: 'Full Body — Corpo Inteiro (Iniciante 3x)',
-      descricao: 'Ideal para quem busca saúde, condicionamento geral e rotina de 3x por semana.',
+          exs.push({
+            exercicio_id: id,
+            ordem: ordem++,
+            series: vol.series,
+            repeticoes_min: vol.repMin,
+            repeticoes_max: vol.repMax,
+            carga_sugerida_kg: template.cargaSugeridaKg ?? vol.cargaSugeridaKg ?? null,
+            restricoes: template.restricoes || [],
+          })
+        }
+      }
+
+      if (!todosEncontrados) {
+        console.error(
+          `  ❌ Pulando ${split} ${nivel} — exercícios incompletos (${exs.length} encontrados)`,
+        )
+        continue
+      }
+
+      const label = sessao.labelA
+      planos.push({
+        codigo: `${split}_HIPER_${nivel.slice(0, 4)}`,
+        nome: `${split} — ${label} (${nivel === 'INICIANTE' ? 'Iniciante' : nivel === 'INTERMEDIARIO' ? 'Intermediário' : 'Avançado'})`,
+        descricao: `${sessao.labelCompleto} — 3 exercícios por grupo muscular. Nível ${nivel.toLowerCase()}.`,
+        objetivo: 'HIPERTROFIA',
+        nivel,
+        sexo_alvo: 'AMBOS',
+        dias_por_semana: 3,
+        split_tipo: 'ABC',
+        sessoes: [
+          {
+            nome: `${split} ${sessao.labelA}`,
+            dia_label: split === 'PUSH' ? 'A' : split === 'PULL' ? 'B' : 'C',
+            ordem: split === 'PUSH' ? 1 : split === 'PULL' ? 2 : 3,
+            exercicios: exs,
+          },
+        ],
+      })
+    }
+  }
+
+  const nivelFull = 'INICIANTE'
+  const volFull = NIVEL_VOLUME[nivelFull]
+  const fullExs: PlanoSessaoDef['exercicios'] = []
+  let fullOrdem = 1
+
+  for (const grupoKey of ['PEITO', 'COSTAS', 'OMBRO', 'QUAD', 'POSTERIOR', 'BICEPS', 'TRICEPS', 'CORE']) {
+    const catalogoGrupo = CATALOGO[grupoKey]
+    if (!catalogoGrupo) continue
+    const template = catalogoGrupo[nivelFull][0]
+    if (!template) continue
+    const id = await findExercicioSeguro(template)
+    if (!id) continue
+    fullExs.push({
+      exercicio_id: id,
+      ordem: fullOrdem++,
+      series: 3,
+      repeticoes_min: 10,
+      repeticoes_max: 12,
+      carga_sugerida_kg: null,
+      restricoes: template.restricoes || [],
+    })
+  }
+
+  if (fullExs.length >= 6) {
+    planos.push({
+      codigo: 'FULL_HIPER_INIT',
+      nome: 'Full Body — Corpo Inteiro (Iniciante)',
+      descricao: 'Um exercício por grande área muscular. Ideal para saúde geral e condicionamento 3x/semana.',
       objetivo: 'SAUDE',
       nivel: 'INICIANTE',
       sexo_alvo: 'AMBOS',
@@ -265,46 +205,23 @@ async function main() {
       split_tipo: 'FULL_BODY',
       sessoes: [
         {
-          nome: 'Treino Full Body A — Geral',
-          dia_label: 'F',
+          nome: 'Full Body',
+          dia_label: 'A',
           ordem: 1,
-          exercicios: [
-            { exercicio_id: exAgachamento, ordem: 1, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['joelho'], alternativo_id: exLegPress },
-            { exercicio_id: exSupinoHalter, ordem: 2, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: ['ombro'] },
-            { exercicio_id: exPuxadaFrontal, ordem: 3, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 10, repeticoes_max: 12, restricoes: [] },
-            { exercicio_id: exDesenvolvimento, ordem: 4, tipo: 'PRINCIPAL', series: 2, repeticoes_min: 12, repeticoes_max: 15, restricoes: ['ombro'] },
-            { exercicio_id: exAbdominal, ordem: 5, tipo: 'PRINCIPAL', series: 3, repeticoes_min: 15, repeticoes_max: 20, restricoes: [] },
-          ],
+          exercicios: fullExs,
         },
       ],
-    },
-    {
-      codigo: 'FULLBODY_EMAG',
-      nome: 'Full Body Circuito — Emagrecimento / Queima Fat',
-      descricao: 'Séries contínuas com intervalos curtos para elevado gasto calórico.',
-      objetivo: 'EMAGRECIMENTO',
-      nivel: 'INICIANTE',
-      sexo_alvo: 'AMBOS',
-      dias_por_semana: 3,
-      split_tipo: 'FULL_BODY',
-      sessoes: [
-        {
-          nome: 'Circuito Metabólico Full Body',
-          dia_label: 'F',
-          ordem: 1,
-          exercicios: [
-            { exercicio_id: exLegPress, ordem: 1, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 15, repeticoes_max: 20, restricoes: ['joelho'] },
-            { exercicio_id: exPuxadaFrontal, ordem: 2, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 15, repeticoes_max: 20, restricoes: [] },
-            { exercicio_id: exSupinoHalter, ordem: 3, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 15, repeticoes_max: 20, restricoes: ['ombro'] },
-            { exercicio_id: exHipThrust, ordem: 4, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 15, repeticoes_max: 20, restricoes: [] },
-            { exercicio_id: exPrancha, ordem: 5, tipo: 'PRINCIPAL', series: 4, repeticoes_min: 30, repeticoes_max: 60, restricoes: [] },
-          ],
-        },
-      ],
-    },
-  ]
+    })
+  }
 
-  for (const plan of plansData) {
+  console.log(`\n📋 Planos a criar: ${planos.length}`)
+
+  for (const plan of planos) {
+    if (plan.sessoes.length === 0 || plan.sessoes[0].exercicios.length === 0) {
+      console.log(`  ⊘ Pulando ${plan.nome} — sem exercícios`)
+      continue
+    }
+
     const createdPlan = await prisma.planoBiblioteca.create({
       data: {
         codigo: plan.codigo,
@@ -335,10 +252,11 @@ async function main() {
               sessao_id: createdSessao.id,
               exercicio_id: ex.exercicio_id,
               ordem: ex.ordem,
-              tipo: ex.tipo,
+              tipo: 'PRINCIPAL',
               series: ex.series,
               repeticoes_min: ex.repeticoes_min,
               repeticoes_max: ex.repeticoes_max,
+              carga_sugerida_kg: ex.carga_sugerida_kg,
               restricoes_incompativeis: ex.restricoes || [],
               alternativo_id: ex.alternativo_id || null,
             },
@@ -347,10 +265,11 @@ async function main() {
       }
     }
 
-    console.log(`  ✓ Plano cadastrado: ${plan.nome} (${plan.codigo})`)
+    const totalEx = plan.sessoes[0].exercicios.length
+    console.log(`  ✓ ${plan.codigo} — ${totalEx} exercícios`)
   }
 
-  console.log('✅ Seed da Biblioteca de Planos concluído com sucesso!')
+  console.log('\n✅ Seed da Biblioteca de Planos concluído!')
 }
 
 main()

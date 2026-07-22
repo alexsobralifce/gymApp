@@ -132,6 +132,19 @@ function isRestricaoIncompativel(nome: string, restricoes: string[]): boolean {
   return false
 }
 
+const PALAVRAS_PROIBIDAS = [
+  'alongamento', 'alongar', 'stretch', 'mobilidade', 'mobility',
+  'yoga', 'aquecimento', 'warm up', 'cool down',
+  'respiração', 'relaxamento', 'meditação',
+]
+
+function isAlongamento(nome: string): boolean {
+  const n = normalize(nome)
+  return PALAVRAS_PROIBIDAS.some((p) => n.includes(normalize(p)))
+}
+
+const EQUIP_INICIANTE = ['Máquina', 'maquina', 'Polia', 'cabo', 'Peso Corporal', 'assistido']
+
 export async function gerarTreinoPorGrupos(alunoId: string, input: GerarPorGruposInput) {
   const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
   if (!aluno) throw new NotFoundError('Aluno')
@@ -187,8 +200,22 @@ export async function gerarTreinoPorGrupos(alunoId: string, input: GerarPorGrupo
     }
 
     exercicios = exercicios.filter((ex) => !isRestricaoIncompativel(ex.nome, restricoes))
+    exercicios = exercicios.filter((ex) => !isAlongamento(ex.nome))
 
     exercicios.sort((a, b) => {
+      const isIniciante = input.nivel === 'INICIANTE'
+
+      if (isIniciante) {
+        const aInit = EQUIP_INICIANTE.some(
+          (eq) => (a.equipamento || '').toLowerCase().includes(eq),
+        )
+        const bInit = EQUIP_INICIANTE.some(
+          (eq) => (b.equipamento || '').toLowerCase().includes(eq),
+        )
+        if (aInit && !bInit) return -1
+        if (!aInit && bInit) return 1
+      }
+
       const aLarge =
         a.equipamento && ['Barra', 'Halteres', 'Máquina'].some((e) => a.equipamento!.includes(e))
       const bLarge =
