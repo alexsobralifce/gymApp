@@ -211,9 +211,11 @@ export async function authRoutes(app: FastifyInstance) {
     })
     if (!usuario) return reply.status(404).send({ message: 'Usuário não encontrado' })
 
-    const senhaCorreta = await bcrypt.compare(senhaAtual, usuario.senha_hash)
-    if (!senhaCorreta) {
-      return reply.status(400).send({ message: 'Senha atual incorreta' })
+    if (usuario.senha_hash) {
+      const senhaCorreta = await bcrypt.compare(senhaAtual, usuario.senha_hash)
+      if (!senhaCorreta) {
+        return reply.status(400).send({ message: 'Senha atual incorreta' })
+      }
     }
 
     const novaSenhaHash = await bcrypt.hash(novaSenha, 12)

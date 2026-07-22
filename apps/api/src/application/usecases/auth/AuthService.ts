@@ -89,6 +89,10 @@ export class AuthService {
       throw new UnauthorizedError('E-mail ou senha inválidos')
     }
 
+    if (!usuario.senha_hash) {
+      throw new UnauthorizedError('Esta conta usa login com Google. Entre com o botão do Google.')
+    }
+
     const senhaCorreta = await bcrypt.compare(input.senha, usuario.senha_hash)
     if (!senhaCorreta) {
       throw new UnauthorizedError('E-mail ou senha inválidos')
