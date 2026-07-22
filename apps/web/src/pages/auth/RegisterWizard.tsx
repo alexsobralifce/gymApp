@@ -76,13 +76,7 @@ export default function RegisterWizard() {
     if (!verificationStep) {
       await register(
         nome, email, senha, role,
-        isAluno ? (modoVinculo === 'AUTOGESTAO' ? 'AUTOGESTAO' : academiaId) : undefined,
         telefone.replace(/\D/g, '') || undefined,
-        dataNascimento || undefined,
-        peso ? Number(peso) : undefined,
-        altura ? Number(altura) : undefined,
-        sexo || undefined,
-        consentiuSocial,
       )
       setVerificationStep(true)
       return

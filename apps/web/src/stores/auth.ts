@@ -8,7 +8,7 @@ export interface AuthState {
   error: string | null
 
   login: (email: string, senha: string) => Promise<void>
-  register: (nome: string, email: string, senha: string, role: string, academiaId?: string, telefone?: string, dataNascimento?: string, pesoKg?: number, alturaCm?: number, sexo?: string, consentiuSocial?: boolean) => Promise<void>
+  register: (nome: string, email: string, senha: string, role: string, telefone?: string) => Promise<void>
   verifyEmail: (email: string, code: string) => Promise<void>
   completeRegistration: (email: string, senha: string, role: string, academiaId?: string, dataNascimento?: string, pesoKg?: number, alturaCm?: number, sexo?: string, consentiuSocial?: boolean) => Promise<void>
   logout: () => void
@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (nome, email, senha, role, academiaId, telefone, dataNascimento, pesoKg, alturaCm, sexo, consentiuSocial) => {
+  register: async (nome, email, senha, role, telefone) => {
     set({ loading: true, error: null })
     try {
       await api.register(nome, email, senha, role, telefone)
