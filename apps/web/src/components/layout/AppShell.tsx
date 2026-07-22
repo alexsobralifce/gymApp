@@ -369,7 +369,7 @@ export default function AppShell() {
   )
 
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="flex min-h-screen bg-surface overflow-x-hidden">
       {/* Mobile Drawer Overlay */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
@@ -407,12 +407,12 @@ export default function AppShell() {
       <div className="flex flex-1 flex-col min-w-0">
         {/* Top bar */}
         {!hideNav && (
-          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-surface-input glass px-4 shrink-0">
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-surface-input glass px-4 shrink-0 safe-top" style={{ minHeight: `calc(3.5rem + env(safe-area-inset-top, 0px))` }}>
             <div className="flex items-center gap-3 min-w-0">
               {/* Hamburger for all users on mobile */}
               <button
                 onClick={() => setDrawerOpen(true)}
-                className="md:hidden rounded-lg p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer -ml-2"
+                className="md:hidden rounded-xl p-2.5 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer -ml-2 min-h-11 min-w-11 flex items-center justify-center"
                 title="Abrir Menu"
               >
                 <MenuIcon className="h-5 w-5" />
@@ -538,12 +538,12 @@ export default function AppShell() {
 
               <div className="grid grid-cols-2 gap-2.5">
                 {[
+                  { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescricao inteligente' },
                   { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
-                  { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescrição inteligente' },
                   { to: '/amizades', label: 'Amigos', icon: '👥', desc: 'Rede social fitness' },
                   { to: '/medidas', label: 'Minhas Medidas', icon: '📏', desc: 'Peso e dobras' },
                   { to: '/clubes', label: 'Clubes', icon: '🏆', desc: 'Ranking & XP' },
-                  { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restrições' },
+                  { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restricoes' },
                 ].map((item) => (
                   <button
                     key={item.to}
@@ -560,6 +560,18 @@ export default function AppShell() {
                   </button>
                 ))}
               </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMoreSheetOpen(false)
+                  setTimeout(() => setColegasSheetOpen(true), 150)
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-surface-input py-3 text-sm font-bold text-text hover:bg-surface-input/70 active:scale-95 transition-all cursor-pointer min-h-11"
+              >
+                <UsersIcon className="h-4 w-4" />
+                Alunos da Academia
+              </button>
 
               <div className="pt-2 border-t border-surface-input flex flex-col gap-1.5">
                 <button
@@ -639,7 +651,7 @@ export default function AppShell() {
                     key={t.to}
                     to={t.to}
                     end={t.end}
-                    className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 min-w-0 cursor-pointer group"
+                    className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 min-w-11 min-h-11 cursor-pointer group"
                   >
                     <div className="relative">
                       <Icon className={`h-5 w-5 transition-all duration-200 ${isActive ? 'text-primary scale-110' : 'text-text-muted group-hover:text-text'}`} />
@@ -660,26 +672,11 @@ export default function AppShell() {
                 )
               })}
 
-              {/* Tab: Colegas */}
-              <button
-                type="button"
-                onClick={() => setColegasSheetOpen(true)}
-                className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 min-w-0 cursor-pointer group ${
-                  colegasSheetOpen ? 'text-primary font-bold' : 'text-text-muted hover:text-text'
-                }`}
-              >
-                <UsersIcon className={`h-5 w-5 transition-all duration-200 ${colegasSheetOpen ? 'text-primary scale-110' : ''}`} />
-                <span className="text-[10px] font-medium">Colegas</span>
-                {colegasSheetOpen && (
-                  <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-7 rounded-full bg-primary animate-scale-in" />
-                )}
-              </button>
-
               {/* Tab: Mais */}
               <button
                 type="button"
                 onClick={() => setMoreSheetOpen(true)}
-                className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 min-w-0 cursor-pointer group ${
+                className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 min-w-11 min-h-11 cursor-pointer group ${
                   moreSheetOpen ? 'text-primary font-bold' : 'text-text-muted hover:text-text'
                 }`}
               >

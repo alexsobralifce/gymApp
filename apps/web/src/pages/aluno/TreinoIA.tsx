@@ -17,9 +17,9 @@ const SPLIT_ATALHOS = [
 
 const STEPS = [
   { num: 1, label: 'Objetivo' },
-  { num: 2, label: 'Nivel & Dias' },
-  { num: 3, label: 'Musculos' },
-  { num: 4, label: 'Restricoes' },
+  { num: 2, label: 'Nível & Dias' },
+  { num: 3, label: 'Músculos' },
+  { num: 4, label: 'Restrições' },
   { num: 5, label: 'Resultado' },
 ]
 
@@ -102,7 +102,7 @@ export default function TreinoIA() {
     try {
       const res = await api.adotarPlano(planoId)
       setToast({
-        message: `Plano "${res.plano.nome}" ativado com sucesso! ${res.treinosCriadosCount} fichas criadas.`,
+        message: `Treino ativado! ${res.treinosCriadosCount} ficha(s) criada(s).`,
         type: 'success',
       })
       setTimeout(() => navigate('/meus-treinos'), 1500)
@@ -127,7 +127,7 @@ export default function TreinoIA() {
           restricoes,
         })
         setToast({
-          message: `Treino ativado com sucesso! ${res.treinosCriadosCount} fichas criadas.`,
+          message: `Treino ativado! ${res.treinosCriadosCount} ficha(s) criada(s).`,
           type: 'success',
         })
         setTimeout(() => navigate('/meus-treinos'), 1500)
@@ -189,20 +189,20 @@ export default function TreinoIA() {
         <button
           type="button"
           onClick={() => (step > 1 ? setStep(step - 1) : navigate('/meus-treinos'))}
-          className="flex items-center gap-1 text-xs text-text-muted hover:text-text mb-2 transition-colors cursor-pointer min-h-[36px]"
+          className="flex items-center gap-1 text-xs text-text-muted hover:text-text mb-2 transition-colors cursor-pointer min-h-11 px-2 -ml-2"
         >
           <ChevronLeftIcon className="w-4 h-4" />
-          {step > 1 ? 'Voltar Passo Anterior' : 'Voltar para Meus Treinos'}
+          {step > 1 ? 'Voltar' : 'Meus Treinos'}
         </button>
         <h1 className="text-xl sm:text-2xl font-extrabold text-text flex items-center gap-2">
-          Prescricao de Treino por IA
+          Prescrição de Treino por IA
         </h1>
         <p className="text-xs text-text-muted mt-1 leading-relaxed">
-          Escolha seus grupos musculares e receba 3 exercicios por grupo com series ideais para seu nivel.
+          Escolha seus grupos musculares e receba 3 exercícios por grupo com séries ideais para seu nível.
         </p>
       </div>
 
-      <div className="flex items-center justify-between px-2 py-2.5 bg-surface-card rounded-2xl border border-surface-input overflow-x-auto gap-1">
+      <div className="flex items-center justify-between px-2 py-2.5 bg-surface-card rounded-2xl border border-surface-input overflow-x-auto scrollbar-hide gap-1">
         {STEPS.map((s) => (
           <div key={s.num} className="flex items-center gap-1.5 shrink-0 px-1">
             <div
@@ -230,9 +230,9 @@ export default function TreinoIA() {
       {step === 1 && (
         <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
           <div>
-            <h2 className="text-base font-bold text-text">Qual e o seu objetivo principal?</h2>
+            <h2 className="text-base font-bold text-text">Qual é o seu objetivo principal?</h2>
             <p className="text-xs text-text-muted mt-1">
-              Isso define o volume de series, faixa de repeticoes e velocidade de recuperacao ideal.
+              Define o volume de séries, faixa de repetições e velocidade de recuperação.
             </p>
           </div>
 
@@ -292,22 +292,22 @@ export default function TreinoIA() {
       {step === 2 && (
         <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
           <div>
-            <h2 className="text-base font-bold text-text">Seu nivel, frequencia e duracao do treino</h2>
+            <h2 className="text-base font-bold text-text">Seu nível, frequência e duração do treino</h2>
             <p className="text-xs text-text-muted mt-1">
-              Isso ajusta series, repeticoes e volume total do treino.
+              Ajusta séries, repetições e volume total conforme seu condicionamento.
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
-                Nivel de Experiencia
+                Nível de Experiência
               </label>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { id: 'INICIANTE', label: 'Iniciante', desc: '< 6 meses' },
-                  { id: 'INTERMEDIARIO', label: 'Intermediario', desc: '6m a 2 anos' },
-                  { id: 'AVANCADO', label: 'Avancado', desc: '> 2 anos' },
+                  { id: 'INTERMEDIARIO', label: 'Intermediário', desc: '6m a 2 anos' },
+                  { id: 'AVANCADO', label: 'Avançado', desc: '> 2 anos' },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -328,15 +328,15 @@ export default function TreinoIA() {
 
             <div>
               <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
-                Quantos dias por semana pode treinar?
+                Quantos dias por semana?
               </label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap gap-2">
                 {[2, 3, 4, 5, 6].map((num) => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => setDiasPorSemana(num)}
-                    className={`flex-1 py-3 rounded-xl border text-center font-bold text-sm transition-all cursor-pointer ${
+                    className={`min-h-11 min-w-[52px] px-4 py-2.5 rounded-xl border text-center font-bold text-sm transition-all cursor-pointer ${
                       diasPorSemana === num
                         ? 'bg-primary border-primary text-white shadow-md'
                         : 'bg-surface-input/40 border-surface-input text-text-muted'
@@ -350,15 +350,15 @@ export default function TreinoIA() {
 
             <div>
               <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
-                Tempo medio de treino (minutos)
+                Duração média do treino
               </label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap gap-2">
                 {[30, 45, 60, 75, 90].map((num) => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => setTempoMinutos(num)}
-                    className={`flex-1 py-3 rounded-xl border text-center font-bold text-sm transition-all cursor-pointer ${
+                    className={`min-h-11 min-w-[52px] px-3 py-2.5 rounded-xl border text-center font-bold text-sm transition-all cursor-pointer ${
                       tempoMinutos === num
                         ? 'bg-primary border-primary text-white shadow-md'
                         : 'bg-surface-input/40 border-surface-input text-text-muted'
@@ -386,7 +386,7 @@ export default function TreinoIA() {
           <div>
             <h2 className="text-base font-bold text-text">Quais grupos musculares voce quer trabalhar?</h2>
             <p className="text-xs text-text-muted mt-1">
-              Escolha um atalho de divisao ou selecione musculos individualmente. Cada grupo recebera 3 exercicios.
+              Escolha um atalho ou selecione musculos. Cada grupo recebe ate 3 exercicios.
             </p>
           </div>
 
@@ -459,7 +459,7 @@ export default function TreinoIA() {
           <div>
             <h2 className="text-base font-bold text-text">Voce possui restricoes ou dores articulares?</h2>
             <p className="text-xs text-text-muted mt-1">
-              Selecione articulacoes que precisam de cuidado. Exercicios incompativeis serao substituidos.
+              Selecione articulacoes que precisam de cuidado. Exercicios incompativeis serao evitados.
             </p>
           </div>
 
@@ -544,9 +544,11 @@ export default function TreinoIA() {
                 className="bg-surface-input/30 rounded-2xl p-4 border border-surface-input space-y-3"
               >
                 <h3 className="text-sm font-bold text-text flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center">
-                    {sessao.dia_label}
-                  </span>
+                  {fichaGerada.sessoes?.length > 1 && (
+                    <span className="w-6 h-6 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center">
+                      {sessao.dia_label}
+                    </span>
+                  )}
                   {sessao.nome}
                 </h3>
 
@@ -559,20 +561,20 @@ export default function TreinoIA() {
                       {exercicios.map((exItem: any) => (
                         <div
                           key={exItem.exercicio_id || exItem.exercicio?.id || exItem.id}
-                          className="flex items-center justify-between p-2.5 bg-surface rounded-xl border border-surface-input"
+                          className="flex items-center justify-between p-2.5 bg-surface rounded-xl border border-surface-input min-w-0"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             {exItem.exercicio?.gif_url ? (
                               <img
                                 src={exItem.exercicio.gif_url}
                                 alt={exItem.exercicio.nome}
-                                className="w-10 h-10 rounded-lg object-cover bg-surface-input"
+                                className="w-10 h-10 rounded-lg object-cover bg-surface-input shrink-0"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-lg bg-surface-input flex items-center justify-center text-lg" />
+                              <div className="w-10 h-10 rounded-lg bg-surface-input flex items-center justify-center text-lg shrink-0" />
                             )}
-                            <div>
-                              <p className="text-xs font-bold text-text">{exItem.exercicio?.nome}</p>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-text truncate">{exItem.exercicio?.nome}</p>
                               <span className="text-[9px] text-text-muted uppercase">
                                 {exItem.exercicio?.grupo_muscular || 'Geral'}
                               </span>
@@ -607,7 +609,7 @@ export default function TreinoIA() {
               onClick={() => setStep(1)}
               className="flex-1 py-3 bg-surface-input hover:bg-surface-input/80 text-text font-bold text-xs rounded-xl transition-all cursor-pointer"
             >
-              Refazer Perguntas
+              Refazer
             </button>
             <button
               type="button"
@@ -615,7 +617,7 @@ export default function TreinoIA() {
               disabled={salvando}
               className="flex-1 py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
             >
-              {salvando ? 'Ativando...' : 'Confirmar e Ativar este Treino'}
+              {salvando ? 'Salvando...' : 'Confirmar e Salvar'}  
             </button>
           </div>
 

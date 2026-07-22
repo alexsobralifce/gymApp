@@ -22,7 +22,8 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300 ${bg} ${
+      style={{ top: `max(1rem, env(safe-area-inset-top, 0px))` }}
+      className={`fixed right-4 left-4 sm:left-auto sm:max-w-sm z-50 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300 ${bg} ${
         visible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
       }`}
     >

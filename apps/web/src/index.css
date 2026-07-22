@@ -248,3 +248,11 @@
 @utility safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 16px);
 }
+
+@utility safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility safe-top-margin {
+  margin-top: env(safe-area-inset-top, 0px);
+}

@@ -221,7 +221,7 @@ export async function gerarTreinoPorGrupos(alunoId: string, input: GerarPorGrupo
 
   const gruposLabel = grupos.join(', ')
   const nomesGrupos = grupos.join(' + ')
-  const nomeTreino = `Treino A — ${nomesGrupos}`
+  const nomeTreino = `Treino — ${nomesGrupos}`
 
   let ordem = 1
   const todosExercicios: Array<{

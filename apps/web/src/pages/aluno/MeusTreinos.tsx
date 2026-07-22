@@ -157,13 +157,13 @@ export default function AlunoMeusTreinos() {
         title="Nenhum treino ativo"
         description={
           hasProfessor
-            ? "Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Você também pode montar seus próprios treinos a qualquer momento!"
-            : "No modo autogestão, você monta seus próprios treinos. Comece agora mesmo!"
+            ? "Seu professor ainda nao enviou fichas ou voce ainda nao aceitou nenhuma. Monte seus proprios treinos ou use prescricao por IA!"
+            : "No modo autogestao, voce monta seus proprios treinos. Comece agora ou use a prescricao inteligente!"
         }
         actionLabel="Criar Treino"
         onAction={() => navigate('/treino/novo')}
-        secondaryActionLabel="Voltar ao Início"
-        onSecondaryAction={() => navigate('/')}
+        secondaryActionLabel="Prescrever com IA"
+        onSecondaryAction={() => navigate('/treino/ia')}
       />
     )
   }
@@ -216,13 +216,13 @@ export default function AlunoMeusTreinos() {
       {/* Calendário de Treinos */}
       <div className="bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <button onClick={() => mudarMes(-1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer">
+          <button onClick={() => mudarMes(-1)} className="rounded-lg bg-surface-input p-2.5 text-text-muted hover:text-text transition-colors cursor-pointer min-h-11 min-w-11 flex items-center justify-center">
             <ChevronLeftIcon className="h-4 w-4" />
           </button>
           <span className="text-sm font-bold text-text">
             {MESES[mesCalendario.mes]} {mesCalendario.ano}
           </span>
-          <button onClick={() => mudarMes(1)} className="rounded-lg bg-surface-input p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer">
+          <button onClick={() => mudarMes(1)} className="rounded-lg bg-surface-input p-2.5 text-text-muted hover:text-text transition-colors cursor-pointer min-h-11 min-w-11 flex items-center justify-center">
             <ChevronRightIcon className="h-4 w-4" />
           </button>
         </div>
@@ -236,7 +236,7 @@ export default function AlunoMeusTreinos() {
               {dia !== null ? (
                 <button
                   onClick={() => handleClickDia(dia)}
-                  className={`w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center transition-all relative
+                  className={`w-9 h-9 rounded-full text-xs font-semibold flex items-center justify-center transition-all relative
                     ${diasComTreino.has(dataDoDia(dia))
                       ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 cursor-pointer'
                       : 'text-text-muted cursor-default'}
@@ -247,7 +247,7 @@ export default function AlunoMeusTreinos() {
                   {dia}
                 </button>
               ) : (
-                <span className="w-8 h-8" />
+                <span className="w-9 h-9" />
               )}
             </div>
           ))}
