@@ -1,6 +1,16 @@
+/**
+ * Catálogo canônico da Biblioteca de Planos.
+ * Termos alinhados aos nomes reais do GifDoTreino (sem acento, ordem invertida).
+ * 3 exercícios por grupo × nível. SEM alongamento.
+ */
+
 export interface CatalogoExercicio {
+  /** Termos que DEVEM aparecer no nome (AND entre arrays internos = OR de grupos) */
   termos: string[]
+  /** Termos que NÃO podem aparecer */
+  excluir?: string[]
   grupo: string
+  /** Preferência de equipamento (normalizado) */
   equipamentoPref?: string[]
   restricoes?: string[]
   cargaSugeridaKg?: number | null
@@ -12,217 +22,198 @@ export interface CatalogoGrupo {
   AVANCADO: CatalogoExercicio[]
 }
 
-export interface CatalogoSessao {
-  grupos: string[]
-  labelA: string
-  labelB: string
-  labelCompleto: string
-}
-
-export const SESSOES: Record<string, CatalogoSessao> = {
-  PUSH: {
-    grupos: ['PEITO', 'OMBRO', 'TRICEPS'],
-    labelA: 'Peito / Ombro / Tríceps',
-    labelB: 'Push — Peito + Ombro + Tríceps',
-    labelCompleto: 'Supino, desenvolvimento, tríceps e ombros — padrão empurrar',
-  },
-  PULL: {
-    grupos: ['COSTAS', 'BICEPS'],
-    labelA: 'Costas / Bíceps',
-    labelB: 'Pull — Costas + Bíceps',
-    labelCompleto: 'Puxadas, remadas e roscas — padrão puxar',
-  },
-  LEGS: {
-    grupos: ['QUAD', 'POSTERIOR', 'PANTURRILHA'],
-    labelA: 'Quad / Posterior / Panturrilha',
-    labelB: 'Legs — Coxas + Posterior + Panturrilhas',
-    labelCompleto: 'Agachamento, flexora, extensora e panturrilhas — inferior completo',
-  },
-  FULL: {
-    grupos: ['PEITO', 'COSTAS', 'OMBRO', 'QUAD', 'POSTERIOR', 'BICEPS', 'TRICEPS', 'CORE'],
-    labelA: 'Corpo Inteiro',
-    labelB: 'Full Body',
-    labelCompleto: 'Um exercício por grande área muscular',
-  },
-}
-
 export const CATALOGO: Record<string, CatalogoGrupo> = {
   PEITO: {
     INICIANTE: [
-      { termos: ['supino reto', 'máquina'], grupo: 'Peito', equipamentoPref: ['Máquina'] },
-      { termos: ['peck deck', 'crucifixo', 'máquina'], grupo: 'Peito', equipamentoPref: ['Máquina'] },
-      { termos: ['flexão', 'flexao'], grupo: 'Peito' },
+      { termos: ['supino', 'reto'], grupo: 'Peito', equipamentoPref: ['halter', 'barra'] },
+      { termos: ['crucifixo'], grupo: 'Peito', equipamentoPref: ['polia', 'halter'], excluir: ['inverso', 'ombro'] },
+      { termos: ['smith', 'desenvolvimento'], grupo: 'Peito', equipamentoPref: ['smith'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['supino reto', 'barra', 'com barra'], grupo: 'Peito', equipamentoPref: ['Barra'] },
-      { termos: ['supino inclinado', 'halter'], grupo: 'Peito', equipamentoPref: ['Halteres'] },
-      { termos: ['crucifixo', 'halter'], grupo: 'Peito', equipamentoPref: ['Halteres'] },
+      { termos: ['supino', 'reto', 'barra'], grupo: 'Peito', equipamentoPref: ['barra'] },
+      { termos: ['supino', 'inclinado'], grupo: 'Peito', equipamentoPref: ['halter', 'barra'] },
+      { termos: ['crucifixo'], grupo: 'Peito', equipamentoPref: ['halter', 'polia'], excluir: ['inverso'] },
     ],
     AVANCADO: [
-      { termos: ['supino reto', 'barra'], grupo: 'Peito', equipamentoPref: ['Barra'] },
-      { termos: ['supino inclinado'], grupo: 'Peito' },
-      { termos: ['paralela', 'dip'], grupo: 'Peito', cargaSugeridaKg: null },
-      { termos: ['crossover', 'polia'], grupo: 'Peito', equipamentoPref: ['Polia'] },
+      { termos: ['supino', 'reto'], grupo: 'Peito', equipamentoPref: ['barra'] },
+      { termos: ['supino', 'inclinado'], grupo: 'Peito', equipamentoPref: ['barra', 'halter'] },
+      { termos: ['dip'], grupo: 'Peito', excluir: ['triceps'] },
     ],
   },
 
   COSTAS: {
     INICIANTE: [
-      { termos: ['puxada', 'frente', 'lat pulldown'], grupo: 'Costas', equipamentoPref: ['Máquina', 'Polia'] },
-      { termos: ['remada sentada', 'polia baixa'], grupo: 'Costas', equipamentoPref: ['Polia'] },
-      { termos: ['puxada', 'neutra'], grupo: 'Costas', equipamentoPref: ['Máquina', 'Polia'] },
+      { termos: ['puxada'], grupo: 'Costas', equipamentoPref: ['polia'], excluir: ['barra fixa'] },
+      { termos: ['remada', 'sentado'], grupo: 'Costas', equipamentoPref: ['polia'] },
+      { termos: ['remada'], grupo: 'Costas', equipamentoPref: ['polia', 'alavanca'], excluir: ['curvado'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['barra fixa'], grupo: 'Costas', equipamentoPref: ['Barra'] },
-      { termos: ['remada curvada', 'barra'], grupo: 'Costas', equipamentoPref: ['Barra'], restricoes: ['lombar'] },
-      { termos: ['remada unilateral', 'halter'], grupo: 'Costas', equipamentoPref: ['Halteres'] },
+      { termos: ['barra fixa'], grupo: 'Costas', excluir: ['assistid'] },
+      { termos: ['remada', 'curvado'], grupo: 'Costas', equipamentoPref: ['barra'], restricoes: ['lombar'] },
+      { termos: ['remada', 'unilateral'], grupo: 'Costas', equipamentoPref: ['halter', 'polia'] },
     ],
     AVANCADO: [
-      { termos: ['levantamento terra', 'deadlift'], grupo: 'Costas', equipamentoPref: ['Barra'], restricoes: ['lombar'] },
-      { termos: ['remada curvada'], grupo: 'Costas', equipamentoPref: ['Barra'], restricoes: ['lombar'] },
-      { termos: ['barra fixa'], grupo: 'Costas' },
-      { termos: ['remada', 'polia'], grupo: 'Costas', equipamentoPref: ['Polia'] },
+      { termos: ['levantamento terra'], grupo: 'Costas', equipamentoPref: ['barra'], restricoes: ['lombar'], excluir: ['stiff'] },
+      { termos: ['remada', 'curvado'], grupo: 'Costas', equipamentoPref: ['barra'], restricoes: ['lombar'] },
+      { termos: ['barra fixa'], grupo: 'Costas', excluir: ['assistid'] },
     ],
   },
 
   OMBRO: {
     INICIANTE: [
-      { termos: ['desenvolvimento', 'máquina', 'ombro'], grupo: 'Ombros', equipamentoPref: ['Máquina'], restricoes: ['ombro'] },
-      { termos: ['elevação lateral'], grupo: 'Ombros' },
-      { termos: ['elevação frontal', 'halter'], grupo: 'Ombros', equipamentoPref: ['Halteres'] },
+      { termos: ['desenvolvimento'], grupo: 'Ombros', equipamentoPref: ['smith', 'alavanca', 'halter'], restricoes: ['ombro'], excluir: ['peito', 'pullover'] },
+      { termos: ['elevacao', 'lateral'], grupo: 'Ombros', equipamentoPref: ['polia', 'halter'] },
+      { termos: ['elevacao', 'front'], grupo: 'Ombros', equipamentoPref: ['polia', 'halter', 'barra'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['desenvolvimento militar'], grupo: 'Ombros', restricoes: ['ombro'] },
-      { termos: ['elevação lateral', 'halter'], grupo: 'Ombros', equipamentoPref: ['Halteres'] },
-      { termos: ['crucifixo inverso', 'rear'], grupo: 'Ombros', equipamentoPref: ['Máquina'] },
+      { termos: ['military', 'desenvolvimento'], grupo: 'Ombros', equipamentoPref: ['barra', 'halter'], restricoes: ['ombro'] },
+      { termos: ['elevacao', 'lateral'], grupo: 'Ombros', equipamentoPref: ['halter', 'polia'] },
+      { termos: ['posterior', 'ombro'], grupo: 'Ombros', equipamentoPref: ['barra', 'halter', 'polia'] },
     ],
     AVANCADO: [
-      { termos: ['desenvolvimento militar', 'barra'], grupo: 'Ombros', equipamentoPref: ['Barra'], restricoes: ['ombro'] },
-      { termos: ['elevação lateral'], grupo: 'Ombros' },
-      { termos: ['remada alta'], grupo: 'Ombros' },
-      { termos: ['crucifixo inverso', 'rear'], grupo: 'Ombros' },
+      { termos: ['military', 'desenvolvimento'], grupo: 'Ombros', equipamentoPref: ['barra'], restricoes: ['ombro'] },
+      { termos: ['elevacao', 'lateral'], grupo: 'Ombros' },
+      { termos: ['upright', 'remada'], grupo: 'Ombros', equipamentoPref: ['barra'] },
     ],
   },
 
   QUAD: {
     INICIANTE: [
-      { termos: ['leg press'], grupo: 'Coxas', equipamentoPref: ['Máquina'], restricoes: ['joelho'] },
-      { termos: ['cadeira extensora', 'extensora'], grupo: 'Coxas', equipamentoPref: ['Máquina'] },
-      { termos: ['hack', 'agachamento guiado', 'smith'], grupo: 'Coxas', equipamentoPref: ['Máquina'] },
+      { termos: ['agachamento'], grupo: 'Coxas', equipamentoPref: ['smith', 'alavanca', 'halter'], restricoes: ['joelho'], excluir: ['acima', 'overhead', 'salto', 'alongamento'] },
+      { termos: ['hack', 'agachamento'], grupo: 'Coxas', equipamentoPref: ['barra', 'alavanca'], restricoes: ['joelho'] },
+      { termos: ['agachamento', 'halter'], grupo: 'Coxas', equipamentoPref: ['halter'], restricoes: ['joelho'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['agachamento', 'barra'], grupo: 'Coxas', equipamentoPref: ['Barra'], restricoes: ['joelho', 'lombar'] },
-      { termos: ['afundo', 'avanço', 'passada', 'lunge'], grupo: 'Coxas', restricoes: ['joelho'] },
-      { termos: ['leg press'], grupo: 'Coxas', equipamentoPref: ['Máquina'], restricoes: ['joelho'] },
+      { termos: ['agachamento', 'barra'], grupo: 'Coxas', equipamentoPref: ['barra'], restricoes: ['joelho', 'lombar'], excluir: ['acima', 'salto', 'alongamento'] },
+      { termos: ['avanco'], grupo: 'Coxas', equipamentoPref: ['barra', 'halter'], restricoes: ['joelho'] },
+      { termos: ['agachamento', 'halter'], grupo: 'Coxas', equipamentoPref: ['halter'], restricoes: ['joelho'] },
     ],
     AVANCADO: [
-      { termos: ['agachamento', 'barra'], grupo: 'Coxas', equipamentoPref: ['Barra'], restricoes: ['joelho', 'lombar'] },
-      { termos: ['agachamento frontal'], grupo: 'Coxas', equipamentoPref: ['Barra'], restricoes: ['joelho', 'lombar'] },
-      { termos: ['búlgaro', 'bulgaro', 'afundo'], grupo: 'Coxas', equipamentoPref: ['Halteres'], restricoes: ['joelho'] },
-      { termos: ['leg press', 'hack'], grupo: 'Coxas', equipamentoPref: ['Máquina'], restricoes: ['joelho'] },
+      { termos: ['agachamento', 'barra'], grupo: 'Coxas', equipamentoPref: ['barra'], restricoes: ['joelho', 'lombar'], excluir: ['acima', 'salto'] },
+      { termos: ['front', 'agachamento'], grupo: 'Coxas', equipamentoPref: ['barra'], restricoes: ['joelho', 'lombar'] },
+      { termos: ['split', 'agachamento'], grupo: 'Coxas', equipamentoPref: ['barra', 'halter'], restricoes: ['joelho'] },
     ],
   },
 
   POSTERIOR: {
     INICIANTE: [
-      { termos: ['cadeira flexora', 'flexora'], grupo: 'Coxas', equipamentoPref: ['Máquina'] },
-      { termos: ['mesa flexora', 'flexor'], grupo: 'Coxas', equipamentoPref: ['Máquina'] },
-      { termos: ['extensão quadril', 'máquina'], grupo: 'Coxas', equipamentoPref: ['Máquina'] },
+      { termos: ['stiff'], grupo: 'Coxas', equipamentoPref: ['halter', 'barra'], restricoes: ['lombar'], excluir: ['alongamento'] },
+      { termos: ['gluteo', 'ponte'], grupo: 'Coxas', excluir: ['alongamento'] },
+      { termos: ['levantamento terra'], grupo: 'Coxas', equipamentoPref: ['halter', 'barra'], restricoes: ['lombar'], excluir: ['alongamento'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['stiff'], grupo: 'Coxas', equipamentoPref: ['Barra', 'Halteres'], restricoes: ['lombar'] },
-      { termos: ['flexora'], grupo: 'Coxas', equipamentoPref: ['Máquina'] },
-      { termos: ['elevação pélvica', 'hip thrust', 'glúteo', 'ponte'], grupo: 'Coxas', equipamentoPref: ['Barra'] },
+      { termos: ['stiff'], grupo: 'Coxas', equipamentoPref: ['barra', 'halter'], restricoes: ['lombar'] },
+      { termos: ['gluteo', 'ponte'], grupo: 'Coxas', equipamentoPref: ['barra'] },
+      { termos: ['levantamento terra'], grupo: 'Coxas', equipamentoPref: ['barra'], restricoes: ['lombar'] },
     ],
     AVANCADO: [
-      { termos: ['stiff', 'barra'], grupo: 'Coxas', equipamentoPref: ['Barra'], restricoes: ['lombar'] },
-      { termos: ['elevação pélvica', 'hip thrust'], grupo: 'Coxas', equipamentoPref: ['Barra'] },
-      { termos: ['levantamento terra', 'sumô', 'sumo'], grupo: 'Coxas', equipamentoPref: ['Barra'], restricoes: ['lombar'] },
+      { termos: ['stiff', 'barra'], grupo: 'Coxas', equipamentoPref: ['barra'], restricoes: ['lombar'] },
+      { termos: ['gluteo', 'ponte'], grupo: 'Coxas', equipamentoPref: ['barra'] },
+      { termos: ['levantamento terra'], grupo: 'Coxas', equipamentoPref: ['barra'], restricoes: ['lombar'] },
     ],
   },
 
   PANTURRILHA: {
     INICIANTE: [
-      { termos: ['panturrilha', 'pé', 'máquina'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['Máquina'] },
-      { termos: ['panturrilha', 'sentado', 'máquina'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['Máquina'] },
+      { termos: ['panturrilha', 'pe'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['barra', 'halter', 'maquina'], excluir: ['alongamento'] },
+      { termos: ['panturrilha', 'sentado'], grupo: 'Panturrilhas / Tibiais', excluir: ['alongamento'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['panturrilha', 'halter', 'em pé'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['Halteres'] },
-      { termos: ['panturrilha', 'leg press'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['Máquina'] },
-      { termos: ['panturrilha', 'degrau'], grupo: 'Panturrilhas / Tibiais' },
+      { termos: ['panturrilha', 'pe'], grupo: 'Panturrilhas / Tibiais', excluir: ['alongamento'] },
+      { termos: ['panturrilha', 'sentado'], grupo: 'Panturrilhas / Tibiais', excluir: ['alongamento'] },
+      { termos: ['panturrilha'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['halter'], excluir: ['alongamento', 'bola'] },
     ],
     AVANCADO: [
-      { termos: ['panturrilha', 'máquina', 'pé'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['Máquina'] },
-      { termos: ['panturrilha', 'sentado'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['Máquina'] },
-      { termos: ['panturrilha', 'leg press'], grupo: 'Panturrilhas / Tibiais', equipamentoPref: ['Máquina'] },
+      { termos: ['panturrilha', 'pe'], grupo: 'Panturrilhas / Tibiais', excluir: ['alongamento'] },
+      { termos: ['panturrilha', 'sentado'], grupo: 'Panturrilhas / Tibiais', excluir: ['alongamento'] },
+      { termos: ['panturrilha', 'rocking'], grupo: 'Panturrilhas / Tibiais', excluir: ['alongamento'] },
     ],
   },
 
   BICEPS: {
     INICIANTE: [
-      { termos: ['rosca', 'máquina'], grupo: 'Bracos', equipamentoPref: ['Máquina'] },
-      { termos: ['rosca', 'polia'], grupo: 'Bracos', equipamentoPref: ['Polia'] },
-      { termos: ['rosca alternada', 'halter'], grupo: 'Bracos', equipamentoPref: ['Halteres'] },
-      { termos: ['rosca concentrada'], grupo: 'Bracos' },
+      { termos: ['rosca'], grupo: 'Bracos', equipamentoPref: ['polia', 'halter'], excluir: ['punho', 'triceps', 'alongamento'] },
+      { termos: ['rosca', 'alternado'], grupo: 'Bracos', equipamentoPref: ['barra', 'halter'], excluir: ['punho'] },
+      { termos: ['rosca', 'concentrado'], grupo: 'Bracos', excluir: ['punho'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['rosca direta', 'barra'], grupo: 'Bracos', equipamentoPref: ['Barra'], restricoes: ['punho'] },
-      { termos: ['rosca alternada', 'halter'], grupo: 'Bracos', equipamentoPref: ['Halteres'] },
-      { termos: ['rosca', 'polia', 'cabo'], grupo: 'Bracos', equipamentoPref: ['Polia'] },
+      { termos: ['rosca', 'direta'], grupo: 'Bracos', equipamentoPref: ['barra'], restricoes: ['punho'], excluir: ['punho', 'triceps'] },
+      { termos: ['rosca', 'alternado'], grupo: 'Bracos', equipamentoPref: ['halter', 'barra'], excluir: ['punho'] },
+      { termos: ['rosca', 'polia'], grupo: 'Bracos', equipamentoPref: ['polia'], excluir: ['punho', 'triceps'] },
     ],
     AVANCADO: [
-      { termos: ['rosca direta', 'barra'], grupo: 'Bracos', equipamentoPref: ['Barra'], restricoes: ['punho'] },
-      { termos: ['rosca inclinada', 'halter', 'banco'], grupo: 'Bracos', equipamentoPref: ['Halteres'] },
-      { termos: ['rosca martelo'], grupo: 'Bracos', equipamentoPref: ['Halteres'] },
-      { termos: ['rosca concentrada'], grupo: 'Bracos' },
+      { termos: ['rosca', 'direta', 'barra'], grupo: 'Bracos', equipamentoPref: ['barra'], restricoes: ['punho'], excluir: ['punho'] },
+      { termos: ['rosca', 'inclinado'], grupo: 'Bracos', equipamentoPref: ['halter'], excluir: ['punho'] },
+      { termos: ['rosca', 'hammer'], grupo: 'Bracos', equipamentoPref: ['halter', 'polia'], excluir: ['punho'] },
     ],
   },
 
   TRICEPS: {
     INICIANTE: [
-      { termos: ['tríceps', 'polia', 'pushdown'], grupo: 'Bracos', equipamentoPref: ['Polia'] },
-      { termos: ['tríceps testa', 'máquina'], grupo: 'Bracos', equipamentoPref: ['Máquina'] },
-      { termos: ['mergulho', 'banco', 'assistido'], grupo: 'Bracos' },
+      { termos: ['triceps', 'pushdown'], grupo: 'Bracos', equipamentoPref: ['polia'], excluir: ['alongamento'] },
+      { termos: ['triceps', 'extensao'], grupo: 'Bracos', equipamentoPref: ['polia', 'halter'], excluir: ['alongamento'] },
+      { termos: ['triceps', 'dip'], grupo: 'Bracos', excluir: ['peito'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['supino fechado', 'barra'], grupo: 'Bracos', equipamentoPref: ['Barra'] },
-      { termos: ['tríceps testa'], grupo: 'Bracos', restricoes: ['punho'] },
-      { termos: ['tríceps', 'polia', 'corda'], grupo: 'Bracos', equipamentoPref: ['Polia'] },
+      { termos: ['triceps', 'testa'], grupo: 'Bracos', restricoes: ['punho'] },
+      { termos: ['triceps', 'extensao'], grupo: 'Bracos', equipamentoPref: ['barra', 'halter'] },
+      { termos: ['triceps', 'pushdown'], grupo: 'Bracos', equipamentoPref: ['polia'] },
     ],
     AVANCADO: [
-      { termos: ['paralela', 'dip'], grupo: 'Bracos' },
-      { termos: ['supino fechado', 'barra'], grupo: 'Bracos', equipamentoPref: ['Barra'] },
-      { termos: ['tríceps', 'polia', 'corda'], grupo: 'Bracos', equipamentoPref: ['Polia'] },
+      { termos: ['triceps', 'dip'], grupo: 'Bracos', excluir: ['peito'] },
+      { termos: ['triceps', 'extensao', 'barra'], grupo: 'Bracos', equipamentoPref: ['barra'] },
+      { termos: ['triceps', 'pushdown'], grupo: 'Bracos', equipamentoPref: ['polia'] },
     ],
   },
 
   CORE: {
     INICIANTE: [
-      { termos: ['abdominal', 'crunch'], grupo: 'Abdomen / Lombar' },
-      { termos: ['prancha', 'plank'], grupo: 'Abdomen / Lombar' },
-      { termos: ['elevação pernas', 'banco'], grupo: 'Abdomen / Lombar' },
+      { termos: ['abdominal'], grupo: 'Abdomen / Lombar', excluir: ['alongamento', 'desenvolvimento'] },
+      { termos: ['prancha'], grupo: 'Abdomen / Lombar', excluir: ['alongamento', 'equilibrio'] },
+      { termos: ['elevacao', 'joelho'], grupo: 'Abdomen / Lombar', excluir: ['alongamento'] },
     ],
     INTERMEDIARIO: [
-      { termos: ['abdominal', 'crunch', 'inclinado'], grupo: 'Abdomen / Lombar' },
-      { termos: ['prancha lateral'], grupo: 'Abdomen / Lombar' },
-      { termos: ['cable crunch', 'wood chop'], grupo: 'Abdomen / Lombar', equipamentoPref: ['Polia'] },
+      { termos: ['abdominal'], grupo: 'Abdomen / Lombar', equipamentoPref: ['polia'], excluir: ['alongamento'] },
+      { termos: ['prancha'], grupo: 'Abdomen / Lombar', excluir: ['alongamento'] },
+      { termos: ['elevacao', 'pernas'], grupo: 'Abdomen / Lombar', excluir: ['alongamento'] },
     ],
     AVANCADO: [
-      { termos: ['elevação pernas', 'barra', 'hang'], grupo: 'Abdomen / Lombar' },
-      { termos: ['ab wheel', 'roda abdominal'], grupo: 'Abdomen / Lombar' },
-      { termos: ['russian twist'], grupo: 'Abdomen / Lombar' },
+      { termos: ['elevacao', 'pernas'], grupo: 'Abdomen / Lombar', excluir: ['alongamento'] },
+      { termos: ['roller', 'wheel'], grupo: 'Abdomen / Lombar', excluir: ['alongamento'] },
+      { termos: ['abdominal'], grupo: 'Abdomen / Lombar', equipamentoPref: ['polia'], excluir: ['alongamento'] },
     ],
   },
 }
 
-export const NIVEL_VOLUME: Record<string, { series: number; repMin: number; repMax: number; cargaSugeridaKg?: number | null }> = {
-  INICIANTE: { series: 3, repMin: 10, repMax: 12, cargaSugeridaKg: null },
-  INTERMEDIARIO: { series: 3, repMin: 8, repMax: 12, cargaSugeridaKg: null },
-  AVANCADO: { series: 4, repMin: 6, repMax: 10, cargaSugeridaKg: null },
+export const SESSOES: Record<string, { grupos: string[]; label: string; dia: string; ordem: number }> = {
+  PUSH: {
+    grupos: ['PEITO', 'OMBRO', 'TRICEPS'],
+    label: 'Peito + Ombro + Tríceps',
+    dia: 'A',
+    ordem: 1,
+  },
+  PULL: {
+    grupos: ['COSTAS', 'BICEPS'],
+    label: 'Costas + Bíceps',
+    dia: 'B',
+    ordem: 2,
+  },
+  LEGS: {
+    grupos: ['QUAD', 'POSTERIOR', 'PANTURRILHA'],
+    label: 'Coxas + Posterior + Panturrilhas',
+    dia: 'C',
+    ordem: 3,
+  },
+}
+
+export const NIVEL_VOLUME: Record<string, { series: number; repMin: number; repMax: number }> = {
+  INICIANTE: { series: 3, repMin: 10, repMax: 12 },
+  INTERMEDIARIO: { series: 3, repMin: 8, repMax: 12 },
+  AVANCADO: { series: 4, repMin: 6, repMax: 10 },
 }
 
 export const PALAVRAS_PROIBIDAS = [
   'alongamento', 'alongar', 'stretch', 'mobilidade', 'mobility',
-  'yoga', 'aquecimento', 'warm up', 'cool down', 'descanso',
-  'respiração', 'respiração', 'relaxamento', 'meditação',
+  'yoga', 'aquecimento', 'warm up', 'cool down',
+  'respiracao', 'relaxamento', 'meditacao',
 ]
