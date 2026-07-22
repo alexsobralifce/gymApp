@@ -4,8 +4,9 @@ import { api } from '../../api/client'
 import type { Treino, Exercicio, TreinoExercicio, HistoricoDia } from '../../types/api'
 import StatusBadge, { getTreinoStatusVariant, getTreinoStatusLabel } from '../../components/ui/StatusBadge'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../components/icons/Icon'
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, PencilIcon, Trash2Icon } from '../../components/icons/Icon'
 import EmptyState from '../../components/ui/EmptyState'
+import ConfirmModal from '../../components/ui/ConfirmModal'
 
 function formatMes(ano: number, mes: number) {
   return `${ano}-${String(mes + 1).padStart(2, '0')}`
@@ -21,6 +22,8 @@ export default function AlunoMeusTreinos() {
   const [selectedExercicio, setSelectedExercicio] = useState<Exercicio | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [hasProfessor, setHasProfessor] = useState<boolean | null>(null)
+  const [deletingTreino, setDeletingTreino] = useState<Treino | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const navigate = useNavigate()
 
   const hoje = useMemo(() => new Date(), [])
@@ -118,6 +121,25 @@ export default function AlunoMeusTreinos() {
       setTimeout(() => setFeedback(null), 3000)
     } catch {
       setFeedback('Erro ao responder ao treino.')
+    }
+  }
+
+  async function handleDeleteTreino() {
+    if (!deletingTreino) return
+    setDeleting(true)
+    try {
+      await api.deletarTreino(deletingTreino.id)
+      setFeedback('Treino excluído com sucesso.')
+      setDeletingTreino(null)
+      await carregarTreinos()
+      setTimeout(() => setFeedback(null), 3000)
+      if (fichaAtiva >= treinos.length - 1 && treinos.length > 1) {
+        setFichaAtiva(treinos.length - 2)
+      }
+    } catch {
+      setFeedback('Erro ao excluir treino.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -350,24 +372,44 @@ export default function AlunoMeusTreinos() {
                 Aceitar Ficha
               </button>
             </div>
-            <button
-              onClick={() => navigate(`/treino/${treino.id}/editar`)}
-              className="w-full rounded-xl border border-surface-input py-2.5 text-sm font-bold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
-            >
-              ✎ Editar antes de aceitar
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/treino/${treino.id}/editar`)}
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                title="Editar treino"
+              >
+                <PencilIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setDeletingTreino(treino)}
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-red-400 hover:text-red-300 hover:border-red-400/40 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                title="Excluir treino"
+              >
+                <Trash2Icon className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         ) : treino.status === 'CADASTRADO' ? (
           <div className="space-y-2 pt-1">
             <p className="text-xs text-center text-text-muted italic py-2">
               Esta ficha ainda está sendo preparada pelo professor e será enviada em breve.
             </p>
-            <button
-              onClick={() => navigate(`/treino/${treino.id}/editar`)}
-              className="w-full rounded-xl border border-surface-input py-2.5 text-sm font-bold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
-            >
-              ✎ Editar Treino
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/treino/${treino.id}/editar`)}
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                title="Editar treino"
+              >
+                <PencilIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setDeletingTreino(treino)}
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-red-400 hover:text-red-300 hover:border-red-400/40 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                title="Excluir treino"
+              >
+                <Trash2Icon className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         ) : treino.status === 'EM_EXECUCAO' ? (
           <button
@@ -377,22 +419,42 @@ export default function AlunoMeusTreinos() {
             Continuar Treino
           </button>
         ) : (
-          <div className="flex gap-2 pt-1">
-            <button
-              onClick={() => navigate(`/treino/${treino.id}/editar`)}
-              className="rounded-xl border border-surface-input px-4 py-3.5 text-sm font-bold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
-            >
-              ✎ Editar
-            </button>
-            <button
-              onClick={() => navigate(`/treino/${treino.id}/inicio`)}
-              className="flex-1 rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-            >
-              {treino.status === 'CONCLUIDO' ? 'Fazer Novamente' : 'Iniciar Ficha de Treino'}
-            </button>
+          <div className="space-y-2 pt-1">
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/treino/${treino.id}/editar`)}
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                title="Editar treino"
+              >
+                <PencilIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setDeletingTreino(treino)}
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-red-400 hover:text-red-300 hover:border-red-400/40 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                title="Excluir treino"
+              >
+                <Trash2Icon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => navigate(`/treino/${treino.id}/inicio`)}
+                className="flex-1 rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              >
+                {treino.status === 'CONCLUIDO' ? 'Fazer Novamente' : 'Iniciar Ficha de Treino'}
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Modal de Exclusão */}
+      <ConfirmModal
+        open={!!deletingTreino}
+        title="Excluir treino"
+        message={`Tem certeza que deseja excluir "${deletingTreino?.nome}"? Esta ação não pode ser desfeita.`}
+        onConfirm={handleDeleteTreino}
+        onCancel={() => setDeletingTreino(null)}
+        loading={deleting}
+      />
 
       {/* Modal de Instruções com GIF em destaque */}
       {selectedExercicio && (
