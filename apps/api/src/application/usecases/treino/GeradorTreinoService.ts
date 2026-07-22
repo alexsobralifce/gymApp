@@ -219,84 +219,45 @@ export async function gerarTreinoPorGrupos(alunoId: string, input: GerarPorGrupo
     totalExercicios--
   }
 
-  const sessoes: Array<{
-    nome: string
-    dia_label: string
-    exercicios: Array<{
-      exercicio_id: string
-      exercicio: ExercicioInfo
-      series: number
-      repeticoes_min: number
-      repeticoes_max: number
-      ordem: number
-    }>
+  const gruposLabel = grupos.join(', ')
+  const nomesGrupos = grupos.join(' + ')
+  const nomeTreino = `Treino A — ${nomesGrupos}`
+
+  let ordem = 1
+  const todosExercicios: Array<{
+    exercicio_id: string
+    exercicio: ExercicioInfo
+    series: number
+    repeticoes_min: number
+    repeticoes_max: number
+    ordem: number
   }> = []
-
-  const numSessoes = Math.min(input.diasPorSemana, exerciciosPorGrupo.length)
-
-  if (numSessoes <= 2 || exerciciosPorGrupo.length <= 2) {
-    let ordem = 1
-    const todos: typeof sessoes[0]['exercicios'] = []
-    for (const g of exerciciosPorGrupo) {
-      for (const ex of g.exercicios) {
-        todos.push({
-          exercicio_id: ex.id,
-          exercicio: ex,
-          series: serieParams.series,
-          repeticoes_min: serieParams.repMin,
-          repeticoes_max: serieParams.repMax,
-          ordem: ordem++,
-        })
-      }
-    }
-    sessoes.push({
-      nome: `Treino ${input.objetivo}`,
-      dia_label: 'A',
-      exercicios: todos,
-    })
-  } else {
-    const porSessao = Math.ceil(exerciciosPorGrupo.length / numSessoes)
-    const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-    for (let s = 0; s < numSessoes; s++) {
-      const gruposSessao = exerciciosPorGrupo.slice(s * porSessao, (s + 1) * porSessao)
-      if (gruposSessao.length === 0) break
-
-      let ordem = 1
-      const exs: typeof sessoes[0]['exercicios'] = []
-      const nomesGrupos: string[] = []
-
-      for (const g of gruposSessao) {
-        nomesGrupos.push(g.grupo)
-        for (const ex of g.exercicios) {
-          exs.push({
-            exercicio_id: ex.id,
-            exercicio: ex,
-            series: serieParams.series,
-            repeticoes_min: serieParams.repMin,
-            repeticoes_max: serieParams.repMax,
-            ordem: ordem++,
-          })
-        }
-      }
-
-      sessoes.push({
-        nome: `Treino ${labels[s]} — ${nomesGrupos.join(' + ')}`,
-        dia_label: labels[s],
-        exercicios: exs,
+  for (const g of exerciciosPorGrupo) {
+    for (const ex of g.exercicios) {
+      todosExercicios.push({
+        exercicio_id: ex.id,
+        exercicio: ex,
+        series: serieParams.series,
+        repeticoes_min: serieParams.repMin,
+        repeticoes_max: serieParams.repMax,
+        ordem: ordem++,
       })
     }
   }
 
-  const resumoPrescricao = `${grupos.length} grupo(s) muscular(es) · ${sessoes.length} sessão(ões) · ${serieParams.series}s × ${serieParams.repMin}-${serieParams.repMax} reps`
-  const gruposLabel = grupos.join(', ')
-  const nomesTreinos = sessoes.map((s) => s.nome).join(' ; ')
+  const sessoes = [{
+    nome: nomeTreino,
+    dia_label: 'A',
+    exercicios: todosExercicios,
+  }]
+
+  const resumoPrescricao = `${grupos.length} grupo(s) muscular(es) · 1 treino com ${todosExercicios.length} exercícios · ${serieParams.series}s × ${serieParams.repMin}-${serieParams.repMax} reps`
 
   return {
     tipo_tarefa: 'GERAR_TREINO_POR_GRUPOS' as const,
     alunoId,
     grupo_treino: `${input.objetivo}_${input.nivel}_${input.diasPorSemana}X`,
-    nome_treino: nomesTreinos,
+    nome_treino: nomeTreino,
     sessoes: sessoes.map((s, i) => ({
       id: `gen_${i}`,
       nome: s.nome,
@@ -311,7 +272,8 @@ export async function gerarTreinoPorGrupos(alunoId: string, input: GerarPorGrupo
     resumo_prescricao: resumoPrescricao,
     observacoes: [
       `Séries: ${serieParams.series} × ${serieParams.repMin}-${serieParams.repMax} repetições`,
-      `Frequência: ${input.diasPorSemana}x por semana`,
+      `Frequência semanal: ${input.diasPorSemana}x`,
+      `Exercícios totais: ${todosExercicios.length}`,
       restricoes.length > 0
         ? `Restrições consideradas: ${restricoes.join(', ')}.`
         : 'Nenhuma restrição aplicada.',
@@ -323,7 +285,15 @@ export async function gerarTreinoPorGrupos(alunoId: string, input: GerarPorGrupo
 export async function salvarTreinoPorGrupos(alunoId: string, input: GerarPorGruposInput) {
   const gerado = await gerarTreinoPorGrupos(alunoId, input)
 
-  const padraoDias = [[1, 3, 5], [2, 4, 6], [1, 2, 4, 5], [1, 2, 3, 4, 5]]
+  const diasPorFrequencia: Record<number, number[]> = {
+    1: [1],
+    2: [1, 4],
+    3: [1, 3, 5],
+    4: [1, 2, 4, 5],
+    5: [1, 2, 3, 4, 5],
+    6: [1, 2, 3, 4, 5, 6],
+  }
+  const diasSemana = diasPorFrequencia[input.diasPorSemana] || [1, 3, 5]
 
   let count = 0
   for (let i = 0; i < gerado.sessoes.length; i++) {
@@ -337,8 +307,6 @@ export async function salvarTreinoPorGrupos(alunoId: string, input: GerarPorGrup
     }))
 
     if (exerciciosParaTreino.length === 0) continue
-
-    const diasSemana = padraoDias[0][i % 3] !== undefined ? [padraoDias[0][i % 3]] : [1]
 
     await prisma.treino.create({
       data: {
