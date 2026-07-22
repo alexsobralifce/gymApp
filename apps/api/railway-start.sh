@@ -8,5 +8,7 @@ echo "=== Running migrations ==="
 npx prisma migrate deploy
 echo "=== Syncing exercise library ==="
 npx tsx prisma/sync-gifdotreino.ts
+echo "=== Seeding plan library ==="
+npx tsx prisma/seed-planos.ts
 echo "=== Starting server ==="
 npm run start
