@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Dumbbell, Users, BarChart3, Zap, Shield, Clock, TrendingUp, BrainCircuit,
+  Dumbbell, Users, Shield, Clock, TrendingUp, BrainCircuit,
   Target, Heart, Sparkles, MessageCircle, BookOpen, ChevronDown,
-  ChevronRight, Menu, X, Check, ArrowRight, UserPlus, ClipboardList,
+  Menu, X, Check, ArrowRight, UserPlus, ClipboardList, Trophy,
 } from 'lucide-react'
 
 const NAV_LINKS = ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Funciona']
