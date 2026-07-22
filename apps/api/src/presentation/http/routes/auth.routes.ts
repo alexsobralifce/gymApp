@@ -38,6 +38,16 @@ export async function authRoutes(app: FastifyInstance) {
   })
 
   /**
+   * POST /auth/google
+   * Login com Google OAuth — recebe credential (ID token) e retorna JWT
+   */
+  app.post('/google', async (request, reply) => {
+    const body = z.object({ credential: z.string() }).parse(request.body)
+    const result = await AuthService.loginWithGoogle(body.credential, app.jwt.sign.bind(app.jwt))
+    return reply.status(200).send(result)
+  })
+
+  /**
    * POST /auth/verify-email
    * Verifica o código enviado por e-mail
    */

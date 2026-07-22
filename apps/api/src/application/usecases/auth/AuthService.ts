@@ -1,9 +1,14 @@
 import bcrypt from 'bcryptjs'
+import { OAuth2Client } from 'google-auth-library'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { ConflictError, NotFoundError, UnauthorizedError, ForbiddenError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
 import { sendVerificationEmail } from '../../../infrastructure/email/mailer.js'
+
+const googleClient = env.GOOGLE_CLIENT_ID
+  ? new OAuth2Client(env.GOOGLE_CLIENT_ID)
+  : null
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -215,6 +220,78 @@ export class AuthService {
     })
 
     await sendVerificationEmail(email, code)
+  }
+
+  /**
+   * Login com Google OAuth — verifica credential, upsert usuario, retorna JWT
+   */
+  static async loginWithGoogle(
+    credential: string,
+    jwtSign: (payload: object, opts?: object) => string,
+  ): Promise<AuthTokens & { isNew: boolean; nome: string }> {
+    if (!googleClient) {
+      throw new Error('Google OAuth não está configurado. Defina GOOGLE_CLIENT_ID.')
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: env.GOOGLE_CLIENT_ID,
+    })
+
+    const payload = ticket.getPayload()
+    if (!payload || !payload.email) {
+      throw new UnauthorizedError('Token Google inválido.')
+    }
+
+    const email = payload.email
+    const nome = payload.name || email.split('@')[0]
+    const fotoUrl = payload.picture || null
+    const googleId = payload.sub
+
+    let usuario = await prisma.usuario.findUnique({
+      where: { email },
+    })
+
+    let isNew = false
+
+    if (!usuario) {
+      usuario = await prisma.usuario.create({
+        data: {
+          nome,
+          email,
+          senha_hash: null,
+          role: Role.ALUNO,
+          google_id: googleId,
+          foto_url: fotoUrl,
+          email_verified: true,
+        },
+      })
+      isNew = true
+    } else {
+      const updateData: Record<string, any> = {}
+      if (!usuario.google_id && googleId) updateData.google_id = googleId
+      if (!usuario.foto_url && fotoUrl) updateData.foto_url = fotoUrl
+      if (Object.keys(updateData).length > 0) {
+        await prisma.usuario.update({ where: { id: usuario.id }, data: updateData })
+      }
+    }
+
+    const tokenPayload = { sub: usuario.id, role: usuario.role }
+    const accessToken = jwtSign(tokenPayload, { expiresIn: env.JWT_EXPIRES_IN })
+    const refreshToken = jwtSign(
+      { sub: usuario.id },
+      { secret: env.JWT_REFRESH_SECRET, expiresIn: env.JWT_REFRESH_EXPIRES_IN },
+    )
+
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        usuario_id: usuario.id,
+        expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    })
+
+    return { accessToken, refreshToken, isNew, nome: usuario.nome }
   }
 
   /**

@@ -30,6 +30,8 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASS: z.string().optional().default(''),
   FROM_EMAIL: z.string().optional().default('noreply@gymapp.com'),
+
+  GOOGLE_CLIENT_ID: z.string().optional().default(''),
 })
 
 const parsed = envSchema.safeParse(process.env)

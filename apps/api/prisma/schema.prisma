@@ -62,11 +62,12 @@ enum TreinoAtor {
 model Usuario {
   id           String   @id @default(cuid())
   email        String   @unique
-  senha_hash   String
+  senha_hash   String?  // nullable — OAuth (Google) users have no password
   nome         String
   role         Role
   telefone     String?
   foto_url     String?
+  google_id    String?  @unique // sub from Google OAuth
   ativo        Boolean  @default(true)
   expo_push_token       String?  // token Expo para push notifications
   web_push_subscription  Json?    // PushSubscription JSON (Web Push API)
