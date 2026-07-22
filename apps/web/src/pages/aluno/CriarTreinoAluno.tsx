@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
 import { ChevronLeftIcon } from '../../components/icons/Icon'
 import { GRUPOS_MUSCULARES, EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
+import { sugerirNomes } from '../../lib/treinoNome'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -71,7 +72,7 @@ export default function AlunoCriarTreino() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  const [nome, setNome] = useState('Meu Treino')
+  const [nome, setNome] = useState('')
   const [diasSemana, setDiasSemana] = useState<number[]>([1, 3, 5])
   const [exerciciosTreino, setExerciciosTreino] = useState<ExercicioTreino[]>([])
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -195,6 +196,10 @@ export default function AlunoCriarTreino() {
       setFeedback('Selecione pelo menos um dia da semana.')
       return
     }
+    if (!nome.trim() || nome.trim().length < 2) {
+      setFeedback('Dê um nome para o treino (mínimo 2 caracteres).')
+      return
+    }
 
     const payload = {
       nome,
@@ -279,7 +284,20 @@ export default function AlunoCriarTreino() {
                   onChange={(e) => setNome(e.target.value)}
                   className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
                   placeholder="Ex: Treino A — Peito e Tríceps"
+                  maxLength={60}
                 />
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {sugerirNomes({ origem: 'criar' }).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setNome(s)}
+                      className="rounded-lg border border-surface-input bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">Dias da Semana</label>
@@ -405,7 +423,7 @@ export default function AlunoCriarTreino() {
           <button
             type="button"
             onClick={handleSalvar}
-            disabled={enviando || exerciciosTreino.length === 0}
+            disabled={enviando || exerciciosTreino.length === 0 || !nome.trim()}
             className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-40 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             {enviando ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Salvar Treino'}

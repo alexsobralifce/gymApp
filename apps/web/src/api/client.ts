@@ -481,6 +481,7 @@ export const api = {
     gruposMusculares?: string[]
     splitPreferido?: string
     restricoes?: string[]
+    nome?: string
   }) =>
     api.post<{
       plano: { id: string; nome: string; codigo?: string }

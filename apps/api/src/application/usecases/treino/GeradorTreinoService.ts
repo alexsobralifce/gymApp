@@ -10,6 +10,7 @@ export interface GerarPorGruposInput {
   gruposMusculares: string[]
   splitPreferido?: string | null
   restricoes?: string[]
+  nome?: string | null
 }
 
 export interface ExercicioInfo {
@@ -298,6 +299,7 @@ export async function salvarTreinoPorGrupos(alunoId: string, input: GerarPorGrup
   let count = 0
   for (let i = 0; i < gerado.sessoes.length; i++) {
     const sessao = gerado.sessoes[i]
+    const nomeFinal = input.nome?.trim() || sessao.nome
     const exerciciosParaTreino = sessao.exercicios.map((ex, idx) => ({
       exercicio_id: ex.exercicio_id,
       ordem: idx + 1,
@@ -311,7 +313,7 @@ export async function salvarTreinoPorGrupos(alunoId: string, input: GerarPorGrup
     await prisma.treino.create({
       data: {
         aluno_id: alunoId,
-        nome: sessao.nome,
+        nome: nomeFinal,
         dias_semana: diasSemana,
         status: TreinoStatus.ACEITO,
         exercicios: {

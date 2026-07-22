@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { GRUPOS_GRANULARES } from '../../lib/exerciseFilters'
+import { sugerirNomes } from '../../lib/treinoNome'
 import { ChevronLeftIcon } from '../../components/icons/Icon'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Toast from '../../components/ui/Toast'
@@ -31,6 +32,7 @@ export default function TreinoIA() {
   const [nivel, setNivel] = useState<string>('INICIANTE')
   const [diasPorSemana, setDiasPorSemana] = useState<number>(3)
   const [tempoMinutos, setTempoMinutos] = useState<number>(60)
+  const [nomeTreino, setNomeTreino] = useState('')
   const [restricoes, setRestricoes] = useState<string[]>([])
   const [gruposMusculares, setGruposMusculares] = useState<string[]>([])
   const [splitPreferido, setSplitPreferido] = useState<string | null>(null)
@@ -84,6 +86,8 @@ export default function TreinoIA() {
       ])
       setFichaGerada(res)
       setPlanosBiblioteca(libPlanos)
+      const sugestao = sugerirNomes({ grupos: gruposMusculares, split: splitPreferido, origem: 'ia' })[0] || ''
+      setNomeTreino(sugestao)
       if (splitPreferido === 'PUSH') setGrupoFiltro('ABC')
       else if (splitPreferido === 'PULL') setGrupoFiltro('PULL')
       else if (splitPreferido === 'LEGS') setGrupoFiltro('LEGS')
@@ -125,6 +129,7 @@ export default function TreinoIA() {
           gruposMusculares,
           splitPreferido: splitPreferido || undefined,
           restricoes,
+          nome: nomeTreino || undefined,
         })
         setToast({
           message: `Treino ativado! ${res.treinosCriadosCount} ficha(s) criada(s).`,
@@ -537,6 +542,30 @@ export default function TreinoIA() {
             )}
           </div>
 
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Nome do Treino</label>
+            <input
+              type="text"
+              value={nomeTreino}
+              onChange={(e) => setNomeTreino(e.target.value)}
+              className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
+              placeholder="Ex: Treino A — Peitoral + Tríceps"
+              maxLength={60}
+            />
+            <div className="flex flex-wrap gap-1.5">
+              {sugerirNomes({ grupos: gruposMusculares, split: splitPreferido, origem: 'ia' }).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setNomeTreino(s)}
+                  className="rounded-lg border border-surface-input bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-4">
             {previewAgrupado?.map((sessao: any) => (
               <div
@@ -614,7 +643,7 @@ export default function TreinoIA() {
             <button
               type="button"
               onClick={handleConfirmarESalvar}
-              disabled={salvando}
+              disabled={salvando || !nomeTreino.trim()}
               className="flex-1 py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
             >
               {salvando ? 'Salvando...' : 'Confirmar e Salvar'}  

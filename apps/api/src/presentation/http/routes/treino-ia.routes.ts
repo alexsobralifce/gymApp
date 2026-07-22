@@ -75,6 +75,7 @@ export async function treinoIARoutes(app: FastifyInstance) {
         gruposMusculares: z.array(z.string()).optional(),
         splitPreferido: z.string().optional(),
         restricoes: z.array(z.string()).optional(),
+        nome: z.string().optional(),
       })
       .parse(request.body || {})
 
@@ -87,6 +88,7 @@ export async function treinoIARoutes(app: FastifyInstance) {
         gruposMusculares: body.gruposMusculares,
         splitPreferido: body.splitPreferido || null,
         restricoes: body.restricoes || [],
+        nome: body.nome || null,
       })
       return reply.status(201).send(resultado)
     }
