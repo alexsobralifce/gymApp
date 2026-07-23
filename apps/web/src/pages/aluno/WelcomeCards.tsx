@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const WELCOME_KEY = 'gymapp_welcome_seen'
 
@@ -23,7 +24,16 @@ export default function WelcomeCards() {
     navigate('/', { replace: true })
   }
 
-  if (hasProfessor === null) return null
+  if (hasProfessor === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-4">
+          <LoadingSpinner size="md" />
+          <p className="text-sm text-text-muted">Preparando...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-4 py-8 animate-[fade-in_0.3s_ease]">
