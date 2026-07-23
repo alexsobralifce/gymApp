@@ -12,7 +12,8 @@ const config: CapacitorConfig = {
     StatusBar: {
       overlaysWebView: false,
       style: 'DARK',
-      backgroundColor: '#0A1628',
+  backgroundColor: '#0A1628',
+  androidNavigationBarColor: '#0A1628',
     },
     GoogleAuth: {
       clientId: '100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com',
