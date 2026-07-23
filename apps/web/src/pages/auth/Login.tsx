@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { GoogleLogin } from '@react-oauth/google'
 import { useAuthStore } from '../../stores/auth'
 import { api } from '../../api/client'
 
@@ -8,7 +9,7 @@ export default function Login() {
   const [senha, setSenha] = useState('')
   const [notVerified, setNotVerified] = useState(false)
   const [resending, setResending] = useState(false)
-  const { login, loading, error } = useAuthStore()
+  const { login, loginWithGoogle, loading, error } = useAuthStore()
   const navigate = useNavigate()
 
   async function handleSubmit(e: React.FormEvent) {
@@ -33,6 +34,19 @@ export default function Login() {
     }
   }
 
+  async function handleGoogleSuccess(credentialResponse: any) {
+    try {
+      const isNew = await loginWithGoogle(credentialResponse.credential)
+      if (isNew) {
+        navigate('/welcome')
+      } else {
+        navigate('/')
+      }
+    } catch {
+      // error is in store
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg bg-surface-card p-6">
@@ -54,6 +68,24 @@ export default function Login() {
             </button>
           </div>
         )}
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {}}
+            theme="filled_black"
+            size="large"
+            text="signin_with"
+            shape="rectangular"
+            width="100%"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="h-px flex-1 bg-surface-input" />
+          <span className="text-xs text-text-muted">ou</span>
+          <div className="h-px flex-1 bg-surface-input" />
+        </div>
 
         <input
           type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
