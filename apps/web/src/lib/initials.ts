@@ -1,14 +1,28 @@
-/** Iniciais seguras a partir do nome (evita "EUNDEFINED" com espaços extras). */
+/** Iniciais seguras (máx. 2 letras). Nunca retorna "undefined". */
 export function getInitials(nome?: string | null): string {
-  if (!nome?.trim()) return '?'
-  const parts = nome.trim().split(/\s+/).filter(Boolean)
+  if (nome == null) return '?'
+  const cleaned = String(nome)
+    .replace(/\bundefined\b/gi, ' ')
+    .replace(/\bnull\b/gi, ' ')
+    .trim()
+  if (!cleaned) return '?'
+
+  const parts = cleaned.split(/\s+/).filter((p) => p.length > 0)
   if (parts.length === 0) return '?'
-  const first = parts[0][0]
-  if (!first) return '?'
+
+  const a = parts[0]?.charAt(0)
+  if (!a || a === 'u' && parts[0].toLowerCase() === 'undefined') return '?'
+
   if (parts.length === 1) {
-    const second = parts[0][1]
-    return (first + (second || '')).toUpperCase() || '?'
+    const b = parts[0].charAt(1)
+    return (a + (b || '')).toUpperCase().slice(0, 2)
   }
-  const last = parts[parts.length - 1][0]
-  return (first + (last || '')).toUpperCase()
+
+  const lastPart = parts[parts.length - 1]
+  const b = lastPart?.charAt(0)
+  if (!b || lastPart.toLowerCase() === 'undefined') {
+    return a.toUpperCase()
+  }
+
+  return (a + b).toUpperCase().slice(0, 2)
 }

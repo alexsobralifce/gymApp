@@ -8,10 +8,12 @@ import { historicoDiasTreino } from '../../../application/usecases/treino/Treino
 import { env } from '../../../shared/env.js'
 
 function absolutizeMedia(url: string | null | undefined): string | null {
-  if (!url) return null
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
-  if (url.startsWith('/')) return `${env.API_BASE_URL}${url}`
-  return `${env.API_BASE_URL}/${url}`
+  if (url == null) return null
+  const s = String(url).trim()
+  if (!s || s === 'undefined' || s === 'null') return null
+  if (s.startsWith('http://') || s.startsWith('https://')) return s
+  if (s.startsWith('/')) return `${env.API_BASE_URL}${s}`
+  return `${env.API_BASE_URL}/${s}`
 }
 
 function calcularIMC(pesoKg: number, alturaCm: number): number | null {

@@ -11,6 +11,29 @@ interface Colega {
   fotoUrl: string | null
 }
 
+function AvatarColega({ nome, fotoUrl }: { nome: string; fotoUrl: string | null }) {
+  const [imgOk, setImgOk] = useState(true)
+  const src = resolveMediaUrl(fotoUrl)
+  const iniciais = getInitials(nome)
+
+  if (src && imgOk) {
+    return (
+      <img
+        src={src}
+        alt=""
+        onError={() => setImgOk(false)}
+        className="h-7 w-7 rounded-full object-cover border border-surface-input shrink-0"
+      />
+    )
+  }
+
+  return (
+    <div className="h-7 w-7 rounded-full bg-surface-input flex items-center justify-center text-[10px] font-bold text-text-muted shrink-0 overflow-hidden">
+      <span className="truncate max-w-full px-0.5">{iniciais}</span>
+    </div>
+  )
+}
+
 export default function AcademySidebar() {
   const user = useAuthStore((s) => s.user)
   const [colegas, setColegas] = useState<Colega[]>([])
@@ -44,26 +67,16 @@ export default function AcademySidebar() {
         {colegas.map((c) => (
           <div
             key={c.id}
-            className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-surface-input/50 transition-colors"
+            className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-surface-input/50 transition-colors min-w-0"
           >
-            {resolveMediaUrl(c.fotoUrl) ? (
-              <img
-                src={resolveMediaUrl(c.fotoUrl)!}
-                alt={c.nome}
-                className="h-7 w-7 rounded-full object-cover border border-surface-input shrink-0"
-              />
-            ) : (
-              <div className="h-7 w-7 rounded-full bg-surface-input flex items-center justify-center text-xs font-bold text-text-muted shrink-0">
-                {getInitials(c.nome)}
-              </div>
-            )}
-            <span className="text-xs text-text truncate flex-1">{c.nome}</span>
+            <AvatarColega nome={c.nome} fotoUrl={c.fotoUrl} />
+            <span className="text-xs text-text truncate flex-1 min-w-0">{c.nome}</span>
             {solicitados.has(c.id) ? (
               <span className="text-xs text-text-muted shrink-0">Enviado</span>
             ) : (
               <button
                 onClick={() => handleSeguir(c.id)}
-                className="rounded-lg bg-primary/10 hover:bg-primary px-2 py-0.5 text-xs font-bold text-primary hover:text-white transition-all shrink-0 cursor-pointer"
+                className="rounded-lg bg-primary/10 hover:bg-primary px-2 py-0.5 text-xs font-bold text-primary hover:text-primary-foreground transition-all shrink-0 cursor-pointer"
               >
                 Seguir
               </button>

@@ -87,22 +87,25 @@ function UserAvatar({
   size?: 'sm' | 'md'
   ringClass?: string
 }) {
+  const [imgOk, setImgOk] = useState(true)
   const dim = size === 'md' ? 'h-11 w-11 text-sm' : 'h-9 w-9 text-xs'
   const src = resolveMediaUrl(fotoUrl)
+  const iniciais = getInitials(nome)
 
-  if (src) {
+  if (src && imgOk) {
     return (
       <img
         src={src}
-        alt={nome || 'Avatar'}
+        alt=""
+        onError={() => setImgOk(false)}
         className={`${dim} shrink-0 rounded-full object-cover ring-2 ring-offset-2 ring-offset-surface ${ringClass}`}
       />
     )
   }
 
   return (
-    <div className={`flex ${dim} shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white ring-2 ring-offset-2 ring-offset-surface ${ringClass}`}>
-      {nome ? getInitials(nome) : '?'}
+    <div className={`flex ${dim} shrink-0 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground ring-2 ring-offset-2 ring-offset-surface overflow-hidden ${ringClass}`}>
+      <span className="truncate max-w-full px-0.5">{iniciais}</span>
     </div>
   )
 }
