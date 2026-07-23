@@ -221,7 +221,7 @@ export default function AlunoMedidas() {
                 style={{ left: `${posicaoBarra}%` }}
               />
             </div>
-            <div className="flex justify-between text-[10px] text-text-muted">
+            <div className="flex justify-between text-xs text-text-muted">
               <span>{IMC_MIN}</span>
               <span>{IMC_MAX}</span>
             </div>
@@ -344,7 +344,7 @@ export default function AlunoMedidas() {
                   <span className={`${isActive ? 'text-text font-semibold' : 'text-text-muted'}`}>
                     {cat.label}
                     {isActive && (
-                      <span className="ml-1.5 text-[10px] text-text-muted font-normal">(você)</span>
+                      <span className="ml-1.5 text-xs text-text-muted font-normal">(você)</span>
                     )}
                   </span>
                 </div>

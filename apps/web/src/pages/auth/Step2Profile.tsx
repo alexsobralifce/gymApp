@@ -82,7 +82,7 @@ export default function Step2Profile({
             required
           />
           {errors.peso && (
-            <p className="text-[11px] text-destructive mt-1 animate-[fade-in_0.2s_ease]">{errors.peso}</p>
+            <p className="text-xs text-destructive mt-1 animate-[fade-in_0.2s_ease]">{errors.peso}</p>
           )}
         </div>
         <div className="flex-1">
@@ -98,7 +98,7 @@ export default function Step2Profile({
             required
           />
           {errors.altura && (
-            <p className="text-[11px] text-destructive mt-1 animate-[fade-in_0.2s_ease]">{errors.altura}</p>
+            <p className="text-xs text-destructive mt-1 animate-[fade-in_0.2s_ease]">{errors.altura}</p>
           )}
         </div>
       </div>

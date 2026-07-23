@@ -229,7 +229,7 @@ export default function AlunoMeusTreinos() {
 
         <div className="grid grid-cols-7 text-center gap-1">
           {DIAS_SEMANA.map((d) => (
-            <span key={d} className="text-[10px] font-bold text-text-muted uppercase">{d}</span>
+            <span key={d} className="text-xs font-bold text-text-muted uppercase">{d}</span>
           ))}
           {diasDoMes.map((dia, i) => (
             <div key={i} className="aspect-square flex items-center justify-center">
@@ -337,12 +337,12 @@ export default function AlunoMeusTreinos() {
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {ex.exercicio.grupo_muscular && (
-                    <span className="rounded bg-surface-input px-1.5 py-0.5 text-[9px] font-bold text-text-muted uppercase">
+                    <span className="rounded bg-surface-input px-1.5 py-0.5 text-xs font-bold text-text-muted uppercase">
                       {ex.exercicio.grupo_muscular}
                     </span>
                   )}
                   {ex.exercicio.equipamento && (
-                    <span className="rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary uppercase">
+                    <span className="rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-xs font-bold text-primary uppercase">
                       {ex.exercicio.equipamento}
                     </span>
                   )}
@@ -537,7 +537,7 @@ export default function AlunoMeusTreinos() {
                   <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">Músculos Trabalhados</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedExercicio.musculos_secundarios.map((m, i) => (
-                      <span key={i} className="rounded-full bg-surface-input px-2 py-0.5 text-[10px] font-bold text-text-muted uppercase">
+                      <span key={i} className="rounded-full bg-surface-input px-2 py-0.5 text-xs font-bold text-text-muted uppercase">
                         {m}
                       </span>
                     ))}

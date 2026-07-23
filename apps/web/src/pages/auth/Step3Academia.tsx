@@ -23,7 +23,7 @@ export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, 
         >
           <div className="text-2xl mb-1">🎯</div>
           <p className="text-sm font-semibold text-text">Autogestão</p>
-          <p className="text-[11px] text-text-muted mt-1 leading-tight">
+          <p className="text-xs text-text-muted mt-1 leading-tight">
             Monte seus treinos sem professor ou academia
           </p>
         </button>
@@ -38,7 +38,7 @@ export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, 
         >
           <div className="text-2xl mb-1">🏋️</div>
           <p className="text-sm font-semibold text-text">Academia</p>
-          <p className="text-[11px] text-text-muted mt-1 leading-tight">
+          <p className="text-xs text-text-muted mt-1 leading-tight">
             Vinculado a uma academia e professor
           </p>
         </button>

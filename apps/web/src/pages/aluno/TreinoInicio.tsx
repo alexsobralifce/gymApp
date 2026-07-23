@@ -70,17 +70,17 @@ export default function AlunoTreinoInicio() {
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <ActivityIcon className="h-5 w-5 text-primary mb-1" />
             <span className="text-lg font-bold text-text">{totalExercicios}</span>
-            <span className="text-[10px] text-text-muted">Exercicios</span>
+            <span className="text-xs text-text-muted">Exercicios</span>
           </div>
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <TrophyIcon className="h-5 w-5 text-warning mb-1" />
             <span className="text-lg font-bold text-text">{totalSeries}</span>
-            <span className="text-[10px] text-text-muted">Series</span>
+            <span className="text-xs text-text-muted">Series</span>
           </div>
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <TimerIcon className="h-5 w-5 text-blue-400 mb-1" />
             <span className="text-lg font-bold text-text">0:00</span>
-            <span className="text-[10px] text-text-muted">Duracao</span>
+            <span className="text-xs text-text-muted">Duracao</span>
           </div>
         </div>
 
@@ -95,7 +95,7 @@ export default function AlunoTreinoInicio() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-text truncate">{ex.exercicio.nome}</p>
-                  <p className="text-[10px] text-text-muted">{ex.series}s × {ex.repeticoes} reps</p>
+                  <p className="text-xs text-text-muted">{ex.series}s × {ex.repeticoes} reps</p>
                 </div>
               </div>
             ))}

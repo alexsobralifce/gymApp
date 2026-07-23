@@ -56,7 +56,7 @@ function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void })
           <p className="text-xs font-bold text-text leading-tight">{ex.nome}</p>
           <div className="flex flex-wrap gap-1 mt-1.5">
             {ex.grupo_muscular && (
-              <span className="text-[9px] text-text-muted font-semibold bg-surface-input px-1.5 py-0.5 rounded border border-surface-input uppercase">
+              <span className="text-xs text-text-muted font-semibold bg-surface-input px-1.5 py-0.5 rounded border border-surface-input uppercase">
                 {ex.grupo_muscular}
               </span>
             )}
@@ -368,7 +368,7 @@ export default function AcademiaCriarTreino() {
                               <p className="text-sm font-bold text-text leading-tight">{ex.ordem}. {ex.nome}</p>
                               <div className="flex gap-1.5 mt-1">
                                 {ex.grupoMuscular && (
-                                  <span className="rounded bg-surface-input px-1.5 py-0.5 text-[10px] font-bold text-text-muted uppercase">
+                                  <span className="rounded bg-surface-input px-1.5 py-0.5 text-xs font-bold text-text-muted uppercase">
                                     {ex.grupoMuscular}
                                   </span>
                                 )}
@@ -379,7 +379,7 @@ export default function AcademiaCriarTreino() {
                           <div className="flex items-center gap-3.5">
                             <div className="flex gap-1.5 max-w-[200px]">
                               <div>
-                                <label className="block text-[9px] font-bold text-text-muted uppercase">Séries</label>
+                                <label className="block text-xs font-bold text-text-muted uppercase">Séries</label>
                                 <input
                                   type="number"
                                   min={1}
@@ -389,7 +389,7 @@ export default function AcademiaCriarTreino() {
                                 />
                               </div>
                               <div>
-                                <label className="block text-[9px] font-bold text-text-muted uppercase">Reps</label>
+                                <label className="block text-xs font-bold text-text-muted uppercase">Reps</label>
                                 <input
                                   type="number"
                                   min={1}
@@ -399,7 +399,7 @@ export default function AcademiaCriarTreino() {
                                 />
                               </div>
                               <div>
-                                <label className="block text-[9px] font-bold text-text-muted uppercase">Carga (kg)</label>
+                                <label className="block text-xs font-bold text-text-muted uppercase">Carga (kg)</label>
                                 <input
                                   type="number"
                                   min={0}

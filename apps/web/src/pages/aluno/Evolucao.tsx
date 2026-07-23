@@ -168,7 +168,7 @@ export default function AlunoEvolucao() {
                 <div className={`text-xl font-extrabold ${val.r !== null && val.r > 0 ? 'text-success' : val.r !== null && val.r < 0 ? 'text-destructive' : 'text-text-muted'}`}>
                   {val.r !== null ? (val.r >= 0 ? '+' : '') + val.r.toFixed(2) : '?'}
                 </div>
-                <div className="text-[10px] text-text-muted font-medium mt-0.5 leading-tight">{key.replace('Vs', ' vs ')}</div>
+                <div className="text-xs text-text-muted font-medium mt-0.5 leading-tight">{key.replace('Vs', ' vs ')}</div>
               </div>
             ))}
           </div>
@@ -211,7 +211,7 @@ export default function AlunoEvolucao() {
                   {m.percentual_bf != null && <span className="text-text-muted">BF: {m.percentual_bf}%</span>}
                   {m.massa_magra_kg != null && <span className="text-text-muted">MM: {m.massa_magra_kg}kg</span>}
                 </div>
-                {m.observacao && <p className="mt-1 text-[11px] text-text-muted italic">{m.observacao}</p>}
+                {m.observacao && <p className="mt-1 text-xs text-text-muted italic">{m.observacao}</p>}
               </div>
             ))}
           </div>

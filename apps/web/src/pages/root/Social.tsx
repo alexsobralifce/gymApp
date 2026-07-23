@@ -223,10 +223,10 @@ export default function RootSocial() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-text">{post.autor_nome}</span>
-                            <span className="rounded-full bg-surface-input px-2 py-0.5 text-[10px] text-text-muted">
+                            <span className="rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">
                               {post.tipo}
                             </span>
-                            <span className="rounded-full bg-surface-input px-2 py-0.5 text-[10px] text-text-muted">
+                            <span className="rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">
                               {post.visibilidade}
                             </span>
                           </div>
@@ -266,7 +266,7 @@ export default function RootSocial() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-text">{clube.nome}</h3>
-                          <span className="rounded-full bg-surface-input px-2 py-0.5 text-[10px] text-text-muted">
+                          <span className="rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">
                             {clube.tipo}
                           </span>
                         </div>

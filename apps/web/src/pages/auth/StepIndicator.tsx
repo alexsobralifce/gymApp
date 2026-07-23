@@ -21,7 +21,7 @@ export default function StepIndicator({ steps, current }: StepIndicatorProps) {
               {i < current ? '✓' : i + 1}
             </div>
             <span
-              className={`text-[10px] mt-1 font-semibold hidden sm:block ${
+              className={`text-xs mt-1 font-semibold hidden sm:block ${
                 i <= current ? 'text-text' : 'text-text-muted'
               }`}
             >

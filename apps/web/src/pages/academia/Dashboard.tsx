@@ -96,7 +96,7 @@ export default function AcademiaDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-extrabold text-text">{data.totalProfessores}</p>
-                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Professores</p>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Professores</p>
               </div>
             </div>
             {data.professoresPendentes > 0 && (
@@ -116,7 +116,7 @@ export default function AcademiaDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-extrabold text-text">{data.totalAlunos}</p>
-                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Alunos</p>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Alunos</p>
               </div>
             </div>
           </div>

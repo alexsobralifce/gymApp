@@ -194,7 +194,7 @@ export default function AlunoDashboard() {
                 </div>
                 <div className="flex items-baseline gap-2 mt-0.5">
                   <span className="text-xl font-bold text-text">{imc}</span>
-                  <span className="text-[10px] text-text-muted">
+                  <span className="text-xs text-text-muted">
                     {perfil?.peso_kg}kg / {perfil?.altura_cm}cm
                   </span>
                 </div>
@@ -251,7 +251,7 @@ export default function AlunoDashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-text truncate">Biblioteca</p>
-              <p className="text-[10px] text-text-muted truncate">30+ planos</p>
+              <p className="text-xs text-text-muted truncate">30+ planos</p>
             </div>
           </button>
 
@@ -265,7 +265,7 @@ export default function AlunoDashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-text truncate">Treino IA</p>
-              <p className="text-[10px] text-text-muted truncate">Gerador IA</p>
+              <p className="text-xs text-text-muted truncate">Gerador IA</p>
             </div>
           </button>
 
@@ -279,7 +279,7 @@ export default function AlunoDashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-text truncate">Medidas</p>
-              <p className="text-[10px] text-text-muted truncate">Histórico físico</p>
+              <p className="text-xs text-text-muted truncate">Histórico físico</p>
             </div>
           </button>
 
@@ -293,7 +293,7 @@ export default function AlunoDashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-text truncate">Evolução</p>
-              <p className="text-[10px] text-text-muted truncate">Performance</p>
+              <p className="text-xs text-text-muted truncate">Performance</p>
             </div>
           </button>
         </div>
@@ -316,7 +316,7 @@ export default function AlunoDashboard() {
                     <h3 className="text-base font-bold text-text">{t.nome}</h3>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {t.dias_semana.map((d) => (
-                        <span key={d} className="rounded-md bg-surface-input/50 px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                        <span key={d} className="rounded-md bg-surface-input/50 px-1.5 py-0.5 text-xs font-medium text-text-muted">
                           {DIAS[d]}
                         </span>
                       ))}
@@ -326,7 +326,7 @@ export default function AlunoDashboard() {
 
                 {t.exercicios && t.exercicios.length > 0 && (
                   <div className="rounded-xl bg-surface/50 p-3">
-                    <p className="text-[10px] font-bold text-text-muted mb-1.5 uppercase tracking-wider">
+                    <p className="text-xs font-bold text-text-muted mb-1.5 uppercase tracking-wider">
                       {t.exercicios.length} exercicios
                     </p>
                     <p className="text-xs text-text leading-relaxed line-clamp-2">
@@ -380,7 +380,7 @@ export default function AlunoDashboard() {
                     <h3 className="text-base font-bold text-text">{t.nome}</h3>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {t.dias_semana.map((d) => (
-                        <span key={d} className="rounded-md bg-surface-input/50 px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                        <span key={d} className="rounded-md bg-surface-input/50 px-1.5 py-0.5 text-xs font-medium text-text-muted">
                           {DIAS[d]}
                         </span>
                       ))}
@@ -445,7 +445,7 @@ function StatCard({ icon, value, label, color, bg }: { icon: React.ReactNode; va
         {icon}
       </div>
       <p className="text-lg font-bold text-text">{value}</p>
-      <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">{label}</p>
+      <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{label}</p>
     </div>
   )
 }
@@ -454,7 +454,7 @@ function InfoCard({ title, body }: { title: string; body: string }) {
   return (
     <div className="rounded-xl bg-surface p-3 border border-surface-input">
       <p className="text-xs font-semibold text-text">{title}</p>
-      <p className="text-[11px] text-text-muted mt-1 leading-relaxed">{body}</p>
+      <p className="text-xs text-text-muted mt-1 leading-relaxed">{body}</p>
     </div>
   )
 }

@@ -222,7 +222,7 @@ export default function TreinoIA() {
               {step > s.num ? '✓' : s.num}
             </div>
             <span
-              className={`text-[10px] sm:text-xs font-semibold ${
+              className={`text-xs sm:text-xs font-semibold ${
                 step === s.num ? 'text-text font-bold' : 'text-text-muted'
               }`}
             >
@@ -325,7 +325,7 @@ export default function TreinoIA() {
                     }`}
                   >
                     <p className="text-xs font-bold">{item.label}</p>
-                    <p className="text-[10px] mt-0.5">{item.desc}</p>
+                    <p className="text-xs mt-0.5">{item.desc}</p>
                   </button>
                 ))}
               </div>
@@ -442,7 +442,7 @@ export default function TreinoIA() {
               })}
             </div>
             {gruposMusculares.length > 0 && (
-              <p className="text-[11px] text-text-muted mt-2">
+              <p className="text-xs text-text-muted mt-2">
                 Selecionados: {gruposMusculares.length} grupo(s) × 3 = ~{gruposMusculares.length * 3} exercicios
               </p>
             )}
@@ -489,7 +489,7 @@ export default function TreinoIA() {
                   }`}
                 >
                   <p className="text-xs font-bold">{item.label}</p>
-                  <span className="text-[10px] block mt-1">{selected ? '✓ Selecionado' : '+ Adicionar'}</span>
+                  <span className="text-xs block mt-1">{selected ? '✓ Selecionado' : '+ Adicionar'}</span>
                 </button>
               )
             })}
@@ -522,19 +522,19 @@ export default function TreinoIA() {
             <h2 className="text-xl font-bold text-text mt-2">{fichaGerada.nome_treino}</h2>
             <p className="text-xs text-text-muted mt-1">{fichaGerada.resumo_prescricao}</p>
             {fichaGerada.justificativa_match && (
-              <p className="text-[11px] text-text-muted mt-2 leading-relaxed bg-surface-input/40 rounded-xl p-2.5">
+              <p className="text-xs text-text-muted mt-2 leading-relaxed bg-surface-input/40 rounded-xl p-2.5">
                 {fichaGerada.justificativa_match}
               </p>
             )}
             {(fichaGerada.grupos_solicitados?.length > 0 || fichaGerada.split_preferido) && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {fichaGerada.split_preferido && (
-                  <span className="text-[10px] font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded">
+                  <span className="text-xs font-bold uppercase bg-primary/10 text-primary px-2 py-0.5 rounded">
                     {fichaGerada.split_preferido}
                   </span>
                 )}
                 {(fichaGerada.grupos_solicitados || []).map((g: string) => (
-                  <span key={g} className="text-[10px] font-bold uppercase bg-surface-input text-text-muted px-2 py-0.5 rounded">
+                  <span key={g} className="text-xs font-bold uppercase bg-surface-input text-text-muted px-2 py-0.5 rounded">
                     {g}
                   </span>
                 ))}
@@ -558,7 +558,7 @@ export default function TreinoIA() {
                   key={s}
                   type="button"
                   onClick={() => setNomeTreino(s)}
-                  className="rounded-lg border border-surface-input bg-surface px-2.5 py-1 text-[11px] font-semibold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                  className="rounded-lg border border-surface-input bg-surface px-2.5 py-1 text-xs font-semibold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
                 >
                   {s}
                 </button>
@@ -583,7 +583,7 @@ export default function TreinoIA() {
 
                 {Object.entries(sessao.grupos as Record<string, any[]>).map(([grupo, exercicios]) => (
                   <div key={grupo} className="space-y-1.5">
-                    <h4 className="text-[11px] font-bold text-primary uppercase tracking-wider px-1">
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider px-1">
                       {grupo} ({exercicios.length} exercicios)
                     </h4>
                     <div className="space-y-1.5">
@@ -604,7 +604,7 @@ export default function TreinoIA() {
                             )}
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-text truncate">{exItem.exercicio?.nome}</p>
-                              <span className="text-[9px] text-text-muted uppercase">
+                              <span className="text-xs text-text-muted uppercase">
                                 {exItem.exercicio?.grupo_muscular || 'Geral'}
                               </span>
                             </div>
@@ -625,7 +625,7 @@ export default function TreinoIA() {
           </div>
 
           {fichaGerada.observacoes?.length > 0 && (
-            <ul className="text-[11px] text-text-muted space-y-1 list-disc pl-4">
+            <ul className="text-xs text-text-muted space-y-1 list-disc pl-4">
               {fichaGerada.observacoes.map((o: string, i: number) => (
                 <li key={i}>{o}</li>
               ))}
@@ -698,11 +698,11 @@ export default function TreinoIA() {
                     className="p-3.5 bg-surface-card rounded-2xl border border-surface-input space-y-2 flex flex-col justify-between hover:border-primary/40 transition-colors"
                   >
                     <div>
-                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">
+                      <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">
                         {plano.split_tipo} · {plano.dias_por_semana}x/semana
                       </span>
                       <h4 className="text-xs font-bold text-text mt-1.5">{plano.nome}</h4>
-                      <p className="text-[11px] text-text-muted line-clamp-2 mt-1 leading-relaxed">{plano.descricao}</p>
+                      <p className="text-xs text-text-muted line-clamp-2 mt-1 leading-relaxed">{plano.descricao}</p>
                     </div>
                     <button
                       type="button"

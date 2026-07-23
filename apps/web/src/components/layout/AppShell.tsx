@@ -335,7 +335,7 @@ export default function AppShell() {
               {entry.icon}
               <span>{entry.label}</span>
               {entry.label === 'Mural' && atividadeMural > 0 && (
-                <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+                <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-white">
                   {atividadeMural}
                 </span>
               )}
@@ -390,7 +390,7 @@ export default function AppShell() {
                 {entry.icon}
                 <span>{entry.label}</span>
                 {entry.label === 'Mural' && atividadeMural > 0 && (
-                  <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-white">
                     {atividadeMural}
                   </span>
                 )}
@@ -448,7 +448,7 @@ export default function AppShell() {
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
                         <p className="text-xs text-text-muted truncate">{user?.email || ''}</p>
-                        <span className="inline-block mt-0.5 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-text-muted">
+                        <span className="inline-block mt-0.5 rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-text-muted">
                           {getRoleLabel(role)}
                         </span>
                       </div>
@@ -463,7 +463,7 @@ export default function AppShell() {
                           <PaletteIcon className="h-4 w-4 text-primary" />
                           <span>Alternar Tema</span>
                         </div>
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
                           {theme === 'lime' ? 'Lima/Navy' : theme === 'red' ? 'Vermelho' : 'Violeta'}
                         </span>
                       </button>
@@ -552,7 +552,7 @@ export default function AppShell() {
                   >
                     <span className="text-xl mb-1">{item.icon}</span>
                     <span className="text-xs font-bold text-text">{item.label}</span>
-                    <span className="text-[10px] text-text-muted">{item.desc}</span>
+                    <span className="text-xs text-text-muted">{item.desc}</span>
                   </button>
                 ))}
               </div>
@@ -658,7 +658,7 @@ export default function AppShell() {
                         </span>
                       )}
                     </div>
-                    <span className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? 'text-primary font-bold' : 'text-text-muted'}`}>
+                    <span className={`text-xs font-medium transition-colors duration-200 ${isActive ? 'text-primary font-bold' : 'text-text-muted'}`}>
                       {t.label}
                     </span>
                     {isActive && (
@@ -677,7 +677,7 @@ export default function AppShell() {
                 }`}
               >
                 <MoreHorizontalIcon className={`h-5 w-5 transition-all duration-200 ${moreSheetOpen ? 'text-primary scale-110' : ''}`} />
-                <span className="text-[10px] font-medium">Mais</span>
+                <span className="text-xs font-medium">Mais</span>
                 {moreSheetOpen && (
                   <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-7 rounded-full bg-primary animate-scale-in" />
                 )}

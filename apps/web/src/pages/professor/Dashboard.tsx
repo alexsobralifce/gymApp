@@ -61,17 +61,17 @@ export default function ProfessorDashboard() {
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
           <UsersIcon className="h-5 w-5 text-blue-400 mx-auto mb-2" />
           <p className="text-xl font-bold text-text">{totalAlunos}</p>
-          <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">Alunos</p>
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Alunos</p>
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
           <DumbbellIcon className="h-5 w-5 text-primary mx-auto mb-2" />
           <p className="text-xl font-bold text-text">{totalTreinos}</p>
-          <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">Treinos</p>
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Treinos</p>
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
           <ActivityIcon className="h-5 w-5 text-success mx-auto mb-2" />
           <p className="text-xl font-bold text-text">{alunosComTreino}</p>
-          <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">Ativos</p>
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Ativos</p>
         </div>
       </div>
 
@@ -103,7 +103,7 @@ export default function ProfessorDashboard() {
                     <h3 className="text-sm font-bold text-text">{aluno.usuario.nome}</h3>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <p className="text-xs text-text-muted truncate">{aluno.usuario.email}</p>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-surface-input px-2 py-0.5 text-[10px] text-text-muted">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">
                         <Building2Icon className="h-3 w-3" />
                         {aluno.academia?.nome || 'Autogestao'}
                       </span>

@@ -179,10 +179,10 @@ export default function AcademiaTreinos() {
                     <div>
                       <p className="text-sm font-medium text-text">{t.nome}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
+                        <span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
                           {t.status}
                         </span>
-                        <span className="text-[10px] text-text-muted">
+                        <span className="text-xs text-text-muted">
                           {t.dias_semana?.map((d: number) => DIA_LABEL[d]).join(', ')}
                         </span>
                       </div>

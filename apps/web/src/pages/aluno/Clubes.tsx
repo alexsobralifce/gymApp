@@ -78,7 +78,7 @@ export default function Clubes() {
               return (
                 <div key={entry.aluno_id} className="flex items-center gap-3 px-4 py-3 border-b border-surface-input last:border-0 hover:bg-white/5 transition-colors">
                   <span className={`w-7 text-center text-sm font-bold ${medal || 'text-text-muted'}`}>{i + 1}</span>
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full gradient-primary text-[10px] font-bold text-white">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-white">
                     {getInitials(entry.nome)}
                   </div>
                   <div className="min-w-0 flex-1">

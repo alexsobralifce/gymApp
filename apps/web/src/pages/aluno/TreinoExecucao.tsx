@@ -231,7 +231,7 @@ export default function AlunoTreinoExecucao() {
             </button>
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-text truncate">{treinoAtual.nome}</h1>
-              <p className="text-[10px] text-text-muted">
+              <p className="text-xs text-text-muted">
                 {concluidoSeries}/{totalSeries} series
               </p>
             </div>
@@ -290,15 +290,15 @@ export default function AlunoTreinoExecucao() {
                 />
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setPreviewExercicio(exDetail)}>
                   <div className="flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
                       {exIdx + 1}
                     </span>
                     <p className="text-sm font-bold text-text truncate">{exDetail.nome}</p>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 ml-7">
-                    <p className="text-[10px] text-text-muted">{exDetail.grupo_muscular || 'Geral'}</p>
+                    <p className="text-xs text-text-muted">{exDetail.grupo_muscular || 'Geral'}</p>
                     {exercicioCompleto && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-[9px] font-bold text-success">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-xs font-bold text-success">
                         <CheckIcon className="h-2.5 w-2.5" />
                         OK
                       </span>
@@ -307,7 +307,7 @@ export default function AlunoTreinoExecucao() {
                 </div>
                 <button
                   onClick={() => setPreviewExercicio(exDetail)}
-                  className="shrink-0 rounded-lg bg-surface-input px-2.5 py-1.5 text-[10px] font-semibold text-text-muted active:scale-95 transition-transform cursor-pointer"
+                  className="shrink-0 rounded-lg bg-surface-input px-2.5 py-1.5 text-xs font-semibold text-text-muted active:scale-95 transition-transform cursor-pointer"
                 >
                   Ver
                 </button>
@@ -335,7 +335,7 @@ export default function AlunoTreinoExecucao() {
                         placeholder="Kg"
                         className="w-[56px] rounded-lg border border-surface-input bg-surface px-2 py-2 text-center text-sm font-semibold text-text disabled:opacity-40 focus:border-primary focus:outline-none"
                       />
-                      <span className="text-[10px] text-text-muted font-medium">kg</span>
+                      <span className="text-xs text-text-muted font-medium">kg</span>
                       <input
                         type="number"
                         disabled={isLogged}
@@ -344,7 +344,7 @@ export default function AlunoTreinoExecucao() {
                         placeholder="Reps"
                         className="w-[56px] rounded-lg border border-surface-input bg-surface px-2 py-2 text-center text-sm font-semibold text-text disabled:opacity-40 focus:border-primary focus:outline-none"
                       />
-                      <span className="text-[10px] text-text-muted font-medium">reps</span>
+                      <span className="text-xs text-text-muted font-medium">reps</span>
                       <div className="flex-1" />
                       {isLogged ? (
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-success/15 text-success">

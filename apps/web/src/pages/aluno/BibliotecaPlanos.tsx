@@ -189,7 +189,7 @@ export default function BibliotecaPlanos() {
                 key={`rec-${rec.id}`}
                 className="bg-gradient-to-br from-primary/10 via-surface to-surface border border-primary/30 rounded-2xl p-5 shadow-sm hover:border-primary transition-all relative overflow-hidden flex flex-col justify-between"
               >
-                <div className="absolute top-3 right-3 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <div className="absolute top-3 right-3 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                   Recomendado ★
                 </div>
                 <div>
@@ -197,13 +197,13 @@ export default function BibliotecaPlanos() {
                   <p className="text-xs text-text-muted mt-1.5 line-clamp-2">{rec.descricao}</p>
                   
                   <div className="flex flex-wrap gap-1.5 mt-3">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-input text-text border border-surface-input">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text border border-surface-input">
                       {rec.objetivo}
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-input text-text border border-surface-input">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text border border-surface-input">
                       {rec.nivel}
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
                       📅 {rec.dias_por_semana}x / semana ({rec.split_tipo})
                     </span>
                   </div>
@@ -274,13 +274,13 @@ export default function BibliotecaPlanos() {
                   <p className="text-xs text-text-muted mt-2 line-clamp-3">{plano.descricao}</p>
 
                   <div className="flex flex-wrap gap-1.5 mt-4">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted border border-surface-input uppercase">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted border border-surface-input uppercase">
                       {plano.objetivo}
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted border border-surface-input uppercase">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted border border-surface-input uppercase">
                       {plano.nivel}
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-input text-primary border border-surface-input">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-primary border border-surface-input">
                       {plano.dias_por_semana}x / sem
                     </span>
                   </div>
@@ -325,13 +325,13 @@ export default function BibliotecaPlanos() {
                     <h2 className="text-xl font-bold text-text">{planoSelecionado.nome}</h2>
                     <p className="text-xs text-text-muted mt-1">{planoSelecionado.descricao}</p>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                         {planoSelecionado.objetivo}
                       </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted">
                         {planoSelecionado.nivel}
                       </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted">
                         {planoSelecionado.dias_por_semana}x por semana ({planoSelecionado.split_tipo})
                       </span>
                     </div>
@@ -381,12 +381,12 @@ export default function BibliotecaPlanos() {
                                   <p className="text-xs font-bold text-text leading-tight">{ex?.nome}</p>
                                   <div className="flex items-center gap-2 mt-1">
                                     {ex?.grupo_muscular && (
-                                      <span className="text-[9px] font-semibold text-text-muted bg-surface px-1.5 py-0.5 rounded border border-surface-input uppercase">
+                                      <span className="text-xs font-semibold text-text-muted bg-surface px-1.5 py-0.5 rounded border border-surface-input uppercase">
                                         {ex.grupo_muscular}
                                       </span>
                                     )}
                                     {exItem.restricoes_incompativeis && exItem.restricoes_incompativeis.length > 0 && (
-                                      <span className="text-[9px] font-semibold text-amber-500 bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20">
+                                      <span className="text-xs font-semibold text-amber-500 bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20">
                                         ⚠️ Substituto p/ {exItem.restricoes_incompativeis.join(', ')}
                                       </span>
                                     )}
@@ -398,7 +398,7 @@ export default function BibliotecaPlanos() {
                                 <span className="text-xs font-bold text-text block">
                                   {exItem.series} séries × {exItem.repeticoes_min}–{exItem.repeticoes_max} reps
                                 </span>
-                                <span className="text-[10px] text-text-muted uppercase">
+                                <span className="text-xs text-text-muted uppercase">
                                   {exItem.tipo || 'PRINCIPAL'}
                                 </span>
                               </div>

@@ -135,9 +135,9 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
         )}
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-text">{post.autor_nome}</p>
-          <p className="text-[11px] text-text-muted">{tempoRelativo(post.criado_em)}</p>
+          <p className="text-xs text-text-muted">{tempoRelativo(post.criado_em)}</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${badge.color} bg-white/5 border border-white/10`}>
+        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${badge.color} bg-white/5 border border-white/10`}>
           {badge.label}
         </span>
       </div>
@@ -146,7 +146,7 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
       {post.grupo_muscular_resumo && (
         <div className="flex flex-wrap gap-1.5">
           {post.grupo_muscular_resumo.split(', ').map((g) => (
-            <span key={g} className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+            <span key={g} className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
               {g}
             </span>
           ))}
@@ -191,7 +191,7 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
         </div>
 
         {curtiu && (
-          <span className="text-[10px] text-primary/80 font-medium">
+          <span className="text-xs text-primary/80 font-medium">
             ✓ Curtido {curtidoEm ? `às ${curtidoEm}` : ''}
           </span>
         )}
@@ -208,13 +208,13 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
             <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
               {comentarios.map((c) => (
                 <div key={c.id} className="flex gap-2.5 p-2 rounded-xl bg-surface border border-surface-input">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-input text-[10px] font-bold text-text-muted">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-input text-xs font-bold text-text-muted">
                     {c.autor_nome.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-bold text-text">{c.autor_nome}</p>
-                      <span className="text-[9px] text-text-muted">{formatHora(c.criado_em)}</span>
+                      <span className="text-xs text-text-muted">{formatHora(c.criado_em)}</span>
                     </div>
                     <p className="text-xs text-text-muted leading-relaxed mt-0.5 break-words">{c.texto}</p>
                   </div>

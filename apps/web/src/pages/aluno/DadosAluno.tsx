@@ -428,7 +428,7 @@ export default function DadosAluno() {
           {imcCalculado !== null && imcBadge && (
             <div className={`rounded-xl border p-3 flex items-center justify-between ${imcBadge.cor}`}>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">IMC Calculado</p>
+                <p className="text-xs font-bold uppercase tracking-wider opacity-80">IMC Calculado</p>
                 <p className="text-xl font-black">{imcCalculado}</p>
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-black/20">
@@ -523,7 +523,7 @@ export default function DadosAluno() {
                 )
               })}
             </div>
-            <p className="text-[10px] text-text-muted mt-1.5">
+            <p className="text-xs text-text-muted mt-1.5">
               Ao adotar um plano pronto, exercícios que sobrecarreguem essas articulações serão trocados por alternativas seguras.
             </p>
           </div>
@@ -629,7 +629,7 @@ export default function DadosAluno() {
             )}
           </div>
 
-          <p className="text-[11px] text-text-muted leading-relaxed">
+          <p className="text-xs text-text-muted leading-relaxed">
             {perfil?.professor
               ? 'Seu professor envia fichas personalizadas, mas você também pode criar e editar seus treinos.'
               : 'Você está no modo autogestão. Você cria e gerencia 100% das suas fichas de treino.'}

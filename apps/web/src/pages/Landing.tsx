@@ -316,12 +316,12 @@ export default function Landing() {
                   <div className="space-y-3">
                     <h4 className="text-sm font-bold text-foreground">Push — Peito + Ombro + Triceps</h4>
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-bold text-primary uppercase">Peito (3 exercicios)</p>
-                      <p className="text-[10px] text-muted-foreground">Supino Reto, Crucifixo, Peck Deck — 3x8-12</p>
-                      <p className="text-[11px] font-bold text-primary uppercase mt-2">Ombro (3 exercicios)</p>
-                      <p className="text-[10px] text-muted-foreground">Desenvolvimento, Elevacao Lateral, Frontal — 3x10-12</p>
-                      <p className="text-[11px] font-bold text-primary uppercase mt-2">Triceps (3 exercicios)</p>
-                      <p className="text-[10px] text-muted-foreground">Pushdown, Testa, Dip — 3x10-12</p>
+                      <p className="text-xs font-bold text-primary uppercase">Peito (3 exercicios)</p>
+                      <p className="text-xs text-muted-foreground">Supino Reto, Crucifixo, Peck Deck — 3x8-12</p>
+                      <p className="text-xs font-bold text-primary uppercase mt-2">Ombro (3 exercicios)</p>
+                      <p className="text-xs text-muted-foreground">Desenvolvimento, Elevacao Lateral, Frontal — 3x10-12</p>
+                      <p className="text-xs font-bold text-primary uppercase mt-2">Triceps (3 exercicios)</p>
+                      <p className="text-xs text-muted-foreground">Pushdown, Testa, Dip — 3x10-12</p>
                     </div>
                   </div>
                 </div>
@@ -435,12 +435,12 @@ export default function Landing() {
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">CR</div>
                     <div>
                       <p className="text-xs font-semibold text-foreground">Carlos R.</p>
-                      <p className="text-[10px] text-muted-foreground">concluiu o treino na Iron Force</p>
+                      <p className="text-xs text-muted-foreground">concluiu o treino na Iron Force</p>
                     </div>
-                    <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">TREINO CONCLUIDO</span>
+                    <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">TREINO CONCLUIDO</span>
                   </div>
                   <p className="text-xs text-foreground font-medium">Push — Peito + Ombro + Triceps</p>
-                  <div className="flex gap-3 text-[11px] text-muted-foreground">
+                  <div className="flex gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Heart className="w-3 h-3" /> 12</span>
                     <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> 3</span>
                   </div>

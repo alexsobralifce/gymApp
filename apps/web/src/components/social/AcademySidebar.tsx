@@ -53,17 +53,17 @@ export default function AcademySidebar() {
                 className="h-7 w-7 rounded-full object-cover border border-surface-input shrink-0"
               />
             ) : (
-              <div className="h-7 w-7 rounded-full bg-surface-input flex items-center justify-center text-[10px] font-bold text-text-muted shrink-0">
+              <div className="h-7 w-7 rounded-full bg-surface-input flex items-center justify-center text-xs font-bold text-text-muted shrink-0">
                 {getInitials(c.nome)}
               </div>
             )}
             <span className="text-xs text-text truncate flex-1">{c.nome}</span>
             {solicitados.has(c.id) ? (
-              <span className="text-[10px] text-text-muted shrink-0">Enviado</span>
+              <span className="text-xs text-text-muted shrink-0">Enviado</span>
             ) : (
               <button
                 onClick={() => handleSeguir(c.id)}
-                className="rounded-lg bg-primary/10 hover:bg-primary px-2 py-0.5 text-[10px] font-bold text-primary hover:text-white transition-all shrink-0 cursor-pointer"
+                className="rounded-lg bg-primary/10 hover:bg-primary px-2 py-0.5 text-xs font-bold text-primary hover:text-white transition-all shrink-0 cursor-pointer"
               >
                 Seguir
               </button>
