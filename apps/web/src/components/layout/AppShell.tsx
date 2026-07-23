@@ -3,7 +3,8 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
 import { api } from '../../api/client'
-import { useThemeStore } from '../../stores/theme'
+import { useThemeStore, THEME_BRANDS } from '../../stores/theme'
+import type { ThemeBrand } from '../../stores/theme'
 import {
   HomeIcon,
   DumbbellIcon,
@@ -241,7 +242,9 @@ export default function AppShell() {
   const logout = useAuthStore((s: AuthState) => s.logout)
   const user = useAuthStore((s: AuthState) => s.user)
   const theme = useThemeStore((s) => s.theme)
-  const toggleTheme = useThemeStore((s) => s.toggleTheme)
+  const mode = useThemeStore((s) => s.mode)
+  const setTheme = useThemeStore((s) => s.setTheme)
+  const setMode = useThemeStore((s) => s.setMode)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -341,7 +344,7 @@ export default function AppShell() {
               {entry.icon}
               <span>{entry.label}</span>
               {entry.label === 'Mural' && atividadeMural > 0 && (
-                <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-white">
+                <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                   {atividadeMural}
                 </span>
               )}
@@ -350,10 +353,10 @@ export default function AppShell() {
         )}
       </nav>
 
-      <div className="border-t border-surface-input p-3 space-y-1">
+      <div className="border-t border-border p-3 space-y-1">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-all duration-200 cursor-pointer"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-all duration-200 cursor-pointer"
         >
           <LogOutIcon className="h-5 w-5" />
           <span>Sair</span>
@@ -388,7 +391,7 @@ export default function AppShell() {
                 {entry.icon}
                 <span>{entry.label}</span>
                 {entry.label === 'Mural' && atividadeMural > 0 && (
-                  <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-white">
+                  <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                     {atividadeMural}
                   </span>
                 )}
@@ -430,44 +433,86 @@ export default function AppShell() {
                 </button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-surface-input bg-surface-card shadow-xl z-30 overflow-hidden animate-scale-in">
-                    <div className="flex items-center gap-3 px-4 py-4 border-b border-surface-input">
+                  <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-border bg-surface-card shadow-2xl z-30 overflow-hidden animate-scale-in">
+                    <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
                       <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="md" ringClass={`${ringColor} ring-offset-surface-card`} />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
                         <p className="text-xs text-text-muted truncate">{user?.email || ''}</p>
-                        <span className="inline-block mt-0.5 rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-text-muted">
+                        <span className="inline-block mt-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-text">
                           {getRoleLabel(role)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="py-1">
-                      <button
-                        onClick={toggleTheme}
-                        className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <PaletteIcon className="h-4 w-4 text-primary" />
-                          <span>Alternar Tema</span>
-                        </div>
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                          {theme === 'lime' ? 'Lima/Navy' : theme === 'red' ? 'Vermelho' : 'Violeta'}
-                        </span>
-                      </button>
+                    <div className="px-4 py-3 border-b border-border space-y-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                        <PaletteIcon className="h-3.5 w-3.5 text-primary" />
+                        Tema
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {THEME_BRANDS.map((b) => {
+                          const active = theme === b.id
+                          return (
+                            <button
+                              key={b.id}
+                              type="button"
+                              title={b.label}
+                              onClick={() => setTheme(b.id as ThemeBrand)}
+                              className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold transition-all cursor-pointer border ${
+                                active
+                                  ? 'border-primary bg-primary/15 text-text ring-1 ring-primary/40'
+                                  : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
+                              }`}
+                            >
+                              <span
+                                className={`h-5 w-5 rounded-full border-2 ${active ? 'border-text scale-110' : 'border-transparent'}`}
+                                style={{ backgroundColor: b.swatch }}
+                              />
+                              {b.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setMode('night')}
+                          className={`rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                            mode === 'night'
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
+                          }`}
+                        >
+                          Noite
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMode('day')}
+                          className={`rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                            mode === 'day'
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
+                          }`}
+                        >
+                          Dia
+                        </button>
+                      </div>
+                    </div>
 
+                    <div className="py-1.5">
                       {isAluno && (
                         <>
                           <button
                             onClick={handleDados}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
                           >
                             <UserCircleIcon className="h-4 w-4 text-text-muted" />
                             Dados do Aluno
                           </button>
                           <button
                             onClick={() => { setMenuOpen(false); navigate('/privacidade') }}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
                           >
                             <ShieldIcon className="h-4 w-4 text-text-muted" />
                             Privacidade
@@ -476,26 +521,15 @@ export default function AppShell() {
                       )}
                       <button
                         onClick={handleAlterarSenha}
-                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
                       >
                         <KeyIcon className="h-4 w-4 text-text-muted" />
                         Alterar Senha
                       </button>
-                      <button
-                        onClick={toggleTheme}
-                        className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <PaletteIcon className="h-4 w-4 text-primary" />
-                          <span>Alternar Tema</span>
-                        </div>
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                          {theme === 'lime' ? 'Lima/Navy' : theme === 'red' ? 'Vermelho' : 'Violeta'}
-                        </span>
-                      </button>
+                      <div className="my-1 border-t border-border" />
                       <button
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-colors cursor-pointer"
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                       >
                         <LogOutIcon className="h-4 w-4" />
                         Sair
@@ -592,7 +626,7 @@ export default function AppShell() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10 rounded-xl transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 rounded-xl transition-all cursor-pointer"
                 >
                   <LogOutIcon className="h-4 w-4" />
                   <span>Sair da Conta</span>
