@@ -10,9 +10,12 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export function useNotifications() {
+  const user = useAuthStore((s: AuthState) => s.user)
   const updatePushSubscription = useAuthStore((s: AuthState) => s.updatePushSubscription)
 
   useEffect(() => {
+    if (!user) return
+
     async function setup() {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
 
@@ -35,6 +38,6 @@ export function useNotifications() {
       await updatePushSubscription(subscription.toJSON())
     }
 
-    setup()
-  }, [])
+    setup().catch(() => {})
+  }, [user, updatePushSubscription])
 }

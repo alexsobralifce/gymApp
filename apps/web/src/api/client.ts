@@ -35,7 +35,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
-    window.location.href = '/login'
+    const pathName = window.location.pathname
+    const isAuthPage = pathName === '/login' || pathName === '/register' || pathName === '/'
+    if (!isAuthPage) {
+      window.location.replace('/login')
+    }
     throw new ApiError(401, 'Sessão expirada')
   }
 
