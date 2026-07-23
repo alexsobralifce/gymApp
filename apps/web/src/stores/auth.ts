@@ -10,8 +10,6 @@ export interface AuthState {
   login: (email: string, senha: string) => Promise<void>
   loginWithGoogle: (credential: string) => Promise<boolean> // returns isNew
   register: (nome: string, email: string, senha: string, role: string, telefone?: string) => Promise<void>
-  verifyEmail: (email: string, code: string) => Promise<void>
-  completeRegistration: (email: string, senha: string, role: string, academiaId?: string, dataNascimento?: string, pesoKg?: number, alturaCm?: number, sexo?: string, consentiuSocial?: boolean) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
   updatePushSubscription: (subscription: PushSubscriptionJSON | null) => Promise<void>
@@ -55,36 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       await api.register(nome, email, senha, role, telefone)
-      set({ loading: false })
-    } catch (err) {
-      set({ error: (err as Error).message, loading: false })
-      throw err
-    }
-  },
-
-  verifyEmail: async (email: string, code: string) => {
-    set({ loading: true, error: null })
-    try {
-      await api.verifyEmail(email, code)
-      set({ loading: false })
-    } catch (err) {
-      set({ error: (err as Error).message, loading: false })
-      throw err
-    }
-  },
-
-  completeRegistration: async (email: string, senha: string, role: string, academiaId?: string, dataNascimento?: string, pesoKg?: number, alturaCm?: number, sexo?: string, consentiuSocial?: boolean) => {
-    set({ loading: true, error: null })
-    try {
       await get().login(email, senha)
-      if (role === 'ALUNO') {
-        await api.criarPerfilAluno({ dataNascimento, pesoKg, alturaCm, sexo: sexo as 'MASCULINO' | 'FEMININO' | undefined, consentiuFeedSocial: consentiuSocial })
-        if (academiaId && academiaId !== 'AUTOGESTAO') {
-          await api.vincularAcademiaAluno(academiaId)
-        }
-      } else if (role === 'PROFESSOR') {
-        await api.criarPerfilProfessor()
-      }
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
       throw err

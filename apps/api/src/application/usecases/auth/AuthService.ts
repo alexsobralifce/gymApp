@@ -55,8 +55,6 @@ export class AuthService {
     }
 
     const senhaHash = await bcrypt.hash(input.senha, 12)
-    const code = String(Math.floor(100000 + Math.random() * 900000))
-    const codeExpira = new Date(Date.now() + 15 * 60 * 1000) // 15 minutos
 
     const usuario = await prisma.usuario.create({
       data: {
@@ -65,15 +63,14 @@ export class AuthService {
         senha_hash: senhaHash,
         role: input.role,
         telefone: input.telefone || null,
-        email_verify_code: code,
-        email_verify_code_expira: codeExpira,
+        email_verify_code: null,
+        email_verify_code_expira: null,
+        email_verified: true, // ← verificação desabilitada temporariamente
       },
       select: { id: true, nome: true, email: true, role: true, criado_em: true },
     })
 
-    await sendVerificationEmail(input.email, code)
-
-    return { message: 'Conta criada. Verifique seu e-mail para ativá-la.', usuario }
+    return { message: 'Conta criada com sucesso.', usuario }
   }
 
   /**
