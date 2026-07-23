@@ -122,7 +122,6 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/evolucao', label: 'Evolucao', icon: <ChartLineIcon className="h-5 w-5" /> },
         { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
-        { to: '/alterar-senha', label: 'Alterar Senha', icon: <KeyIcon className="h-5 w-5" /> },
       ]
     case 'PROFESSOR':
       return [
@@ -139,7 +138,6 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },
         { to: '/exercicios/criar', label: 'Exercicios', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/academias', label: 'Academias', icon: <Building2Icon className="h-5 w-5" /> },
-        { to: '/alterar-senha', label: 'Alterar Senha', icon: <KeyIcon className="h-5 w-5" /> },
       ]
     case 'ACADEMIA':
       return [
@@ -154,7 +152,6 @@ function getNavItems(role: string): NavEntry[] {
         },
         { to: '/professores', label: 'Professores', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/alunos', label: 'Alunos', icon: <UsersIcon className="h-5 w-5" /> },
-        { to: '/alterar-senha', label: 'Alterar Senha', icon: <KeyIcon className="h-5 w-5" /> },
       ]
     case 'ROOT':
       return [
@@ -311,6 +308,12 @@ export default function AppShell() {
     navigate('/dados')
   }
 
+  function handleAlterarSenha() {
+    setMenuOpen(false)
+    setDrawerOpen(false)
+    navigate('/alterar-senha')
+  }
+
   const renderDrawerContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-4 border-b border-surface-input">
@@ -348,14 +351,6 @@ export default function AppShell() {
       </nav>
 
       <div className="border-t border-surface-input p-3 space-y-1">
-        <button
-          onClick={toggleTheme}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
-        >
-          <PaletteIcon className="h-5 w-5 text-primary" />
-          <span>Tema: {theme === 'lime' ? 'Lima & Navy' : theme === 'red' ? 'Vermelho & Carvao' : 'Violeta & Grafite'}</span>
-        </button>
-
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-all duration-200 cursor-pointer"
@@ -426,16 +421,6 @@ export default function AppShell() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Theme toggle button */}
-              <button
-                onClick={toggleTheme}
-                title={`Tema atual: ${theme === 'lime' ? 'Lima & Navy' : theme === 'red' ? 'Vermelho & Carvao' : 'Violeta & Grafite'}. Clique para alterar.`}
-                className="flex items-center gap-1.5 rounded-xl border border-surface-input bg-surface-card px-2.5 py-1.5 text-xs font-semibold text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer"
-              >
-                <PaletteIcon className="h-4 w-4 text-primary" />
-                <span className="hidden sm:inline">{theme === 'lime' ? 'Lima' : theme === 'red' ? 'Vermelho' : 'Violeta'}</span>
-              </button>
-
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -489,6 +474,25 @@ export default function AppShell() {
                           </button>
                         </>
                       )}
+                      <button
+                        onClick={handleAlterarSenha}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                      >
+                        <KeyIcon className="h-4 w-4 text-text-muted" />
+                        Alterar Senha
+                      </button>
+                      <button
+                        onClick={toggleTheme}
+                        className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <PaletteIcon className="h-4 w-4 text-primary" />
+                          <span>Alternar Tema</span>
+                        </div>
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                          {theme === 'lime' ? 'Lima/Navy' : theme === 'red' ? 'Vermelho' : 'Violeta'}
+                        </span>
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-primary-light hover:bg-primary/10 transition-colors cursor-pointer"
@@ -573,18 +577,6 @@ export default function AppShell() {
               </button>
 
               <div className="pt-2 border-t border-surface-input flex flex-col gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMoreSheetOpen(false)
-                    navigate('/alterar-senha')
-                  }}
-                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-text-muted hover:text-text cursor-pointer"
-                >
-                  <KeyIcon className="h-4 w-4" />
-                  <span>Alterar Senha</span>
-                </button>
-
                 <button
                   type="button"
                   onClick={() => {
