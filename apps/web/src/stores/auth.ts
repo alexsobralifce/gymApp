@@ -8,7 +8,6 @@ export interface AuthState {
   error: string | null
 
   login: (email: string, senha: string) => Promise<void>
-  loginWithGoogle: (credential: string) => Promise<boolean> // returns isNew
   register: (nome: string, email: string, senha: string, role: string, telefone?: string) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
@@ -28,21 +27,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('refreshToken', tokens.refreshToken)
       const user = await api.getMe()
       set({ user, loading: false })
-    } catch (err) {
-      set({ error: (err as Error).message, loading: false })
-      throw err
-    }
-  },
-
-  loginWithGoogle: async (credential) => {
-    set({ loading: true, error: null })
-    try {
-      const result = await api.loginWithGoogle(credential)
-      localStorage.setItem('accessToken', result.accessToken)
-      localStorage.setItem('refreshToken', result.refreshToken)
-      const user = await api.getMe()
-      set({ user, loading: false })
-      return result.isNew
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
       throw err
