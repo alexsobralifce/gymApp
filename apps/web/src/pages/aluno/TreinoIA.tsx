@@ -213,7 +213,7 @@ export default function TreinoIA() {
             <div
               className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 step === s.num
-                  ? 'bg-primary text-white shadow-md'
+                  ? 'bg-primary text-primary-foreground shadow-md'
                   : step > s.num
                     ? 'bg-success/20 text-success border border-success/40'
                     : 'bg-surface-input text-text-muted'
@@ -287,7 +287,7 @@ export default function TreinoIA() {
           <button
             type="button"
             onClick={() => setStep(2)}
-            className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
           >
             Proximo Passo: Nivel & Dias
           </button>
@@ -343,7 +343,7 @@ export default function TreinoIA() {
                     onClick={() => setDiasPorSemana(num)}
                     className={`min-h-11 min-w-[52px] px-4 py-2.5 rounded-xl border text-center font-bold text-sm transition-all cursor-pointer ${
                       diasPorSemana === num
-                        ? 'bg-primary border-primary text-white shadow-md'
+                        ? 'bg-primary border-primary text-primary-foreground shadow-md'
                         : 'bg-surface-input/40 border-surface-input text-text-muted'
                     }`}
                   >
@@ -365,7 +365,7 @@ export default function TreinoIA() {
                     onClick={() => setTempoMinutos(num)}
                     className={`min-h-11 min-w-[52px] px-3 py-2.5 rounded-xl border text-center font-bold text-sm transition-all cursor-pointer ${
                       tempoMinutos === num
-                        ? 'bg-primary border-primary text-white shadow-md'
+                        ? 'bg-primary border-primary text-primary-foreground shadow-md'
                         : 'bg-surface-input/40 border-surface-input text-text-muted'
                     }`}
                   >
@@ -379,7 +379,7 @@ export default function TreinoIA() {
           <button
             type="button"
             onClick={() => setStep(3)}
-            className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
           >
             Proximo Passo: Grupos Musculares
           </button>
@@ -431,7 +431,7 @@ export default function TreinoIA() {
                     onClick={() => toggleGrupo(g.value)}
                     className={`px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                       selected
-                        ? 'bg-primary text-white border-primary shadow-sm'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : 'bg-surface-input/40 border-surface-input text-text-muted hover:border-primary/40'
                     }`}
                   >
@@ -452,7 +452,7 @@ export default function TreinoIA() {
             type="button"
             onClick={() => setStep(4)}
             disabled={!podeAvancarMusculos}
-            className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-40"
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-40"
           >
             Proximo Passo: Restricoes
           </button>
@@ -499,7 +499,7 @@ export default function TreinoIA() {
             type="button"
             onClick={handleGerarPrescricao}
             disabled={loading}
-            className="w-full py-3.5 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+            className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
           >
             {loading ? <LoadingSpinner size="sm" /> : 'Prescrever Treino com IA'}
           </button>
@@ -574,7 +574,7 @@ export default function TreinoIA() {
               >
                 <h3 className="text-sm font-bold text-text flex items-center gap-2">
                   {fichaGerada.sessoes?.length > 1 && (
-                    <span className="w-6 h-6 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center">
+                    <span className="w-6 h-6 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                       {sessao.dia_label}
                     </span>
                   )}
@@ -644,7 +644,7 @@ export default function TreinoIA() {
               type="button"
               onClick={handleConfirmarESalvar}
               disabled={salvando || !nomeTreino.trim()}
-              className="flex-1 py-3 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
+              className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
             >
               {salvando ? 'Salvando...' : 'Confirmar e Salvar'}  
             </button>
@@ -674,7 +674,7 @@ export default function TreinoIA() {
                   onClick={() => setGrupoFiltro(g.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     grupoFiltro === g.id
-                      ? 'bg-primary text-white shadow-sm'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'bg-surface-input text-text-muted hover:text-text'
                   }`}
                 >
@@ -708,7 +708,7 @@ export default function TreinoIA() {
                       type="button"
                       onClick={() => handleAdotarPlanoPronto(plano.id)}
                       disabled={salvando}
-                      className="w-full py-2 bg-surface-input hover:bg-primary hover:text-white text-text text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
+                      className="w-full py-2 bg-surface-input hover:bg-primary hover:text-primary-foreground text-text text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
                     >
                       {salvando ? 'Ativando...' : 'Usar esta Ficha'}
                     </button>

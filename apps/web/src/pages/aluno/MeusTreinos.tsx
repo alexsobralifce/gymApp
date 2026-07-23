@@ -197,7 +197,7 @@ export default function AlunoMeusTreinos() {
           </button>
           <button
             onClick={() => navigate('/treino/novo')}
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
           >
             <PlusIcon className="h-4 w-4" />
             Criar
@@ -283,7 +283,7 @@ export default function AlunoMeusTreinos() {
             key={t.id}
             onClick={() => setFichaAtiva(idx)}
             className={`flex-1 rounded-xl py-2 px-3 text-sm font-bold transition-all shrink-0 ${
-              fichaAtiva === idx ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text'
+              fichaAtiva === idx ? 'bg-primary text-primary-foreground shadow-sm' : 'text-text-muted hover:text-text'
             }`}
           >
             {t.nome}
@@ -414,7 +414,7 @@ export default function AlunoMeusTreinos() {
         ) : treino.status === 'EM_EXECUCAO' ? (
           <button
             onClick={() => navigate(`/treino/${treino.id}/inicio`)}
-            className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             Continuar Treino
           </button>
@@ -437,7 +437,7 @@ export default function AlunoMeusTreinos() {
               </button>
               <button
                 onClick={() => navigate(`/treino/${treino.id}/inicio`)}
-                className="flex-1 rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                className="flex-1 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
               >
                 {treino.status === 'CONCLUIDO' ? 'Fazer Novamente' : 'Iniciar Ficha de Treino'}
               </button>
@@ -522,7 +522,7 @@ export default function AlunoMeusTreinos() {
                     : selectedExercicio.dica?.split('\n')
                   )?.map((step, idx) => (
                     <div key={idx} className="flex gap-3 p-2.5 rounded-xl bg-surface border border-surface-input">
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                         {idx + 1}
                       </span>
                       <span className="text-sm text-text leading-relaxed">{step}</span>

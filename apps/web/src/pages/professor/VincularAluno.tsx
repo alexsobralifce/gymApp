@@ -48,7 +48,7 @@ export default function ProfessorVincularAluno() {
         <button
           type="submit"
           disabled={loading || !email}
-          className="w-full rounded bg-primary py-2 text-sm font-medium text-white disabled:opacity-40"
+          className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40"
         >
           {loading ? 'Vinculando...' : 'Vincular Aluno'}
         </button>

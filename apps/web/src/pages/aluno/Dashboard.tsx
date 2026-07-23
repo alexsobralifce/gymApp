@@ -135,7 +135,7 @@ export default function AlunoDashboard() {
               {modalNotificacao.tipo === 'NOVO_TREINO' && (
                 <button
                   onClick={() => { handleFecharNotificacao(); navigate('/meus-treinos') }}
-                  className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-bold text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+                  className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   Ver Treinos
                 </button>
@@ -157,7 +157,7 @@ export default function AlunoDashboard() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
           <div className="relative flex items-center gap-4">
-            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary text-lg font-bold text-white ring-4 ring-offset-2 ring-offset-surface-card ring-white/10`}>
+            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary text-lg font-bold text-primary-foreground ring-4 ring-offset-2 ring-offset-surface-card ring-white/10`}>
               {getInitials(user.nome)}
             </div>
             <div className="min-w-0">
@@ -366,7 +366,7 @@ export default function AlunoDashboard() {
             </p>
             <button
               onClick={() => navigate('/treino/novo')}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
             >
               Criar Treino
             </button>
@@ -397,7 +397,7 @@ export default function AlunoDashboard() {
 
                 <button
                   onClick={() => navigate(`/treino/${t.id}/inicio`)}
-                  className="mt-4 w-full rounded-xl gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+                  className="mt-4 w-full rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   Iniciar Treino
                 </button>

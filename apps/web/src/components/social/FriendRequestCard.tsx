@@ -10,7 +10,7 @@ interface FriendRequestCardProps {
 export default function FriendRequestCard({ amizade, onResponder }: FriendRequestCardProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-surface-card border border-surface-input p-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-white">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground">
         {getInitials(amizade.nome)}
       </div>
       <div className="min-w-0 flex-1">

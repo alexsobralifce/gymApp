@@ -292,7 +292,7 @@ export default function DadosAluno() {
                   className="h-20 w-20 rounded-full object-cover border-2 border-surface-input group-hover:border-primary transition-colors"
                 />
               ) : (
-                <div className="h-20 w-20 rounded-full gradient-primary flex items-center justify-center text-2xl font-bold text-white border-2 border-surface-input group-hover:border-primary transition-colors">
+                <div className="h-20 w-20 rounded-full gradient-primary flex items-center justify-center text-2xl font-bold text-primary-foreground border-2 border-surface-input group-hover:border-primary transition-colors">
                   {nome?.charAt(0)?.toUpperCase() || '?'}
                 </div>
               )}
@@ -349,7 +349,7 @@ export default function DadosAluno() {
           <button
             type="submit"
             disabled={salvandoPessoais}
-            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {salvandoPessoais ? 'Salvando...' : 'Salvar Informações Pessoais'}
           </button>
@@ -440,7 +440,7 @@ export default function DadosAluno() {
           <button
             type="submit"
             disabled={salvandoFisicos}
-            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {salvandoFisicos ? 'Salvando...' : 'Salvar Dados Físicos'}
           </button>
@@ -531,7 +531,7 @@ export default function DadosAluno() {
           <button
             type="submit"
             disabled={salvandoPreferencias}
-            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {salvandoPreferencias ? 'Salvando...' : 'Salvar Preferências'}
           </button>
@@ -579,7 +579,7 @@ export default function DadosAluno() {
                   type="button"
                   onClick={handleTrocarAcademia}
                   disabled={salvandoAcademia || !novaAcademiaId}
-                  className="flex-1 rounded-lg bg-primary py-1.5 text-xs font-bold text-white hover:brightness-110 transition-all disabled:opacity-40"
+                  className="flex-1 rounded-lg bg-primary py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 transition-all disabled:opacity-40"
                 >
                   {salvandoAcademia ? 'Salvando...' : 'Confirmar Troca'}
                 </button>

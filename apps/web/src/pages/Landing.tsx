@@ -115,7 +115,7 @@ export default function Landing() {
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 text-sm font-semibold rounded bg-primary text-white hover:brightness-110 transition-all duration-200"
+                className="px-4 py-2 text-sm font-semibold rounded bg-primary text-primary-foreground hover:brightness-110 transition-all duration-200"
               >
                 Criar Conta
               </Link>
@@ -149,7 +149,7 @@ export default function Landing() {
               </Link>
               <Link
                 to="/register"
-                className="flex-1 text-center py-3 text-sm font-semibold rounded bg-primary text-white"
+                className="flex-1 text-center py-3 text-sm font-semibold rounded bg-primary text-primary-foreground"
                 onClick={() => setMobileOpen(false)}
               >
                 Criar Conta
@@ -199,7 +199,7 @@ export default function Landing() {
             <div className="flex flex-wrap justify-center gap-3">
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded font-semibold text-white bg-primary hover:brightness-110 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/25 text-sm"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded font-semibold text-primary-foreground bg-primary hover:brightness-110 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/25 text-sm"
               >
                 Criar Conta Gratis
                 <ArrowRight className="w-4 h-4" />
@@ -432,7 +432,7 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-accent/10 blur-2xl rounded-full scale-75 translate-y-4" />
                 <div className="relative z-10 bg-card border border-border rounded-2xl p-4 shadow-xl space-y-3">
                   <div className="flex items-center gap-2 pb-2 border-b border-border">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">CR</div>
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">CR</div>
                     <div>
                       <p className="text-xs font-semibold text-foreground">Carlos R.</p>
                       <p className="text-xs text-muted-foreground">concluiu o treino na Iron Force</p>
@@ -569,7 +569,7 @@ export default function Landing() {
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               to="/register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold text-white bg-primary hover:brightness-110 transition-all shadow-xl shadow-primary/30 text-base"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold text-primary-foreground bg-primary hover:brightness-110 transition-all shadow-xl shadow-primary/30 text-base"
             >
               Criar Conta Gratis
               <ArrowRight className="w-5 h-5" />

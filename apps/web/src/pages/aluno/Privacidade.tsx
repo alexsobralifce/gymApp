@@ -114,7 +114,7 @@ checked={settings?.visibilidade_padrao === value}
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-white hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
+        className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
       >
         {saving ? 'Salvando...' : 'Salvar Configuracoes'}
       </button>

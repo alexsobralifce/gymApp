@@ -129,7 +129,7 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
             className="h-10 w-10 shrink-0 rounded-full object-cover border border-surface-input"
           />
         ) : (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-white">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground">
             {getInitials(post.autor_nome)}
           </div>
         )}
@@ -237,7 +237,7 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
               type="button"
               onClick={handleComentar}
               disabled={!novoTexto.trim() || enviando}
-              className="rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-white hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer shrink-0"
+              className="rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer shrink-0"
             >
               {enviando ? '...' : 'Enviar'}
             </button>

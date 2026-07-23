@@ -129,7 +129,7 @@ export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNex
           </button>
           <button
             onClick={onNext}
-            className="rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-white hover:brightness-110 cursor-pointer"
+            className="rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 cursor-pointer"
           >
             {isLast ? 'Entendi' : 'Próximo'}
           </button>

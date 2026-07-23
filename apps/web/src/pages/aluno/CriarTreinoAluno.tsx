@@ -57,7 +57,7 @@ function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void })
       <button
         type="button"
         onClick={onAdd}
-        className="rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
+        className="rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
       >
         + Add
       </button>
@@ -308,7 +308,7 @@ export default function AlunoCriarTreino() {
                       type="button"
                       onClick={() => toggleDia(i)}
                       className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer select-none transition-all ${
-                        diasSemana.includes(i) ? 'bg-primary text-white' : 'bg-surface text-text-muted border border-surface-input'
+                        diasSemana.includes(i) ? 'bg-primary text-primary-foreground' : 'bg-surface text-text-muted border border-surface-input'
                       }`}
                     >
                       {d}
@@ -424,7 +424,7 @@ export default function AlunoCriarTreino() {
             type="button"
             onClick={handleSalvar}
             disabled={enviando || exerciciosTreino.length === 0 || !nome.trim()}
-            className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-40 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md disabled:opacity-40 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             {enviando ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Salvar Treino'}
           </button>

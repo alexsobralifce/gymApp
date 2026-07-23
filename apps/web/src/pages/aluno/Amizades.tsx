@@ -71,7 +71,7 @@ export default function Amizades() {
             key={key}
             onClick={() => setTab(key as typeof tab)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-all cursor-pointer ${
-              tab === key ? 'bg-primary text-white' : 'text-text-muted hover:text-text'
+              tab === key ? 'bg-primary text-primary-foreground' : 'text-text-muted hover:text-text'
             }`}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -93,7 +93,7 @@ export default function Amizades() {
           ) : (
             amigos.map((a) => (
               <div key={a.id} className="flex items-center gap-3 rounded-xl bg-surface-card border border-surface-input p-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-white">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground">
                   {getInitials(a.nome)}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -142,7 +142,7 @@ export default function Amizades() {
             <button
               onClick={handleSolicitar}
               disabled={!emailBusca.trim()}
-              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
+              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
             >
               Solicitar
             </button>

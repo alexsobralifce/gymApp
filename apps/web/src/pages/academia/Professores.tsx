@@ -91,7 +91,7 @@ export default function AcademiaProfessores() {
                 {p.status === 'PENDENTE_ACADEMIA' && (
                   <button
                     onClick={() => autorizar(p.id)}
-                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110 transition-all cursor-pointer"
+                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
                   >
                     Aprovar
                   </button>

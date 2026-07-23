@@ -54,7 +54,7 @@ export default function App() {
   if (!ready) return (
     <div className="flex h-screen items-center justify-center bg-surface">
       <div className="flex flex-col items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-white">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
           G
         </div>
         <LoadingSpinner size="md" />

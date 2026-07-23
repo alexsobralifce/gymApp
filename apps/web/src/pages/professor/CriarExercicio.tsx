@@ -51,7 +51,7 @@ export default function ProfessorCriarExercicio() {
           <input type="url" placeholder="URL da imagem (opcional)" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)}
             className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
           <button type="submit" disabled={!nome}
-            className="w-full rounded bg-primary py-2 text-sm font-medium text-white disabled:opacity-40">Criar</button>
+            className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">Criar</button>
         </form>
       </div>
 

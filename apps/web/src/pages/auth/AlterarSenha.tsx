@@ -101,7 +101,7 @@ export default function AlterarSenha() {
           <button
             type="submit"
             disabled={saving}
-            className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-white shadow hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             {saving ? 'Salvando...' : 'Salvar Senha'}
           </button>

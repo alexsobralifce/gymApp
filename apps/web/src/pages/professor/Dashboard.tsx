@@ -86,7 +86,7 @@ export default function ProfessorDashboard() {
           <p className="text-sm text-text-muted">Nenhum aluno vinculado ao seu perfil.</p>
           <button
             onClick={() => navigate('/alunos/vincular')}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             <PlusIcon className="h-4 w-4" />
             Vincular Aluno
@@ -140,7 +140,7 @@ export default function ProfessorDashboard() {
                   </button>
                   <button
                     onClick={() => navigate(`/treinos/criar?alunoId=${aluno.id}`)}
-                    className="flex-1 rounded-xl bg-primary py-2.5 text-xs font-bold text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+                    className="flex-1 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <DumbbellIcon className="h-3.5 w-3.5 inline mr-1.5" />
                     Montar Treino

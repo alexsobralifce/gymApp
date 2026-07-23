@@ -99,7 +99,7 @@ export default function Login() {
         />
         <button
           type="submit" disabled={loading}
-          className="w-full rounded bg-primary py-2 text-sm font-medium text-white disabled:opacity-50 cursor-pointer"
+          className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 cursor-pointer"
         >
           {loading ? 'Entrando...' : 'Entrar'}
         </button>

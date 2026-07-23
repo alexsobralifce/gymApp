@@ -166,7 +166,7 @@ export default function AcademiaDashboard() {
         <button
           type="submit"
           disabled={!nome || cnpj.replace(/\D/g, '').length !== 14}
-          className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
+          className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
         >
           Cadastrar Academia
         </button>

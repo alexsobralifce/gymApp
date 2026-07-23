@@ -146,7 +146,7 @@ export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
             <button
               type="button"
               onClick={handleUpload}
-              className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
+              className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
             >
               Confirmar e publicar
             </button>

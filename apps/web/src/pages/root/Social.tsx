@@ -78,7 +78,7 @@ function Pagination({
           <button
             key={p}
             onClick={() => onChange(p)}
-            className={`rounded px-3 py-1 text-sm ${p === page ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface-input'}`}
+            className={`rounded px-3 py-1 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'text-text-muted hover:bg-surface-input'}`}
           >
             {p}
           </button>

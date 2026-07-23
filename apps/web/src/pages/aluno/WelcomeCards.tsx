@@ -68,7 +68,7 @@ export default function WelcomeCards() {
         <div className="flex flex-col items-center gap-3">
           <button
             onClick={dismiss}
-            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white hover:brightness-110 transition-all cursor-pointer"
+            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
           >
             Começar
           </button>

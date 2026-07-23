@@ -134,7 +134,7 @@ export default function RegisterWizard() {
           )}
           <button
             type="submit" disabled={loading || !canProceed()}
-            className="flex-1 rounded bg-primary py-2 text-sm font-medium text-white disabled:opacity-50 hover:brightness-110 transition-all cursor-pointer"
+            className="flex-1 rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 hover:brightness-110 transition-all cursor-pointer"
           >
             {loading ? 'Cadastrando...' : step < totalSteps - 1 ? 'Próximo' : 'Cadastrar'}
           </button>

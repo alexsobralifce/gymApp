@@ -189,7 +189,7 @@ export default function BibliotecaPlanos() {
                 key={`rec-${rec.id}`}
                 className="bg-gradient-to-br from-primary/10 via-surface to-surface border border-primary/30 rounded-2xl p-5 shadow-sm hover:border-primary transition-all relative overflow-hidden flex flex-col justify-between"
               >
-                <div className="absolute top-3 right-3 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                   Recomendado ★
                 </div>
                 <div>
@@ -221,7 +221,7 @@ export default function BibliotecaPlanos() {
                     type="button"
                     onClick={() => handleAdotarPlano(rec.id)}
                     disabled={adotandoId === rec.id}
-                    className="flex-1 py-2 px-3 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl transition-all text-center cursor-pointer disabled:opacity-50"
+                    className="flex-1 py-2 px-3 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl transition-all text-center cursor-pointer disabled:opacity-50"
                   >
                     {adotandoId === rec.id ? 'Adotando...' : 'Adotar Plano'}
                   </button>
@@ -298,7 +298,7 @@ export default function BibliotecaPlanos() {
                     type="button"
                     onClick={() => handleAdotarPlano(plano.id)}
                     disabled={adotandoId === plano.id}
-                    className="flex-1 py-2 text-center text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 py-2 text-center text-xs font-bold text-primary-foreground bg-primary hover:bg-primary/90 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                   >
                     {adotandoId === plano.id ? 'Adotando...' : 'Adotar'}
                   </button>
@@ -426,7 +426,7 @@ export default function BibliotecaPlanos() {
                       setPlanoSelecionado(null)
                       handleAdotarPlano(id)
                     }}
-                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md"
+                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md"
                   >
                     Adotar este Plano
                   </button>

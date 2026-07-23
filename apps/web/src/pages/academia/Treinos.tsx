@@ -150,7 +150,7 @@ export default function AcademiaTreinos() {
                   <td className="p-4 text-right">
                     <button
                       onClick={() => navigate(`/treinos/criar?alunoId=${aluno.id}`)}
-                      className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/95 transition-colors cursor-pointer"
+                      className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/95 transition-colors cursor-pointer"
                     >
                       + Novo
                     </button>
@@ -257,7 +257,7 @@ export default function AcademiaTreinos() {
                       onClick={() => toggleDia(Number(k))}
                       className={`rounded px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
                         form.diasSemana.includes(Number(k))
-                          ? 'bg-primary text-white'
+                          ? 'bg-primary text-primary-foreground'
                           : 'bg-surface text-text-muted border border-surface-input hover:border-primary'
                       }`}
                     >
@@ -278,7 +278,7 @@ export default function AcademiaTreinos() {
               <button
                 onClick={handleUpdateTreino}
                 disabled={saving || !form.nome || form.diasSemana.length === 0}
-                className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
+                className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
               >
                 {saving ? 'Salvando...' : 'Salvar'}
               </button>
@@ -331,7 +331,7 @@ export default function AcademiaTreinos() {
               <button
                 onClick={handleCloneTreino}
                 disabled={saving || !alunoDestinoId}
-                className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
+                className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
               >
                 {saving ? 'Clonando...' : 'Clonar'}
               </button>

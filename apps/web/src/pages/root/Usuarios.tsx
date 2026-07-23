@@ -49,7 +49,7 @@ const inputClass =
   'w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none'
 
 const btnPrimary =
-  'rounded bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-40'
+  'rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40'
 
 const btnGhost =
   'rounded border border-surface-input px-4 py-2 text-sm text-text-muted'
@@ -98,7 +98,7 @@ function Pagination({
           <button
             key={p}
             onClick={() => onChange(p)}
-            className={`rounded px-3 py-1 text-sm ${p === page ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface-input'}`}
+            className={`rounded px-3 py-1 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'text-text-muted hover:bg-surface-input'}`}
           >
             {p}
           </button>
@@ -553,7 +553,7 @@ function EditAcademiaModal({
             type="button"
             onClick={handleResetPassword}
             disabled={newPassword.length < 8}
-            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
             Resetar
           </button>
@@ -670,7 +670,7 @@ function EditProfessorModal({
             type="button"
             onClick={handleResetPassword}
             disabled={newPassword.length < 8}
-            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
             Resetar
           </button>
@@ -801,7 +801,7 @@ function EditAlunoModal({
             type="button"
             onClick={handleResetPassword}
             disabled={newPassword.length < 8}
-            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
             Resetar
           </button>

@@ -21,13 +21,13 @@
   --text-3xl: 2rem;             /* 32px (ajuste pro mobile) */
   --text-3xl--line-height: 2.5rem;
 
-  /* Lima & Navy — night (default) — contraste profissional */
+  /* Lima & Navy — night (default) — texto preto no botão primary */
   --color-primary: #B8F000;
   --color-primary-dark: #8FCC00;
   --color-primary-hover: #C8FF33;
   --color-primary-active: #A3D900;
   --color-primary-light: #D4F56A;
-  --color-primary-foreground: #0A1628;
+  --color-primary-foreground: #000000;
 
   --color-surface: #0A1628;
   --color-surface-card: #122040;
@@ -38,7 +38,7 @@
   --color-text-disabled: #6B7A94;
 
   --color-accent: #B8F000;
-  --color-accent-foreground: #0A1628;
+  --color-accent-foreground: #000000;
 
   --color-destructive: #FF6B6B;
   --color-destructive-foreground: #FFFFFF;
@@ -207,11 +207,11 @@
   --color-menu-border: #33333A;
 
   --color-primary: #A78BFA;
-  --color-primary-dark: #7C3AED;
+  --color-primary-dark: #8B5CF6;
   --color-primary-hover: #C4B5FD;
-  --color-primary-active: #8B5CF6;
+  --color-primary-active: #9F7AEA;
   --color-primary-light: #DDD6FE;
-  --color-primary-foreground: #0A0A0B;
+  --color-primary-foreground: #000000;
 
   --color-surface: #0C0C0E;
   --color-surface-card: #16161A;
@@ -242,17 +242,18 @@
 }
 
 /* ─── Violeta — day ─── */
+/* Primary mais claro no dia para texto preto legível no botão */
 [data-theme="violet"][data-mode="day"] {
   --color-glass-bg: rgba(255, 255, 255, 0.92);
   --color-menu-hover: rgba(12, 12, 14, 0.06);
   --color-menu-border: #DCDCE8;
 
-  --color-primary: #7C3AED;
-  --color-primary-dark: #6D28D9;
-  --color-primary-hover: #8B5CF6;
-  --color-primary-active: #6D28D9;
-  --color-primary-light: #A78BFA;
-  --color-primary-foreground: #FFFFFF;
+  --color-primary: #B794F6;
+  --color-primary-dark: #9F7AEA;
+  --color-primary-hover: #C4B5FD;
+  --color-primary-active: #A78BFA;
+  --color-primary-light: #DDD6FE;
+  --color-primary-foreground: #000000;
 
   --color-surface: #F5F4FA;
   --color-surface-card: #FFFFFF;
@@ -279,7 +280,7 @@
   --color-muted-foreground: #4A4A5C;
   --color-border: #DCDCE8;
   --color-input: #EAE8F4;
-  --color-ring: #7C3AED;
+  --color-ring: #B794F6;
 }
 
 /* Tema laranja (legado) — mapeia para vermelho night */
@@ -381,27 +382,6 @@
     font-size: 16px;
   }
 
-  /* T1 fix: bg-primary e gradient-primary sempre usam foreground do tema */
-  .bg-primary,
-  .gradient-primary,
-  .gradient-accent {
-    color: var(--color-primary-foreground);
-
-    & *:not([class*="bg-"]) {
-      color: inherit;
-    }
-  }
-
-  /* text-white dentro de bg-primary perde p/ foreground do tema (lima = preto) */
-  .bg-primary.text-white,
-  .bg-primary .text-white,
-  .gradient-primary.text-white,
-  .gradient-primary .text-white,
-  .gradient-accent.text-white,
-  .gradient-accent .text-white {
-    color: var(--color-primary-foreground);
-  }
-
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -453,4 +433,26 @@
 
 @utility safe-top-margin {
   margin-top: env(safe-area-inset-top, 0px);
+}
+
+/*
+  Contraste em botões primary — FORA de @layer.
+  Root cause: @layer utilities (.text-white) vence @layer base mesmo com
+  especificidade menor. Unlayered + !important garante foreground do tema
+  (lima noite = #0A1628 quase preto).
+*/
+.bg-primary,
+.bg-primary.text-white,
+.hover\:bg-primary:hover,
+.gradient-primary,
+.gradient-primary.text-white,
+.gradient-accent,
+.gradient-accent.text-white {
+  color: var(--color-primary-foreground) !important;
+}
+
+.bg-primary *:not([class*="bg-"]),
+.gradient-primary *:not([class*="bg-"]),
+.gradient-accent *:not([class*="bg-"]) {
+  color: inherit !important;
 }

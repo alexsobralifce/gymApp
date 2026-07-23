@@ -12,9 +12,9 @@ export default function StepIndicator({ steps, current }: StepIndicatorProps) {
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 i < current
-                  ? 'bg-success text-white'
+                  ? 'bg-success text-primary-foreground'
                   : i === current
-                    ? 'bg-primary text-white ring-2 ring-primary/30'
+                    ? 'bg-primary text-primary-foreground ring-2 ring-primary/30'
                     : 'bg-surface-input text-text-muted'
               }`}
             >

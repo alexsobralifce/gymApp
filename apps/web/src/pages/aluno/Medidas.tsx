@@ -168,7 +168,7 @@ export default function AlunoMedidas() {
         {!mostrarNovo && !editando && (
           <button
             onClick={abrirNovo}
-            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110 transition-all cursor-pointer"
+            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
           >
             + Nova
           </button>
@@ -265,7 +265,7 @@ export default function AlunoMedidas() {
           <input type="text" placeholder="Observação (opcional)" value={observacao} onChange={(e) => setObservacao(e.target.value)}
             className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
           <button type="submit" disabled={saving || (!pesoKg && !alturaCm && !percentualBf && !massaMagraKg)}
-            className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer">
+            className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer">
             {saving ? 'Salvando...' : editando ? 'Atualizar medida' : 'Registrar medida'}
           </button>
         </form>
