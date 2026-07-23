@@ -33,6 +33,7 @@ import {
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
 import { resolveMediaUrl } from '../../lib/media'
+import { getInitials } from '../../lib/initials'
 
 interface NavItem {
   to: string
@@ -53,12 +54,7 @@ function isSection(entry: NavEntry): entry is NavSection {
   return 'children' in entry
 }
 
-function getInitials(nome?: string): string {
-  if (!nome) return '?'
-  const parts = nome.trim().split(/\s+/)
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
-}
+
 
 function getRoleRingColor(role: string): string {
   switch (role) {

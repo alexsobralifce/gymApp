@@ -3,17 +3,12 @@ import { api } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import { Building2Icon } from '../icons/Icon'
 import { resolveMediaUrl } from '../../lib/media'
+import { getInitials } from '../../lib/initials'
 
 interface Colega {
   id: string
   nome: string
   fotoUrl: string | null
-}
-
-function getIniciais(nome: string): string {
-  const parts = nome.split(' ')
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
 }
 
 export default function AcademySidebar() {
@@ -59,7 +54,7 @@ export default function AcademySidebar() {
               />
             ) : (
               <div className="h-7 w-7 rounded-full bg-surface-input flex items-center justify-center text-[10px] font-bold text-text-muted shrink-0">
-                {getIniciais(c.nome)}
+                {getInitials(c.nome)}
               </div>
             )}
             <span className="text-xs text-text truncate flex-1">{c.nome}</span>

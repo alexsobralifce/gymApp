@@ -3,13 +3,7 @@ import { api } from '../../api/client'
 import { UserSearchIcon, UsersIcon, XIcon } from '../../components/icons/Icon'
 import FriendRequestCard from '../../components/social/FriendRequestCard'
 import type { Amizade, AmizadePendente } from '../../types/api'
-
-function getInitials(nome?: string): string {
-  if (!nome) return '?'
-  const parts = nome.split(' ')
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
-}
+import { getInitials } from '../../lib/initials'
 
 export default function Amizades() {
   const [tab, setTab] = useState<'amigos' | 'solicitacoes' | 'adicionar'>('amigos')

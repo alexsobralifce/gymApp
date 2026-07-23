@@ -2,13 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import { TrophyIcon, Building2Icon } from '../../components/icons/Icon'
 import type { LeaderboardEntry } from '../../types/api'
-
-function getInitials(nome?: string): string {
-  if (!nome) return '?'
-  const parts = nome.split(' ')
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
-}
+import { getInitials } from '../../lib/initials'
 
 export default function Clubes() {
   const [academia, setAcademia] = useState<{ nome: string; id: string } | null>(null)

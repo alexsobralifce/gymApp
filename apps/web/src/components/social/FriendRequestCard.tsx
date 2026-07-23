@@ -1,16 +1,10 @@
 import { XIcon, CheckIcon } from '../icons/Icon'
 import type { AmizadePendente } from '../../types/api'
+import { getInitials } from '../../lib/initials'
 
 interface FriendRequestCardProps {
   amizade: AmizadePendente
   onResponder: (id: string, acao: 'ACEITAR' | 'RECUSAR') => void
-}
-
-function getInitials(nome?: string): string {
-  if (!nome) return '?'
-  const parts = nome.split(' ')
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
 }
 
 export default function FriendRequestCard({ amizade, onResponder }: FriendRequestCardProps) {

@@ -12,6 +12,7 @@ import {
   TimerIcon,
   RulerIcon,
 } from '../../components/icons/Icon'
+import { getInitials } from '../../lib/initials'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 
@@ -157,7 +158,7 @@ export default function AlunoDashboard() {
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
           <div className="relative flex items-center gap-4">
             <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary text-lg font-bold text-white ring-4 ring-offset-2 ring-offset-surface-card ring-white/10`}>
-              {getInitialsName(user.nome)}
+              {getInitials(user.nome)}
             </div>
             <div className="min-w-0">
               <p className="text-xs font-medium text-text-muted uppercase tracking-wider">
@@ -428,12 +429,7 @@ export default function AlunoDashboard() {
   )
 }
 
-function getInitialsName(nome?: string): string {
-  if (!nome) return '?'
-  const parts = nome.trim().split(/\s+/)
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
-}
+
 
 function getSaudacao(): string {
   const h = new Date().getHours()
