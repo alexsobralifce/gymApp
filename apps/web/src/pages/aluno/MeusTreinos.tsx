@@ -207,7 +207,7 @@ export default function AlunoMeusTreinos() {
 
       {feedback && (
         <div className={`rounded-xl p-3 text-sm text-center font-medium ${
-          feedback.includes('Erro') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-success/10 text-success border border-success/20'
+          feedback.includes('Erro') ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-success/10 text-success border border-success/20'
         }`}>
           {feedback}
         </div>
@@ -238,7 +238,7 @@ export default function AlunoMeusTreinos() {
                   onClick={() => handleClickDia(dia)}
                   className={`w-9 h-9 rounded-full text-xs font-semibold flex items-center justify-center transition-all relative
                     ${diasComTreino.has(dataDoDia(dia))
-                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 cursor-pointer'
+                      ? 'bg-success/20 text-success hover:bg-green-500/30 cursor-pointer'
                       : 'text-text-muted cursor-default'}
                     ${dataDoDia(dia) === diaAtualStr ? 'ring-2 ring-primary ring-offset-1 ring-offset-surface-card' : ''}
                     ${diaSelecionado === dataDoDia(dia) ? 'bg-green-500 text-white' : ''}
@@ -361,7 +361,7 @@ export default function AlunoMeusTreinos() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleResponder(treino.id, 'RECUSAR')}
-                className="flex-1 rounded-xl border border-red-500/30 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/10 active:scale-95 transition-all"
+                className="flex-1 rounded-xl border border-red-500/30 py-2.5 text-sm font-bold text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
               >
                 Recusar
               </button>
@@ -382,7 +382,7 @@ export default function AlunoMeusTreinos() {
               </button>
               <button
                 onClick={() => setDeletingTreino(treino)}
-                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-red-400 hover:text-red-300 hover:border-red-400/40 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-destructive hover:text-red-300 hover:border-red-400/40 hover:bg-destructive/10 active:scale-95 transition-all cursor-pointer"
                 title="Excluir treino"
               >
                 <Trash2Icon className="h-5 w-5" />
@@ -404,7 +404,7 @@ export default function AlunoMeusTreinos() {
               </button>
               <button
                 onClick={() => setDeletingTreino(treino)}
-                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-red-400 hover:text-red-300 hover:border-red-400/40 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-destructive hover:text-red-300 hover:border-red-400/40 hover:bg-destructive/10 active:scale-95 transition-all cursor-pointer"
                 title="Excluir treino"
               >
                 <Trash2Icon className="h-5 w-5" />
@@ -430,7 +430,7 @@ export default function AlunoMeusTreinos() {
               </button>
               <button
                 onClick={() => setDeletingTreino(treino)}
-                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-red-400 hover:text-red-300 hover:border-red-400/40 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-destructive hover:text-red-300 hover:border-red-400/40 hover:bg-destructive/10 active:scale-95 transition-all cursor-pointer"
                 title="Excluir treino"
               >
                 <Trash2Icon className="h-5 w-5" />

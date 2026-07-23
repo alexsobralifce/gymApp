@@ -6,11 +6,11 @@ const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const STATUS_COR: Record<string, string> = {
   CADASTRADO: 'bg-surface-input text-text-muted',
   ENVIADO: 'bg-blue-500/10 text-blue-400',
-  ACEITO: 'bg-green-500/10 text-green-400',
-  RECUSADO: 'bg-red-500/10 text-red-400',
+  ACEITO: 'bg-success/10 text-success',
+  RECUSADO: 'bg-destructive/10 text-destructive',
   EM_ABERTO: 'bg-yellow-500/10 text-yellow-400',
   EM_EXECUCAO: 'bg-primary/10 text-primary',
-  CONCLUIDO: 'bg-green-500/10 text-success',
+  CONCLUIDO: 'bg-success/10 text-success',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -88,7 +88,7 @@ export default function ProfessorFichas() {
       <h1 className="mb-6 text-xl font-bold text-text">Fichas de Treino</h1>
 
       {feedback && (
-        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-surface-card text-success'}`}>
+        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
           {feedback}
         </div>
       )}

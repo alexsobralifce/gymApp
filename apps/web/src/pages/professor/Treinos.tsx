@@ -10,8 +10,8 @@ const DIA_LABEL: Record<number, string> = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qu
 const STATUS_COR: Record<string, string> = {
   CADASTRADO: 'text-text-muted bg-surface border border-surface-input',
   ENVIADO: 'text-blue-400 bg-blue-500/10 border border-blue-500/20',
-  ACEITO: 'text-green-400 bg-green-500/10 border border-green-500/20',
-  RECUSADO: 'text-red-400 bg-red-500/10 border border-red-500/20',
+  ACEITO: 'text-success bg-success/10 border border-green-500/20',
+  RECUSADO: 'text-destructive bg-destructive/10 border border-destructive/20',
   EM_ABERTO: 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20',
   EM_EXECUCAO: 'text-primary bg-primary/10 border border-primary/20',
   CONCLUIDO: 'text-success bg-success/10 border border-success/20',
@@ -229,7 +229,7 @@ export default function ProfessorTreinos() {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-text">{t.nome}</p>
                         {t.is_template && (
-                          <span className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                          <span className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold text-warning bg-amber-400/10 border border-amber-400/20">
                             Template
                           </span>
                         )}
@@ -246,14 +246,14 @@ export default function ProfessorTreinos() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleToggleTemplate(t.id, !t.is_template)}
-                        className={`text-xs hover:underline cursor-pointer ${t.is_template ? 'text-amber-400' : 'text-amber-500'}`}
+                        className={`text-xs hover:underline cursor-pointer ${t.is_template ? 'text-warning' : 'text-amber-500'}`}
                       >
                         {t.is_template ? 'Desmarcar Template' : 'Template'}
                       </button>
                       {t.is_template && (
                         <button
                           onClick={() => { setViewingTreinos(null); openCloneLoteModal(t.id, t.nome) }}
-                          className="text-xs text-green-400 hover:underline cursor-pointer"
+                          className="text-xs text-success hover:underline cursor-pointer"
                         >
                           Clonar em Lote
                         </button>
@@ -289,7 +289,7 @@ export default function ProfessorTreinos() {
                         setDeletingTreino({ id: t.id, nome: t.nome })
                         setViewingTreinos(null)
                       }}
-                      className="text-xs text-red-400 hover:underline cursor-pointer"
+                      className="text-xs text-destructive hover:underline cursor-pointer"
                     >
                       Deletar
                     </button>
@@ -417,7 +417,7 @@ export default function ProfessorTreinos() {
             <p className="mt-1 text-sm text-text-muted">
               Clonando: <span className="text-text font-medium">{cloningLote.nome}</span>
             </p>
-            <div className="mt-1 text-xs text-amber-400">
+            <div className="mt-1 text-xs text-warning">
               {selectedAlunoIds.length} aluno(s) selecionado(s)
             </div>
             <div className="mt-3">

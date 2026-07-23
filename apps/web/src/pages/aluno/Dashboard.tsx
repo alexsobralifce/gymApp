@@ -22,7 +22,7 @@ function calcularIMC(pesoKg: number | null | undefined, alturaCm: number | null 
 
 function classificarIMC(imc: number): { label: string; cor: string } {
   if (imc < 18.5) return { label: 'Abaixo do peso', cor: 'text-blue-400' }
-  if (imc < 25) return { label: 'Peso normal', cor: 'text-green-400' }
+  if (imc < 25) return { label: 'Peso normal', cor: 'text-success' }
   if (imc < 30) return { label: 'Sobrepeso', cor: 'text-accent' }
   if (imc < 35) return { label: 'Obesidade grau I', cor: 'text-primary-light' }
   if (imc < 40) return { label: 'Obesidade grau II', cor: 'text-primary' }
@@ -231,8 +231,8 @@ export default function AlunoDashboard() {
           icon={<TrophyIcon className="h-5 w-5" />}
           value={concluidos.length}
           label="Concluidos"
-          color="text-green-400"
-          bg="bg-green-500/10"
+          color="text-success"
+          bg="bg-success/10"
         />
       </div>
 
@@ -287,7 +287,7 @@ export default function AlunoDashboard() {
             onClick={() => navigate('/evolucao')}
             className="flex items-center gap-3 p-3 rounded-2xl bg-surface-card border border-surface-input hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-success/10 text-success flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
               📊
             </div>
             <div className="min-w-0">

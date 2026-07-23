@@ -74,7 +74,7 @@ export default function RootPainel() {
                 <h3 className="font-semibold text-text">{a.nome}</h3>
                 <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
                 <div className="mt-1 flex gap-2 text-xs">
-                  <span className={`rounded-full px-2 py-0.5 ${a.status === 'ATIVO' ? 'bg-green-500/10 text-green-400' : a.status === 'PENDENTE' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary-light'}`}>
+                  <span className={`rounded-full px-2 py-0.5 ${a.status === 'ATIVO' ? 'bg-success/10 text-success' : a.status === 'PENDENTE' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary-light'}`}>
                     {a.status}
                   </span>
                   <span className="text-text-muted">{a._count.professores} profs</span>
@@ -85,7 +85,7 @@ export default function RootPainel() {
               <div className="flex gap-1 items-center">
                 {a.status === 'PENDENTE' && (
                   <>
-                    <button onClick={() => handleAcademia(a.id, 'APROVAR')} className="rounded bg-green-500/10 px-2 py-1 text-xs text-green-400">Aprovar</button>
+                    <button onClick={() => handleAcademia(a.id, 'APROVAR')} className="rounded bg-success/10 px-2 py-1 text-xs text-success">Aprovar</button>
                     <button onClick={() => handleAcademia(a.id, 'REJEITAR')} className="rounded bg-primary/10 px-2 py-1 text-xs text-primary-light">Rejeitar</button>
                   </>
                 )}
@@ -104,7 +104,7 @@ export default function RootPainel() {
                   </>
                 )}
                 {a.status === 'REJEITADO' && (
-                  <button onClick={() => handleStatus(a.id, 'ATIVO')} className="rounded bg-green-500/10 px-2 py-1 text-xs text-green-400">Habilitar</button>
+                  <button onClick={() => handleStatus(a.id, 'ATIVO')} className="rounded bg-success/10 px-2 py-1 text-xs text-success">Habilitar</button>
                 )}
               </div>
             </div>

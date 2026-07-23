@@ -73,7 +73,7 @@ export default function AlunoTreinoInicio() {
             <span className="text-[10px] text-text-muted">Exercicios</span>
           </div>
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
-            <TrophyIcon className="h-5 w-5 text-amber-400 mb-1" />
+            <TrophyIcon className="h-5 w-5 text-warning mb-1" />
             <span className="text-lg font-bold text-text">{totalSeries}</span>
             <span className="text-[10px] text-text-muted">Series</span>
           </div>
@@ -106,7 +106,7 @@ export default function AlunoTreinoInicio() {
         )}
 
         {error && (
-          <div className="mt-4 w-full max-w-xs rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-center text-sm text-red-400 animate-slide-up">
+          <div className="mt-4 w-full max-w-xs rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-center text-sm text-destructive animate-slide-up">
             {error}
           </div>
         )}

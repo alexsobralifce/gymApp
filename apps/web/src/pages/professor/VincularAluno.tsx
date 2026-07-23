@@ -31,7 +31,7 @@ export default function ProfessorVincularAluno() {
       </p>
 
       {feedback && (
-        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-surface-card text-success'}`}>
+        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
           {feedback}
         </div>
       )}

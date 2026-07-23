@@ -69,7 +69,7 @@ export default function ProfessorDashboard() {
           <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">Treinos</p>
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
-          <ActivityIcon className="h-5 w-5 text-green-400 mx-auto mb-2" />
+          <ActivityIcon className="h-5 w-5 text-success mx-auto mb-2" />
           <p className="text-xl font-bold text-text">{alunosComTreino}</p>
           <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">Ativos</p>
         </div>

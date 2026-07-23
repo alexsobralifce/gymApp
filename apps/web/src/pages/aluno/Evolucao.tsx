@@ -159,13 +159,13 @@ export default function AlunoEvolucao() {
       {correlacoes && Object.keys(correlacoes).length > 0 && (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <TimerIcon className="h-4 w-4 text-amber-400" />
+            <TimerIcon className="h-4 w-4 text-warning" />
             <h2 className="text-sm font-bold text-text uppercase tracking-wider">Correlacoes</h2>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(correlacoes).map(([key, val]) => (
               <div key={key} className="rounded-xl bg-surface border border-surface-input p-3 text-center">
-                <div className={`text-xl font-extrabold ${val.r !== null && val.r > 0 ? 'text-success' : val.r !== null && val.r < 0 ? 'text-red-400' : 'text-text-muted'}`}>
+                <div className={`text-xl font-extrabold ${val.r !== null && val.r > 0 ? 'text-success' : val.r !== null && val.r < 0 ? 'text-destructive' : 'text-text-muted'}`}>
                   {val.r !== null ? (val.r >= 0 ? '+' : '') + val.r.toFixed(2) : '?'}
                 </div>
                 <div className="text-[10px] text-text-muted font-medium mt-0.5 leading-tight">{key.replace('Vs', ' vs ')}</div>
@@ -178,7 +178,7 @@ export default function AlunoEvolucao() {
       {correlacao?.sugerirAtualizacao && (
         <button
           onClick={() => api.calcularCorrelacoes().then(setCorrelacao)}
-          className="w-full rounded-xl bg-surface-card border border-amber-500/20 py-3 text-sm font-medium text-amber-400 hover:bg-amber-500/10 active:scale-[0.98] transition-all cursor-pointer"
+          className="w-full rounded-xl bg-surface-card border border-warning/20 py-3 text-sm font-medium text-warning hover:bg-warning/10 active:scale-[0.98] transition-all cursor-pointer"
         >
           Dados desatualizados. Recalcular correlacoes?
         </button>

@@ -298,7 +298,7 @@ export default function ProfessorCriarTreino() {
 
       {feedback && (
         <div className={`rounded-xl p-4 text-sm font-semibold text-center ${
-          feedback.includes('Erro') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-success/10 text-success border border-success/20'
+          feedback.includes('Erro') ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-success/10 text-success border border-success/20'
         }`}>
           {feedback}
         </div>
@@ -342,7 +342,7 @@ export default function ProfessorCriarTreino() {
       {/* Seletor de Template */}
       {templates.length > 0 && (
         <div className="max-w-md bg-surface-card border border-amber-400/20 rounded-2xl p-4 shadow-sm">
-          <label className="mb-1.5 block text-xs font-semibold text-amber-400 uppercase tracking-wider">Criar a partir de Template</label>
+          <label className="mb-1.5 block text-xs font-semibold text-warning uppercase tracking-wider">Criar a partir de Template</label>
           <select
             value={selectedTemplateId}
             onChange={(e) => handleSelectTemplate(e.target.value)}
@@ -377,7 +377,7 @@ export default function ProfessorCriarTreino() {
                     <button
                       type="button"
                       onClick={() => removerFicha(idx)}
-                      className="text-text-muted hover:text-red-400 p-1 text-base leading-none transition-colors"
+                      className="text-text-muted hover:text-destructive p-1 text-base leading-none transition-colors"
                       title="Excluir esta ficha"
                     >
                       ×
@@ -521,7 +521,7 @@ export default function ProfessorCriarTreino() {
                               <button
                                 type="button"
                                 onClick={() => removerExercicio(idx)}
-                                className="p-1 text-red-400 hover:text-red-500 ml-1"
+                                className="p-1 text-destructive hover:text-red-500 ml-1"
                                 title="Remover exercício"
                               >
                                 🗑️

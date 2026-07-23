@@ -38,8 +38,8 @@ export default function RootVinculos() {
               <p className="text-xs text-text-muted">Solicitou vínculo com: <span className="text-text">{v.academia.nome}</span></p>
             </div>
             <div className="flex gap-1">
-              <button onClick={() => handle(v.id, 'APROVAR')} className="rounded bg-green-500/10 px-3 py-1 text-sm text-green-400">Aprovar</button>
-              <button onClick={() => handle(v.id, 'REJEITAR')} className="rounded bg-red-500/10 px-3 py-1 text-sm text-red-400">Rejeitar</button>
+              <button onClick={() => handle(v.id, 'APROVAR')} className="rounded bg-success/10 px-3 py-1 text-sm text-success">Aprovar</button>
+              <button onClick={() => handle(v.id, 'REJEITAR')} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Rejeitar</button>
             </div>
           </div>
         ))}

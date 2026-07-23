@@ -5,25 +5,29 @@
 @theme {
   --font-sans: 'DM Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  --color-primary: #9DD802;
-  --color-primary-dark: #78AA00;
-  --color-primary-hover: #B0F000;
-  --color-primary-active: #88C702;
-  --color-primary-light: #D4F57A;
+  --color-primary: #A8E600;
+  --color-primary-dark: #7EB800;
+  --color-primary-hover: #BCF520;
+  --color-primary-active: #92CC00;
+  --color-primary-light: #D8F57A;
+  --color-primary-foreground: #0B1F4B;
 
   --color-surface: #0B1F4B;
   --color-surface-card: #112660;
   --color-surface-input: #1D3270;
 
   --color-text: #F5F5F5;
-  --color-text-muted: #9BA8C0;
-  --color-text-disabled: #616161;
+  --color-text-muted: #A5B4CC;
+  --color-text-disabled: #6B7280;
 
-  --color-accent: #9DD802;
+  --color-accent: #A8E600;
+  --color-accent-foreground: #0B1F4B;
 
+  --color-destructive: #FF6B6B;
+  --color-destructive-foreground: #FFFFFF;
   --color-success: #22c55e;
-  --color-warning: #F2C230;
-  --color-info: #3b82f6;
+  --color-warning: #FBBF24;
+  --color-info: #60a5fa;
 
   --color-white: #FFFFFF;
 
@@ -34,14 +38,10 @@
   --color-secondary: #1D3270;
   --color-secondary-foreground: #F5F5F5;
   --color-muted: #112660;
-  --color-muted-foreground: #9BA8C0;
-  --color-accent-foreground: #0B1F4B;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #FFFFFF;
+  --color-muted-foreground: #A5B4CC;
   --color-border: #1D3270;
   --color-input: #1D3270;
-  --color-ring: #9DD802;
-  --color-primary-foreground: #0B1F4B;
+  --color-ring: #A8E600;
 
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -52,111 +52,128 @@
   --animate-scale-in: scale-in 0.2s ease-out;
 }
 
-/* Glass background variable per theme — overridden below */
 :root {
   --color-glass-bg: rgba(17, 38, 96, 0.85);
 }
 
+/* ─── Lima & Navy (default) — fine calibrado ─── */
+/* valores no :root / @theme acima, sem sobrescrita */
+
+/* ─── Vermelho & Carvao ─── */
 [data-theme="red"] {
   --color-glass-bg: rgba(26, 26, 26, 0.85);
 
-  --color-primary: #F20C0C;
-  --color-primary-dark: #BF213E;
-  --color-primary-hover: #F23D3D;
-  --color-primary-active: #F21B1B;
-  --color-primary-light: #F28585;
+  --color-primary: #FF3B3B;
+  --color-primary-dark: #CC1414;
+  --color-primary-hover: #FF5C5C;
+  --color-primary-active: #E62525;
+  --color-primary-light: #FF9999;
+  --color-primary-foreground: #FFFFFF;
 
   --color-surface: #0D0D0D;
   --color-surface-card: #1A1A1A;
   --color-surface-input: #2A2A2A;
 
-  --color-text: #F2F2F2;
-  --color-text-muted: #BFBFBF;
-  --color-text-disabled: #666666;
+  --color-text: #F5F5F5;
+  --color-text-muted: #D1D1D1;
+  --color-text-disabled: #717171;
 
-  --color-accent: #F2C230;
+  --color-accent: #FBBF24;
+  --color-accent-foreground: #0D0D0D;
+
+  --color-destructive: #FF5C5C;
+  --color-success: #22c55e;
+  --color-warning: #FBBF24;
 
   --color-background: #0D0D0D;
-  --color-foreground: #F2F2F2;
+  --color-foreground: #F5F5F5;
   --color-card: #1A1A1A;
-  --color-card-foreground: #F2F2F2;
+  --color-card-foreground: #F5F5F5;
   --color-secondary: #2A2A2A;
-  --color-secondary-foreground: #F2F2F2;
+  --color-secondary-foreground: #F5F5F5;
   --color-muted: #1A1A1A;
-  --color-muted-foreground: #BFBFBF;
-  --color-accent-foreground: #0D0D0D;
+  --color-muted-foreground: #D1D1D1;
   --color-border: #2A2A2A;
   --color-input: #2A2A2A;
-  --color-ring: #F20C0C;
-  --color-primary-foreground: #FFFFFF;
+  --color-ring: #FF3B3B;
 }
 
+/* ─── Violeta & Grafite ─── */
 [data-theme="violet"] {
   --color-glass-bg: rgba(13, 13, 13, 0.85);
 
-  --color-primary: #7D39EB;
-  --color-primary-dark: #6020C8;
-  --color-primary-hover: #9552F5;
-  --color-primary-active: #6B2EDC;
-  --color-primary-light: #C6FF33;
+  --color-primary: #8B5CF6;
+  --color-primary-dark: #6D28D9;
+  --color-primary-hover: #A78BFA;
+  --color-primary-active: #7C3AED;
+  --color-primary-light: #C4B5FD;
+  --color-primary-foreground: #FFFFFF;
 
-  --color-surface: #000000;
-  --color-surface-card: #0D0D0D;
-  --color-surface-input: #1A1A1A;
+  --color-surface: #0A0A0B;
+  --color-surface-card: #131315;
+  --color-surface-input: #1E1E22;
 
   --color-text: #FFFFFF;
-  --color-text-muted: #A0A0A0;
-  --color-text-disabled: #555555;
+  --color-text-muted: #B0B0C0;
+  --color-text-disabled: #6B6B7B;
 
   --color-accent: #C6FF33;
+  --color-accent-foreground: #0A0A0B;
 
-  --color-background: #000000;
+  --color-destructive: #FF6B6B;
+  --color-success: #22c55e;
+  --color-warning: #FBBF24;
+
+  --color-background: #0A0A0B;
   --color-foreground: #FFFFFF;
-  --color-card: #0D0D0D;
+  --color-card: #131315;
   --color-card-foreground: #FFFFFF;
-  --color-secondary: #1A1A1A;
+  --color-secondary: #1E1E22;
   --color-secondary-foreground: #FFFFFF;
-  --color-muted: #0D0D0D;
-  --color-muted-foreground: #A0A0A0;
-  --color-accent-foreground: #000000;
-  --color-border: #1A1A1A;
-  --color-input: #1A1A1A;
-  --color-ring: #7D39EB;
-  --color-primary-foreground: #FFFFFF;
+  --color-muted: #131315;
+  --color-muted-foreground: #B0B0C0;
+  --color-border: #1E1E22;
+  --color-input: #1E1E22;
+  --color-ring: #8B5CF6;
 }
 
+/* Tema laranja (legado) — mapeia para vermelho */
 [data-theme="orange"] {
-  --color-glass-bg: rgba(75, 75, 77, 0.85);
+  --color-glass-bg: rgba(26, 26, 26, 0.85);
 
-  --color-primary: #FFA500;
-  --color-primary-dark: #E69400;
-  --color-primary-hover: #FFB84D;
-  --color-primary-active: #D98C00;
-  --color-primary-light: #FFB84D;
+  --color-primary: #FF3B3B;
+  --color-primary-dark: #CC1414;
+  --color-primary-hover: #FF5C5C;
+  --color-primary-active: #E62525;
+  --color-primary-light: #FF9999;
+  --color-primary-foreground: #FFFFFF;
 
-  --color-surface: #2B2B2C;
-  --color-surface-card: #4B4B4D;
-  --color-surface-input: #5D5D60;
+  --color-surface: #0D0D0D;
+  --color-surface-card: #1A1A1A;
+  --color-surface-input: #2A2A2A;
 
-  --color-text: #FFF7E6;
-  --color-text-muted: #D1C7B7;
-  --color-text-disabled: #8C857B;
+  --color-text: #F5F5F5;
+  --color-text-muted: #D1D1D1;
+  --color-text-disabled: #717171;
 
-  --color-accent: #FFB84D;
+  --color-accent: #FBBF24;
+  --color-accent-foreground: #0D0D0D;
 
-  --color-background: #2B2B2C;
-  --color-foreground: #FFF7E6;
-  --color-card: #4B4B4D;
-  --color-card-foreground: #FFF7E6;
-  --color-secondary: #5D5D60;
-  --color-secondary-foreground: #FFF7E6;
-  --color-muted: #4B4B4D;
-  --color-muted-foreground: #D1C7B7;
-  --color-accent-foreground: #1C1C1E;
-  --color-border: #5D5D60;
-  --color-input: #5D5D60;
-  --color-ring: #FFA500;
-  --color-primary-foreground: #1C1C1E;
+  --color-destructive: #FF5C5C;
+  --color-success: #22c55e;
+  --color-warning: #FBBF24;
+
+  --color-background: #0D0D0D;
+  --color-foreground: #F5F5F5;
+  --color-card: #1A1A1A;
+  --color-card-foreground: #F5F5F5;
+  --color-secondary: #2A2A2A;
+  --color-secondary-foreground: #F5F5F5;
+  --color-muted: #1A1A1A;
+  --color-muted-foreground: #D1D1D1;
+  --color-border: #2A2A2A;
+  --color-input: #2A2A2A;
+  --color-ring: #FF3B3B;
 }
 
 @keyframes fade-in {
@@ -202,6 +219,17 @@
   body {
     @apply bg-surface text-text antialiased;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* T1 fix: bg-primary e gradient-primary sempre usam foreground do tema */
+  .bg-primary,
+  .gradient-primary,
+  .gradient-accent {
+    color: var(--color-primary-foreground);
+
+    & *:not([class*="bg-"]) {
+      color: inherit;
+    }
   }
 
   input[type="number"]::-webkit-inner-spin-button,

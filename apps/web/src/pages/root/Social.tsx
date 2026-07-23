@@ -175,7 +175,7 @@ export default function RootSocial() {
       <h1 className="mb-6 text-xl font-bold text-text">Moderacao Social</h1>
 
       {feedback && (
-        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-surface-card text-success'}`}>
+        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
           {feedback}
         </div>
       )}
@@ -241,7 +241,7 @@ export default function RootSocial() {
                         </div>
                         <button
                           onClick={() => setDeleteConfirm({ type: 'post', id: post.id, nome: post.autor_nome })}
-                          className="shrink-0 rounded bg-red-500/10 px-3 py-1 text-sm text-red-400"
+                          className="shrink-0 rounded bg-destructive/10 px-3 py-1 text-sm text-destructive"
                         >
                           Remover
                         </button>
@@ -276,7 +276,7 @@ export default function RootSocial() {
                       </div>
                       <button
                         onClick={() => setDeleteConfirm({ type: 'clube', id: clube.id, nome: clube.nome })}
-                        className="rounded bg-red-500/10 px-3 py-1 text-sm text-red-400"
+                        className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive"
                       >
                         Remover
                       </button>
@@ -302,7 +302,7 @@ export default function RootSocial() {
                           {a.aluno_nome} <span className="text-text-muted">-</span> {a.amigo_nome}
                         </p>
                         <div className="flex gap-2 text-xs text-text-muted">
-                          <span className={`rounded-full px-2 py-0.5 ${a.status === 'ACEITO' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                          <span className={`rounded-full px-2 py-0.5 ${a.status === 'ACEITO' ? 'bg-success/10 text-success' : 'bg-yellow-500/10 text-yellow-400'}`}>
                             {a.status}
                           </span>
                           <span>{new Date(a.criado_em).toLocaleDateString('pt-BR')}</span>

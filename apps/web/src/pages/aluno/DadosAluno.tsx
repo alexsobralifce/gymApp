@@ -22,10 +22,10 @@ function calcularIMC(pesoKg: number | null | undefined, alturaCm: number | null 
 
 function classificarIMC(imc: number): { label: string; cor: string } {
   if (imc < 18.5) return { label: 'Abaixo do peso', cor: 'text-blue-400 border-blue-500/30 bg-blue-500/10' }
-  if (imc < 25) return { label: 'Peso ideal', cor: 'text-green-400 border-green-500/30 bg-green-500/10' }
+  if (imc < 25) return { label: 'Peso ideal', cor: 'text-success border-green-500/30 bg-success/10' }
   if (imc < 30) return { label: 'Sobrepeso', cor: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' }
   if (imc < 35) return { label: 'Obesidade grau I', cor: 'text-orange-400 border-orange-500/30 bg-orange-500/10' }
-  return { label: 'Obesidade grau II/III', cor: 'text-red-400 border-red-500/30 bg-red-500/10' }
+  return { label: 'Obesidade grau II/III', cor: 'text-destructive border-red-500/30 bg-destructive/10' }
 }
 
 export default function DadosAluno() {
@@ -256,7 +256,7 @@ export default function DadosAluno() {
 
       {feedbackGeral && (
         <div className={`rounded-xl p-3 text-sm text-center font-medium ${
-          feedbackGeral.includes('Erro') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-success/10 text-success border border-success/20'
+          feedbackGeral.includes('Erro') ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-success/10 text-success border border-success/20'
         }`}>
           {feedbackGeral}
         </div>
@@ -271,7 +271,7 @@ export default function DadosAluno() {
 
         {feedbackPessoais && (
           <div className={`rounded-xl p-2.5 text-xs text-center font-medium ${
-            feedbackPessoais.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-success/10 text-success'
+            feedbackPessoais.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
           }`}>
             {feedbackPessoais}
           </div>
@@ -365,7 +365,7 @@ export default function DadosAluno() {
 
         {feedbackFisicos && (
           <div className={`rounded-xl p-2.5 text-xs text-center font-medium ${
-            feedbackFisicos.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-success/10 text-success'
+            feedbackFisicos.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
           }`}>
             {feedbackFisicos}
           </div>
@@ -456,7 +456,7 @@ export default function DadosAluno() {
 
         {feedbackPreferencias && (
           <div className={`rounded-xl p-2.5 text-xs text-center font-medium ${
-            feedbackPreferencias.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-success/10 text-success'
+            feedbackPreferencias.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
           }`}>
             {feedbackPreferencias}
           </div>
@@ -605,7 +605,7 @@ export default function DadosAluno() {
                 <button
                   type="button"
                   onClick={() => setModalSairAcademia(true)}
-                  className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all"
+                  className="rounded-lg border border-destructive/20 bg-red-500/5 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-all"
                 >
                   Sair
                 </button>

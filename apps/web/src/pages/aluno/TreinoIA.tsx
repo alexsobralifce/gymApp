@@ -484,7 +484,7 @@ export default function TreinoIA() {
                   onClick={() => toggleRestricao(item.key)}
                   className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                     selected
-                      ? 'bg-amber-500/10 border-amber-500 text-amber-500 font-bold'
+                      ? 'bg-warning/10 border-amber-500 text-amber-500 font-bold'
                       : 'bg-surface-input/40 border-surface-input text-text-muted'
                   }`}
                 >

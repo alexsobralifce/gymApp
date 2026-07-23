@@ -18,7 +18,7 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
     return () => clearTimeout(timer)
   }, [duration, onClose])
 
-  const bg = type === 'success' ? 'bg-green-500' : 'bg-red-500'
+  const bg = type === 'success' ? 'bg-success' : 'bg-destructive'
 
   return (
     <div

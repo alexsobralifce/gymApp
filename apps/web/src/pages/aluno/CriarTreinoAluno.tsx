@@ -266,7 +266,7 @@ export default function AlunoCriarTreino() {
 
       {feedback && (
         <div className={`rounded-xl p-4 text-sm font-semibold text-center ${
-          feedback.includes('Erro') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-success/10 text-success border border-success/20'
+          feedback.includes('Erro') ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-success/10 text-success border border-success/20'
         }`}>
           {feedback}
         </div>
@@ -406,7 +406,7 @@ export default function AlunoCriarTreino() {
                           <button
                             type="button"
                             onClick={() => removerExercicio(idx)}
-                            className="p-1 text-red-400 hover:text-red-500 ml-1 cursor-pointer"
+                            className="p-1 text-destructive hover:text-red-500 ml-1 cursor-pointer"
                             title="Remover exercício"
                           >
                             🗑️

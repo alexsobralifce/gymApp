@@ -136,7 +136,7 @@ export default function AcademiaAlunos() {
                           <span className="text-xs text-success animate-pulse">Salvo com sucesso!</span>
                         )}
                         {row.success === false && (
-                          <span className="text-xs text-red-400">Erro ao salvar</span>
+                          <span className="text-xs text-destructive">Erro ao salvar</span>
                         )}
                         <button
                           onClick={() => handleSalvar(a.id)}

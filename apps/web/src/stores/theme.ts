@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type Theme = 'lime' | 'red' | 'violet' | 'orange'
+export type Theme = 'lime' | 'red' | 'violet'
 
 interface ThemeState {
   theme: Theme
@@ -10,8 +10,12 @@ interface ThemeState {
 
 const getStoredTheme = (): Theme => {
   if (typeof window === 'undefined') return 'lime'
-  const saved = localStorage.getItem('gymapp_theme') as Theme
-  if (saved === 'red' || saved === 'violet' || saved === 'orange') return saved
+  const saved = localStorage.getItem('gymapp_theme')
+  if (saved === 'red' || saved === 'violet') return saved
+  if (saved === 'orange') {
+    localStorage.setItem('gymapp_theme', 'red')
+    return 'red'
+  }
   return 'lime'
 }
 
@@ -31,13 +35,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   toggleTheme: () => {
     const current = get().theme
     const next: Theme =
-      current === 'lime'
-        ? 'red'
-        : current === 'red'
-        ? 'violet'
-        : current === 'violet'
-        ? 'orange'
-        : 'lime'
+      current === 'lime' ? 'red' : current === 'red' ? 'violet' : 'lime'
     get().setTheme(next)
   },
 }))

@@ -12,10 +12,10 @@ interface IMCClassification {
 
 const IMC_TABLE: IMCClassification[] = [
   { label: 'Abaixo do peso', min: 0, max: 18.49, color: '#3b82f6', bgClass: 'bg-blue-500/20 text-blue-400' },
-  { label: 'Peso normal', min: 18.5, max: 24.99, color: '#22c55e', bgClass: 'bg-green-500/20 text-green-400' },
-  { label: 'Sobrepeso', min: 25, max: 29.99, color: '#f59e0b', bgClass: 'bg-amber-500/20 text-amber-400' },
+  { label: 'Peso normal', min: 18.5, max: 24.99, color: '#22c55e', bgClass: 'bg-success/20 text-success' },
+  { label: 'Sobrepeso', min: 25, max: 29.99, color: '#f59e0b', bgClass: 'bg-amber-500/20 text-warning' },
   { label: 'Obesidade grau I', min: 30, max: 34.99, color: '#f97316', bgClass: 'bg-orange-500/20 text-orange-400' },
-  { label: 'Obesidade grau II', min: 35, max: 39.99, color: '#ef4444', bgClass: 'bg-red-500/20 text-red-400' },
+  { label: 'Obesidade grau II', min: 35, max: 39.99, color: '#ef4444', bgClass: 'bg-red-500/20 text-destructive' },
   { label: 'Obesidade grau III', min: 40, max: null, color: '#dc2626', bgClass: 'bg-red-700/30 text-red-500' },
 ]
 
@@ -177,7 +177,7 @@ export default function AlunoMedidas() {
 
       {sucesso && (
         <div className={`rounded-xl p-3 text-sm text-center font-medium ${
-          sucesso.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-success/10 text-success'
+          sucesso.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
         }`}>
           {sucesso}
         </div>

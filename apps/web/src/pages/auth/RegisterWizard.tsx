@@ -131,7 +131,7 @@ export default function RegisterWizard() {
             autoFocus
           />
 
-          {error && <p className="rounded bg-red-500/10 p-2 text-xs text-red-400">{error}</p>}
+          {error && <p className="rounded bg-destructive/10 p-2 text-xs text-destructive">{error}</p>}
 
           <button
             type="button"
@@ -164,7 +164,7 @@ export default function RegisterWizard() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg bg-surface-card p-6">
         <h1 className="text-2xl font-bold text-text">Cadastro</h1>
 
-        {error && <p className="rounded bg-red-500/10 p-2 text-sm text-red-400">{error}</p>}
+        {error && <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">{error}</p>}
 
         <StepIndicator steps={isAluno ? STEPS : ['Dados']} current={step} />
 

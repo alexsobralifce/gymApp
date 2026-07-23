@@ -96,7 +96,7 @@ export default function ProfessorAcademias() {
       )}
 
       {feedback && (
-        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-red-500/10 text-red-400' : feedback.includes('Desvinculado') ? 'bg-surface-card text-text-muted' : 'bg-surface-card text-success'}`}>
+        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : feedback.includes('Desvinculado') ? 'bg-surface-card text-text-muted' : 'bg-surface-card text-success'}`}>
           {feedback}
         </div>
       )}
@@ -115,8 +115,8 @@ export default function ProfessorAcademias() {
                 <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
                 {isLinked && (
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs ${
-                    vinculo.status === 'ATIVO' ? 'bg-green-500/10 text-green-400' :
-                    vinculo.status === 'REJEITADO' || vinculo.status === 'REMOVIDO' ? 'bg-red-500/10 text-red-400' :
+                    vinculo.status === 'ATIVO' ? 'bg-success/10 text-success' :
+                    vinculo.status === 'REJEITADO' || vinculo.status === 'REMOVIDO' ? 'bg-destructive/10 text-destructive' :
                     'bg-yellow-500/10 text-yellow-400'
                   }`}>
                     {STATUS_BADGE[vinculo.status] ?? vinculo.status}

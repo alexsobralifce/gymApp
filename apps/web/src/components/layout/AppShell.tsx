@@ -354,7 +354,7 @@ export default function AppShell() {
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-text hover:bg-surface-input transition-colors cursor-pointer"
         >
           <PaletteIcon className="h-5 w-5 text-primary" />
-          <span>Tema: {theme === 'lime' ? 'Lima & Navy' : theme === 'red' ? 'Vermelho & Preto' : theme === 'violet' ? 'Violeta & Preto' : 'Laranja & Grafite'}</span>
+          <span>Tema: {theme === 'lime' ? 'Lima & Navy' : theme === 'red' ? 'Vermelho & Carvao' : 'Violeta & Grafite'}</span>
         </button>
 
         <button
@@ -430,11 +430,11 @@ export default function AppShell() {
               {/* Theme toggle button */}
               <button
                 onClick={toggleTheme}
-                title={`Tema atual: ${theme === 'lime' ? 'Verde Lima & Navy' : theme === 'red' ? 'Vermelho & Preto' : theme === 'violet' ? 'Violeta & Preto' : 'Laranja & Grafite'}. Clique para alterar.`}
+                title={`Tema atual: ${theme === 'lime' ? 'Lima & Navy' : theme === 'red' ? 'Vermelho & Carvao' : 'Violeta & Grafite'}. Clique para alterar.`}
                 className="flex items-center gap-1.5 rounded-xl border border-surface-input bg-surface-card px-2.5 py-1.5 text-xs font-semibold text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer"
               >
                 <PaletteIcon className="h-4 w-4 text-primary" />
-                <span className="hidden sm:inline">{theme === 'lime' ? 'Lima & Navy' : theme === 'red' ? 'Vermelho' : theme === 'violet' ? 'Violeta' : 'Laranja'}</span>
+                <span className="hidden sm:inline">{theme === 'lime' ? 'Lima' : theme === 'red' ? 'Vermelho' : 'Violeta'}</span>
               </button>
 
               <div className="relative" ref={menuRef}>
@@ -468,7 +468,7 @@ export default function AppShell() {
                           <span>Alternar Tema</span>
                         </div>
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                          {theme === 'lime' ? 'Lima/Navy' : theme === 'red' ? 'Vermelho' : theme === 'violet' ? 'Violeta' : 'Laranja'}
+                          {theme === 'lime' ? 'Lima/Navy' : theme === 'red' ? 'Vermelho' : 'Violeta'}
                         </span>
                       </button>
 

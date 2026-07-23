@@ -47,7 +47,7 @@ export default function AlterarSenha() {
 
       {feedback && (
         <div className={`rounded-xl p-4 text-sm font-semibold border ${
-          feedback.tipo === 'erro' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-success/10 text-success border-success/20'
+          feedback.tipo === 'erro' ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-success/10 text-success border-success/20'
         }`}>
           {feedback.texto}
         </div>

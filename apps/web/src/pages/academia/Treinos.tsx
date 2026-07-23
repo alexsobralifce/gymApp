@@ -10,8 +10,8 @@ const DIA_LABEL: Record<number, string> = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qu
 const STATUS_COR: Record<string, string> = {
   CADASTRADO: 'text-text-muted bg-surface border border-surface-input',
   ENVIADO: 'text-blue-400 bg-blue-500/10 border border-blue-500/20',
-  ACEITO: 'text-green-400 bg-green-500/10 border border-green-500/20',
-  RECUSADO: 'text-red-400 bg-red-500/10 border border-red-500/20',
+  ACEITO: 'text-success bg-success/10 border border-green-500/20',
+  RECUSADO: 'text-destructive bg-destructive/10 border border-destructive/20',
   EM_ABERTO: 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20',
   EM_EXECUCAO: 'text-primary bg-primary/10 border border-primary/20',
   CONCLUIDO: 'text-success bg-success/10 border border-success/20',
@@ -221,7 +221,7 @@ export default function AcademiaTreinos() {
                           setDeletingTreino({ id: t.id, nome: t.nome })
                           setViewingTreinos(null)
                         }}
-                        className="text-xs text-red-400 hover:underline cursor-pointer"
+                        className="text-xs text-destructive hover:underline cursor-pointer"
                       >
                         Deletar
                       </button>

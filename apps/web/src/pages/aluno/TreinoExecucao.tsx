@@ -6,10 +6,10 @@ import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 
 const DIFICULDADE_OPCOES = [
-  { value: 'FACIL', label: 'Facil', emoji: '😊', cor: 'border-green-500/30 bg-green-500/10 text-green-400' },
+  { value: 'FACIL', label: 'Facil', emoji: '😊', cor: 'border-green-500/30 bg-success/10 text-success' },
   { value: 'MODERADO', label: 'Moderado', emoji: '💪', cor: 'border-blue-500/30 bg-blue-500/10 text-blue-400' },
   { value: 'INTENSO', label: 'Intenso', emoji: '🔥', cor: 'border-orange-500/30 bg-orange-500/10 text-orange-400' },
-  { value: 'MUITO_INTENSO', label: 'Muito Intenso', emoji: '🥵', cor: 'border-red-500/30 bg-red-500/10 text-red-400' },
+  { value: 'MUITO_INTENSO', label: 'Muito Intenso', emoji: '🥵', cor: 'border-red-500/30 bg-destructive/10 text-destructive' },
 ]
 
 function ExerciseGif({

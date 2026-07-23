@@ -53,16 +53,16 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-text">GymApp</h1>
         <p className="text-sm text-text-muted">Entre na sua conta</p>
 
-        {error && !notVerified && <p className="rounded bg-red-500/10 p-2 text-sm text-red-400">{error}</p>}
+        {error && !notVerified && <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">{error}</p>}
 
         {notVerified && (
-          <div className="rounded bg-amber-500/10 border border-amber-500/20 p-3 space-y-2">
-            <p className="text-xs text-amber-400">E-mail nao verificado. Verifique sua caixa de entrada ou reenvie o codigo.</p>
+          <div className="rounded bg-warning/10 border border-warning/20 p-3 space-y-2">
+            <p className="text-xs text-warning">E-mail nao verificado. Verifique sua caixa de entrada ou reenvie o codigo.</p>
             <button
               type="button"
               onClick={handleResend}
               disabled={resending}
-              className="text-xs font-bold text-amber-400 hover:text-amber-300 cursor-pointer"
+              className="text-xs font-bold text-warning hover:text-warning/80 cursor-pointer"
             >
               {resending ? 'Reenviando...' : 'Reenviar codigo'}
             </button>

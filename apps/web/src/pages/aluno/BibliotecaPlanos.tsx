@@ -386,7 +386,7 @@ export default function BibliotecaPlanos() {
                                       </span>
                                     )}
                                     {exItem.restricoes_incompativeis && exItem.restricoes_incompativeis.length > 0 && (
-                                      <span className="text-[9px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                                      <span className="text-[9px] font-semibold text-amber-500 bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20">
                                         ⚠️ Substituto p/ {exItem.restricoes_incompativeis.join(', ')}
                                       </span>
                                     )}

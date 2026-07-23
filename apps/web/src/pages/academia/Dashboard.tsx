@@ -70,7 +70,7 @@ export default function AcademiaDashboard() {
             </div>
             <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase ${
               data.status === 'ATIVO'
-                ? 'bg-green-500/15 text-green-400 border border-green-500/20'
+                ? 'bg-green-500/15 text-success border border-green-500/20'
                 : 'bg-accent/15 text-accent border border-accent/20'
             }`}>
               {data.status === 'ATIVO' ? (
@@ -111,7 +111,7 @@ export default function AcademiaDashboard() {
 
           <div className="rounded-2xl bg-surface-card border border-surface-input p-5 hover:border-primary/20 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success">
                 <UsersIcon className="h-5 w-5" />
               </div>
               <div>

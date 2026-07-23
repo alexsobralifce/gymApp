@@ -12,8 +12,8 @@ interface ProfessorAcademia {
 const STATUS_COR: Record<string, string> = {
   PENDENTE_ACADEMIA: 'text-yellow-400 bg-yellow-500/10',
   PENDENTE_ROOT: 'text-blue-400 bg-blue-500/10',
-  ATIVO: 'text-green-400 bg-green-500/10',
-  REJEITADO: 'text-red-400 bg-red-500/10',
+  ATIVO: 'text-success bg-success/10',
+  REJEITADO: 'text-destructive bg-destructive/10',
   REMOVIDO: 'text-text-muted bg-surface-input',
 }
 
@@ -69,7 +69,7 @@ export default function AcademiaProfessores() {
       <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Professores</h1>
 
       {feedback && (
-        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-surface-card text-success'}`}>
+        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
           {feedback}
         </div>
       )}
@@ -99,7 +99,7 @@ export default function AcademiaProfessores() {
                 {p.status === 'ATIVO' && (
                   <button
                     onClick={() => remover(p.id)}
-                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
+                    className="rounded-lg border border-red-500/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-red-500/20 transition-all cursor-pointer"
                   >
                     Desabilitar
                   </button>

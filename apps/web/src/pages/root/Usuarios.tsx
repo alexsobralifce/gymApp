@@ -56,9 +56,9 @@ const btnGhost =
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
-    ATIVO: 'bg-green-500/10 text-green-400',
+    ATIVO: 'bg-success/10 text-success',
     PENDENTE: 'bg-yellow-500/10 text-yellow-400',
-    REJEITADO: 'bg-red-500/10 text-red-400',
+    REJEITADO: 'bg-destructive/10 text-destructive',
   }
   const cls = map[status] || 'bg-surface-input text-text-muted'
   return <span className={`rounded-full px-2 py-0.5 text-xs ${cls}`}>{status}</span>
@@ -194,7 +194,7 @@ export default function RootUsuarios() {
       <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Plataforma</h1>
 
       {feedback && (
-        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-red-500/10 text-red-400' : 'bg-surface-card text-success'}`}>
+        <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
           {feedback}
         </div>
       )}
@@ -380,7 +380,7 @@ function AcademiasTab({
           </div>
           <div className="flex gap-1">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
-            <button onClick={() => onDelete(a)} className="rounded bg-red-500/10 px-3 py-1 text-sm text-red-400">Excluir</button>
+            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
           </div>
         </div>
       ))}
@@ -413,7 +413,7 @@ function ProfessoresTab({
             </div>
             <div className="flex gap-1">
               <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
-              <button onClick={() => onDelete(p)} className="rounded bg-red-500/10 px-3 py-1 text-sm text-red-400">Excluir</button>
+              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
             </div>
           </div>
           {p.academias.length > 0 && (
@@ -461,7 +461,7 @@ function AlunosTab({
           </div>
           <div className="flex gap-1">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
-            <button onClick={() => onDelete(a)} className="rounded bg-red-500/10 px-3 py-1 text-sm text-red-400">Excluir</button>
+            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
           </div>
         </div>
       ))}
