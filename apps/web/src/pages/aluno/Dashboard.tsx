@@ -413,7 +413,7 @@ export default function AlunoDashboard() {
         <div className="space-y-3">
           <InfoCard
             title="Por que o aquecimento e essencial?"
-            body="Estudos mostram que 5-10 minutos de aquecimento reduzem o risco de lesoes em ate 40% e melhoram o desempenho nas primeiras series."
+            body="Estudos mostram que 5-10 minutos de aquecimento reduzem o risco de lesões em até 40% e melhoram o desempenho nas primeiras séries."
           />
           <InfoCard
             title="Consistencia &gt; Intensidade"

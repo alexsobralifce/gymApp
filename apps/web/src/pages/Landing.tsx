@@ -12,27 +12,27 @@ const FEATURES = [
   {
     icon: BrainCircuit,
     title: 'Prescrição por IA',
-    desc: 'Escolha grupos musculares, nível, objetivo e tempo. O sistema monta 3 exercícios por grupo, ajustando series e repetições.',
+    desc: 'Escolha grupos musculares, nível, objetivo e tempo. O sistema monta 3 exercícios por grupo, ajustando séries e repetições.',
   },
   {
     icon: BookOpen,
     title: 'Biblioteca de Planos',
-    desc: 'Push, Pull, Legs por nível de experiencia. Templates prontos para adotar com um clique — sem alongamento, so exercicio efetivo.',
+    desc: 'Push, Pull, Legs por nível de experiência. Templates prontos para adotar com um clique — sem alongamento, so exercício efetivo.',
   },
   {
     icon: Dumbbell,
     title: 'Execução Guiada',
-    desc: 'Cada exercicio com GIF animado e passos em portugues. Registre cargas e repetições serie a serie ate concluir o treino.',
+    desc: 'Cada exercício com GIF animado e passos em português. Registre cargas e repetições série a série até concluir o treino.',
   },
   {
     icon: Target,
-    title: 'Maquina de Estados',
+    title: 'Máquina de Estados',
     desc: 'Enviado → Aceito → Iniciado → Em Execução → Concluído. Todo treino segue um fluxo claro, seja seu ou do professor.',
   },
   {
     icon: TrendingUp,
-    title: 'Evolucao com Dados',
-    desc: 'Medidas corporais, correlações entre volume e composição, calendario de treinos — sua progressão visivel em graficos.',
+    title: 'Evolução com Dados',
+    desc: 'Medidas corporais, correlações entre volume e composição, calendário de treinos — sua progressão visível em gráficos.',
   },
   {
     icon: ClipboardList,
@@ -46,7 +46,7 @@ const FEATURES = [
   },
   {
     icon: Heart,
-    title: 'Restricoes e Seguranca',
+    title: 'Restrições e Segurança',
     desc: 'Informe dores articulares (ombro, joelho, lombar). O sistema evita exercícios incompatíveis e prefere máquinas no iniciante.',
   },
 ]
@@ -62,7 +62,7 @@ const FAQS = [
   },
   {
     q: 'Os exercícios tem demonstração?',
-    a: 'Sim. Cada exercicio tem GIF animado e passos de execucao detalhados em portugues.',
+    a: 'Sim. Cada exercício tem GIF animado e passos de execução detalhados em português.',
   },
   {
     q: 'Tem rede social no app?',
@@ -285,7 +285,7 @@ export default function Landing() {
               <ul className="mt-6 space-y-3">
                 {[
                   { icon: Target, text: 'Objetivo: hipertrofia, força, emagrecimento ou saúde — cada um com faixa de repetições propria' },
-                  { icon: TrendingUp, text: 'Nivel: iniciante (máquinas), intermediário (livre) ou avançado (alta carga) — series ajustadas' },
+                  { icon: TrendingUp, text: 'Nivel: iniciante (máquinas), intermediário (livre) ou avançado (alta carga) — séries ajustadas' },
                   { icon: Clock, text: 'Duração: você define quanto tempo tem (30 a 90 min) — o volume se adapta automaticamente' },
                   { icon: Shield, text: 'Restricoes articulares: ombro, joelho, lombar — exercícios incompatíveis são evitados' },
                 ].map(({ icon: Icon, text }) => (
@@ -337,7 +337,7 @@ export default function Landing() {
           <div className="text-center mb-12">
             <span className="text-xs font-semibold text-primary uppercase tracking-widest">Base Científica</span>
             <h2 className="mt-3 text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.05 }}>
-              PRINCIPIOS DE PRESCRICAO
+              PRINCÍPIOS DE PRESCRIÇÃO
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
               Transparência total: a montagem dos treinos segue regras claras baseadas na literatura de treinamento.
@@ -352,31 +352,31 @@ export default function Landing() {
               },
               {
                 title: 'Volume por Grupo',
-                desc: '3 exercícios por grupo muscular na sessão — dose minima efetiva para estímulo hipertrófico.',
+                desc: '3 exercícios por grupo muscular na sessão — dose mínima efetiva para estímulo hipertrófico.',
               },
               {
-                title: 'Progressão por Nivel',
-                desc: 'Iniciante: máquinas e cargas leves. Intermediario: pesos livres. Avancado: alta carga e variação.',
+                title: 'Progressão por Nível',
+                desc: 'Iniciante: máquinas e cargas leves. Intermediário: pesos livres. Avançado: alta carga e variação.',
               },
               {
-                title: 'Gestao de Fadiga',
+                title: 'Gestão de Fadiga',
                 desc: 'Orçamento de exercícios por duração (30-90 min). Treinos mais longos não significam melhores.',
               },
               {
                 title: 'Splits Reconhecidos',
-                desc: 'Push/Pull/Legs, Upper/Lower e Full Body — divisões classicas do strength & conditioning.',
+                desc: 'Push/Pull/Legs, Upper/Lower e Full Body — divisões clássicas do strength & conditioning.',
               },
               {
-                title: 'Seguranca Primeiro',
+                title: 'Segurança Primeiro',
                 desc: 'Respeita restrições articulares. Prefere movimentos guiados para iniciantes. Zero alongamento na ficha.',
               },
               {
-                title: 'Selecao Baseada em Dados',
-                desc: 'Cada exercicio tem grupo muscular, equipamento e padrão de movimento — filtrados por relevância.',
+                title: 'Seleção Baseada em Dados',
+                desc: 'Cada exercício tem grupo muscular, equipamento e padrão de movimento — filtrados por relevância.',
               },
               {
                 title: 'Montagem Transparente',
-                desc: 'não é caixa-preta. Você vê por que cada exercicio foi escolhido, com series, repetições e carga sugerida.',
+                desc: 'não é caixa-preta. Você vê por que cada exercício foi escolhido, com séries, repetições e carga sugerida.',
               },
             ].map((item) => (
               <div key={item.title} className="p-5 rounded-xl border border-border bg-background">
@@ -471,7 +471,7 @@ export default function Landing() {
                   'Cadastro rapido (wizard de 3 passos)',
                   'Crie treinos ou use a IA',
                   'Receba fichas do professor',
-                  'Execute com GIFs e registre series',
+                  'Execute com GIFs e registre séries',
                   'Poste conquistas no Mural',
                   'Acompanhe medidas e evolução',
                 ],
