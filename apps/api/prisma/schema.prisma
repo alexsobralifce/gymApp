@@ -194,6 +194,12 @@ model Treino {
   is_template            Boolean      @default(false)
   iniciado_em            DateTime?
   finalizado_em          DateTime?
+  /// Última interação na sessão (início ou série registrada)
+  ultima_atividade_em    DateTime?
+  /// Evita spam do push de ociosidade
+  notificado_inatividade_em DateTime?
+  /// Push único quando sessão passa de 60 min
+  notificado_longo_em    DateTime?
   criado_em              DateTime     @default(now())
   atualizado_em          DateTime     @updatedAt
 

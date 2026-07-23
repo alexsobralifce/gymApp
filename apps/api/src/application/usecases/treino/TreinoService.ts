@@ -166,6 +166,46 @@ export async function responderTreino(treinoId: string, alunoId: string, acao: '
 
 // ─── UC-20: Iniciar treino ────────────────────────────────────────────────────
 
+export async function buscarUltimasCargas(alunoId: string, exercicioIds: string[]) {
+  if (exercicioIds.length === 0) return [] as Array<{
+    exercicio_id: string
+    serie_numero: number
+    carga_kg: number
+    repeticoes: number
+  }>
+
+  const recent = await prisma.execucaoExercicio.findMany({
+    where: {
+      exercicio_id: { in: exercicioIds },
+      treino: { aluno_id: alunoId },
+    },
+    orderBy: { registrado_em: 'desc' },
+    take: 400,
+    select: {
+      exercicio_id: true,
+      serie_numero: true,
+      carga_kg: true,
+      repeticoes: true,
+    },
+  })
+
+  const seen = new Set<string>()
+  const ultimas: Array<{
+    exercicio_id: string
+    serie_numero: number
+    carga_kg: number
+    repeticoes: number
+  }> = []
+
+  for (const row of recent) {
+    const key = `${row.exercicio_id}-${row.serie_numero}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    ultimas.push(row)
+  }
+  return ultimas
+}
+
 async function carregarTreinoComSessao(treinoId: string, iniciadoEm?: Date | null) {
   const treino = await prisma.treino.findUnique({
     where: { id: treinoId },
@@ -178,7 +218,10 @@ async function carregarTreinoComSessao(treinoId: string, iniciadoEm?: Date | nul
     },
   })
   if (!treino) throw new NotFoundError('Treino')
-  return treino
+
+  const exercicioIds = treino.exercicios.map((e) => e.exercicio_id)
+  const ultimas_cargas = await buscarUltimasCargas(treino.aluno_id, exercicioIds)
+  return { ...treino, ultimas_cargas }
 }
 
 export async function iniciarTreino(treinoId: string, alunoId: string) {
@@ -222,7 +265,13 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
 
     await tx.treino.update({
       where: { id: treinoId },
-      data: { status: TreinoStatus.EM_EXECUCAO, iniciado_em: iniciadoEm },
+      data: {
+        status: TreinoStatus.EM_EXECUCAO,
+        iniciado_em: iniciadoEm,
+        ultima_atividade_em: iniciadoEm,
+        notificado_inatividade_em: null,
+        notificado_longo_em: null,
+      },
     })
     await tx.treinoHistorico.create({
       data: {
@@ -283,15 +332,27 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
     throw new ConflictError('Série já registrada nesta sessão')
   }
 
-  return prisma.execucaoExercicio.create({
-    data: {
-      treino_id: treinoId,
-      exercicio_id: input.exercicioId,
-      serie_numero: input.serieNumero,
-      repeticoes: input.repeticoes,
-      carga_kg: input.cargaKg,
-    },
-  })
+  const agora = new Date()
+  const [execucao] = await prisma.$transaction([
+    prisma.execucaoExercicio.create({
+      data: {
+        treino_id: treinoId,
+        exercicio_id: input.exercicioId,
+        serie_numero: input.serieNumero,
+        repeticoes: input.repeticoes,
+        carga_kg: input.cargaKg,
+      },
+    }),
+    prisma.treino.update({
+      where: { id: treinoId },
+      data: {
+        ultima_atividade_em: agora,
+        // permite novo lembrete se ficar ocioso de novo
+        notificado_inatividade_em: null,
+      },
+    }),
+  ])
+  return execucao
 }
 
 // ─── UC-23: Finalizar treino ──────────────────────────────────────────────────
@@ -325,7 +386,14 @@ export async function finalizarTreino(treinoId: string, alunoId: string, avaliac
     // Recicla ficha para reuso (CONCLUIDO → ACEITO), preservando avaliacao
     await tx.treino.update({
       where: { id: treinoId },
-      data: { status: TreinoStatus.ACEITO, iniciado_em: null, finalizado_em: null },
+      data: {
+        status: TreinoStatus.ACEITO,
+        iniciado_em: null,
+        finalizado_em: null,
+        ultima_atividade_em: null,
+        notificado_inatividade_em: null,
+        notificado_longo_em: null,
+      },
     })
     await tx.treinoHistorico.create({
       data: {

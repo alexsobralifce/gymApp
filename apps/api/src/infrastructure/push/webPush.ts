@@ -21,9 +21,10 @@ export async function sendWebPush(
     return
   }
   try {
+    const url = (data?.url as string | undefined) || (data?.url_estudo as string | undefined) || null
     await webpush.sendNotification(
       subscription,
-      JSON.stringify({ title, body, url_estudo: data?.url_estudo }),
+      JSON.stringify({ title, body, url, url_estudo: url }),
     )
   } catch (err: unknown) {
     if (err instanceof Error && err.name === 'WebPushError') {

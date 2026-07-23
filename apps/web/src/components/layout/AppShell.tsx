@@ -367,8 +367,8 @@ export default function AppShell() {
 
   return (
     <div className="flex min-h-screen bg-surface overflow-x-hidden">
-      {/* Mobile Drawer Overlay */}
-      {drawerOpen && (
+      {/* Mobile Drawer Overlay — oculto em execução de treino */}
+      {!hideNav && drawerOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
@@ -380,26 +380,28 @@ export default function AppShell() {
         </div>
       )}
 
-      {/* Sidebar — Desktop */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-surface-input bg-surface/50 md:flex">
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {navItems.map((entry, i) =>
-            isSection(entry) ? (
-              <NavSectionComponent key={i} section={entry} />
-            ) : (
-              <NavLink key={entry.to} to={entry.to} end={entry.end} className={linkClass}>
-                {entry.icon}
-                <span>{entry.label}</span>
-                {entry.label === 'Mural' && atividadeMural > 0 && (
-                  <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
-                    {atividadeMural}
-                  </span>
-                )}
-              </NavLink>
-            )
-          )}
-        </nav>
-      </aside>
+      {/* Sidebar — Desktop (oculta em execução) */}
+      {!hideNav && (
+        <aside className="hidden w-60 shrink-0 flex-col border-r border-surface-input bg-surface/50 md:flex">
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+            {navItems.map((entry, i) =>
+              isSection(entry) ? (
+                <NavSectionComponent key={i} section={entry} />
+              ) : (
+                <NavLink key={entry.to} to={entry.to} end={entry.end} className={linkClass}>
+                  {entry.icon}
+                  <span>{entry.label}</span>
+                  {entry.label === 'Mural' && atividadeMural > 0 && (
+                    <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
+                      {atividadeMural}
+                    </span>
+                  )}
+                </NavLink>
+              )
+            )}
+          </nav>
+        </aside>
+      )}
 
       <div className="flex flex-1 flex-col min-w-0">
         {/* Top bar */}
@@ -543,13 +545,15 @@ export default function AppShell() {
         )}
 
         <div className="flex flex-1 min-h-0">
-          <main className="flex-1 pb-20 md:pb-0 min-w-0">
+          <main className={`flex-1 min-w-0 ${hideNav ? '' : 'pb-20 md:pb-0'}`}>
             <Outlet />
           </main>
-          {/* Academy sidebar — right panel desktop */}
-          <aside className="hidden xl:block w-56 shrink-0 border-l border-surface-input bg-surface/50">
-            <AcademySidebar />
-          </aside>
+          {/* Academy sidebar — right panel desktop (oculta em execução) */}
+          {!hideNav && (
+            <aside className="hidden xl:block w-56 shrink-0 border-l border-surface-input bg-surface/50">
+              <AcademySidebar />
+            </aside>
+          )}
         </div>
 
         {/* Bottom Sheet "Mais" para Aluno no Mobile */}

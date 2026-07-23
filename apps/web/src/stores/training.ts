@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { api } from '../api/client'
-import type { Treino, ExecucaoExercicio, TreinoExercicio } from '../types/api'
+import type { Treino, ExecucaoExercicio, TreinoExercicio, UltimaCarga } from '../types/api'
+
+const REST_DEFAULT_SEC = 90
 
 function timerDesdeInicio(iniciadoEm?: string | null): number {
   if (!iniciadoEm) return 0
@@ -12,8 +14,12 @@ interface TrainingState {
   treinoAtual: Treino | null
   exercicioAtual: TreinoExercicio | null
   execucoes: ExecucaoExercicio[]
+  ultimasCargas: UltimaCarga[]
   timer: number
   timerFinalizado: number
+  restSeconds: number
+  restTotal: number
+  restActive: boolean
   loading: boolean
   error: string | null
 
@@ -23,15 +29,38 @@ interface TrainingState {
   registrarExecucao: (exercicioId: string, serieNumero: number, repeticoes: number, cargaKg: number) => Promise<void>
   finalizarTreino: (avaliacao?: string) => Promise<void>
   tick: () => void
+  syncTimer: () => void
+  startRest: (seconds?: number) => void
+  skipRest: () => void
+  tickRest: () => void
   reset: () => void
+}
+
+function applyTreino(
+  treino: Treino & { execucoes?: ExecucaoExercicio[]; ultimas_cargas?: UltimaCarga[] },
+) {
+  const exercicios = treino.exercicios ?? []
+  const execucoes = treino.execucoes ?? []
+  return {
+    treinoAtual: treino,
+    exercicioAtual: exercicios[0] ?? null,
+    execucoes,
+    ultimasCargas: treino.ultimas_cargas ?? [],
+    timer: timerDesdeInicio(treino.iniciado_em),
+    loading: false,
+  }
 }
 
 export const useTrainingStore = create<TrainingState>((set, get) => ({
   treinoAtual: null,
   exercicioAtual: null,
   execucoes: [],
+  ultimasCargas: [],
   timer: 0,
   timerFinalizado: 0,
+  restSeconds: 0,
+  restTotal: REST_DEFAULT_SEC,
+  restActive: false,
   loading: false,
   error: null,
 
@@ -39,15 +68,7 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const treino = await api.iniciarTreino(id)
-      const exercicios = treino.exercicios ?? []
-      const execucoes = (treino as Treino & { execucoes?: ExecucaoExercicio[] }).execucoes ?? []
-      set({
-        treinoAtual: treino,
-        exercicioAtual: exercicios[0] ?? null,
-        execucoes,
-        timer: timerDesdeInicio(treino.iniciado_em),
-        loading: false,
-      })
+      set(applyTreino(treino))
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
       throw err
@@ -56,23 +77,18 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
 
   retomarTreino: async (id) => {
     const atual = get().treinoAtual
-    if (atual?.id === id && atual.status === 'EM_EXECUCAO') return
+    if (atual?.id === id && atual.status === 'EM_EXECUCAO') {
+      get().syncTimer()
+      return
+    }
 
     set({ loading: true, error: null })
     try {
       const detalhe = await api.getTreino(id)
       if (detalhe.status === 'EM_EXECUCAO') {
-        const exercicios = detalhe.exercicios ?? []
-        set({
-          treinoAtual: detalhe,
-          exercicioAtual: exercicios[0] ?? null,
-          execucoes: detalhe.execucoes ?? [],
-          timer: timerDesdeInicio(detalhe.iniciado_em),
-          loading: false,
-        })
+        set(applyTreino(detalhe))
         return
       }
-      // Se não está em execução, tenta iniciar (ACEITO / EM_ABERTO)
       await get().iniciarTreino(id)
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
@@ -107,13 +123,14 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
       if (dup) return s
       return { execucoes: [...s.execucoes, execucao] }
     })
+    get().startRest(REST_DEFAULT_SEC)
   },
 
   finalizarTreino: async (avaliacao?: string) => {
     const { treinoAtual, timer } = get()
     if (!treinoAtual) return
 
-    set({ loading: true, timerFinalizado: timer })
+    set({ loading: true, timerFinalizado: timer, restActive: false, restSeconds: 0 })
     try {
       await api.finalizarTreino(treinoAtual.id, avaliacao)
       get().reset()
@@ -123,13 +140,54 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     }
   },
 
-  tick: () => set((s) => ({ timer: s.timer + 1 })),
+  tick: () => {
+    const { treinoAtual } = get()
+    if (treinoAtual?.iniciado_em) {
+      set({ timer: timerDesdeInicio(treinoAtual.iniciado_em) })
+    } else {
+      set((s) => ({ timer: s.timer + 1 }))
+    }
+  },
+
+  syncTimer: () => {
+    const { treinoAtual } = get()
+    if (treinoAtual?.iniciado_em) {
+      set({ timer: timerDesdeInicio(treinoAtual.iniciado_em) })
+    }
+  },
+
+  startRest: (seconds = REST_DEFAULT_SEC) => {
+    set({ restActive: true, restSeconds: seconds, restTotal: seconds })
+  },
+
+  skipRest: () => set({ restActive: false, restSeconds: 0 }),
+
+  tickRest: () => {
+    const { restActive, restSeconds } = get()
+    if (!restActive) return
+    if (restSeconds <= 1) {
+      set({ restActive: false, restSeconds: 0 })
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([200, 80, 200, 80, 400])
+        }
+      } catch {
+        /* ignore */
+      }
+      return
+    }
+    set({ restSeconds: restSeconds - 1 })
+  },
 
   reset: () => set({
     treinoAtual: null,
     exercicioAtual: null,
     execucoes: [],
+    ultimasCargas: [],
     timer: 0,
+    restSeconds: 0,
+    restTotal: REST_DEFAULT_SEC,
+    restActive: false,
     loading: false,
     error: null,
   }),

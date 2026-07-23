@@ -30,6 +30,9 @@ let socialBadgeWorker: Worker | null = null
 
 let started = false
 
+const IDLE_MS = 10 * 60 * 1000
+const LONGO_MS = 60 * 60 * 1000
+
 // ─── Push dual-channel helper ──────────────────────────────────────────────────
 
 async function sendDualPush(
@@ -45,16 +48,23 @@ async function sendDualPush(
   await Promise.allSettled(promises)
 }
 
+function execUrl(treinoId: string) {
+  return `/treino/${treinoId}/execucao`
+}
+
 // ─── Work handlers ────────────────────────────────────────────────────────────
 
+/** Ociosidade real (sem série) + lembrete de treino longo (>60min) */
 async function handleInatividade30min(_job: Job) {
-  const limite = new Date(Date.now() - 30 * 60 * 1000)
+  const agora = Date.now()
+  const limiteIdle = new Date(agora - IDLE_MS)
+  const limiteLongo = new Date(agora - LONGO_MS)
 
-  const treinosInativos = await prisma.treino.findMany({
+  const treinosAtivos = await prisma.treino.findMany({
     where: {
       status: TreinoStatus.EM_EXECUCAO,
-      iniciado_em: { lte: limite },
       finalizado_em: null,
+      iniciado_em: { not: null },
     },
     include: {
       aluno: {
@@ -66,26 +76,64 @@ async function handleInatividade30min(_job: Job) {
     },
   })
 
-  for (const treino of treinosInativos) {
+  for (const treino of treinosAtivos) {
     const nomeAluno = treino.aluno.usuario.nome
-    console.log(`[Worker] Inatividade 30min detectada: ${treino.id} — aluno: ${nomeAluno}`)
+    const ultima = treino.ultima_atividade_em ?? treino.iniciado_em
+    if (!ultima || !treino.iniciado_em) continue
 
-    await sendDualPush(
-      treino.aluno.usuario.expo_push_token,
-      treino.aluno.usuario.web_push_subscription as PushSubscription | null,
-      'Treino parado',
-      'Seu treino está parado há mais de 30 minutos. Retome as atividades!',
-    )
+    const url = execUrl(treino.id)
+    const expo = treino.aluno.usuario.expo_push_token
+    const web = treino.aluno.usuario.web_push_subscription as PushSubscription | null
 
-    const professorToken = treino.aluno.professor?.usuario.expo_push_token
-    const professorWeb = treino.aluno.professor?.usuario.web_push_subscription as PushSubscription | null
-    if (professorToken || professorWeb) {
+    // 1) Away: sem atividade há >= 10 min (1 push até registrar nova série)
+    const ocioso = ultima <= limiteIdle
+    const jaNotificouIdle =
+      treino.notificado_inatividade_em != null &&
+      treino.notificado_inatividade_em >= ultima
+
+    if (ocioso && !jaNotificouIdle) {
+      console.log(`[Worker] Ociosidade treino ${treino.id} — aluno: ${nomeAluno}`)
       await sendDualPush(
-        professorToken,
-        professorWeb,
-        'Aluno inativo',
-        `${nomeAluno} está com o treino parado há mais de 30 minutos.`,
+        expo,
+        web,
+        'Treino te esperando 💪',
+        'Você saiu no meio do treino. Volte e continue de onde parou!',
+        { url, url_estudo: url },
       )
+
+      const professorToken = treino.aluno.professor?.usuario.expo_push_token
+      const professorWeb = treino.aluno.professor?.usuario.web_push_subscription as PushSubscription | null
+      if (professorToken || professorWeb) {
+        await sendDualPush(
+          professorToken,
+          professorWeb,
+          'Aluno ocioso no treino',
+          `${nomeAluno} está há mais de 10 min sem registrar séries.`,
+          { url: '/' },
+        )
+      }
+
+      await prisma.treino.update({
+        where: { id: treino.id },
+        data: { notificado_inatividade_em: new Date() },
+      })
+    }
+
+    // 2) Longo: sessão > 60 min (1 push por sessão)
+    const longo = treino.iniciado_em <= limiteLongo
+    if (longo && !treino.notificado_longo_em) {
+      console.log(`[Worker] Treino longo 60min ${treino.id} — aluno: ${nomeAluno}`)
+      await sendDualPush(
+        expo,
+        web,
+        'Treino longo demais ⏱️',
+        'Já se passou mais de 1 hora. Finalize o treino ou continue focado!',
+        { url, url_estudo: url },
+      )
+      await prisma.treino.update({
+        where: { id: treino.id },
+        data: { notificado_longo_em: new Date() },
+      })
     }
   }
 }
@@ -182,7 +230,7 @@ async function handleMensagemMotivacional(job: Job<{ alunoId: string }>) {
       aluno.usuario.web_push_subscription as PushSubscription | null,
       mensagem.titulo,
       mensagem.resumo,
-      { url_estudo: mensagem.url_estudo },
+      { url: mensagem.url_estudo, url_estudo: mensagem.url_estudo },
     )
   }
 }
@@ -205,7 +253,7 @@ async function scheduleRecurringJobs() {
   if (!inatividade30minQueue || !treinoEmAbertoQueue) return
 
   await inatividade30minQueue.add('check-inatividade', {}, {
-    repeat: { every: 5 * 60 * 1000 },
+    repeat: { every: 2 * 60 * 1000 },
     removeOnComplete: true,
   })
 

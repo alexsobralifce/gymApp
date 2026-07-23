@@ -14,6 +14,13 @@ export interface AuthTokens {
   refreshToken: string
 }
 
+export interface UltimaCarga {
+  exercicio_id: string
+  serie_numero: number
+  carga_kg: number
+  repeticoes: number
+}
+
 export interface Treino {
   id: string
   aluno_id: string
@@ -27,6 +34,7 @@ export interface Treino {
   atualizado_em: string
   exercicios?: TreinoExercicio[]
   execucoes?: ExecucaoExercicio[]
+  ultimas_cargas?: UltimaCarga[]
 }
 
 export type TreinoStatus =

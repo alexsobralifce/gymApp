@@ -14,6 +14,7 @@ import {
   finalizarTreino,
   clonarTreino,
   clonarTreinoEmLote,
+  buscarUltimasCargas,
 } from '../../../application/usecases/treino/TreinoService.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
@@ -287,7 +288,11 @@ export async function treinoRoutes(app: FastifyInstance) {
       },
     })
 
-    return reply.status(200).send(treino)
+    if (!treino) throw new NotFoundError('Treino')
+
+    const exercicioIds = treino.exercicios.map((e) => e.exercicio_id)
+    const ultimas_cargas = await buscarUltimasCargas(treino.aluno_id, exercicioIds)
+    return reply.status(200).send({ ...treino, ultimas_cargas })
   })
 
   /** PATCH /treinos/:id — Editar treino (nome, dias_semana, exercícios) */
