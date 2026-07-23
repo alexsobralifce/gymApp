@@ -392,6 +392,16 @@
     }
   }
 
+  /* text-white dentro de bg-primary perde p/ foreground do tema (lima = preto) */
+  .bg-primary.text-white,
+  .bg-primary .text-white,
+  .gradient-primary.text-white,
+  .gradient-primary .text-white,
+  .gradient-accent.text-white,
+  .gradient-accent .text-white {
+    color: var(--color-primary-foreground);
+  }
+
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
