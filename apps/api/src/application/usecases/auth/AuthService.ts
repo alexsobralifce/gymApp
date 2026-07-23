@@ -95,9 +95,10 @@ export class AuthService {
       throw new UnauthorizedError('E-mail ou senha inválidos')
     }
 
-    if (!usuario.email_verified) {
+    // email_verified check temporarily disabled
+    /* if (!usuario.email_verified) {
       throw new ForbiddenError('E-mail não verificado. Verifique sua caixa de entrada.')
-    }
+    } */
 
     // Montar payload com tenantId dependendo do role
     let tenantId: string | undefined
