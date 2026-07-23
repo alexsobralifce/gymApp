@@ -214,6 +214,7 @@ export interface PerfilAluno {
   usuario_id: string
   professor_id?: string | null
   academia_id?: string | null
+  clube_id?: string | null
   data_nascimento?: string | null
   peso_kg?: number | null
   altura_cm?: number | null

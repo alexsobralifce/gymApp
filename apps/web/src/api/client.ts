@@ -370,6 +370,7 @@ export const api = {
     return api.get<{ items: any[]; total: number; page: number; limit: number; totalPages: number }>(`/root/social/clubes${query ? `?${query}` : ''}`)
   },
   deleteRootClube: (id: string) => api.delete(`/root/social/clubes/${id}`),
+  createRootClube: (nome: string, tipo: 'ACADEMIA' | 'TEMATICO') => api.post('/root/social/clubes', { nome, tipo }),
 
   getRootSocialAmizades: (params?: { page?: number; limit?: number }) => {
     const qs = new URLSearchParams()

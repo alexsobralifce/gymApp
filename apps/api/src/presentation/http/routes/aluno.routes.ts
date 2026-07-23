@@ -196,7 +196,16 @@ export async function alunoRoutes(app: FastifyInstance) {
     })
     if (!aluno) throw new NotFoundError('Aluno')
 
-    return reply.status(200).send(aluno)
+    let clubeId: string | null = null
+    if (aluno.academia_id) {
+      const club = await prisma.socialClub.findUnique({
+        where: { academia_id: aluno.academia_id },
+        select: { id: true },
+      })
+      clubeId = club?.id ?? null
+    }
+
+    return reply.status(200).send({ ...aluno, clube_id: clubeId })
   })
 
   /** GET /alunos/treinos — lista treinos do aluno */

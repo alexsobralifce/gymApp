@@ -6,11 +6,11 @@ import { useEffect, useState } from 'react'
 import PostPhotoUpload from '../../components/social/PostPhotoUpload'
 
 const CONQUISTAS = [
-  { msg: 'Cada repeticao conta! Continue assim e os resultados virao.', emoji: '🏆' },
-  { msg: 'Disciplina e constancia sao o segredo do progresso.', emoji: '💎' },
-  { msg: 'Voce esta mais forte do que ontem. Orgulhe-se!', emoji: '🔥' },
-  { msg: 'O treino de hoje e a base do shape de amanha.', emoji: '🚀' },
-  { msg: 'Superar seus limites e o que te faz evoluir.', emoji: '⚡' },
+  { msg: 'Cada repetição conta! Continue assim e os resultados virão.', emoji: '🏆' },
+  { msg: 'Disciplina e constância são o segredo do progresso.', emoji: '💎' },
+  { msg: 'Você está mais forte do que ontem. Orgulhe-se!', emoji: '🔥' },
+  { msg: 'O treino de hoje é a base do shape de amanhã.', emoji: '🚀' },
+  { msg: 'Superar seus limites é o que te faz evoluir.', emoji: '⚡' },
 ]
 
 export default function AlunoTreinoConclusao() {
@@ -37,11 +37,11 @@ export default function AlunoTreinoConclusao() {
           <TrophyIcon className="h-10 w-10 text-success" />
         </div>
 
-        <h1 className="text-2xl font-extrabold text-text text-center">Treino Concluido!</h1>
+        <h1 className="text-2xl font-extrabold text-text text-center">Treino Concluído!</h1>
 
         <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface-card border border-surface-input px-4 py-2">
           <TimerIcon className="h-4 w-4 text-text-muted" />
-          <span className="text-sm font-semibold text-text-muted">Duracao: {duracao}</span>
+          <span className="text-sm font-semibold text-text-muted">Duração: {duracao}</span>
         </div>
 
         {/* Motivational */}
@@ -56,14 +56,14 @@ export default function AlunoTreinoConclusao() {
           onClick={() => navigate('/')}
           className="mt-8 w-full max-w-xs rounded-2xl gradient-primary py-3.5 text-base font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
         >
-          Voltar para o Inicio
+          Voltar para o Início
         </button>
 
         <button
           onClick={() => navigate('/evolucao')}
           className="mt-3 w-full max-w-xs rounded-2xl border border-surface-input bg-surface-card py-3 text-sm font-semibold text-text-muted hover:text-text hover:border-text-muted active:scale-[0.98] transition-all cursor-pointer"
         >
-          Ver Minha Evolucao
+          Ver Minha Evolução
         </button>
 
         {postId && (

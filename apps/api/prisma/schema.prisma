@@ -523,11 +523,12 @@ model SocialClub {
 }
 
 model SocialClubMember {
-  id        String   @id @default(cuid())
-  clube_id  String
-  aluno_id  String
-  xp_semana Int      @default(0)
-  criado_em DateTime @default(now())
+  id           String   @id @default(cuid())
+  clube_id     String
+  aluno_id     String
+  xp_semana    Int      @default(0)
+  xp_reset_ano Int      @default(2026)
+  criado_em    DateTime @default(now())
 
   @@unique([clube_id, aluno_id])
   @@index([clube_id, xp_semana])

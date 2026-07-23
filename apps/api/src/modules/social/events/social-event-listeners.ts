@@ -1,5 +1,5 @@
 import { eventBus } from '../../../shared/events/event-bus.js'
-import { socialFanoutQueue, socialBadgeQueue } from '../../../jobs/social/queues.js'
+import { socialFanoutQueue, socialBadgeQueue, socialLeaderboardQueue } from '../../../jobs/social/queues.js'
 
 export function registerSocialEventListeners() {
   eventBus.on('treino.iniciado', async (event) => {
@@ -37,6 +37,13 @@ export function registerSocialEventListeners() {
         badgeTipo: 'primeiros_10_treinos',
       }, {
         jobId: `badge:${event.payload.alunoId}:10treinos`,
+      })
+
+      await socialLeaderboardQueue.add('update-xp', {
+        treinoId: event.payload.treinoId,
+        alunoId: event.payload.alunoId,
+      }, {
+        jobId: `xp:${event.payload.treinoId}`,
       })
     } catch (err) {
       console.warn('[Social] Falha ao enfileirar treino.concluido:', err)

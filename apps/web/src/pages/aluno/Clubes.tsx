@@ -6,7 +6,8 @@ import { getInitials } from '../../lib/initials'
 
 export default function Clubes() {
   const [academia, setAcademia] = useState<{ nome: string; id: string } | null>(null)
-  const [leaderboard] = useState<LeaderboardEntry[]>([])
+  const [clubeId, setClubeId] = useState<string | null>(null)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -15,12 +16,18 @@ export default function Clubes() {
         const p = await api.getPerfilAluno().catch(() => null)
         if (p?.academia) {
           setAcademia({ nome: p.academia.nome, id: p.academia.id || '' })
+          setClubeId(p.clube_id || null)
         }
       } catch { /* ok */ }
       setLoading(false)
     }
     load()
   }, [])
+
+  useEffect(() => {
+    if (!clubeId) return
+    api.getLeaderboard(clubeId).then(setLeaderboard).catch(() => {})
+  }, [clubeId])
 
   if (loading) {
     return (
@@ -64,12 +71,12 @@ export default function Clubes() {
       </div>
 
       <div>
-        <h3 className="text-sm font-bold text-text mb-3 uppercase tracking-wider">Leaderboard Semanal</h3>
+        <h3 className="text-sm font-bold text-text mb-3 uppercase tracking-wider">Ranking Anual</h3>
         {leaderboard.length === 0 ? (
           <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
             <TrophyIcon className="h-10 w-10 text-text-muted mx-auto mb-3 opacity-30" />
-            <p className="text-sm text-text-muted">Leaderboard em breve.</p>
-            <p className="text-xs text-text-muted mt-1">A pontuacao semanal esta sendo implementada. Treine para garantir sua posicao!</p>
+            <p className="text-sm text-text-muted">Nenhum XP acumulado ainda.</p>
+            <p className="text-xs text-text-muted mt-1">Conclua treinos para ganhar XP e aparecer no ranking!</p>
           </div>
         ) : (
           <div className="rounded-2xl bg-surface-card border border-surface-input overflow-hidden">

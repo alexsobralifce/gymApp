@@ -11,6 +11,7 @@ import { connection as socialConnection } from '../../jobs/social/queues.js'
 import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
 import { handleNotifyFriends } from '../../jobs/social/notify-friends.worker.js'
 import { handleAwardBadges } from '../../jobs/social/award-badges.worker.js'
+import { handleUpdateXp } from '../../jobs/social/update-xp.worker.js'
 
 let connection: { url: string } | null = null
 
@@ -27,6 +28,7 @@ let correlacaoWorker: Worker | null = null
 let socialFanoutWorker: Worker | null = null
 let socialNotifyWorker: Worker | null = null
 let socialBadgeWorker: Worker | null = null
+let socialLeaderboardWorker: Worker | null = null
 
 let started = false
 
@@ -287,9 +289,12 @@ export async function startWorkers() {
   socialNotifyWorker = new Worker('social-notify', handleNotifyFriends, { connection: socialConnection })
   socialBadgeWorker = new Worker('social-badge', handleAwardBadges, { connection: socialConnection })
 
+  socialLeaderboardWorker = new Worker('social-leaderboard', handleUpdateXp, { connection: socialConnection })
+
   socialFanoutWorker.on('failed', (job, err) => console.error('[Social Fanout] Job failed after retries:', job?.id, err.message))
   socialNotifyWorker.on('failed', (job, err) => console.error('[Social Notify] Job failed after retries:', job?.id, err.message))
   socialBadgeWorker.on('failed', (job, err) => console.error('[Social Badge] Job failed after retries:', job?.id, err.message))
+  socialLeaderboardWorker.on('failed', (job, err) => console.error('[Social Leaderboard] Job failed after retries:', job?.id, err.message))
 
   await scheduleRecurringJobs()
 }
@@ -299,7 +304,7 @@ export async function stopWorkers() {
   started = false
 
   const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker,
-    socialFanoutWorker, socialNotifyWorker, socialBadgeWorker]
+    socialFanoutWorker, socialNotifyWorker, socialBadgeWorker, socialLeaderboardWorker]
   const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue]
 
   await Promise.all([

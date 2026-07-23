@@ -108,6 +108,11 @@ export default function RootSocial() {
 
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: string; nome: string } | null>(null)
 
+  const [showCreateClub, setShowCreateClub] = useState(false)
+  const [clubNome, setClubNome] = useState('')
+  const [clubTipo, setClubTipo] = useState<'ACADEMIA' | 'TEMATICO'>('TEMATICO')
+  const [creating, setCreating] = useState(false)
+
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
@@ -161,6 +166,23 @@ export default function RootSocial() {
       await loadData()
     } catch {
       showFeedback('Erro ao remover clube.')
+    }
+  }
+
+  async function handleCreateClub(e: React.FormEvent) {
+    e.preventDefault()
+    setCreating(true)
+    try {
+      await api.createRootClube(clubNome, clubTipo)
+      showFeedback('Clube criado com sucesso!')
+      setShowCreateClub(false)
+      setClubNome('')
+      setClubTipo('TEMATICO')
+      await loadData()
+    } catch {
+      showFeedback('Erro ao criar clube.')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -256,7 +278,55 @@ export default function RootSocial() {
 
           {tab === 'clubes' && clubes && (
             <>
-              <p className="mb-3 text-xs text-text-muted">{clubes.total} clubes encontrados</p>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs text-text-muted">{clubes.total} clubes encontrados</p>
+                <button
+                  onClick={() => setShowCreateClub(true)}
+                  className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:brightness-110 cursor-pointer"
+                >
+                  + Criar Clube
+                </button>
+              </div>
+
+              {showCreateClub && (
+                <form onSubmit={handleCreateClub} className="mb-4 rounded-lg bg-surface-card p-4 space-y-3">
+                  <h3 className="font-semibold text-text">Novo Clube</h3>
+                  <input
+                    type="text"
+                    placeholder="Nome do clube"
+                    value={clubNome}
+                    onChange={(e) => setClubNome(e.target.value)}
+                    className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text"
+                    required
+                    minLength={3}
+                  />
+                  <select
+                    value={clubTipo}
+                    onChange={(e) => setClubTipo(e.target.value as 'ACADEMIA' | 'TEMATICO')}
+                    className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text"
+                  >
+                    <option value="TEMATICO">Temático</option>
+                    <option value="ACADEMIA">Academia</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={creating || !clubNome}
+                      className="flex-1 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 cursor-pointer"
+                    >
+                      {creating ? 'Criando...' : 'Criar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowCreateClub(false); setClubNome(''); setClubTipo('TEMATICO') }}
+                      className="rounded border border-surface-input px-4 py-2 text-sm text-text-muted cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              )}
+
               {clubes.items.length === 0 ? (
                 <p className="py-8 text-center text-text-muted">Nenhum clube encontrado.</p>
               ) : (

@@ -806,6 +806,23 @@ export async function rootRoutes(app: FastifyInstance) {
     return reply.status(200).send({ items: clubesComMembros, total, page, limit, totalPages: Math.ceil(total / limit) })
   })
 
+  /** POST /root/social/clubes — criar clube TEMATICO (root only) */
+  app.post('/social/clubes', { preHandler }, async (request, reply) => {
+    const { nome, tipo } = z.object({
+      nome: z.string().min(3).max(100),
+      tipo: z.enum(['ACADEMIA', 'TEMATICO']),
+    }).parse(request.body)
+
+    const exists = await prisma.socialClub.findFirst({ where: { nome, tipo } })
+    if (exists) throw new ConflictError('Clube já existe')
+
+    const clube = await prisma.socialClub.create({
+      data: { nome, tipo },
+    })
+
+    return reply.status(201).send(clube)
+  })
+
   /** DELETE /root/social/clubes/:id — remove clube */
   app.delete('/social/clubes/:id', { preHandler }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
