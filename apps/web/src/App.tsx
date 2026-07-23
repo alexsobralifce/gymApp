@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/auth'
 import { useNotifications } from './hooks/useNotifications'
+import { useCapacitorTheme } from './hooks/useCapacitorTheme'
 import AppShell from './components/layout/AppShell'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import Landing from './pages/Landing'
@@ -44,6 +45,7 @@ import AlterarSenha from './pages/auth/AlterarSenha'
 
 export default function App() {
   useNotifications()
+  useCapacitorTheme()
   const { user, fetchUser } = useAuthStore()
   const [ready, setReady] = useState(false)
 

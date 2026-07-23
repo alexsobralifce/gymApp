@@ -57,7 +57,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     },
   })
 
-  const origins: string[] = [env.API_BASE_URL]
+  const origins: string[] = [env.API_BASE_URL, 'capacitor://localhost', 'http://localhost']
   if (env.WEB_BASE_URL) {
     origins.push(env.WEB_BASE_URL)
   }
