@@ -274,7 +274,7 @@ export default function Landing() {
               </div>
 
               <h2 className="text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.05 }}>
-                PRESCRICAO EM{' '}
+                PRESCRIÇÃO EM{' '}
                 <span className="text-primary">MINUTOS</span>
               </h2>
 
