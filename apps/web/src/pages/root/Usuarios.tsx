@@ -321,10 +321,10 @@ export default function RootUsuarios() {
 
       {deleteConfirm && (
         <Modal onClose={() => setDeleteConfirm(null)}>
-          <h2 className="mb-2 text-lg font-bold text-text">Confirmar exclusao</h2>
+          <h2 className="mb-2 text-lg font-bold text-text">Confirmar exclusão</h2>
           <p className="mb-6 text-sm text-text-muted">
             Tem certeza que deseja excluir <strong className="text-text">{deleteConfirm.nome}</strong>?
-            Esta acao nao pode ser desfeita e todos os dados vinculados serao removidos.
+            Esta ação não pode ser desfeita e todos os dados vinculados serão removidos.
           </p>
           <div className="flex justify-end gap-2">
             <button onClick={() => setDeleteConfirm(null)} className={btnGhost}>Cancelar</button>
@@ -637,7 +637,7 @@ function EditProfessorModal({
         <div>
           <label className="mb-2 block text-xs text-text-muted">Academias vinculadas</label>
           <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-surface-input p-2">
-            {academias.length === 0 && <p className="text-xs text-text-muted">Nenhuma academia disponivel.</p>}
+            {academias.length === 0 && <p className="text-xs text-text-muted">Nenhuma academia disponível.</p>}
             {academias.map((a) => (
               <label key={a.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-text hover:bg-surface-input">
                 <input

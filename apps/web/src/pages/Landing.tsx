@@ -11,70 +11,70 @@ const NAV_LINKS = ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Func
 const FEATURES = [
   {
     icon: BrainCircuit,
-    title: 'Prescricao por IA',
-    desc: 'Escolha grupos musculares, nivel, objetivo e tempo. O sistema monta 3 exercicios por grupo, ajustando series e repeticoes.',
+    title: 'Prescrição por IA',
+    desc: 'Escolha grupos musculares, nível, objetivo e tempo. O sistema monta 3 exercícios por grupo, ajustando series e repetições.',
   },
   {
     icon: BookOpen,
     title: 'Biblioteca de Planos',
-    desc: 'Push, Pull, Legs por nivel de experiencia. Templates prontos para adotar com um clique — sem alongamento, so exercicio efetivo.',
+    desc: 'Push, Pull, Legs por nível de experiencia. Templates prontos para adotar com um clique — sem alongamento, so exercicio efetivo.',
   },
   {
     icon: Dumbbell,
-    title: 'Execucao Guiada',
-    desc: 'Cada exercicio com GIF animado e passos em portugues. Registre cargas e repeticoes serie a serie ate concluir o treino.',
+    title: 'Execução Guiada',
+    desc: 'Cada exercicio com GIF animado e passos em portugues. Registre cargas e repetições serie a serie ate concluir o treino.',
   },
   {
     icon: Target,
     title: 'Maquina de Estados',
-    desc: 'Enviado → Aceito → Iniciado → Em Execucao → Concluido. Todo treino segue um fluxo claro, seja seu ou do professor.',
+    desc: 'Enviado → Aceito → Iniciado → Em Execução → Concluído. Todo treino segue um fluxo claro, seja seu ou do professor.',
   },
   {
     icon: TrendingUp,
     title: 'Evolucao com Dados',
-    desc: 'Medidas corporais, correlacoes entre volume e composicao, calendario de treinos — sua progressao visivel em graficos.',
+    desc: 'Medidas corporais, correlações entre volume e composição, calendario de treinos — sua progressão visivel em graficos.',
   },
   {
     icon: ClipboardList,
-    title: 'Autogestao Completa',
-    desc: 'Crie e edite seus proprios treinos. Monte do zero ou use a biblioteca. Voce nao depende de academia ou professor.',
+    title: 'Autogestão Completa',
+    desc: 'Crie e edite seus próprios treinos. Monte do zero ou use a biblioteca. Você não depende de academia ou professor.',
   },
   {
     icon: UserPlus,
     title: 'Professor & Academia',
-    desc: 'Vincule-se a um professor ou academia. Receba fichas, tenha acompanhamento profissional e templates reutilizaveis.',
+    desc: 'Vincule-se a um professor ou academia. Receba fichas, tenha acompanhamento profissional e templates reutilizáveis.',
   },
   {
     icon: Heart,
     title: 'Restricoes e Seguranca',
-    desc: 'Informe dores articulares (ombro, joelho, lombar). O sistema evita exercicios incompativeis e prefere maquinas no iniciante.',
+    desc: 'Informe dores articulares (ombro, joelho, lombar). O sistema evita exercícios incompatíveis e prefere máquinas no iniciante.',
   },
 ]
 
 const FAQS = [
   {
     q: 'Preciso de academia ou professor para usar?',
-    a: 'Nao. O GymApp tem modo autogestao — voce cria, edita e executa seus treinos sozinho. Professores e academias sao opcionais para quem quer acompanhamento.',
+    a: 'Não. O GymApp tem modo autogestão — você cria, edita e executa seus treinos sozinho. Professores e academias são opcionais para quem quer acompanhamento.',
   },
   {
     q: 'Como a IA monta o treino?',
-    a: 'Voce escolhe grupos musculares, nivel (iniciante/intermediario/avancado), objetivo (hipertrofia/forca/emagrecimento/saude) e duracao. O sistema aplica regras de volume e seleciona 3 exercicios por grupo da biblioteca com +900 movimentos.',
+    a: 'Você escolhe grupos musculares, nível (iniciante/intermediário/avançado), objetivo (hipertrofia/força/emagrecimento/saúde) e duração. O sistema aplica regras de volume e seleciona 3 exercícios por grupo da biblioteca com +900 movimentos.',
   },
   {
-    q: 'Os exercicios tem demonstracao?',
+    q: 'Os exercícios tem demonstração?',
     a: 'Sim. Cada exercicio tem GIF animado e passos de execucao detalhados em portugues.',
   },
   {
     q: 'Tem rede social no app?',
-    a: 'Sim. Mural com posts de treinos concluidos, amizades, curtidas, comentarios e colegas da mesma academia. Voce controla a visibilidade de cada post.',
+    a: 'Sim. Mural com posts de treinos concluídos, amizades, curtidas, comentários e colegas da mesma academia. Você controla a visibilidade de cada post.',
   },
   {
     q: 'Funciona no celular?',
-    a: 'Sim. O GymApp e web responsivo e funciona em qualquer navegador moderno no celular. Pode instalar como PWA na tela inicial.',
+    a: 'Sim. O GymApp é web responsivo e funciona em qualquer navegador moderno no celular. Pode instalar como PWA na tela inicial.',
   },
   {
     q: 'Posso treinar com um professor vinculado?',
-    a: 'Sim. Professores montam fichas, enviam para voce, acompanham sua evolucao e reutilizam templates entre alunos.',
+    a: 'Sim. Professores montam fichas, enviam para você, acompanham sua evolução e reutilizam templates entre alunos.',
   },
 ]
 
@@ -187,13 +187,13 @@ export default function Landing() {
               SEU TREINO INTELIGENTE.
               <br />
               SUA{' '}
-              <span className="text-primary">EVOLUCAO</span>.
+              <span className="text-primary">EVOLUÇÃO</span>.
               <br />
               SUA COMUNIDADE.
             </h1>
 
             <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">
-              Escolha grupos musculares, receba 3 exercicios por grupo ajustados ao seu nivel e objetivo. Execute com GIFs, registre cargas e compartilhe suas conquistas na rede social fitness.
+              Escolha grupos musculares, receba 3 exercícios por grupo ajustados ao seu nível e objetivo. Execute com GIFs, registre cargas e compartilhe suas conquistas na rede social fitness.
             </p>
 
             <div className="flex flex-wrap justify-center gap-3">
@@ -201,7 +201,7 @@ export default function Landing() {
                 to="/register"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded font-semibold text-primary-foreground bg-primary hover:brightness-110 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/25 text-sm"
               >
-                Criar Conta Gratis
+                Criar Conta Grátis
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
@@ -215,11 +215,11 @@ export default function Landing() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-accent" />
-                +900 exercicios com GIF
+                +900 exercícios com GIF
               </span>
               <span className="flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-accent" />
-                Prescricao por objetivo e nivel
+                Prescrição por objetivo e nível
               </span>
               <span className="flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-accent" />
@@ -236,10 +236,10 @@ export default function Landing() {
           <div className="text-center mb-14">
             <span className="text-xs font-semibold text-primary uppercase tracking-widest">Funcionalidades</span>
             <h2 className="mt-3 text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.05 }}>
-              TUDO EM UM SO LUGAR
+              TUDO EM UM SÓ LUGAR
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
-              Monte treinos com IA, execute com GIFs, acompanhe sua evolucao e interaja na comunidade.
+              Monte treinos com IA, execute com GIFs, acompanhe sua evolução e interaja na comunidade.
             </p>
           </div>
 
@@ -279,15 +279,15 @@ export default function Landing() {
               </h2>
 
               <p className="mt-4 text-muted-foreground leading-relaxed text-sm">
-                Responda 5 perguntas simples e receba uma ficha completa com 3 exercicios por grupo muscular. Nada de caixa-preta — o sistema aplica principios de treinamento reconhecidos.
+                Responda 5 perguntas simples e receba uma ficha completa com 3 exercícios por grupo muscular. Nada de caixa-preta — o sistema aplica princípios de treinamento reconhecidos.
               </p>
 
               <ul className="mt-6 space-y-3">
                 {[
-                  { icon: Target, text: 'Objetivo: hipertrofia, forca, emagrecimento ou saude — cada um com faixa de repeticoes propria' },
-                  { icon: TrendingUp, text: 'Nivel: iniciante (maquinas), intermediario (livre) ou avancado (alta carga) — series ajustadas' },
-                  { icon: Clock, text: 'Duracao: voce define quanto tempo tem (30 a 90 min) — o volume se adapta automaticamente' },
-                  { icon: Shield, text: 'Restricoes articulares: ombro, joelho, lombar — exercicios incompativeis sao evitados' },
+                  { icon: Target, text: 'Objetivo: hipertrofia, força, emagrecimento ou saúde — cada um com faixa de repetições propria' },
+                  { icon: TrendingUp, text: 'Nivel: iniciante (máquinas), intermediário (livre) ou avançado (alta carga) — series ajustadas' },
+                  { icon: Clock, text: 'Duração: você define quanto tempo tem (30 a 90 min) — o volume se adapta automaticamente' },
+                  { icon: Shield, text: 'Restricoes articulares: ombro, joelho, lombar — exercícios incompatíveis são evitados' },
                 ].map(({ icon: Icon, text }) => (
                   <li key={text} className="flex items-start gap-3 text-sm text-muted-foreground">
                     <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -299,7 +299,7 @@ export default function Landing() {
               </ul>
 
               <p className="mt-6 text-xs text-muted-foreground italic">
-                Nao e LLM — e um motor deterministico com regras de volume, selecao de exercicios e orcamento por tempo. Voce sempre sabe o que esperar.
+                Não é LLM — é um motor determinístico com regras de volume, seleção de exercícios e orçamento por tempo. Você sempre sabe o que esperar.
               </p>
             </div>
 
@@ -316,11 +316,11 @@ export default function Landing() {
                   <div className="space-y-3">
                     <h4 className="text-sm font-bold text-foreground">Push — Peito + Ombro + Triceps</h4>
                     <div className="space-y-1.5">
-                      <p className="text-xs font-bold text-primary uppercase">Peito (3 exercicios)</p>
+                      <p className="text-xs font-bold text-primary uppercase">Peito (3 exercícios)</p>
                       <p className="text-xs text-muted-foreground">Supino Reto, Crucifixo, Peck Deck — 3x8-12</p>
-                      <p className="text-xs font-bold text-primary uppercase mt-2">Ombro (3 exercicios)</p>
+                      <p className="text-xs font-bold text-primary uppercase mt-2">Ombro (3 exercícios)</p>
                       <p className="text-xs text-muted-foreground">Desenvolvimento, Elevacao Lateral, Frontal — 3x10-12</p>
-                      <p className="text-xs font-bold text-primary uppercase mt-2">Triceps (3 exercicios)</p>
+                      <p className="text-xs font-bold text-primary uppercase mt-2">Triceps (3 exercícios)</p>
                       <p className="text-xs text-muted-foreground">Pushdown, Testa, Dip — 3x10-12</p>
                     </div>
                   </div>
@@ -335,12 +335,12 @@ export default function Landing() {
       <section id="ciencia" className="py-20 bg-card border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Base Cientifica</span>
+            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Base Científica</span>
             <h2 className="mt-3 text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.05 }}>
               PRINCIPIOS DE PRESCRICAO
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
-              Transparencia total: a montagem dos treinos segue regras claras baseadas na literatura de treinamento.
+              Transparência total: a montagem dos treinos segue regras claras baseadas na literatura de treinamento.
             </p>
           </div>
 
@@ -348,35 +348,35 @@ export default function Landing() {
             {[
               {
                 title: 'Especificidade',
-                desc: 'Cada objetivo tem sua faixa de repeticoes: hipertrofia 8-12, forca 1-6, emagrecimento 12-20, saude 10-15.',
+                desc: 'Cada objetivo tem sua faixa de repetições: hipertrofia 8-12, força 1-6, emagrecimento 12-20, saúde 10-15.',
               },
               {
                 title: 'Volume por Grupo',
-                desc: '3 exercicios por grupo muscular na sessao — dose minima efetiva para estimulo hipertrófico.',
+                desc: '3 exercícios por grupo muscular na sessão — dose minima efetiva para estímulo hipertrófico.',
               },
               {
-                title: 'Progressao por Nivel',
-                desc: 'Iniciante: maquinas e cargas leves. Intermediario: pesos livres. Avancado: alta carga e variacao.',
+                title: 'Progressão por Nivel',
+                desc: 'Iniciante: máquinas e cargas leves. Intermediario: pesos livres. Avancado: alta carga e variação.',
               },
               {
                 title: 'Gestao de Fadiga',
-                desc: 'Orcamento de exercicios por duracao (30-90 min). Treinos mais longos nao significam melhores.',
+                desc: 'Orçamento de exercícios por duração (30-90 min). Treinos mais longos não significam melhores.',
               },
               {
                 title: 'Splits Reconhecidos',
-                desc: 'Push/Pull/Legs, Upper/Lower e Full Body — divisoes classicas do strength & conditioning.',
+                desc: 'Push/Pull/Legs, Upper/Lower e Full Body — divisões classicas do strength & conditioning.',
               },
               {
                 title: 'Seguranca Primeiro',
-                desc: 'Respeita restricoes articulares. Prefere movimentos guiados para iniciantes. Zero alongamento na ficha.',
+                desc: 'Respeita restrições articulares. Prefere movimentos guiados para iniciantes. Zero alongamento na ficha.',
               },
               {
                 title: 'Selecao Baseada em Dados',
-                desc: 'Cada exercicio tem grupo muscular, equipamento e padrao de movimento — filtrados por relevancia.',
+                desc: 'Cada exercicio tem grupo muscular, equipamento e padrão de movimento — filtrados por relevância.',
               },
               {
                 title: 'Montagem Transparente',
-                desc: 'Nao e caixa-preta. Voce ve por que cada exercicio foi escolhido, com series, repeticoes e carga sugerida.',
+                desc: 'não é caixa-preta. Você vê por que cada exercicio foi escolhido, com series, repetições e carga sugerida.',
               },
             ].map((item) => (
               <div key={item.title} className="p-5 rounded-xl border border-border bg-background">
@@ -406,14 +406,14 @@ export default function Landing() {
               </h2>
 
               <p className="mt-4 text-muted-foreground leading-relaxed text-sm">
-                Treinar e melhor, mas compartilhar conquistas motiva. O GymApp conecta voce a colegas da academia, amigos e a uma comunidade fitness real.
+                Treinar é melhor, mas compartilhar conquistas motiva. O GymApp conecta você a colegas da academia, amigos e a uma comunidade fitness real.
               </p>
 
               <ul className="mt-6 space-y-3">
                 {[
-                  { icon: MessageCircle, text: 'Mural com posts automaticos de treino iniciado, concluido e recordes pessoais' },
-                  { icon: Users, text: 'Colegas da academia: descubra e siga quem treina no mesmo lugar que voce' },
-                  { icon: Heart, text: 'Curtidas e comentarios nos posts — interacao no feed como rede social' },
+                  { icon: MessageCircle, text: 'Mural com posts automáticos de treino iniciado, concluido e recordes pessoais' },
+                  { icon: Users, text: 'Colegas da academia: descubra e siga quem treina no mesmo lugar que você' },
+                  { icon: Heart, text: 'Curtidas e comentários nos posts — interação no feed como rede social' },
                   { icon: Trophy, text: 'Clubes com ranking semanal de XP (em breve)' },
                   { icon: Shield, text: 'Privacidade sob seu controle: publico, so amigos ou privado' },
                 ].map(({ icon: Icon, text }) => (
@@ -437,7 +437,7 @@ export default function Landing() {
                       <p className="text-xs font-semibold text-foreground">Carlos R.</p>
                       <p className="text-xs text-muted-foreground">concluiu o treino na Iron Force</p>
                     </div>
-                    <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">TREINO CONCLUIDO</span>
+                    <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">TREINO CONCLUÍDO</span>
                   </div>
                   <p className="text-xs text-foreground font-medium">Push — Peito + Ombro + Triceps</p>
                   <div className="flex gap-3 text-xs text-muted-foreground">
@@ -473,7 +473,7 @@ export default function Landing() {
                   'Receba fichas do professor',
                   'Execute com GIFs e registre series',
                   'Poste conquistas no Mural',
-                  'Acompanhe medidas e evolucao',
+                  'Acompanhe medidas e evolução',
                 ],
               },
               {
@@ -482,11 +482,11 @@ export default function Landing() {
                 color: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
                 steps: [
                   'Vincule-se a academias',
-                  'Monte fichas com biblioteca de exercicios',
+                  'Monte fichas com biblioteca de exercícios',
                   'Envie treinos para alunos vinculados',
-                  'Acompanhe evolucao e correlacoes',
-                  'Crie templates reutilizaveis',
-                  'Clone fichas para varios alunos em lote',
+                  'Acompanhe evolução e correlações',
+                  'Crie templates reutilizáveis',
+                  'Clone fichas para vários alunos em lote',
                 ],
               },
               {
@@ -498,8 +498,8 @@ export default function Landing() {
                   'Adicione professores ao time',
                   'Visualize todos os alunos',
                   'Atribua professor a cada aluno',
-                  'Tenha visao completa de treinos',
-                  'Dashboard com metricas',
+                  'Tenha visão completa de treinos',
+                  'Dashboard com métricas',
                 ],
               },
             ].map((col) => (
@@ -526,7 +526,7 @@ export default function Landing() {
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Duvidas Frequentes</span>
+            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Dúvidas Frequentes</span>
             <h2 className="mt-3 text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 800, lineHeight: 1.05 }}>
               PERGUNTAS E RESPOSTAS
             </h2>
@@ -564,21 +564,21 @@ export default function Landing() {
             <span className="text-primary">COM METODO?</span>
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto text-sm">
-            Monte treinos com regras claras, execute com GIFs, acompanhe sua evolucao e conecte-se a uma comunidade fitness real.
+            Monte treinos com regras claras, execute com GIFs, acompanhe sua evolução e conecte-se a uma comunidade fitness real.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               to="/register"
               className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold text-primary-foreground bg-primary hover:brightness-110 transition-all shadow-xl shadow-primary/30 text-base"
             >
-              Criar Conta Gratis
+              Criar Conta Grátis
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               to="/login"
               className="inline-flex items-center gap-2 px-8 py-4 rounded font-semibold text-foreground border border-border hover:border-foreground/30 transition-colors text-base"
             >
-              Ja Tenho Conta
+              Já Tenho Conta
             </Link>
           </div>
         </div>
@@ -604,7 +604,7 @@ export default function Landing() {
 
             {[
               { title: 'Produto', links: ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Funciona'] },
-              { title: 'Para Quem', links: ['Aluno Autogestao', 'Professor', 'Academia', 'Personal Trainer'] },
+              { title: 'Para Quem', links: ['Aluno Autogestão', 'Professor', 'Academia', 'Personal Trainer'] },
               { title: 'Links', links: ['Entrar', 'Criar Conta', 'Termos de Uso', 'Privacidade'] },
             ].map((col) => (
               <div key={col.title}>

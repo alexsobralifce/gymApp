@@ -8,7 +8,7 @@ export interface AuthState {
   error: string | null
 
   login: (email: string, senha: string) => Promise<void>
-  loginWithGoogle: (credential: string) => Promise<boolean>
+  loginWithGoogle: (credential: string, accessToken?: string) => Promise<boolean>
   register: (nome: string, email: string, senha: string, role: string, telefone?: string) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
@@ -34,10 +34,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  loginWithGoogle: async (credential) => {
+  loginWithGoogle: async (credential, accessToken) => {
     set({ loading: true, error: null })
     try {
-      const result = await api.loginWithGoogle(credential)
+      const result = await api.loginWithGoogle(credential, accessToken)
       localStorage.setItem('accessToken', result.accessToken)
       localStorage.setItem('refreshToken', result.refreshToken)
       const user = await api.getMe()

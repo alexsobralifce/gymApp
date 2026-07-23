@@ -229,26 +229,46 @@ export class AuthService {
    */
   static async loginWithGoogle(
     credential: string,
+    accessToken?: string,
     jwtSign: (payload: object, opts?: object) => string,
   ): Promise<AuthTokens & { isNew: boolean; nome: string }> {
     if (!googleClient) {
       throw new Error('Google OAuth não está configurado. Defina GOOGLE_CLIENT_ID.')
     }
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: env.GOOGLE_CLIENT_ID,
-    })
+    let email: string
+    let nome: string
+    let fotoUrl: string | null = null
+    let googleId: string | null = null
 
-    const payload = ticket.getPayload()
-    if (!payload || !payload.email) {
+    if (credential) {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: env.GOOGLE_CLIENT_ID,
+      })
+      const payload = ticket.getPayload()
+      if (!payload || !payload.email) {
+        throw new UnauthorizedError('Token Google inválido.')
+      }
+      email = payload.email
+      nome = payload.name || email.split('@')[0]
+      fotoUrl = payload.picture || null
+      googleId = payload.sub
+    } else if (accessToken) {
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!response.ok) {
+        throw new UnauthorizedError('Access token Google inválido.')
+      }
+      const data = await response.json() as any
+      email = data.email
+      nome = data.name || email.split('@')[0]
+      fotoUrl = data.picture || null
+      googleId = data.sub
+    } else {
       throw new UnauthorizedError('Token Google inválido.')
     }
-
-    const email = payload.email
-    const nome = payload.name || email.split('@')[0]
-    const fotoUrl = payload.picture || null
-    const googleId = payload.sub
 
     let usuario = await prisma.usuario.findUnique({
       where: { email },

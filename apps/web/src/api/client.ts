@@ -96,8 +96,8 @@ export const api = {
   login: (email: string, senha: string) =>
     api.post<AuthTokens>('/auth/login', { email, senha }),
 
-  loginWithGoogle: (credential: string) =>
-    api.post<AuthTokens & { isNew: boolean; nome: string }>('/auth/google', { credential }),
+  loginWithGoogle: (credential: string, accessToken?: string) =>
+    api.post<AuthTokens & { isNew: boolean; nome: string }>('/auth/google', { credential: credential || undefined, access_token: accessToken || undefined }),
 
   register: (nome: string, email: string, senha: string, role: string, telefone?: string) =>
     api.post<{ message: string }>('/auth/register', { nome, email, senha, role, telefone }),

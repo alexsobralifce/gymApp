@@ -87,8 +87,8 @@ export default function Amizades() {
           ) : amigos.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
               <UsersIcon className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-30" />
-              <p className="text-sm text-text-muted">Voce ainda nao tem amigos.</p>
-              <p className="text-xs text-text-muted mt-1">Va para a aba Adicionar e encontre pessoas pelo email.</p>
+              <p className="text-sm text-text-muted">Você ainda não tem amigos.</p>
+              <p className="text-xs text-text-muted mt-1">Vá para a aba Adicionar e encontre pessoas pelo email.</p>
             </div>
           ) : (
             amigos.map((a) => (

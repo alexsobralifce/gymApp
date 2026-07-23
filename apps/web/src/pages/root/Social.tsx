@@ -322,11 +322,11 @@ export default function RootSocial() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteConfirm(null)} />
           <div className="relative z-10 w-full max-w-lg rounded-lg bg-surface-card p-6 shadow-2xl">
-            <h2 className="mb-2 text-lg font-bold text-text">Confirmar remocao</h2>
+            <h2 className="mb-2 text-lg font-bold text-text">Confirmar remoção</h2>
             <p className="mb-6 text-sm text-text-muted">
               Tem certeza que deseja remover{' '}
               <strong className="text-text">{deleteConfirm.nome}</strong>?
-              Esta acao nao pode ser desfeita.
+              Esta ação não pode ser desfeita.
             </p>
             <div className="flex justify-end gap-2">
               <button

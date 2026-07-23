@@ -39,7 +39,7 @@ export default function Clubes() {
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
           <Building2Icon className="h-10 w-10 text-text-muted mx-auto mb-3 opacity-30" />
-          <p className="text-sm text-text-muted">Voce nao esta vinculado a uma academia.</p>
+          <p className="text-sm text-text-muted">Você não está vinculado a uma academia.</p>
           <p className="text-xs text-text-muted mt-1">Vincule-se a uma academia para participar do clube e do leaderboard.</p>
         </div>
       </div>

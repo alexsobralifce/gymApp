@@ -157,8 +157,8 @@ export default function AlunoMeusTreinos() {
         title="Nenhum treino ativo"
         description={
           hasProfessor
-            ? "Seu professor ainda nao enviou fichas ou voce ainda nao aceitou nenhuma. Monte seus proprios treinos ou use prescricao por IA!"
-            : "No modo autogestao, voce monta seus proprios treinos. Comece agora ou use a prescricao inteligente!"
+            ? "Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Monte seus próprios treinos ou use prescrição por IA!"
+            : "No modo autogestão, você monta seus próprios treinos. Comece agora ou use a prescrição inteligente!"
         }
         actionLabel="Criar Treino"
         onAction={() => navigate('/treino/novo')}
