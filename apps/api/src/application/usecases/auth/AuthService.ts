@@ -229,8 +229,8 @@ export class AuthService {
    */
   static async loginWithGoogle(
     credential: string,
-    accessToken?: string,
     jwtSign: (payload: object, opts?: object) => string,
+    googleAccessToken?: string,
   ): Promise<AuthTokens & { isNew: boolean; nome: string }> {
     if (!googleClient) {
       throw new Error('Google OAuth não está configurado. Defina GOOGLE_CLIENT_ID.')
@@ -254,9 +254,9 @@ export class AuthService {
       nome = payload.name || email.split('@')[0]
       fotoUrl = payload.picture || null
       googleId = payload.sub
-    } else if (accessToken) {
+    } else if (googleAccessToken) {
       const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${googleAccessToken}` },
       })
       if (!response.ok) {
         throw new UnauthorizedError('Access token Google inválido.')

@@ -43,7 +43,7 @@ export async function authRoutes(app: FastifyInstance) {
    */
   app.post('/google', async (request, reply) => {
     const body = z.object({ credential: z.string().optional(), access_token: z.string().optional() }).parse(request.body)
-    const result = await AuthService.loginWithGoogle(body.credential || '', body.access_token, app.jwt.sign.bind(app.jwt))
+    const result = await AuthService.loginWithGoogle(body.credential || '', app.jwt.sign.bind(app.jwt), body.access_token)
     return reply.status(200).send(result)
   })
 
