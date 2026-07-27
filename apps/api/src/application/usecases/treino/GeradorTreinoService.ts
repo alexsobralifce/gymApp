@@ -343,6 +343,7 @@ export async function salvarTreinoPorGrupos(alunoId: string, input: GerarPorGrup
         nome: nomeFinal,
         dias_semana: diasSemana,
         status: TreinoStatus.ACEITO,
+        criado_por_ia: true,
         exercicios: {
           create: exerciciosParaTreino,
         },

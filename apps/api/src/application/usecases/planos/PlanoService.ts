@@ -208,6 +208,7 @@ export async function adotarPlano(planoId: string, alunoId: string) {
         nome: sessao.nome,
         dias_semana: diasSemanaSessao,
         status: TreinoStatus.ACEITO,
+        criado_por_ia: true,
         exercicios: {
           create: exerciciosParaTreino,
         },

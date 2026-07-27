@@ -192,6 +192,7 @@ model Treino {
   status                 TreinoStatus @default(CADASTRADO)
   avaliacao_dificuldade  String?      // FACIL, MODERADO, INTENSO, MUITO_INTENSO
   is_template            Boolean      @default(false)
+  criado_por_ia          Boolean      @default(false)
   iniciado_em            DateTime?
   finalizado_em          DateTime?
   /// Última interação na sessão (início ou série registrada)

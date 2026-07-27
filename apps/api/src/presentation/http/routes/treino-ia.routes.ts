@@ -2,13 +2,35 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { NotFoundError } from '../../../domain/errors/AppError.js'
+import { NotFoundError, ValidationError } from '../../../domain/errors/AppError.js'
 import {
   classificarGrupo,
   gerarTreinoIA,
   gerarESalvarTreinoIA,
 } from '../../../application/usecases/treino/PrescricaoIAService.js'
 import { salvarTreinoPorGrupos } from '../../../application/usecases/treino/GeradorTreinoService.js'
+
+const LIMITE_TREINOS_IA_POR_MES = 7
+
+async function verificarLimiteIAMensal(alunoId: string): Promise<void> {
+  const agora = new Date()
+  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1, 0, 0, 0, 0)
+  const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59, 999)
+
+  const count = await prisma.treino.count({
+    where: {
+      aluno_id: alunoId,
+      criado_por_ia: true,
+      criado_em: { gte: inicioMes, lte: fimMes },
+    },
+  })
+
+  if (count >= LIMITE_TREINOS_IA_POR_MES) {
+    throw new ValidationError(
+      `Você atingiu o limite de ${LIMITE_TREINOS_IA_POR_MES} treinos gerados por IA neste mês. O limite renova todo dia 1°.`
+    )
+  }
+}
 
 const iaInputSchema = z.object({
   objetivo: z.string().optional(),
@@ -78,6 +100,9 @@ export async function treinoIARoutes(app: FastifyInstance) {
         nome: z.string().optional(),
       })
       .parse(request.body || {})
+
+    // Verifica limite mensal de treinos gerados por IA
+    await verificarLimiteIAMensal(aluno.id)
 
     if (body.gruposMusculares && body.gruposMusculares.length > 0) {
       const resultado = await salvarTreinoPorGrupos(aluno.id, {
