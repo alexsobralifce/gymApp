@@ -7,6 +7,7 @@ import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, PencilIcon, Trash2Icon } from '../../components/icons/Icon'
 import EmptyState from '../../components/ui/EmptyState'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import { formatExerciseStep } from '../../lib/exerciseFormatter'
 
 function formatMes(ano: number, mes: number) {
   return `${ano}-${String(mes + 1).padStart(2, '0')}`
@@ -525,7 +526,7 @@ export default function AlunoMeusTreinos() {
                       <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                         {idx + 1}
                       </span>
-                      <span className="text-sm text-text leading-relaxed">{step}</span>
+                      <span className="text-sm text-text leading-relaxed">{formatExerciseStep(step)}</span>
                     </div>
                   )) || <p className="text-text-muted italic text-sm">Nenhuma instrução disponível.</p>}
                 </div>
