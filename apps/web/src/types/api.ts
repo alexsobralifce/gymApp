@@ -140,6 +140,20 @@ export interface PontoCorrelacao {
   volumeAcumuladoKg: number
 }
 
+export interface EvolucaoMensal {
+  mes: string
+  totalTreinos: number
+  metaSemanal: number
+  semanas: { semana: string; treinos: number; volumeKg: number }[]
+  volumeTotalKg: number
+  volumeMesAnteriorKg: number
+  variacaoVolumePercent: number
+  duracaoMediaMinutos: number
+  duracaoTotalMinutos: number
+  frequenciaPercent: number
+  maiorCargaExercicio: { nome: string; cargaKg: number; mes_anterior: number } | null
+}
+
 export interface Academia {
   id: string
   nome: string

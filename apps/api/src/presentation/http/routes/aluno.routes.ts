@@ -402,4 +402,163 @@ export async function alunoRoutes(app: FastifyInstance) {
 
     return reply.status(200).send(naoSeguidos)
   })
+
+  /** GET /alunos/evolucao/mensal — resumo de frequência, volume e duração mensal */
+  app.get('/evolucao/mensal', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const { mes } = z.object({
+      mes: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+    }).parse(request.query || {})
+
+    const agora = new Date()
+    const mesAlvoStr = mes || `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`
+
+    const [anoStr, mesStr] = mesAlvoStr.split('-')
+    const ano = parseInt(anoStr, 10)
+    const mesNum = parseInt(mesStr, 10) - 1 // 0-indexed
+
+    const inicioMes = new Date(ano, mesNum, 1, 0, 0, 0, 0)
+    const fimMes = new Date(ano, mesNum + 1, 0, 23, 59, 59, 999)
+
+    const inicioMesAnt = new Date(ano, mesNum - 1, 1, 0, 0, 0, 0)
+    const fimMesAnt = new Date(ano, mesNum, 0, 23, 59, 59, 999)
+
+    // Treinos concluídos no mês
+    const treinosMes = await prisma.treino.findMany({
+      where: {
+        aluno_id: aluno.id,
+        status: 'CONCLUIDO',
+        finalizado_em: { gte: inicioMes, lte: fimMes },
+      },
+      include: {
+        execucoes: true,
+      },
+    })
+
+    const treinosMesAnt = await prisma.treino.findMany({
+      where: {
+        aluno_id: aluno.id,
+        status: 'CONCLUIDO',
+        finalizado_em: { gte: inicioMesAnt, lte: fimMesAnt },
+      },
+      include: {
+        execucoes: true,
+      },
+    })
+
+    // Execuções do mês
+    const execucoesMes = await prisma.execucaoExercicio.findMany({
+      where: {
+        treino: { aluno_id: aluno.id },
+        registrado_em: { gte: inicioMes, lte: fimMes },
+      },
+      include: {
+        exercicio: { select: { nome: true } },
+      },
+    })
+
+    const execucoesMesAnt = await prisma.execucaoExercicio.findMany({
+      where: {
+        treino: { aluno_id: aluno.id },
+        registrado_em: { gte: inicioMesAnt, lte: fimMesAnt },
+      },
+    })
+
+    // Volume total (kg * reps)
+    const volumeTotalKg = Math.round(
+      execucoesMes.reduce((acc, e) => acc + e.carga_kg * e.repeticoes, 0)
+    )
+
+    const volumeMesAnteriorKg = Math.round(
+      execucoesMesAnt.reduce((acc, e) => acc + e.carga_kg * e.repeticoes, 0)
+    )
+
+    let variacaoVolumePercent = 0
+    if (volumeMesAnteriorKg > 0) {
+      variacaoVolumePercent = parseFloat(
+        (((volumeTotalKg - volumeMesAnteriorKg) / volumeMesAnteriorKg) * 100).toFixed(1)
+      )
+    } else if (volumeTotalKg > 0) {
+      variacaoVolumePercent = 100
+    }
+
+    // Duração total e média em minutos
+    let duracaoTotalMinutos = 0
+    let treinosComDuracao = 0
+
+    for (const t of treinosMes) {
+      if (t.iniciado_em && t.finalizado_em) {
+        const diffMs = t.finalizado_em.getTime() - t.iniciado_em.getTime()
+        const diffMin = Math.round(diffMs / (1000 * 60))
+        if (diffMin > 3 && diffMin < 240) {
+          duracaoTotalMinutos += diffMin
+          treinosComDuracao++
+        } else {
+          duracaoTotalMinutos += 45
+          treinosComDuracao++
+        }
+      } else {
+        duracaoTotalMinutos += 45
+        treinosComDuracao++
+      }
+    }
+
+    const totalTreinos = treinosMes.length
+    const duracaoMediaMinutos = treinosComDuracao > 0 ? Math.round(duracaoTotalMinutos / treinosComDuracao) : 0
+
+    // Distribuição semanal (S1: 1-7, S2: 8-14, S3: 15-21, S4: 22-fim)
+    const semanasMap = [
+      { semana: 'S1', treinos: 0, volumeKg: 0 },
+      { semana: 'S2', treinos: 0, volumeKg: 0 },
+      { semana: 'S3', treinos: 0, volumeKg: 0 },
+      { semana: 'S4', treinos: 0, volumeKg: 0 },
+    ]
+
+    for (const t of treinosMes) {
+      const dia = (t.finalizado_em || t.atualizado_em).getDate()
+      const sIdx = dia <= 7 ? 0 : dia <= 14 ? 1 : dia <= 21 ? 2 : 3
+      semanasMap[sIdx].treinos++
+    }
+
+    for (const e of execucoesMes) {
+      const dia = e.registrado_em.getDate()
+      const sIdx = dia <= 7 ? 0 : dia <= 14 ? 1 : dia <= 21 ? 2 : 3
+      semanasMap[sIdx].volumeKg += Math.round(e.carga_kg * e.repeticoes)
+    }
+
+    // Maior carga no mês
+    let maiorCargaExercicio: { nome: string; cargaKg: number; mes_anterior: number } | null = null
+    if (execucoesMes.length > 0) {
+      const topExec = [...execucoesMes].sort((a, b) => b.carga_kg - a.carga_kg)[0]
+      if (topExec && topExec.carga_kg > 0) {
+        const topAnt = execucoesMesAnt
+          .filter((e) => e.exercicio_id === topExec.exercicio_id)
+          .sort((a, b) => b.carga_kg - a.carga_kg)[0]
+
+        maiorCargaExercicio = {
+          nome: topExec.exercicio.nome,
+          cargaKg: topExec.carga_kg,
+          mes_anterior: topAnt ? topAnt.carga_kg : 0,
+        }
+      }
+    }
+
+    const metaSemanal = 3
+    const frequenciaPercent = Math.min(100, Math.round((totalTreinos / (4 * metaSemanal)) * 100))
+
+    return reply.status(200).send({
+      mes: mesAlvoStr,
+      totalTreinos,
+      metaSemanal,
+      semanas: semanasMap,
+      volumeTotalKg,
+      volumeMesAnteriorKg,
+      variacaoVolumePercent,
+      duracaoMediaMinutos,
+      duracaoTotalMinutos,
+      frequenciaPercent,
+      maiorCargaExercicio,
+    })
+  })
 }
+

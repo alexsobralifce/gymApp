@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -178,10 +178,12 @@ export const api = {
 
   visualizarNotificacoes: () => api.post('/alunos/notificacoes/visualizar'),
 
-  // ─── Correlações ───────────────────────────────────
+  // ─── Correlações e Evolução Mensal ─────────────────
   getCorrelacoes: () => api.get<CorrelacaoResponse>('/alunos/correlacoes'),
 
   calcularCorrelacoes: () => api.post<CorrelacaoResponse>('/alunos/correlacoes'),
+
+  getEvolucaoMensal: (mes?: string) => api.get<EvolucaoMensal>(`/alunos/evolucao/mensal${mes ? `?mes=${mes}` : ''}`),
 
   // ─── Academias ─────────────────────────────────────
   getAcademias: () => api.get<Academia[]>('/academias'),
