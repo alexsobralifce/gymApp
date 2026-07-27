@@ -1,4 +1,4 @@
-ar# GymApp Agent Instruction & Documentation Guidelines (AGENTS.md)
+# GymApp Agent Instruction & Documentation Guidelines (AGENTS.md)
 
 Este arquivo serve como base de conhecimento para qualquer assistente de IA/LLM operando neste repositório. Resume arquitetura, regras de negócio, modelo de dados, casos de uso e padrões de código do ecossistema **GymApp**.
 
@@ -25,6 +25,41 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 - Script `apps/api/prisma/sync-gifdotreino.ts` — crawla API paginada, baixa descrições PT, faz upsert no banco
 - Executado automaticamente no startup do Railway via `apps/api/railway-start.sh`
 - Cada exercício tem: nome PT, GIF animado, thumbnail, descrição completa, passos de execução, grupo muscular e equipamento inferidos
+
+### 1.5. Levantamento de Requisitos do Sistema
+
+#### Requisitos Funcionais (RF)
+
+- **RF01 - Autenticação Multi-Role & OAuth**: O sistema deve permitir o cadastro e login de usuários divididos em 4 níveis de acesso: `ROOT`, `ACADEMIA`, `PROFESSOR` e `ALUNO`. Deve suportar login tradicional (e-mail/senha) e autenticação social via Google OAuth.
+- **RF02 - Onboarding e Wizard do Aluno**: O processo de cadastro do aluno deve guiar o usuário em um wizard de 3 passos: Dados Básicos, Dados Físicos (data de nascimento, peso, altura e sexo biológico) com validação dinâmica em tempo real (debounce 400ms), e Vínculo (associação a uma academia ativa ou modo autogestão).
+- **RF03 - Painel de Boas-Vindas (Welcome)**: Após o cadastro, o aluno deve visualizar um painel standalone (sem o menu lateral do app) com explicações dos benefícios da plataforma, configurado via `localStorage` (`gymapp_welcome_seen`) para ser exibido apenas no primeiro acesso.
+- **RF04 - Gestão de Fichas de Treino**:
+  - **Professor/Academia**: Podem criar, editar, excluir e enviar treinos para alunos, bem como clonar treinos existentes (individual ou em lote para múltiplos alunos) e marcar fichas como templates reutilizáveis.
+  - **Aluno**: Pode criar seus próprios treinos em modo autogestão, editar ou excluir treinos já salvos (mesmo os recebidos de professores, sem interferir no histórico original de execuções).
+- **RF05 - Máquina de Estados de Execução**: Os treinos devem seguir uma transição rígida de estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CONCLUIDO`. Toda e qualquer transição inválida deve disparar um erro de estado correspondente.
+- **RF06 - Execução e Monitoramento de Treino**: Durante a execução de um treino, o app deve fornecer um cronômetro com tempo decorrido, controle de preenchimento de séries (carga e repetição), coach marks direcionais na primeira execução (`gymapp_first_workout_done`), modal de confirmação ao tentar sair, e botão para conclusão em lote de séries por exercício ("✓ Concluir Exercício").
+- **RF07 - Prescrição e Geração por Inteligência Artificial**: O aluno pode utilizar um assistente de IA em 5 etapas para classificar e gerar treinos baseados em seus objetivos, nível de condicionamento, dias disponíveis, restrições médicas e seleção específica de grupos musculares.
+- **RF08 - Limite Rígido de Treinos IA**: O aluno pode criar e salvar no máximo **7 treinos gerados por IA por mês**. A validação ocorre em nível de banco de dados (`criado_por_ia: true`) e é reiniciada automaticamente a cada dia 1° do mês.
+- **RF09 - Dashboard de Evolução Mensal**: Acompanhamento dinâmico do progresso do aluno com:
+  - Comparativo de frequência de treinos contra a meta.
+  - Somatório de volume total de peso levantado (kg) e variação percentual versus o mês anterior.
+  - Duração total de treino acumulada e média em minutos por sessão.
+  - Destaque da maior carga alcançada no mês.
+  - Gráficos de Peso Corporal e IMC ao longo do tempo.
+  - Correlações estatísticas de Pearson r calculadas de forma assíncrona.
+- **RF10 - Análise Científica & Mensagens Motivacionais**: Com base nas métricas de desempenho mensal do aluno, o sistema deve fornecer análises explicativas dos benefícios físicos, neurológicos e sistêmicos, com fundamentação bibliográfica em pesquisas médicas recentes de revistas prestigiadas (ex.: *Sports Medicine, JAMA, The Lancet*).
+- **RF11 - Mural Social & Notificações de Atividade**: Um feed interativo com paginação por cursor composto (`data+id`), suporte a compartilhamento de atividades (início e conclusão de treinos, recordes, conquistas), curtidas, e comentários com limite de 280 caracteres. Deve incluir um badge indicador de atividade recente alimentado por polling de 30s.
+- **RF12 - Gestão de Colegas de Academia**: Um painel lateral fixo (`AcademySidebar`) listando alunos da mesma academia que o usuário ainda não segue, permitindo segui-los diretamente.
+- **RF13 - Gestão de Clubes de Membros**: Alunos associados podem competir em clubes internos de academias ou temáticos através do acúmulo de XP semanal, com reset anual programado.
+- **RF14 - Aprovação de Vínculos em Duas Camadas**: Professores se vinculam a academias, exigindo aprovação de nível da Academia e aprovação final de nível Root.
+
+#### Requisitos Não-Funcionais (RNF)
+
+- **RNF01 - Isolamento Multi-Tenant**: Segurança física e lógica estrita na segregação de dados entre alunos, professores e academias.
+- **RNF02 - Processamento Assíncrono**: Uso de filas distribuídas com Redis e BullMQ para jobs de segundo plano de cálculo pesado e envio de pushes.
+- **RNF03 - Responsividade & Customização Estética**: Interface em TailwindCSS v4 responsiva para web e dispositivos móveis (drawer menu) com suporte a 3 temas dinâmicos (Vermelho & Preto, Lima & Navy, Violeta & Preto).
+- **RNF04 - Otimização de Imagens e Headers**: URLs absolutas de mídia tratadas dinamicamente e rotas dedicadas para upload e consumo de avatares e imagens do feed configuradas com cache agressivo (`max-age=86400`).
+- **RNF05 - SEO e Semântica de Testabilidade**: Estrutura HTML5 semântica e atribuição de IDs exclusivos para facilitar testes automatizados e SEO.
 
 ---
 
