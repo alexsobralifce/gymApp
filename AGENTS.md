@@ -6,7 +6,8 @@ Este arquivo serve como base de conhecimento para qualquer assistente de IA/LLM 
 
 ## 0. Instrução Obrigatória
 
-**Antes de executar qualquer comando, ler todas as skills dentro de `.agent/skills/`.** Só prossiga com comandos ou edições após carregar e considerar o conteúdo dessas skills.
+1. **Leitura de Skills**: Antes de executar qualquer comando, ler todas as skills dentro de `.agent/skills/`. Só prossiga com comandos ou edições após carregar e considerar o conteúdo dessas skills.
+2. **Atualização Contínua**: Sempre que modificações no sistema acrescentarem novos requisitos, modelos ou regras de negócio, o arquivo `AGENTS.md` deve ser atualizado para manter a base de conhecimento sincronizada.
 
 ---
 
@@ -52,6 +53,8 @@ O **GymApp** é uma plataforma multi-tenant de gerenciamento de academias, acomp
 - **RF12 - Gestão de Colegas de Academia**: Um painel lateral fixo (`AcademySidebar`) listando alunos da mesma academia que o usuário ainda não segue, permitindo segui-los diretamente.
 - **RF13 - Gestão de Clubes de Membros**: Alunos associados podem competir em clubes internos de academias ou temáticos através do acúmulo de XP semanal, com reset anual programado.
 - **RF14 - Aprovação de Vínculos em Duas Camadas**: Professores se vinculam a academias, exigindo aprovação de nível da Academia e aprovação final de nível Root.
+- **RF15 - Identidade Visual & Slogan da Marca**: O sistema adota a marca oficial **`ENDORFINAPP`**, o slogan **`"A Química do Crescimento"`** e o símbolo em verde neon (ECG + Raio), adaptando-se dinamicamente às paletas de cores nos modos Dia e Noite.
+- **RF16 - Redirecionamento Obrigatório de Logoff**: Ao realizar logoff (ação de Sair) ou em casos de expiração de sessão (401), o sistema deve redirecionar o usuário para a Landing Page raiz (`/`).
 
 #### Requisitos Não-Funcionais (RNF)
 
