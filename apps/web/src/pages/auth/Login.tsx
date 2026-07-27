@@ -6,7 +6,7 @@ import { api } from '../../api/client'
 import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { clearGoogleOverlays } from '../../lib/googleOverlay'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
-import EndorfinappLogo from '../../components/branding/EndorfinappLogo'
+import { EndorfinappLogo, EndorfinappIcon } from '../../components/branding'
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -119,9 +119,7 @@ export default function Login() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface px-4">
         <div className="flex flex-col items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
-            G
-          </div>
+          <EndorfinappIcon size={44} />
           <LoadingSpinner size="md" />
           <p className="text-sm text-text-muted">Entrando com Google...</p>
         </div>
@@ -131,9 +129,9 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg bg-surface-card p-6">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg bg-surface-card p-6 text-center">
         <div className="flex flex-col items-center gap-2 pb-2">
-          <EndorfinappLogo variant="full" size={140} showSlogan={false} onBackground />
+          <EndorfinappLogo variant="full" size={140} showSlogan={true} />
         </div>
         <p className="text-sm text-text-muted">Entre na sua conta</p>
 

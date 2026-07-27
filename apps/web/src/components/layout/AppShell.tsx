@@ -35,8 +35,7 @@ import {
 import AcademySidebar from '../social/AcademySidebar'
 import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
-import { EndorfinappIcon } from '../branding/EndorfinappIcon'
-import { EndorfinappWordmark } from '../branding/EndorfinappWordmark'
+import { EndorfinappLogo } from '../branding'
 
 interface NavItem {
   to: string
@@ -322,7 +321,7 @@ export default function AppShell() {
   const renderDrawerContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-4 border-b border-surface-input">
-        <span className="text-sm font-semibold text-text">Navegação</span>
+        <EndorfinappLogo variant="horizontal" size={20} showSlogan={false} />
         <button
           onClick={() => setDrawerOpen(false)}
           className="rounded-lg p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
@@ -385,6 +384,9 @@ export default function AppShell() {
       {/* Sidebar — Desktop (oculta em execução) */}
       {!hideNav && (
         <aside className="hidden w-60 shrink-0 flex-col border-r border-surface-input bg-surface/50 md:flex">
+          <div className="flex flex-col items-center justify-center border-b border-surface-input px-4 py-5 text-center shrink-0">
+            <EndorfinappLogo variant="full" iconSize={42} size={24} showSlogan={true} />
+          </div>
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">
             {navItems.map((entry, i) =>
               isSection(entry) ? (
@@ -418,9 +420,8 @@ export default function AppShell() {
               >
                 <MenuIcon className="h-5 w-5" />
               </button>
-              <span className="flex items-center gap-2 text-primary md:hidden">
-                <EndorfinappIcon size={24} className="shrink-0" />
-                <EndorfinappWordmark size="0.95rem" className="font-bold tracking-wide" />
+              <span className="flex items-center gap-2 md:hidden">
+                <EndorfinappLogo variant="horizontal" size={20} showSlogan={false} />
               </span>
               {pageTitle && (
                 <div className="hidden sm:flex items-center gap-2">

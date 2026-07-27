@@ -5,6 +5,7 @@ import {
   Target, Heart, Sparkles, MessageCircle, BookOpen, ChevronDown,
   Menu, X, Check, ArrowRight, UserPlus, ClipboardList, Trophy,
 } from 'lucide-react'
+import EndorfinappLogo from '../components/branding/EndorfinappLogo'
 
 const NAV_LINKS = ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Funciona']
 
@@ -88,14 +89,9 @@ export default function Landing() {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                <Dumbbell className="w-4 h-4 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-xl font-black tracking-tight text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.02em' }}>
-                GYM<span className="text-primary">APP</span>
-              </span>
-            </div>
+            <Link to="/" className="flex items-center gap-2">
+              <EndorfinappLogo variant="horizontal" size={32} showSlogan={false} />
+            </Link>
 
             <nav className="hidden md:flex items-center gap-6">
               {NAV_LINKS.map((link) => (
@@ -590,12 +586,7 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded bg-primary flex items-center justify-center">
-                  <Dumbbell className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                </div>
-                <span className="text-lg font-black text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  GYM<span className="text-primary">APP</span>
-                </span>
+                <EndorfinappLogo variant="horizontal" size={28} showSlogan={true} />
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
                 Treino inteligente com IA, execução guiada por GIF e rede social fitness. Sozinho, com professor ou academia.

@@ -5,7 +5,6 @@ interface EndorfinappWordmarkProps {
   className?: string
   style?: CSSProperties
   showSlogan?: boolean
-  iconColor?: string
   textColor?: string
   sloganColor?: string
 }
@@ -14,13 +13,12 @@ export function EndorfinappWordmark({
   size = '1.25rem',
   className,
   style,
-  showSlogan = false,
-  iconColor,
-  textColor = 'currentColor',
-  sloganColor = 'rgba(255, 255, 255, 0.65)',
+  showSlogan = true,
+  textColor = '#FFFFFF',
+  sloganColor = '#E0E0E0',
 }: EndorfinappWordmarkProps) {
   const fontSize = typeof size === 'number' ? `${size}px` : size
-  const sloganSize = `calc(${fontSize} * 0.42)`
+  const sloganSize = `calc(${fontSize} * 0.38)`
 
   return (
     <span
@@ -28,10 +26,10 @@ export function EndorfinappWordmark({
       style={{
         display: 'inline-flex',
         flexDirection: 'column',
-        lineHeight: 1,
-        fontFamily: "'Barlow Condensed', 'Inter', system-ui, sans-serif",
-        fontWeight: 600,
-        letterSpacing: '0.04em',
+        alignItems: 'center',
+        lineHeight: 1.15,
+        fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif",
+        textAlign: 'center',
         color: textColor,
         ...style,
       }}
@@ -39,12 +37,13 @@ export function EndorfinappWordmark({
       <span
         style={{
           fontSize,
-          fontWeight: 700,
+          fontWeight: 800,
+          letterSpacing: '0.06em',
           textTransform: 'uppercase',
+          color: textColor,
         }}
       >
-        <span style={{ color: iconColor ?? textColor }}>ENDORFIN</span>
-        <span style={{ opacity: 0.92 }}>APP</span>
+        ENDORFINAPP
       </span>
       {showSlogan && (
         <span
@@ -52,9 +51,10 @@ export function EndorfinappWordmark({
             fontSize: sloganSize,
             fontWeight: 400,
             marginTop: '0.35em',
-            letterSpacing: '0.01em',
+            letterSpacing: '0.02em',
             textTransform: 'none',
             color: sloganColor,
+            opacity: 0.9,
           }}
         >
           A Química do Crescimento

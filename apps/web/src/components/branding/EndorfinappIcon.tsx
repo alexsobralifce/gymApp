@@ -6,6 +6,7 @@ interface EndorfinappIconProps {
   style?: CSSProperties
   glow?: boolean
   withBackground?: boolean
+  color?: string
 }
 
 export function EndorfinappIcon({
@@ -14,41 +15,51 @@ export function EndorfinappIcon({
   style,
   glow = true,
   withBackground = false,
+  color = '#76FF03',
 }: EndorfinappIconProps) {
   const glowFilterId = `ecg-glow-${Math.random().toString(36).slice(2, 9)}`
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 200 120"
+      viewBox="0 0 220 120"
       width={size}
-      height={size}
+      height={typeof size === 'number' ? Math.round(size * (120 / 220)) : size}
       className={className}
-      style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
+      style={{ display: 'inline-block', verticalAlign: 'middle', overflow: 'visible', ...style }}
       role="img"
-      aria-label="ENDORFINAPP"
+      aria-label="ENDORFINAPP Icon"
     >
       {withBackground && (
-        <rect width="200" height="120" rx="16" fill="#1A1A1A" />
+        <rect width="220" height="120" rx="16" fill="#1A1A1A" />
       )}
       {glow && (
         <defs>
           <filter id={glowFilterId} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feComponentTransfer in="blur" result="glowBlur">
+              <feFuncA type="linear" slope="0.6" />
+            </feComponentTransfer>
             <feMerge>
-              <feMergeNode in="blur" />
+              <feMergeNode in="glowBlur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
       )}
-      <g filter={glow ? `url(#${glowFilterId})` : undefined}>
+      <g filter={glow ? `url(#${glowFilterId})` : undefined} fill={color} stroke={color}>
+        {/* Linha de batimento cardíaco (ECG) */}
         <path
-          d="M10 60 L30 60 L40 60 L50 60 L55 35 L60 85 L65 50 L70 70 L75 60 L90 60 L100 60 L105 25 L112 95 L120 45 L128 75 L135 60 L150 60 L160 60 L165 20 L172 100 L180 60 L190 60"
+          d="M 10 60 H 48 L 56 46 L 66 74 L 76 26 L 90 94 L 102 42 L 112 70 L 120 60 H 132"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="6"
+          strokeWidth="7"
           strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Símbolo do Raio Elétrico */}
+        <path
+          d="M 165 10 L 120 62 H 142 L 128 110 L 180 48 H 156 Z"
+          strokeWidth="2"
           strokeLinejoin="round"
         />
       </g>

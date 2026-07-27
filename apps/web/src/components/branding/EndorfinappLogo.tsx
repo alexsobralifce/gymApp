@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { EndorfinappIcon } from './EndorfinappIcon'
 import { EndorfinappWordmark } from './EndorfinappWordmark'
 
-export type EndorfinappLogoVariant = 'full' | 'icon' | 'wordmark'
+export type EndorfinappLogoVariant = 'full' | 'icon' | 'wordmark' | 'horizontal'
 
 interface EndorfinappLogoProps {
   variant?: EndorfinappLogoVariant
@@ -47,11 +47,35 @@ export function EndorfinappLogo({
         className={className}
         style={style}
         textColor={onBackground ? '#FFFFFF' : 'currentColor'}
-        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.7)' : undefined}
+        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}
       />
     )
   }
 
+  if (variant === 'horizontal') {
+    return (
+      <span
+        className={className}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          ...style,
+        }}
+      >
+        <EndorfinappIcon size={iconSize ?? (typeof size === 'number' ? size : 36)} glow={glow} withBackground={withBackground} />
+        <EndorfinappWordmark
+          size={typeof size === 'number' ? Math.max(size * 0.45, 15) : size}
+          showSlogan={showSlogan}
+          textColor={onBackground ? '#FFFFFF' : 'currentColor'}
+          sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}
+          style={{ textAlign: 'left', alignItems: 'flex-start' }}
+        />
+      </span>
+    )
+  }
+
+  // Variant 'full' (Vertical stacked: Symbol on top, ENDORFINAPP + Slogan on bottom)
   const computedIconSize = iconSize ?? (typeof size === 'number' ? size : 56)
 
   return (
@@ -61,16 +85,16 @@ export function EndorfinappLogo({
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.5em',
+        gap: '0.5rem',
         ...style,
       }}
     >
       <EndorfinappIcon size={computedIconSize} glow={glow} withBackground={withBackground} />
       <EndorfinappWordmark
-        size={typeof size === 'number' ? Math.max(size * 0.45, 14) : size}
+        size={typeof size === 'number' ? Math.max(size * 0.42, 16) : size}
         showSlogan={showSlogan}
         textColor={onBackground ? '#FFFFFF' : 'currentColor'}
-        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.7)' : undefined}
+        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}
       />
     </span>
   )
