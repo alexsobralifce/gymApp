@@ -54,7 +54,7 @@ const FEATURES = [
 const FAQS = [
   {
     q: 'Preciso de academia ou professor para usar?',
-    a: 'Não. O GymApp tem modo autogestão — você cria, edita e executa seus treinos sozinho. Professores e academias são opcionais para quem quer acompanhamento.',
+    a: 'Não. A ENDORFINAPP tem modo autogestão — você cria, edita e executa seus treinos sozinho. Professores e academias são opcionais para quem quer acompanhamento.',
   },
   {
     q: 'Como a IA monta o treino?',
@@ -70,7 +70,7 @@ const FAQS = [
   },
   {
     q: 'Funciona no celular?',
-    a: 'Sim. O GymApp é web responsivo e funciona em qualquer navegador moderno no celular. Pode instalar como PWA na tela inicial.',
+    a: 'Sim. A ENDORFINAPP é web responsivo e funciona em qualquer navegador moderno no celular. Pode instalar como PWA na tela inicial.',
   },
   {
     q: 'Posso treinar com um professor vinculado?',
@@ -406,7 +406,7 @@ export default function Landing() {
               </h2>
 
               <p className="mt-4 text-muted-foreground leading-relaxed text-sm">
-                Treinar é melhor, mas compartilhar conquistas motiva. O GymApp conecta você a colegas da academia, amigos e a uma comunidade fitness real.
+                Treinar é melhor, mas compartilhar conquistas motiva. A ENDORFINAPP conecta você a colegas da academia, amigos e a uma comunidade fitness real.
               </p>
 
               <ul className="mt-6 space-y-3">
@@ -623,7 +623,7 @@ export default function Landing() {
           </div>
 
           <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>© 2025 GymApp. Todos os direitos reservados.</span>
+            <span>© 2025 ENDORFINAPP. Todos os direitos reservados.</span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
               Dados protegidos com criptografia SSL

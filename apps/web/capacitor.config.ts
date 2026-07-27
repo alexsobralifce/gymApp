@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.gymapp.mobile',
-  appName: 'GymApp',
+  appId: 'com.endorfinapp.mobile',
+  appName: 'ENDORFINAPP',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

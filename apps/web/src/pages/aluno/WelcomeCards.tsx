@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import EndorfinappLogo from '../../components/branding/EndorfinappLogo'
 
 const WELCOME_KEY = 'gymapp_welcome_seen'
 
@@ -38,8 +39,11 @@ export default function WelcomeCards() {
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-4 py-8 animate-[fade-in_0.3s_ease]">
       <div className="w-full max-w-lg space-y-6">
+        <div className="flex justify-center pb-2">
+          <EndorfinappLogo variant="full" size={120} showSlogan />
+        </div>
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-text">Bem-vindo ao GymApp!</h1>
+          <h1 className="text-2xl font-bold text-text">Bem-vindo à ENDORFINAPP!</h1>
           <p className="text-sm text-text-muted">
             Aqui está o que você precisa saber para começar:
           </p>

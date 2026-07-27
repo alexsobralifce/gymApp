@@ -4,6 +4,7 @@ import {
   ChevronDown, ChevronRight, Menu, X, Star, Check, ArrowRight,
   Zap, Shield, Clock, TrendingUp, Bell, MapPin, Calendar
 } from "lucide-react";
+import EndorfinappLogo from "../components/EndorfinappLogo";
 
 const NAV_LINKS = ["Funcionalidades", "Como Funciona", "Planos", "Depoimentos"];
 
@@ -110,7 +111,7 @@ const TESTIMONIALS = [
     role: "Dono — Academia Iron Force",
     city: "São Paulo, SP",
     photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&auto=format",
-    text: "Antes eu passava horas controlando planilhas de pagamento. Hoje o GymApp faz tudo sozinho — recebi R$ 12.000 em cobranças automáticas no primeiro mês.",
+    text: "Antes eu passava horas controlando planilhas de pagamento. Hoje a ENDORFINAPP faz tudo sozinho — recebi R$ 12.000 em cobranças automáticas no primeiro mês.",
     stars: 5,
   },
   {
@@ -126,7 +127,7 @@ const TESTIMONIALS = [
     role: "Personal Trainer & Sócio — Prime Athletics",
     city: "Rio de Janeiro, RJ",
     photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format",
-    text: "Migramos de outro sistema e a diferença é absurda. O GymApp é muito mais rápido, bonito e completo. Nossa retenção aumentou 34% em 6 meses.",
+    text: "Migramos de outro sistema e a diferença é absurda. A ENDORFINAPP é muito mais rápida, bonita e completa. Nossa retenção aumentou 34% em 6 meses.",
     stars: 5,
   },
 ];
@@ -134,7 +135,7 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "Preciso instalar algum software?",
-    a: "Não. O GymApp funciona 100% na nuvem — acesse pelo navegador no computador e baixe o app no celular. Nenhuma instalação necessária.",
+    a: "Não. A ENDORFINAPP funciona 100% na nuvem — acesse pelo navegador no computador e baixe o app no celular. Nenhuma instalação necessária.",
   },
   {
     q: "Como funciona o período de teste?",
@@ -168,17 +169,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                <Dumbbell className="w-4 h-4 text-white" strokeWidth={2.5} />
-              </div>
-              <span
-                className="text-xl font-black tracking-tight text-foreground"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.02em" }}
-              >
-                GYM<span className="text-primary">APP</span>
-              </span>
-            </div>
+            <EndorfinappLogo size={36} showSlogan={false} />
 
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-8">
@@ -411,7 +402,7 @@ export default function App() {
                 NA PALMA DA MÃO DE CADA ALUNO
               </h2>
               <p className="mt-4 text-muted-foreground leading-relaxed">
-                O aplicativo do GymApp coloca o treino do aluno no celular. Acesso a fichas, histórico de evolução, agendamento de aulas e muito mais — disponível para iOS e Android.
+                O aplicativo da ENDORFINAPP coloca o treino do aluno no celular. Acesso a fichas, histórico de evolução, agendamento de aulas e muito mais — disponível para iOS e Android.
               </p>
 
               <ul className="mt-6 space-y-3">
@@ -446,7 +437,7 @@ export default function App() {
                 <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-75 translate-y-8" />
                 <img
                   src="https://images.unsplash.com/photo-1605296867724-fa87a8ef53fd?w=600&h=700&fit=crop&auto=format"
-                  alt="Aluna treinando com acompanhamento do app GymApp"
+                  alt="Aluna treinando com acompanhamento do app ENDORFINAPP"
                   className="relative z-10 w-full rounded-xl object-cover shadow-2xl"
                   style={{ maxHeight: 480 }}
                 />
@@ -723,7 +714,7 @@ export default function App() {
             <span className="text-primary">SUA ACADEMIA?</span>
           </h2>
           <p className="text-muted-foreground mb-8 text-lg max-w-xl mx-auto">
-            Junte-se a mais de 380 academias que já gerenciam seus negócios com o GymApp. Comece seu teste gratuito hoje.
+            Junte-se a mais de 380 academias que já gerenciam seus negócios com a ENDORFINAPP. Comece seu teste gratuito hoje.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a
@@ -789,7 +780,7 @@ export default function App() {
           </div>
 
           <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>© 2025 GymApp. Todos os direitos reservados.</span>
+            <span>© 2025 ENDORFINAPP. Todos os direitos reservados.</span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
               Seus dados protegidos com criptografia SSL

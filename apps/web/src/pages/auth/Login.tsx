@@ -6,6 +6,7 @@ import { api } from '../../api/client'
 import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { clearGoogleOverlays } from '../../lib/googleOverlay'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import EndorfinappLogo from '../../components/branding/EndorfinappLogo'
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -131,7 +132,9 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg bg-surface-card p-6">
-        <h1 className="text-2xl font-bold text-text">GymApp</h1>
+        <div className="flex flex-col items-center gap-2 pb-2">
+          <EndorfinappLogo variant="full" size={140} showSlogan={false} onBackground />
+        </div>
         <p className="text-sm text-text-muted">Entre na sua conta</p>
 
         {error && !notVerified && <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">{error}</p>}

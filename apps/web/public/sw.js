@@ -8,14 +8,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {}
-  const title = data.title || 'GymApp'
+  const title = data.title || 'ENDORFINAPP'
   const url = data.url || data.url_estudo || '/'
   const options = {
     body: data.body || '',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [200, 100, 200, 100, 400],
-    tag: data.tag || 'gymapp-treino',
+    tag: data.tag || 'endorfinapp-treino',
     renotify: true,
     data: { url },
   }

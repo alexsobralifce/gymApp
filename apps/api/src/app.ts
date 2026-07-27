@@ -92,7 +92,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   if (env.NODE_ENV !== 'production') {
     await app.register(fastifySwagger, {
       openapi: {
-        info: { title: 'GymApp API', version: '1.0.0', description: 'Multi-tenant gym management API' },
+        info: { title: 'ENDORFINAPP API', version: '1.0.0', description: 'ENDORFINAPP — A Química do Crescimento. Multi-tenant gym management API.' },
         components: {
           securitySchemes: {
             bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

@@ -128,7 +128,7 @@ export default function Amizades() {
       {tab === 'adicionar' && (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3">
           <p className="text-xs text-text-muted">
-            Encontre amigos pelo email cadastrado no GymApp.
+            Encontre amigos pelo email cadastrado na ENDORFINAPP.
           </p>
           <div className="flex gap-2">
             <input

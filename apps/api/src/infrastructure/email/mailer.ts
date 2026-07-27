@@ -36,7 +36,7 @@ export async function sendVerificationEmail(to: string, code: string): Promise<b
     await t.sendMail({
       from: env.FROM_EMAIL,
       to,
-      subject: 'GymApp — Código de Verificação',
+      subject: 'ENDORFINAPP — Código de Verificação',
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px">
           <h1 style="color:#9DD802;margin:0 0 8px;font-size:24px">GYM<span style="color:#F5F5F5">APP</span></h1>

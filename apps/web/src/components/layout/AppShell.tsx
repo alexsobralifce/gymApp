@@ -35,6 +35,8 @@ import {
 import AcademySidebar from '../social/AcademySidebar'
 import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
+import { EndorfinappIcon } from '../branding/EndorfinappIcon'
+import { EndorfinappWordmark } from '../branding/EndorfinappWordmark'
 
 interface NavItem {
   to: string
@@ -416,7 +418,10 @@ export default function AppShell() {
               >
                 <MenuIcon className="h-5 w-5" />
               </button>
-              <span className="text-sm font-bold text-primary md:hidden">GymApp</span>
+              <span className="flex items-center gap-2 text-primary md:hidden">
+                <EndorfinappIcon size={24} className="shrink-0" />
+                <EndorfinappWordmark size="0.95rem" className="font-bold tracking-wide" />
+              </span>
               {pageTitle && (
                 <div className="hidden sm:flex items-center gap-2">
                   <span className="text-xs text-text-muted">/</span>

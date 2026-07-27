@@ -1,4 +1,4 @@
-// ─── Erros de Domínio — GymApp ────────────────────────────────────────────────
+// ─── Erros de Domínio — ENDORFINAPP ────────────────────────────────────────────────
 
 export class AppError extends Error {
   public readonly statusCode: number

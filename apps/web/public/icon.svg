@@ -1,4 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
-  <rect width="192" height="192" rx="32" fill="#dc2626"/>
-  <text x="96" y="108" text-anchor="middle" font-family="system-ui" font-weight="bold" font-size="80" fill="white">GA</text>
+  <rect width="192" height="192" rx="32" fill="#1A1A1A"/>
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)">
+    <path
+      d="M20 96 L48 96 L60 96 L70 96 L75 65 L80 127 L85 80 L92 110 L98 96 L116 96 L130 96 L136 50 L145 142 L154 78 L162 118 L170 96 L184 96"
+      fill="none"
+      stroke="#76FF03"
+      stroke-width="9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
 </svg>
