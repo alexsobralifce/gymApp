@@ -14,11 +14,11 @@ export function EndorfinappWordmark({
   className,
   style,
   showSlogan = true,
-  textColor = '#FFFFFF',
-  sloganColor = '#E0E0E0',
+  textColor = 'var(--color-text, currentColor)',
+  sloganColor = 'var(--color-text-muted, currentColor)',
 }: EndorfinappWordmarkProps) {
   const fontSize = typeof size === 'number' ? `${size}px` : size
-  const sloganSize = `calc(${fontSize} * 0.38)`
+  const sloganSize = typeof size === 'number' ? `${Math.max(12, Math.round(size * 0.52))}px` : `max(0.75rem, calc(${fontSize} * 0.52))`
 
   return (
     <span
@@ -27,7 +27,7 @@ export function EndorfinappWordmark({
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        lineHeight: 1.15,
+        lineHeight: 1.2,
         fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif",
         textAlign: 'center',
         color: textColor,
@@ -38,23 +38,23 @@ export function EndorfinappWordmark({
         style={{
           fontSize,
           fontWeight: 800,
-          letterSpacing: '0.06em',
+          letterSpacing: '0.05em',
           textTransform: 'uppercase',
           color: textColor,
         }}
       >
-        ENDORFINAPP
+        ENDORFIN<span style={{ color: 'var(--color-primary)' }}>APP</span>
       </span>
       {showSlogan && (
         <span
           style={{
             fontSize: sloganSize,
-            fontWeight: 400,
-            marginTop: '0.35em',
-            letterSpacing: '0.02em',
+            fontWeight: 600,
+            marginTop: '0.25em',
+            letterSpacing: '0.01em',
             textTransform: 'none',
             color: sloganColor,
-            opacity: 0.9,
+            opacity: 0.95,
           }}
         >
           A Química do Crescimento

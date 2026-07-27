@@ -15,9 +15,10 @@ export function EndorfinappIcon({
   style,
   glow = true,
   withBackground = false,
-  color = '#76FF03',
+  color,
 }: EndorfinappIconProps) {
   const glowFilterId = `ecg-glow-${Math.random().toString(36).slice(2, 9)}`
+  const activeColor = color || 'var(--color-primary, #FF4D4D)'
 
   return (
     <svg
@@ -31,7 +32,7 @@ export function EndorfinappIcon({
       aria-label="ENDORFINAPP Icon"
     >
       {withBackground && (
-        <rect width="220" height="120" rx="16" fill="#1A1A1A" />
+        <rect width="220" height="120" rx="16" fill="var(--color-surface-card, #1C1C1C)" />
       )}
       {glow && (
         <defs>
@@ -47,7 +48,7 @@ export function EndorfinappIcon({
           </filter>
         </defs>
       )}
-      <g filter={glow ? `url(#${glowFilterId})` : undefined} fill={color} stroke={color}>
+      <g filter={glow ? `url(#${glowFilterId})` : undefined} fill={activeColor} stroke={activeColor}>
         {/* Linha de batimento cardíaco (ECG) */}
         <path
           d="M 10 60 H 48 L 56 46 L 66 74 L 76 26 L 90 94 L 102 42 L 112 70 L 120 60 H 132"

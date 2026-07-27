@@ -46,8 +46,8 @@ export function EndorfinappLogo({
         showSlogan={showSlogan}
         className={className}
         style={style}
-        textColor={onBackground ? '#FFFFFF' : 'currentColor'}
-        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}
+        textColor={onBackground ? '#FFFFFF' : undefined}
+        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.85)' : undefined}
       />
     )
   }
@@ -67,8 +67,8 @@ export function EndorfinappLogo({
         <EndorfinappWordmark
           size={typeof size === 'number' ? size : '1.15rem'}
           showSlogan={showSlogan}
-          textColor={onBackground ? '#FFFFFF' : 'currentColor'}
-          sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}
+          textColor={onBackground ? '#FFFFFF' : undefined}
+          sloganColor={onBackground ? 'rgba(255, 255, 255, 0.85)' : undefined}
           style={{ textAlign: 'left', alignItems: 'flex-start' }}
         />
       </span>
@@ -95,8 +95,8 @@ export function EndorfinappLogo({
       <EndorfinappWordmark
         size={finalFontSize}
         showSlogan={showSlogan}
-        textColor={onBackground ? '#FFFFFF' : 'currentColor'}
-        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}
+        textColor={onBackground ? '#FFFFFF' : undefined}
+        sloganColor={onBackground ? 'rgba(255, 255, 255, 0.85)' : undefined}
       />
     </span>
   )
