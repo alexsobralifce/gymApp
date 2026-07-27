@@ -40,7 +40,7 @@ export default function WelcomeCards() {
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-4 py-8 animate-[fade-in_0.3s_ease]">
       <div className="w-full max-w-lg space-y-6">
         <div className="flex justify-center pb-2">
-          <EndorfinappLogo variant="full" size={120} showSlogan />
+          <EndorfinappLogo variant="full" iconSize={52} size={22} showSlogan />
         </div>
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-text">Bem-vindo à ENDORFINAPP!</h1>

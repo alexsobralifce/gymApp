@@ -131,7 +131,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg bg-surface-card p-6 text-center">
         <div className="flex flex-col items-center gap-2 pb-2">
-          <EndorfinappLogo variant="full" size={140} showSlogan={true} />
+          <EndorfinappLogo variant="full" iconSize={60} size={22} showSlogan={true} />
         </div>
         <p className="text-sm text-text-muted">Entre na sua conta</p>
 

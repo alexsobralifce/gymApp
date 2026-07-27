@@ -18,7 +18,7 @@ interface EndorfinappLogoProps {
 
 export function EndorfinappLogo({
   variant = 'full',
-  size = 40,
+  size = 22,
   iconSize,
   showSlogan = true,
   className,
@@ -59,13 +59,13 @@ export function EndorfinappLogo({
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          gap: '0.65rem',
           ...style,
         }}
       >
-        <EndorfinappIcon size={iconSize ?? (typeof size === 'number' ? size : 36)} glow={glow} withBackground={withBackground} />
+        <EndorfinappIcon size={iconSize ?? 32} glow={glow} withBackground={withBackground} />
         <EndorfinappWordmark
-          size={typeof size === 'number' ? Math.max(size * 0.45, 15) : size}
+          size={typeof size === 'number' ? size : '1.15rem'}
           showSlogan={showSlogan}
           textColor={onBackground ? '#FFFFFF' : 'currentColor'}
           sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}
@@ -76,7 +76,8 @@ export function EndorfinappLogo({
   }
 
   // Variant 'full' (Vertical stacked: Symbol on top, ENDORFINAPP + Slogan on bottom)
-  const computedIconSize = iconSize ?? (typeof size === 'number' ? size : 56)
+  const finalIconSize = iconSize ?? 56
+  const finalFontSize = typeof size === 'number' ? size : 22
 
   return (
     <span
@@ -85,13 +86,14 @@ export function EndorfinappLogo({
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '0.4rem',
+        maxWidth: '100%',
         ...style,
       }}
     >
-      <EndorfinappIcon size={computedIconSize} glow={glow} withBackground={withBackground} />
+      <EndorfinappIcon size={finalIconSize} glow={glow} withBackground={withBackground} />
       <EndorfinappWordmark
-        size={typeof size === 'number' ? Math.max(size * 0.42, 16) : size}
+        size={finalFontSize}
         showSlogan={showSlogan}
         textColor={onBackground ? '#FFFFFF' : 'currentColor'}
         sloganColor={onBackground ? 'rgba(255, 255, 255, 0.75)' : undefined}

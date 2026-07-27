@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
 import { api } from '../../api/client'
@@ -321,7 +321,9 @@ export default function AppShell() {
   const renderDrawerContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-4 border-b border-surface-input">
-        <EndorfinappLogo variant="horizontal" size={20} showSlogan={false} />
+        <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2">
+          <EndorfinappLogo variant="horizontal" iconSize={26} size={15} showSlogan={false} />
+        </Link>
         <button
           onClick={() => setDrawerOpen(false)}
           className="rounded-lg p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
@@ -385,7 +387,7 @@ export default function AppShell() {
       {!hideNav && (
         <aside className="hidden w-60 shrink-0 flex-col border-r border-surface-input bg-surface/50 md:flex">
           <div className="flex flex-col items-center justify-center border-b border-surface-input px-4 py-5 text-center shrink-0">
-            <EndorfinappLogo variant="full" iconSize={42} size={24} showSlogan={true} />
+            <EndorfinappLogo variant="full" iconSize={42} size={18} showSlogan={true} />
           </div>
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">
             {navItems.map((entry, i) =>
@@ -420,9 +422,9 @@ export default function AppShell() {
               >
                 <MenuIcon className="h-5 w-5" />
               </button>
-              <span className="flex items-center gap-2 md:hidden">
-                <EndorfinappLogo variant="horizontal" size={20} showSlogan={false} />
-              </span>
+              <Link to="/" className="flex items-center gap-2 md:hidden shrink-0" title="Página Inicial">
+                <EndorfinappLogo variant="horizontal" iconSize={26} size={15} showSlogan={false} />
+              </Link>
               {pageTitle && (
                 <div className="hidden sm:flex items-center gap-2">
                   <span className="text-xs text-text-muted">/</span>
