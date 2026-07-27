@@ -135,7 +135,7 @@ export default function App() {
         </Route>
       )}
 
-      <Route path="*" element={<Navigate to={user ? '/' : '/login'} />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

@@ -38,7 +38,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const pathName = window.location.pathname
     const isAuthPage = pathName === '/login' || pathName === '/register' || pathName === '/'
     if (!isAuthPage) {
-      window.location.replace('/login')
+      window.location.replace('/')
     }
     throw new ApiError(401, 'Sessão expirada')
   }

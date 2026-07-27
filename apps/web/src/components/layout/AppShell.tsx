@@ -303,7 +303,7 @@ export default function AppShell() {
     setMenuOpen(false)
     setDrawerOpen(false)
     logout()
-    navigate('/', { replace: true })
+    window.location.href = '/'
   }
 
   function handleDados() {
