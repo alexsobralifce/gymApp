@@ -262,16 +262,145 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 - `POST /social/amizades/solicitar-por-id` — permite seguir um colega diretamente por `alunoId`.
 - Componente `AcademySidebar` exibido no painel direito fixo (`w-56`) em telas XL+ (`>=1280px`) ao lado do conteúdo principal e no drawer mobile.
 
-### 3.4 Design System & Temas Dinâmicos (novo)
+### 3.4 Design System & Temas Dinâmicos
 
-- **3 Temas de Cores Selecionáveis**:
-  1. `Vermelho & Preto` (padrão)
-  2. `Lima & Navy`
-  3. `Violeta & Preto`
-- Estado global gerenciado por `useThemeStore` (`src/stores/theme.ts`) e alterado dinamicamente via `AppShell.tsx`, persistido em `localStorage` (`gymapp_theme`).
-- `src/index.css` configurado com variáveis CSS dinâmicas (`--color-primary`, `--color-primary-rgb`, `--color-primary-dark`, `--color-surface`, etc.), mantendo isolamento de temas para componentes, glassmorphism e gradientes.
+O design system é inteiramente baseado em **variáveis CSS customizadas** (`--color-*`) definidas em [`src/index.css`](file:///Users/alexandrerocha/gymApp/apps/web/src/index.css) e gerenciadas em runtime pelo store [`src/stores/theme.ts`](file:///Users/alexandrerocha/gymApp/apps/web/src/stores/theme.ts).
+
+#### Fontes
+| Variável | Família | Uso |
+|---|---|---|
+| `--font-sans` | `DM Sans` + `Inter` (fallback) | Corpo e interface geral |
+| *(headings)* | `Barlow Condensed` | Títulos e badges importados via Google Fonts |
+
+#### Estrutura de Temas
+- **3 Marcas (brand)**: `lime` | `red` | `violet`
+- **2 Modos (mode)**: `night` (escuro) | `day` (claro)
+- **6 combinações** totais aplicadas via atributos DOM: `data-theme` e `data-mode`
+- **Persistência**: `localStorage` — chave `gymapp_theme` (brand) e `gymapp_mode` (mode)
+- **Store**: `useThemeStore` em `src/stores/theme.ts` com métodos `setTheme()`, `setMode()`, `toggleMode()`, `toggleTheme()`
 
 ---
+
+#### Paleta 1: Lima & Navy (`data-theme="lime"`)
+
+| Token CSS | Modo Night | Modo Day | Uso |
+|---|---|---|---|
+| `--color-primary` | `#B8F000` | `#6B9A00` | Botões, links, destaques |
+| `--color-primary-dark` | `#8FCC00` | `#557A00` | Hover de primário |
+| `--color-primary-hover` | `#C8FF33` | `#7BB000` | Estado hover |
+| `--color-primary-active` | `#A3D900` | `#5C8500` | Estado active/pressed |
+| `--color-primary-light` | `#D4F56A` | `#A3D930` | Backgrounds suaves |
+| `--color-primary-foreground` | `#000000` | `#FFFFFF` | Texto sobre primário |
+| `--color-surface` | `#0A1628` | `#F4F6FA` | Fundo da página |
+| `--color-surface-card` | `#122040` | `#FFFFFF` | Cards e painéis |
+| `--color-surface-input` | `#1A2D52` | `#E8ECF4` | Inputs e bordas |
+| `--color-text` | `#F7F9FC` | `#0A1628` | Texto principal |
+| `--color-text-muted` | `#B8C5D9` | `#4A5A72` | Texto secundário |
+| `--color-text-disabled` | `#6B7A94` | `#8A96A8` | Texto desabilitado |
+| `--color-border` | `#2A3F66` | `#D0D8E8` | Bordas gerais |
+| `--color-ring` | `#B8F000` | `#6B9A00` | Foco (ring) |
+
+---
+
+#### Paleta 2: Vermelho & Carvão (`data-theme="red"`)
+
+| Token CSS | Modo Night | Modo Day | Uso |
+|---|---|---|---|
+| `--color-primary` | `#FF4D4D` | `#DC2626` | Botões, links, destaques |
+| `--color-primary-dark` | `#E02020` | `#B91C1C` | Hover de primário |
+| `--color-primary-hover` | `#FF6B6B` | `#EF4444` | Estado hover |
+| `--color-primary-active` | `#F03333` | `#C41E1E` | Estado active/pressed |
+| `--color-primary-light` | `#FF8A8A` | `#F87171` | Backgrounds suaves |
+| `--color-primary-foreground` | `#FFFFFF` | `#FFFFFF` | Texto sobre primário |
+| `--color-surface` | `#0F0F0F` | `#F7F7F7` | Fundo da página |
+| `--color-surface-card` | `#1C1C1C` | `#FFFFFF` | Cards e painéis |
+| `--color-surface-input` | `#2C2C2C` | `#EBEBEB` | Inputs e bordas |
+| `--color-text` | `#FAFAFA` | `#141414` | Texto principal |
+| `--color-text-muted` | `#C8C8C8` | `#525252` | Texto secundário |
+| `--color-text-disabled` | `#6E6E6E` | `#A3A3A3` | Texto desabilitado |
+| `--color-accent` | `#FBBF24` | `#D97706` | Destaques secundários |
+| `--color-border` | `#3A3A3A` | `#E0E0E0` | Bordas gerais |
+| `--color-ring` | `#FF4D4D` | `#DC2626` | Foco (ring) |
+
+> ℹ️ O tema legado `orange` é mapeado automaticamente para `red` ao carregar.
+
+---
+
+#### Paleta 3: Violeta & Grafite (`data-theme="violet"`)
+
+| Token CSS | Modo Night | Modo Day | Uso |
+|---|---|---|---|
+| `--color-primary` | `#A78BFA` | `#B794F6` | Botões, links, destaques |
+| `--color-primary-dark` | `#8B5CF6` | `#9F7AEA` | Hover de primário |
+| `--color-primary-hover` | `#C4B5FD` | `#C4B5FD` | Estado hover |
+| `--color-primary-active` | `#9F7AEA` | `#A78BFA` | Estado active/pressed |
+| `--color-primary-light` | `#DDD6FE` | `#DDD6FE` | Backgrounds suaves |
+| `--color-primary-foreground` | `#000000` | `#000000` | Texto sobre primário |
+| `--color-surface` | `#0C0C0E` | `#F5F4FA` | Fundo da página |
+| `--color-surface-card` | `#16161A` | `#FFFFFF` | Cards e painéis |
+| `--color-surface-input` | `#222228` | `#EAE8F4` | Inputs e bordas |
+| `--color-text` | `#FAFAFC` | `#12121A` | Texto principal |
+| `--color-text-muted` | `#B8B8C8` | `#4A4A5C` | Texto secundário |
+| `--color-text-disabled` | `#6B6B7B` | `#8A8A9C` | Texto desabilitado |
+| `--color-accent` | `#C6FF33` | `#65A30D` | Destaques secundários |
+| `--color-border` | `#33333A` | `#DCDCE8` | Bordas gerais |
+| `--color-ring` | `#A78BFA` | `#B794F6` | Foco (ring) |
+
+---
+
+#### Tokens Semânticos Comuns (todos os temas)
+
+| Token CSS | Valor fixo Night | Valor fixo Day | Uso |
+|---|---|---|---|
+| `--color-destructive` | `#FF6B6B` | `#DC2626` | Erros, exclusões |
+| `--color-destructive-foreground` | `#FFFFFF` | `#FFFFFF` | Texto sobre destrutivo |
+| `--color-success` | `#34D399` | `#059669` | Confirmações, sucesso |
+| `--color-warning` | `#FBBF24` | `#D97706` | Avisos |
+| `--color-info` | `#60A5FA` | — | Informações |
+| `--color-white` | `#FFFFFF` | `#FFFFFF` | Branco absoluto |
+
+---
+
+#### Variáveis de Glassmorphism e Menu
+
+| Token CSS | Uso |
+|---|---|
+| `--color-glass-bg` | Fundo com blur para modais, drawers e headers com glassmorphism |
+| `--color-menu-hover` | Fundo translúcido no hover de itens de menu |
+| `--color-menu-border` | Borda dos menus |
+
+---
+
+#### Utilitários CSS Customizados (`@utility`)
+
+| Classe | Efeito |
+|---|---|
+| `glass` | `background: var(--color-glass-bg)` + `backdrop-filter: blur(16px)` |
+| `gradient-primary` | Gradiente 135° de `--color-primary` → `--color-primary-dark` |
+| `gradient-card` | Gradiente de `--color-surface-card` → `--color-surface-input` |
+| `gradient-hero` | Gradiente de surface → primary (para banners e headers) |
+| `gradient-accent` | Idêntico ao `gradient-primary` (alias) |
+| `scrollbar-hide` | Oculta a scrollbar (cross-browser) |
+| `safe-bottom` | `padding-bottom: env(safe-area-inset-bottom)` (iOS notch) |
+| `safe-top` | `padding-top: env(safe-area-inset-top)` (iOS notch) |
+| `safe-top-margin` | `margin-top: env(safe-area-inset-top)` |
+
+---
+
+#### Animações CSS Registradas
+
+| Nome | Duração | Uso |
+|---|---|---|
+| `fade-in` | 0.3s ease-out | Entrada de elementos |
+| `slide-up` | 0.4s cubic-bezier | Painéis, modais e toasts subindo |
+| `slide-down` | 0.3s ease-out | Dropdowns descendo |
+| `slide-right` | 0.3s cubic-bezier | Drawers abrindo da esquerda |
+| `modal-pop` | 0.35s cubic-bezier com spring | Modais com efeito elástico |
+| `pulse-soft` | 2s ease-in-out ∞ | Indicadores de loading suaves |
+| `scale-in` | 0.2s ease-out | Tooltips e badges aparecendo |
+
+---
+
 
 ## 4. Rotas da API (Fastify)
 
