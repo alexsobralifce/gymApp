@@ -121,7 +121,7 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/mural', label: 'Mural', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/amizades', label: 'Amigos', icon: <UserSearchIcon className="h-5 w-5" /> },
         { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
-        { to: '/evolucao', label: 'Evolucao', icon: <ChartLineIcon className="h-5 w-5" /> },
+        { to: '/evolucao', label: 'Evolução', icon: <ChartLineIcon className="h-5 w-5" /> },
         { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
       ]
     case 'PROFESSOR':
@@ -137,7 +137,7 @@ function getNavItems(role: string): NavEntry[] {
         },
         { to: '/alunos/vincular', label: 'Vincular Aluno', icon: <UserPlusIcon className="h-5 w-5" /> },
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },
-        { to: '/exercicios/criar', label: 'Exercicios', icon: <BookOpenIcon className="h-5 w-5" /> },
+        { to: '/exercicios/criar', label: 'Exercícios', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/academias', label: 'Academias', icon: <Building2Icon className="h-5 w-5" /> },
       ]
     case 'ACADEMIA':
@@ -157,9 +157,9 @@ function getNavItems(role: string): NavEntry[] {
     case 'ROOT':
       return [
         { to: '/', label: 'Painel Global', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
-        { to: '/vinculos', label: 'Vinculos Pendentes', icon: <LinkIcon className="h-5 w-5" /> },
+        { to: '/vinculos', label: 'Vínculos Pendentes', icon: <LinkIcon className="h-5 w-5" /> },
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
-        { to: '/social', label: 'Moderacao Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
+        { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
       ]
     default:
       return []
@@ -167,10 +167,10 @@ function getNavItems(role: string): NavEntry[] {
 }
 
 const alunoBottomTabs = [
-  { to: '/', label: 'Inicio', icon: HomeIcon, end: true },
+  { to: '/', label: 'Início', icon: HomeIcon, end: true },
   { to: '/meus-treinos', label: 'Treinos', icon: DumbbellIcon },
   { to: '/mural', label: 'Mural', icon: MessageCircleIcon },
-  { to: '/evolucao', label: 'Evolucao', icon: ChartLineIcon },
+  { to: '/evolucao', label: 'Evolução', icon: ChartLineIcon },
 ]
 
 function getPageTitle(pathname: string, role: string): string {
@@ -320,7 +320,7 @@ export default function AppShell() {
   const renderDrawerContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-4 border-b border-surface-input">
-        <span className="text-sm font-semibold text-text">Navegacao</span>
+        <span className="text-sm font-semibold text-text">Navegação</span>
         <button
           onClick={() => setDrawerOpen(false)}
           className="rounded-lg p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
@@ -579,12 +579,12 @@ export default function AppShell() {
 
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescricao inteligente' },
+                  { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescrição inteligente' },
                   { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
                   { to: '/amizades', label: 'Amigos', icon: '👥', desc: 'Rede social fitness' },
                   { to: '/medidas', label: 'Minhas Medidas', icon: '📏', desc: 'Peso e dobras' },
                   { to: '/clubes', label: 'Clubes', icon: '🏆', desc: 'Ranking & XP' },
-                  { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restricoes' },
+                  { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restrições' },
                 ].map((item) => (
                   <button
                     key={item.to}

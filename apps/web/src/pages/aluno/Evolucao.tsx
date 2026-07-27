@@ -52,7 +52,7 @@ export default function AlunoEvolucao() {
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-text">Evolucao</h1>
+        <h1 className="text-xl font-bold text-text">Evolução</h1>
         <p className="text-xs text-text-muted mt-0.5">Acompanhe seu progresso ao longo do tempo</p>
       </div>
 
@@ -104,7 +104,7 @@ export default function AlunoEvolucao() {
       ) : (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
           <ChartLineIcon className="h-8 w-8 text-text-muted mx-auto mb-3 opacity-30" />
-          <p className="text-sm text-text-muted">Registre ao menos 2 medicoes de peso para ver o grafico.</p>
+          <p className="text-sm text-text-muted">Registre ao menos 2 medições de peso para ver o gráfico.</p>
         </div>
       )}
 
@@ -113,7 +113,7 @@ export default function AlunoEvolucao() {
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <ActivityIcon className="h-4 w-4 text-blue-400" />
-            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Evolucao do IMC</h2>
+            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Evolução do IMC</h2>
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -155,12 +155,12 @@ export default function AlunoEvolucao() {
         </div>
       )}
 
-      {/* Correlacoes */}
+      {/* Correlações */}
       {correlacoes && Object.keys(correlacoes).length > 0 && (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <TimerIcon className="h-4 w-4 text-warning" />
-            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Correlacoes</h2>
+            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Correlações</h2>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(correlacoes).map(([key, val]) => (
@@ -180,13 +180,13 @@ export default function AlunoEvolucao() {
           onClick={() => api.calcularCorrelacoes().then(setCorrelacao)}
           className="w-full rounded-xl bg-surface-card border border-warning/20 py-3 text-sm font-medium text-warning hover:bg-warning/10 active:scale-[0.98] transition-all cursor-pointer"
         >
-          Dados desatualizados. Recalcular correlacoes?
+          Dados desatualizados. Recalcular correlações?
         </button>
       )}
 
-      {/* Historico de Medidas */}
+      {/* Histórico de Medidas */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold text-text uppercase tracking-wider">Historico de Medidas</h2>
+        <h2 className="text-sm font-bold text-text uppercase tracking-wider">Histórico de Medidas</h2>
         {medidas.length === 0 ? (
           <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center">
             <p className="text-sm text-text-muted">Nenhuma medida registrada.</p>

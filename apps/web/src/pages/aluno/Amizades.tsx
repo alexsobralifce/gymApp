@@ -31,11 +31,11 @@ export default function Amizades() {
     if (!emailBusca.trim()) return
     try {
       const res = await api.solicitarAmizade(emailBusca.trim())
-      setFeedback(res.message || 'Solicitacao enviada!')
+      setFeedback(res.message || 'Solicitação enviada!')
       setEmailBusca('')
       setTimeout(() => setFeedback(null), 3000)
     } catch (err: any) {
-      setFeedback(err.message || 'Erro ao enviar solicitacao')
+      setFeedback(err.message || 'Erro ao enviar solicitação')
       setTimeout(() => setFeedback(null), 3000)
     }
   }
@@ -64,7 +64,7 @@ export default function Amizades() {
       <div className="flex rounded-xl bg-surface-card border border-surface-input overflow-hidden">
         {[
           { key: 'amigos', label: 'Amigos', icon: UsersIcon },
-          { key: 'solicitacoes', label: `Solicitacoes${pendentes.length > 0 ? ` (${pendentes.length})` : ''}`, icon: UserSearchIcon },
+          { key: 'solicitacoes', label: `Solicitações${pendentes.length > 0 ? ` (${pendentes.length})` : ''}`, icon: UserSearchIcon },
           { key: 'adicionar', label: 'Adicionar', icon: UserSearchIcon },
         ].map(({ key, label, icon: Icon }) => (
           <button
@@ -115,7 +115,7 @@ export default function Amizades() {
         <div className="space-y-2">
           {pendentes.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
-              <p className="text-sm text-text-muted">Nenhuma solicitacao pendente.</p>
+              <p className="text-sm text-text-muted">Nenhuma solicitação pendente.</p>
             </div>
           ) : (
             pendentes.map((p) => (

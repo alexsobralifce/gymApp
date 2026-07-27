@@ -45,12 +45,12 @@ export function getTreinoStatusVariant(status: string): BadgeVariant {
 
 export function getTreinoStatusLabel(status: string): string {
   switch (status) {
-    case 'CADASTRADO': return 'Em preparacao'
+    case 'CADASTRADO': return 'Em preparação'
     case 'ENVIADO': return 'Pendente'
     case 'ACEITO': return 'Aceito'
     case 'EM_ABERTO': return 'Em aberto'
-    case 'EM_EXECUCAO': return 'Em execucao'
-    case 'CONCLUIDO': return 'Concluido'
+    case 'EM_EXECUCAO': return 'Em execução'
+    case 'CONCLUIDO': return 'Concluído'
     case 'RECUSADO': return 'Recusado'
     default: return status
   }

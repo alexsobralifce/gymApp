@@ -284,10 +284,10 @@ export default function Landing() {
 
               <ul className="mt-6 space-y-3">
                 {[
-                  { icon: Target, text: 'Objetivo: hipertrofia, força, emagrecimento ou saúde — cada um com faixa de repetições propria' },
-                  { icon: TrendingUp, text: 'Nivel: iniciante (máquinas), intermediário (livre) ou avançado (alta carga) — séries ajustadas' },
+                  { icon: Target, text: 'Objetivo: hipertrofia, força, emagrecimento ou saúde — cada um com faixa de repetições própria' },
+                  { icon: TrendingUp, text: 'Nível: iniciante (máquinas), intermediário (livre) ou avançado (alta carga) — séries ajustadas' },
                   { icon: Clock, text: 'Duração: você define quanto tempo tem (30 a 90 min) — o volume se adapta automaticamente' },
-                  { icon: Shield, text: 'Restricoes articulares: ombro, joelho, lombar — exercícios incompatíveis são evitados' },
+                  { icon: Shield, text: 'Restrições articulares: ombro, joelho, lombar — exercícios incompatíveis são evitados' },
                 ].map(({ icon: Icon, text }) => (
                   <li key={text} className="flex items-start gap-3 text-sm text-muted-foreground">
                     <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -411,11 +411,11 @@ export default function Landing() {
 
               <ul className="mt-6 space-y-3">
                 {[
-                  { icon: MessageCircle, text: 'Mural com posts automáticos de treino iniciado, concluido e recordes pessoais' },
+                  { icon: MessageCircle, text: 'Mural com posts automáticos de treino iniciado, concluído e recordes pessoais' },
                   { icon: Users, text: 'Colegas da academia: descubra e siga quem treina no mesmo lugar que você' },
                   { icon: Heart, text: 'Curtidas e comentários nos posts — interação no feed como rede social' },
                   { icon: Trophy, text: 'Clubes com ranking semanal de XP (em breve)' },
-                  { icon: Shield, text: 'Privacidade sob seu controle: publico, so amigos ou privado' },
+                  { icon: Shield, text: 'Privacidade sob seu controle: público, só amigos ou privado' },
                 ].map(({ icon: Icon, text }) => (
                   <li key={text} className="flex items-start gap-3 text-sm text-muted-foreground">
                     <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -598,7 +598,7 @@ export default function Landing() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
-                Treino inteligente com IA, execucao guiada por GIF e rede social fitness. Sozinho, com professor ou academia.
+                Treino inteligente com IA, execução guiada por GIF e rede social fitness. Sozinho, com professor ou academia.
               </p>
             </div>
 

@@ -57,7 +57,7 @@ export default function Privacidade() {
       {/* Visibilidade */}
       <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-text mb-1">Visibilidade padrao dos posts</h3>
+          <h3 className="text-sm font-semibold text-text mb-1">Visibilidade padrão dos posts</h3>
           <p className="text-xs text-text-muted mb-3">Controla quem pode ver seus treinos no mural.</p>
           <div className="space-y-2">
             {[

@@ -109,7 +109,7 @@ function Pagination({
         disabled={page >= totalPages}
         className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
       >
-        Proximo
+        Próximo
       </button>
     </div>
   )
@@ -450,7 +450,7 @@ function AlunosTab({
             <h3 className="font-semibold text-text">{a.usuario.nome}</h3>
             <p className="text-xs text-text-muted">{a.usuario.email}</p>
             <p className="text-xs text-text-muted">
-              Academia: {a.academia?.nome || '---'} | Professor: {a.professor?.usuario.nome || 'Autogestao'}
+              Academia: {a.academia?.nome || '---'} | Professor: {a.professor?.usuario.nome || 'Autogestão'}
             </p>
             {(a.peso_kg || a.altura_cm) && (
               <p className="text-xs text-text-muted">
@@ -540,7 +540,7 @@ function EditAcademiaModal({
         </div>
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuario</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
         <div className="flex gap-2">
           <input
             type="password"
@@ -657,7 +657,7 @@ function EditProfessorModal({
         </div>
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuario</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
         <div className="flex gap-2">
           <input
             type="password"
@@ -776,7 +776,7 @@ function EditAlunoModal({
         <div>
           <label className="mb-1 block text-xs text-text-muted">Professor</label>
           <select value={professorId} onChange={(e) => setProfessorId(e.target.value)} className={inputClass}>
-            <option value="">Autogestao</option>
+            <option value="">Autogestão</option>
             {professores.map((p) => (
               <option key={p.id} value={p.id}>{p.usuario.nome}</option>
             ))}
@@ -788,7 +788,7 @@ function EditAlunoModal({
         </div>
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuario</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
         <div className="flex gap-2">
           <input
             type="password"

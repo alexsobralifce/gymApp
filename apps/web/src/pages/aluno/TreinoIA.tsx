@@ -389,9 +389,12 @@ export default function TreinoIA() {
       {step === 3 && (
         <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
           <div>
-            <h2 className="text-base font-bold text-text">Quais grupos musculares voce quer trabalhar?</h2>
-            <p className="text-xs text-text-muted mt-1">
-              Escolha um atalho ou selecione musculos. Cada grupo recebe ate 3 exercicios.
+            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
+              Próximo Passo: Grupos Musculares
+            </p>
+            <h2 className="text-base font-bold text-text">Quais músculos deseja focar neste plano?</h2>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Escolha um atalho ou selecione músculos. Cada grupo recebe até 3 exercícios.
             </p>
           </div>
 
@@ -418,9 +421,9 @@ export default function TreinoIA() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
-              Grupos individuais (3 exercicios cada)
-            </label>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+              Grupos individuais (3 exercícios cada)
+            </p>
             <div className="flex flex-wrap gap-2">
               {GRUPOS_GRANULARES.map((g) => {
                 const selected = gruposMusculares.includes(g.value)
@@ -442,39 +445,42 @@ export default function TreinoIA() {
               })}
             </div>
             {gruposMusculares.length > 0 && (
-              <p className="text-xs text-text-muted mt-2">
-                Selecionados: {gruposMusculares.length} grupo(s) × 3 = ~{gruposMusculares.length * 3} exercicios
-              </p>
+              <div className="text-xs text-text-muted mt-2">
+                Selecionados: {gruposMusculares.length} grupo(s) × 3 = ~{gruposMusculares.length * 3} exercícios
+              </div>
             )}
+            
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+                disabled={!podeAvancarMusculos}
+                className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-40 min-h-11"
+              >
+                Próximo Passo: Restrições
+              </button>
+            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setStep(4)}
-            disabled={!podeAvancarMusculos}
-            className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-40"
-          >
-            Proximo Passo: Restricoes
-          </button>
         </div>
       )}
 
       {step === 4 && (
-        <div className="bg-surface rounded-2xl p-6 border border-surface-input space-y-6">
+        <div className="space-y-5 animate-slide-up bg-surface rounded-2xl p-6 border border-surface-input">
           <div>
-            <h2 className="text-base font-bold text-text">Voce possui restricoes ou dores articulares?</h2>
-            <p className="text-xs text-text-muted mt-1">
-              Selecione articulacoes que precisam de cuidado. Exercicios incompativeis serao evitados.
+            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Passo 4 de 5</p>
+            <h2 className="text-base font-bold text-text">Você possui restrições ou dores articulares?</h2>
+            <p className="text-xs text-text-muted leading-relaxed mt-1">
+              Selecione articulações que precisam de cuidado. Exercícios incompatíveis serão evitados.
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { key: 'joelho', label: 'Joelho (evita agachamento pesado)' },
-              { key: 'lombar', label: 'Lombar (evita terra/remada curvada)' },
-              { key: 'ombro', label: 'Ombro (evita desenvolvimento pesado)' },
-              { key: 'punho', label: 'Punho (evita rosca com barra reta)' },
-              { key: 'costas', label: 'Costas (prioriza exercicios apoiados)' },
+              { key: 'joelho', label: 'Joelho (evita agachamentos profundos e alto impacto)' },
+              { key: 'lombar', label: 'Lombar (evita levantamento terra e sobrecarga axial)' },
+              { key: 'ombro', label: 'Ombro (evita desenvolvimentos pesados e rotação extrema)' },
+              { key: 'punho', label: 'Punho (evita flexões manuais e barras rígidas)' },
+              { key: 'costas', label: 'Costas (prioriza exercícios apoiados)' },
             ].map((item) => {
               const selected = restricoes.includes(item.key)
               return (

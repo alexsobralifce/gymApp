@@ -70,24 +70,24 @@ export default function AlunoTreinoInicio() {
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <ActivityIcon className="h-5 w-5 text-primary mb-1" />
             <span className="text-lg font-bold text-text">{totalExercicios}</span>
-            <span className="text-xs text-text-muted">Exercicios</span>
+            <span className="text-xs text-text-muted">Exercícios</span>
           </div>
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <TrophyIcon className="h-5 w-5 text-warning mb-1" />
             <span className="text-lg font-bold text-text">{totalSeries}</span>
-            <span className="text-xs text-text-muted">Series</span>
+            <span className="text-xs text-text-muted">Séries</span>
           </div>
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <TimerIcon className="h-5 w-5 text-blue-400 mb-1" />
             <span className="text-lg font-bold text-text">0:00</span>
-            <span className="text-xs text-text-muted">Duracao</span>
+            <span className="text-xs text-text-muted">Duração</span>
           </div>
         </div>
 
         {/* Exercises Preview */}
         {exercicios.length > 0 && (
           <div className="mt-6 w-full max-w-xs space-y-2">
-            <p className="text-xs font-bold text-text-muted uppercase tracking-wider text-center">Exercicios</p>
+            <p className="text-xs font-bold text-text-muted uppercase tracking-wider text-center">Exercícios</p>
             {exercicios.slice(0, 5).map((ex) => (
               <div key={ex.id} className="flex items-center gap-3 rounded-xl bg-surface-card border border-surface-input px-3 py-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
@@ -100,7 +100,7 @@ export default function AlunoTreinoInicio() {
               </div>
             ))}
             {exercicios.length > 5 && (
-              <p className="text-xs text-text-muted text-center">+{exercicios.length - 5} exercicios</p>
+              <p className="text-xs text-text-muted text-center">+{exercicios.length - 5} exercícios</p>
             )}
           </div>
         )}

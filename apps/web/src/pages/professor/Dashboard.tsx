@@ -105,7 +105,7 @@ export default function ProfessorDashboard() {
                       <p className="text-xs text-text-muted truncate">{aluno.usuario.email}</p>
                       <span className="inline-flex items-center gap-1 rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">
                         <Building2Icon className="h-3 w-3" />
-                        {aluno.academia?.nome || 'Autogestao'}
+                        {aluno.academia?.nome || 'Autogestão'}
                       </span>
                     </div>
                   </div>
@@ -133,10 +133,10 @@ export default function ProfessorDashboard() {
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={() => navigate(`/alunos/${aluno.id}/correlacoes`)}
-                    className="flex-1 rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-semibold text-text-muted hover:text-text hover:border-text-muted active:scale-[0.98] transition-all cursor-pointer"
+                    className="flex-1 rounded-xl bg-surface-input px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input/80 transition-colors text-center cursor-pointer min-h-[36px] flex items-center justify-center gap-1.5"
                   >
-                    <ChartLineIcon className="h-3.5 w-3.5 inline mr-1.5" />
-                    Evolucao
+                    <ChartLineIcon className="h-3.5 w-3.5" />
+                    Evolução
                   </button>
                   <button
                     onClick={() => navigate(`/treinos/criar?alunoId=${aluno.id}`)}

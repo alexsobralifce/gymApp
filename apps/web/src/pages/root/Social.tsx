@@ -89,7 +89,7 @@ function Pagination({
         disabled={page >= totalPages}
         className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
       >
-        Proximo
+        Próximo
       </button>
     </div>
   )
@@ -194,7 +194,7 @@ export default function RootSocial() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Moderacao Social</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">Moderação Social</h1>
 
       {feedback && (
         <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>

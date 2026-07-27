@@ -451,7 +451,7 @@ export default function AlunoCriarTreino() {
                 onChange={(e) => setFiltroGrupo(e.target.value)}
                 className="rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:outline-none"
               >
-                <option value="">Todos Músculos</option>
+                <option value="">Todos os Músculos</option>
                 {GRUPOS_MUSCULARES.map((g) => (
                   <option key={g.value} value={g.value}>{g.label}</option>
                 ))}

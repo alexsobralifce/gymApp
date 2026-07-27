@@ -56,7 +56,7 @@ interface PostCardProps {
 
 const tipoBadge: Record<string, { label: string; color: string }> = {
   TREINO_INICIADO: { label: 'Treino iniciado', color: 'text-accent' },
-  TREINO_CONCLUIDO: { label: 'Treino concluido', color: 'text-success' },
+  TREINO_CONCLUIDO: { label: 'Treino concluído', color: 'text-success' },
   RECORDE_PESSOAL: { label: 'Recorde pessoal', color: 'text-primary' },
   BADGE_CONQUISTADO: { label: 'Conquista', color: 'text-accent' },
   DESAFIO_COMPLETO: { label: 'Desafio completo', color: 'text-primary-light' },
@@ -110,7 +110,7 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
     try {
       await onComentar(post.id, novoTexto.trim())
       setComentarios((prev) => [
-        { id: String(Date.now()), post_id: post.id, aluno_id: '', autor_nome: 'Voce', texto: novoTexto.trim(), criado_em: new Date().toISOString() },
+        { id: String(Date.now()), post_id: post.id, aluno_id: '', autor_nome: 'Você', texto: novoTexto.trim(), criado_em: new Date().toISOString() },
         ...prev,
       ])
       setNovoTexto('')

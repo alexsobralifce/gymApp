@@ -113,7 +113,7 @@ export default function AlunoDashboard() {
 
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-5">
-      {/* Modal de Notificacao */}
+      {/* Modal de Notificação */}
       {modalNotificacao && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-surface/60 backdrop-blur-sm" onClick={handleFecharNotificacao} />
@@ -127,7 +127,7 @@ export default function AlunoDashboard() {
                 )}
               </div>
               <h3 className="text-lg font-bold text-text">
-                {modalNotificacao.tipo === 'NOVO_TREINO' ? 'Nova Ficha de Treino!' : 'Professor Atribuido!'}
+                {modalNotificacao.tipo === 'NOVO_TREINO' ? 'Nova Ficha de Treino!' : 'Professor Atribuído!'}
               </h3>
               <p className="mt-2 text-sm text-text-muted">{modalNotificacao.mensagem}</p>
             </div>

@@ -358,7 +358,7 @@ export default function AlunoTreinoExecucao() {
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-text truncate">{treinoAtual.nome}</h1>
               <p className="text-xs text-text-muted">
-                {concluidoSeries}/{totalSeries} series
+                {concluidoSeries}/{totalSeries} séries
               </p>
             </div>
           </div>
@@ -615,13 +615,13 @@ export default function AlunoTreinoExecucao() {
         </div>
       )}
 
-      {/* Modal de Avaliacao de Dificuldade */}
+      {/* Modal de Avaliação de Dificuldade */}
       {showAvaliacao && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/70" onClick={() => setShowAvaliacao(false)} />
           <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-surface-card border border-border p-6 shadow-2xl z-10 animate-modal-pop">
             <h2 className="text-xl font-bold text-text text-center mb-1">Como foi o treino?</h2>
-            <p className="text-sm text-text-muted text-center mb-5">Avalie o nivel de dificuldade</p>
+            <p className="text-sm text-text-muted text-center mb-5">Avalie o nível de dificuldade</p>
 
             <div className="space-y-2 mb-5">
               {DIFICULDADE_OPCOES.map((op) => (
@@ -642,7 +642,7 @@ export default function AlunoTreinoExecucao() {
               disabled={avaliando}
               className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-text-muted font-medium active:scale-[0.98] transition-all cursor-pointer"
             >
-              Pular avaliacao
+              Pular avaliação
             </button>
           </div>
         </div>
