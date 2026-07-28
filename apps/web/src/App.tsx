@@ -6,6 +6,7 @@ import { useCapacitorTheme } from './hooks/useCapacitorTheme'
 import AppShell from './components/layout/AppShell'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import { DebugOverlay } from './components/ui/DebugOverlay'
+import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt'
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
@@ -140,6 +141,7 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     <DebugOverlay />
+    <PWAInstallPrompt />
     </>
   )
 }
