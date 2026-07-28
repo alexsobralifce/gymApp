@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useHealth } from '../../hooks/useHealth'
 import { HeartIcon, ActivityIcon } from '../icons/Icon'
+import HuaweiBridgeGuide from './HuaweiBridgeGuide'
 
 export function HealthConnectCard() {
   const {
@@ -8,9 +9,11 @@ export function HealthConnectCard() {
     authorized,
     checking,
     error,
+    platform,
     requestAccess,
     checkAuthorization,
     fetchDailySummary,
+    checkHasHistoricalData,
   } = useHealth()
 
   const [summary, setSummary] = useState<{
@@ -18,10 +21,19 @@ export function HealthConnectCard() {
     activeCalories: number
   } | null>(null)
 
+  const [hasData, setHasData] = useState<boolean | null>(null)
+  const [showBridgeGuide, setShowBridgeGuide] = useState(false)
+
   useEffect(() => {
     if (!authorized || !available) return
-    fetchDailySummary().then(setSummary)
-  }, [authorized, available, fetchDailySummary])
+    Promise.all([
+      fetchDailySummary().then((s) => {
+        setSummary(s)
+        return s
+      }),
+      checkHasHistoricalData().then((d) => setHasData(d)),
+    ])
+  }, [authorized, available, fetchDailySummary, checkHasHistoricalData])
 
   useEffect(() => {
     if (!available) return
@@ -59,6 +71,50 @@ export function HealthConnectCard() {
         >
           {checking ? 'Solicitando acesso...' : 'Conectar Apple Health / Health Connect'}
         </button>
+      </div>
+    )
+  }
+
+  if (hasData === false && showBridgeGuide) {
+    return (
+      <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10">
+            <span className="text-lg">🔗</span>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-text">Relogio Huawei Detectado?</h3>
+            <p className="text-xs text-text-muted">
+              O acesso foi concedido, mas nao encontramos dados de saude.
+            </p>
+          </div>
+        </div>
+
+        <HuaweiBridgeGuide platform={platform} />
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              fetchDailySummary().then((s) => {
+                setSummary(s)
+                if (s.heartRateAvg !== null) {
+                  setHasData(true)
+                }
+              })
+            }}
+            className="flex-1 rounded-lg bg-surface-input py-2 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
+          >
+            Ja configurei, verificar
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowBridgeGuide(false)}
+            className="flex-1 rounded-lg bg-surface-input py-2 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
+          >
+            Fechar
+          </button>
+        </div>
       </div>
     )
   }
@@ -103,13 +159,24 @@ export function HealthConnectCard() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => fetchDailySummary().then(setSummary)}
-        className="mt-3 w-full rounded-lg bg-surface-input py-1.5 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
-      >
-        Atualizar dados
-      </button>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => fetchDailySummary().then(setSummary)}
+          className="flex-1 rounded-lg bg-surface-input py-1.5 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
+        >
+          Atualizar
+        </button>
+        {hasData === false && (
+          <button
+            type="button"
+            onClick={() => setShowBridgeGuide(true)}
+            className="flex-1 rounded-lg bg-surface-input py-1.5 text-xs font-medium text-accent hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
+          >
+            Configurar relogio
+          </button>
+        )}
+      </div>
     </div>
   )
 }

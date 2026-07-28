@@ -7,9 +7,10 @@ interface HealthState {
   authorized: boolean
   checking: boolean
   error: string | null
+  platform: 'ios' | 'android' | 'web' | null
 }
 
-interface DailySummary {
+export interface DailySummary {
   heartRateAvg: number | null
   heartRateSamples: number
   activeCalories: number
@@ -22,6 +23,7 @@ export function useHealth() {
     authorized: false,
     checking: true,
     error: null,
+    platform: null,
   })
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export function useHealth() {
           authorized: false,
           checking: false,
           error: null,
+          platform: (result.platform as 'ios' | 'android' | 'web') ?? null,
         })
       })
       .catch(() => {
@@ -83,8 +86,7 @@ export function useHealth() {
         write: [],
       })
 
-      const allGranted =
-        status.readAuthorized.length === 3
+      const allGranted = status.readAuthorized.length === 3
 
       setState((prev) => ({ ...prev, authorized: allGranted }))
       return allGranted
@@ -135,6 +137,24 @@ export function useHealth() {
     return summary
   }, [])
 
+  const checkHasHistoricalData = useCallback(async (): Promise<boolean> => {
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+
+    try {
+      const { samples } = await Health.readSamples({
+        dataType: 'heartRate',
+        startDate: weekAgo.toISOString(),
+        endDate: new Date().toISOString(),
+        limit: 1,
+      })
+
+      return samples.length > 0
+    } catch {
+      return false
+    }
+  }, [])
+
   const getHeartRateDuringWorkout = useCallback(
     async (startDate: string, endDate: string): Promise<number | null> => {
       try {
@@ -178,6 +198,7 @@ export function useHealth() {
     requestAccess,
     checkAuthorization,
     fetchDailySummary,
+    checkHasHistoricalData,
     getHeartRateDuringWorkout,
     getCaloriesDuringWorkout,
   }
