@@ -16,6 +16,8 @@ export interface DailySummary {
   activeCalories: number
 }
 
+const TAG = '[Health]'
+
 export function useHealth() {
   const [state, setState] = useState<HealthState>({
     available: false,
@@ -27,8 +29,10 @@ export function useHealth() {
   })
 
   useEffect(() => {
+    console.log(TAG, 'Verificando disponibilidade do Health...')
     Health.isAvailable()
       .then((result) => {
+        console.log(TAG, 'Health.isAvailable resultado:', JSON.stringify(result))
         setState({
           available: result.available,
           checked: true,
@@ -38,7 +42,8 @@ export function useHealth() {
           platform: (result.platform as 'ios' | 'android' | 'web') ?? null,
         })
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(TAG, 'Erro ao verificar disponibilidade:', err)
         setState((prev) => ({
           ...prev,
           checked: true,
@@ -49,13 +54,16 @@ export function useHealth() {
   }, [])
 
   const requestAccess = useCallback(async (): Promise<boolean> => {
+    console.log(TAG, 'requestAccess() iniciado')
     setState((prev) => ({ ...prev, checking: true, error: null }))
 
     try {
-      await Health.requestAuthorization({
+      console.log(TAG, 'Chamando Health.requestAuthorization com read: [heartRate, calories, steps]')
+      const authResult = await Health.requestAuthorization({
         read: ['heartRate', 'calories', 'steps'],
         write: [],
       })
+      console.log(TAG, 'Health.requestAuthorization resultado:', JSON.stringify(authResult))
 
       setState((prev) => ({
         ...prev,
@@ -63,10 +71,13 @@ export function useHealth() {
         checking: false,
       }))
 
+      console.log(TAG, 'requestAccess() sucesso — authorized: true')
       return true
     } catch (err: any) {
       const message =
         err?.message || 'Permissao de saude negada. Va nas configuracoes do dispositivo para conceder acesso.'
+
+      console.error(TAG, 'requestAccess() erro:', message, err)
 
       setState((prev) => ({
         ...prev,
@@ -80,17 +91,21 @@ export function useHealth() {
   }, [])
 
   const checkAuthorization = useCallback(async (): Promise<boolean> => {
+    console.log(TAG, 'checkAuthorization() iniciado')
     try {
       const status = await Health.checkAuthorization({
         read: ['heartRate', 'calories', 'steps'],
         write: [],
       })
+      console.log(TAG, 'checkAuthorization() status:', JSON.stringify(status))
 
       const allGranted = status.readAuthorized.length === 3
+      console.log(TAG, 'checkAuthorization() allGranted:', allGranted, 'readAuthorized:', status.readAuthorized)
 
       setState((prev) => ({ ...prev, authorized: allGranted }))
       return allGranted
-    } catch {
+    } catch (err) {
+      console.error(TAG, 'checkAuthorization() erro:', err)
       setState((prev) => ({ ...prev, authorized: false }))
       return false
     }
@@ -101,6 +116,8 @@ export function useHealth() {
     today.setHours(0, 0, 0, 0)
     const now = new Date()
 
+    console.log(TAG, 'fetchDailySummary() — periodo:', today.toISOString(), 'ate', now.toISOString())
+
     const summary: DailySummary = {
       heartRateAvg: null,
       heartRateSamples: 0,
@@ -108,55 +125,74 @@ export function useHealth() {
     }
 
     try {
+      console.log(TAG, 'fetchDailySummary() lendo heartRate e calories em paralelo...')
       const [heartData, calorieData] = await Promise.all([
         Health.readSamples({
           dataType: 'heartRate',
           startDate: today.toISOString(),
           endDate: now.toISOString(),
-        }).catch(() => ({ samples: [] })),
+        }).catch((err) => {
+          console.error(TAG, 'fetchDailySummary() erro ao ler heartRate:', err)
+          return { samples: [] }
+        }),
         Health.readSamples({
           dataType: 'calories',
           startDate: today.toISOString(),
           endDate: now.toISOString(),
-        }).catch(() => ({ samples: [] })),
+        }).catch((err) => {
+          console.error(TAG, 'fetchDailySummary() erro ao ler calories:', err)
+          return { samples: [] }
+        }),
       ])
+
+      console.log(TAG, 'fetchDailySummary() heartRate samples:', heartData.samples.length)
+      console.log(TAG, 'fetchDailySummary() calories samples:', calorieData.samples.length)
 
       if (heartData.samples.length > 0) {
         const sum = heartData.samples.reduce((acc, s) => acc + s.value, 0)
         summary.heartRateAvg = Math.round(sum / heartData.samples.length)
         summary.heartRateSamples = heartData.samples.length
+        console.log(TAG, 'fetchDailySummary() heartRate avg:', summary.heartRateAvg, 'bpm (', summary.heartRateSamples, 'amostras)')
       }
 
-      summary.activeCalories = Math.round(
-        calorieData.samples.reduce((acc, s) => acc + s.value, 0),
-      )
-    } catch {
-      // silently fail — user can retry
+      const totalCal = calorieData.samples.reduce((acc, s) => acc + s.value, 0)
+      summary.activeCalories = Math.round(totalCal)
+      console.log(TAG, 'fetchDailySummary() activeCalories:', summary.activeCalories, 'kcal')
+    } catch (err) {
+      console.error(TAG, 'fetchDailySummary() erro inesperado:', err)
     }
 
+    console.log(TAG, 'fetchDailySummary() retornando:', JSON.stringify(summary))
     return summary
   }, [])
 
   const checkHasHistoricalData = useCallback(async (): Promise<boolean> => {
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
+    const now = new Date()
+
+    console.log(TAG, 'checkHasHistoricalData() — periodo:', weekAgo.toISOString(), 'ate', now.toISOString())
 
     try {
       const { samples } = await Health.readSamples({
         dataType: 'heartRate',
         startDate: weekAgo.toISOString(),
-        endDate: new Date().toISOString(),
+        endDate: now.toISOString(),
         limit: 1,
       })
 
-      return samples.length > 0
-    } catch {
+      const result = samples.length > 0
+      console.log(TAG, 'checkHasHistoricalData() samples encontrados:', samples.length, '=> tem dados:', result)
+      return result
+    } catch (err) {
+      console.error(TAG, 'checkHasHistoricalData() erro:', err)
       return false
     }
   }, [])
 
   const getHeartRateDuringWorkout = useCallback(
     async (startDate: string, endDate: string): Promise<number | null> => {
+      console.log(TAG, 'getHeartRateDuringWorkout() — periodo:', startDate, 'ate', endDate)
       try {
         const { samples } = await Health.readSamples({
           dataType: 'heartRate',
@@ -165,11 +201,16 @@ export function useHealth() {
           limit: 100,
         })
 
+        console.log(TAG, 'getHeartRateDuringWorkout() samples:', samples.length)
+
         if (samples.length === 0) return null
 
         const sum = samples.reduce((acc, s) => acc + s.value, 0)
-        return Math.round(sum / samples.length)
-      } catch {
+        const avg = Math.round(sum / samples.length)
+        console.log(TAG, 'getHeartRateDuringWorkout() avg:', avg, 'bpm')
+        return avg
+      } catch (err) {
+        console.error(TAG, 'getHeartRateDuringWorkout() erro:', err)
         return null
       }
     },
@@ -178,6 +219,7 @@ export function useHealth() {
 
   const getCaloriesDuringWorkout = useCallback(
     async (startDate: string, endDate: string): Promise<number> => {
+      console.log(TAG, 'getCaloriesDuringWorkout() — periodo:', startDate, 'ate', endDate)
       try {
         const { samples } = await Health.readSamples({
           dataType: 'calories',
@@ -185,8 +227,11 @@ export function useHealth() {
           endDate,
         })
 
-        return Math.round(samples.reduce((acc, s) => acc + s.value, 0))
-      } catch {
+        const total = Math.round(samples.reduce((acc, s) => acc + s.value, 0))
+        console.log(TAG, 'getCaloriesDuringWorkout() samples:', samples.length, 'total:', total, 'kcal')
+        return total
+      } catch (err) {
+        console.error(TAG, 'getCaloriesDuringWorkout() erro:', err)
         return 0
       }
     },

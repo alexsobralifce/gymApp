@@ -3,6 +3,8 @@ import { useHealth } from '../../hooks/useHealth'
 import { HeartIcon, ActivityIcon } from '../icons/Icon'
 import HuaweiBridgeGuide from './HuaweiBridgeGuide'
 
+const TAG = '[HealthCard]'
+
 export function HealthConnectCard() {
   const {
     available,
@@ -23,24 +25,99 @@ export function HealthConnectCard() {
   } | null>(null)
 
   const [hasData, setHasData] = useState<boolean | null>(null)
+
+  console.log(TAG, 'render — available:', available, 'checked:', checked, 'authorized:', authorized, 'checking:', checking, 'platform:', platform, 'hasData:', hasData, 'summary:', summary?.heartRateAvg)
   const [showBridgeGuide, setShowBridgeGuide] = useState(false)
   const [showWebInfo, setShowWebInfo] = useState(false)
 
   useEffect(() => {
-    if (!authorized || !available) return
+    console.log(TAG, 'useEffect[authorized,available] — authorized:', authorized, 'available:', available)
+    if (!authorized || !available) {
+      console.log(TAG, 'useEffect[authorized,available] abortado — falta autorizacao ou disponibilidade')
+      return
+    }
+    console.log(TAG, 'useEffect[authorized,available] — buscando dailySummary e historicalData...')
     Promise.all([
       fetchDailySummary().then((s) => {
+        console.log(TAG, 'dailySummary recebido:', JSON.stringify(s))
         setSummary(s)
         return s
       }),
-      checkHasHistoricalData().then((d) => setHasData(d)),
+      checkHasHistoricalData().then((d) => {
+        console.log(TAG, 'hasHistoricalData:', d)
+        setHasData(d)
+      }),
     ])
   }, [authorized, available, fetchDailySummary, checkHasHistoricalData])
 
   useEffect(() => {
-    if (!available) return
-    checkAuthorization()
+    console.log(TAG, 'useEffect[available] — available:', available)
+    if (!available) {
+      console.log(TAG, 'useEffect[available] abortado — Health nao disponivel')
+      return
+    }
+    console.log(TAG, 'useEffect[available] — verificando autorizacao...')
+    checkAuthorization().then((granted) => {
+      console.log(TAG, 'useEffect[available] autorizacao concedida:', granted)
+    })
   }, [available, checkAuthorization])
+
+  useEffect(() => {
+    if (!authorized || !available) return
+
+    console.log(TAG, 'Registrando listener visibilitychange + focus para auto-refresh')
+
+    const refresh = () => {
+      console.log(TAG, 'App retomou foco — atualizando dados de saude...')
+      fetchDailySummary().then((s) => {
+        console.log(TAG, 'Auto-refresh (resume) — resultado:', JSON.stringify(s))
+        setSummary(s)
+        if (s.heartRateAvg !== null && hasData === false) {
+          setHasData(true)
+        }
+      }).catch((err) => {
+        console.error(TAG, 'Auto-refresh (resume) — erro:', err)
+      })
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', refresh)
+
+    return () => {
+      console.log(TAG, 'Removendo listener visibilitychange + focus')
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [authorized, available, fetchDailySummary, hasData])
+
+  useEffect(() => {
+    if (!authorized || !available) return
+
+    const POLL_INTERVAL_MS = 15 * 60 * 1000
+    console.log(TAG, 'Iniciando polling de saude a cada', POLL_INTERVAL_MS / 60000, 'minutos')
+
+    const interval = setInterval(() => {
+      console.log(TAG, 'Polling 15min — atualizando dados de saude...')
+      fetchDailySummary().then((s) => {
+        console.log(TAG, 'Polling 15min — resultado:', JSON.stringify(s))
+        setSummary(s)
+        if (s.heartRateAvg !== null && hasData === false) {
+          setHasData(true)
+        }
+      }).catch((err) => {
+        console.error(TAG, 'Polling 15min — erro:', err)
+      })
+    }, POLL_INTERVAL_MS)
+
+    return () => {
+      console.log(TAG, 'Limpando intervalo de polling de saude')
+      clearInterval(interval)
+    }
+  }, [authorized, available, fetchDailySummary, hasData])
 
   if (!checked) return null
 
@@ -136,7 +213,12 @@ export function HealthConnectCard() {
 
         <button
           type="button"
-          onClick={requestAccess}
+          onClick={() => {
+            console.log(TAG, 'Botao "Conectar" clicado — solicitando permissao...')
+            requestAccess().then((granted) => {
+              console.log(TAG, 'Botao "Conectar" — permissao concedida:', granted)
+            })
+          }}
           disabled={checking}
           className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
         >
@@ -167,11 +249,18 @@ export function HealthConnectCard() {
           <button
             type="button"
             onClick={() => {
+              console.log(TAG, 'Botao "Ja configurei, verificar" clicado')
               fetchDailySummary().then((s) => {
+                console.log(TAG, '"Ja configurei" — dailySummary:', JSON.stringify(s))
                 setSummary(s)
                 if (s.heartRateAvg !== null) {
+                  console.log(TAG, '"Ja configurei" — dados encontrados, hasData = true')
                   setHasData(true)
+                } else {
+                  console.log(TAG, '"Ja configurei" — ainda sem dados de heartRate')
                 }
+              }).catch((err) => {
+                console.error(TAG, '"Ja configurei" — erro:', err)
               })
             }}
             className="flex-1 rounded-lg bg-surface-input py-2 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
@@ -233,7 +322,19 @@ export function HealthConnectCard() {
       <div className="mt-3 flex gap-2">
         <button
           type="button"
-          onClick={() => fetchDailySummary().then(setSummary)}
+          onClick={() => {
+            console.log(TAG, 'Botao "Atualizar" clicado — buscando dailySummary...')
+            fetchDailySummary().then((s) => {
+              console.log(TAG, 'Botao "Atualizar" — resultado:', JSON.stringify(s))
+              setSummary(s)
+              if (s.heartRateAvg !== null && hasData === false) {
+                console.log(TAG, 'Botao "Atualizar" — detectou dados, atualizando hasData para true')
+                setHasData(true)
+              }
+            }).catch((err) => {
+              console.error(TAG, 'Botao "Atualizar" — erro:', err)
+            })
+          }}
           className="flex-1 rounded-lg bg-surface-input py-1.5 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
         >
           Atualizar
