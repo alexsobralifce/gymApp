@@ -4,6 +4,7 @@ import { useHealth } from '../../hooks/useHealth'
 import { shouldSync, getLastSyncTime } from '../../lib/healthSync'
 import { HeartIcon, ActivityIcon } from '../icons/Icon'
 import HuaweiBridgeGuide from './HuaweiBridgeGuide'
+import { WatchSyncButton } from './WatchSyncButton'
 
 const TAG = '[HealthCard]'
 
@@ -333,26 +334,25 @@ export function HealthConnectCard() {
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            console.log(TAG, 'Botao "Atualizar" clicado')
-            forceUpdate()
-          }}
-          className="flex-1 rounded-lg bg-surface-input py-1.5 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
-        >
-          Atualizar
-        </button>
+      <div className="mt-3 flex gap-2 flex-col">
         {hasData === false && (
           <button
             type="button"
             onClick={() => setShowBridgeGuide(true)}
-            className="flex-1 rounded-lg bg-surface-input py-1.5 text-xs font-medium text-accent hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
+            className="w-full rounded-lg bg-surface-input py-1.5 text-xs font-medium text-accent hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
           >
             Configurar relogio
           </button>
         )}
+        <WatchSyncButton 
+          onSync={async () => {
+            console.log(TAG, 'Botao "Atualizar" clicado via WatchSyncButton')
+            await forceUpdate()
+          }} 
+          available={available}
+          authorized={authorized}
+          onRequestAccess={requestAccess}
+        />
       </div>
     </div>
   )
