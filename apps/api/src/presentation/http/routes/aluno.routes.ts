@@ -484,28 +484,25 @@ export async function alunoRoutes(app: FastifyInstance) {
     const inicioMesAnt = new Date(ano, mesNum - 1, 1, 0, 0, 0, 0)
     const fimMesAnt = new Date(ano, mesNum, 0, 23, 59, 59, 999)
 
-    // Treinos concluídos no mês
-    const treinosMes = await prisma.treino.findMany({
+    // Conclusões do mês via historico (imune à reciclagem CONCLUIDO→ACEITO)
+    const conclusoesMes = await prisma.treinoHistorico.findMany({
       where: {
-        aluno_id: aluno.id,
-        status: 'CONCLUIDO',
-        finalizado_em: { gte: inicioMes, lte: fimMes },
+        treino: { aluno_id: aluno.id },
+        status_novo: 'CONCLUIDO',
+        timestamp: { gte: inicioMes, lte: fimMes },
       },
-      include: {
-        execucoes: true,
+      orderBy: { timestamp: 'asc' },
+    })
+
+    const conclusoesMesAnt = await prisma.treinoHistorico.findMany({
+      where: {
+        treino: { aluno_id: aluno.id },
+        status_novo: 'CONCLUIDO',
+        timestamp: { gte: inicioMesAnt, lte: fimMesAnt },
       },
     })
 
-    const treinosMesAnt = await prisma.treino.findMany({
-      where: {
-        aluno_id: aluno.id,
-        status: 'CONCLUIDO',
-        finalizado_em: { gte: inicioMesAnt, lte: fimMesAnt },
-      },
-      include: {
-        execucoes: true,
-      },
-    })
+    const treinosIdsMes = [...new Set(conclusoesMes.map((h) => h.treino_id))]
 
     // Execuções do mês
     const execucoesMes = await prisma.execucaoExercicio.findMany({
@@ -543,31 +540,25 @@ export async function alunoRoutes(app: FastifyInstance) {
       variacaoVolumePercent = 100
     }
 
-    // Duração total e média em minutos
+    // Duração total e média — do campo duracao_segundos no historico
     let duracaoTotalMinutos = 0
     let treinosComDuracao = 0
 
-    for (const t of treinosMes) {
-      if (t.iniciado_em && t.finalizado_em) {
-        const diffMs = t.finalizado_em.getTime() - t.iniciado_em.getTime()
-        const diffMin = Math.round(diffMs / (1000 * 60))
-        if (diffMin > 3 && diffMin < 240) {
-          duracaoTotalMinutos += diffMin
-          treinosComDuracao++
-        } else {
-          duracaoTotalMinutos += 45
-          treinosComDuracao++
-        }
+    for (const h of conclusoesMes) {
+      if (h.duracao_segundos && h.duracao_segundos >= 60) {
+        const diffMin = Math.round(h.duracao_segundos / 60)
+        duracaoTotalMinutos += diffMin > 3 && diffMin < 240 ? diffMin : 45
+        treinosComDuracao++
       } else {
         duracaoTotalMinutos += 45
         treinosComDuracao++
       }
     }
 
-    const totalTreinos = treinosMes.length
+    const totalTreinos = treinosIdsMes.length
     const duracaoMediaMinutos = treinosComDuracao > 0 ? Math.round(duracaoTotalMinutos / treinosComDuracao) : 0
 
-    // Distribuição semanal (S1: 1-7, S2: 8-14, S3: 15-21, S4: 22-fim)
+    // Distribuição semanal baseada nas conclusões do historico
     const semanasMap = [
       { semana: 'S1', treinos: 0, volumeKg: 0 },
       { semana: 'S2', treinos: 0, volumeKg: 0 },
@@ -575,8 +566,8 @@ export async function alunoRoutes(app: FastifyInstance) {
       { semana: 'S4', treinos: 0, volumeKg: 0 },
     ]
 
-    for (const t of treinosMes) {
-      const dia = (t.finalizado_em || t.atualizado_em).getDate()
+    for (const h of conclusoesMes) {
+      const dia = h.timestamp.getDate()
       const sIdx = dia <= 7 ? 0 : dia <= 14 ? 1 : dia <= 21 ? 2 : 3
       semanasMap[sIdx].treinos++
     }
@@ -604,6 +595,19 @@ export async function alunoRoutes(app: FastifyInstance) {
       }
     }
 
+    // Análise de cargas por semana — progressão por exercício
+    const cargasSemanais: { semana: string; exercicio: string; cargaMedia: number; series: number }[] = []
+    for (const e of execucoesMes) {
+      const dia = e.registrado_em.getDate()
+      const semana = dia <= 7 ? 'S1' : dia <= 14 ? 'S2' : dia <= 21 ? 'S3' : 'S4'
+      cargasSemanais.push({
+        semana,
+        exercicio: e.exercicio.nome,
+        cargaMedia: e.carga_kg,
+        series: 1,
+      })
+    }
+
     const metaSemanal = 3
     const frequenciaPercent = Math.min(100, Math.round((totalTreinos / (4 * metaSemanal)) * 100))
 
@@ -619,6 +623,7 @@ export async function alunoRoutes(app: FastifyInstance) {
       duracaoTotalMinutos,
       frequenciaPercent,
       maiorCargaExercicio,
+      cargasSemanais,
     })
   })
 }

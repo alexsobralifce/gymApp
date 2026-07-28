@@ -140,6 +140,13 @@ export interface PontoCorrelacao {
   volumeAcumuladoKg: number
 }
 
+export interface CargaSemanal {
+  semana: string
+  exercicio: string
+  cargaMedia: number
+  series: number
+}
+
 export interface EvolucaoMensal {
   mes: string
   totalTreinos: number
@@ -152,6 +159,7 @@ export interface EvolucaoMensal {
   duracaoTotalMinutos: number
   frequenciaPercent: number
   maiorCargaExercicio: { nome: string; cargaKg: number; mes_anterior: number } | null
+  cargasSemanais: CargaSemanal[]
 }
 
 export interface Academia {

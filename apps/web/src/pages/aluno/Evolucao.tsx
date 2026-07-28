@@ -216,6 +216,81 @@ export default function AlunoEvolucao() {
             </div>
           </div>
 
+          {/* Análise de Cargas por Semana — Progressão por Exercício */}
+          {evolucaoMensal.cargasSemanais && evolucaoMensal.cargasSemanais.length > 0 && (() => {
+            const exerciciosUnicos = [...new Set(evolucaoMensal.cargasSemanais.map((c) => c.exercicio))]
+            const semanasUnicas = [...new Set(evolucaoMensal.cargasSemanais.map((c) => c.semana))].sort()
+            const ultimaSemana = semanasUnicas[semanasUnicas.length - 1] || 'S1'
+
+            return (
+              <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🏋️</span>
+                  <h3 className="text-xs font-bold text-text uppercase tracking-wider">Progressão de Cargas por Semana</h3>
+                </div>
+
+                <div className="space-y-3">
+                  {exerciciosUnicos.map((exercicio) => {
+                    const dados = evolucaoMensal.cargasSemanais
+                      .filter((c) => c.exercicio === exercicio)
+                      .sort((a, b) => a.semana.localeCompare(b.semana))
+
+                    const primeiraCarga = dados[0]?.cargaMedia ?? 0
+                    const ultimaCarga = dados[dados.length - 1]?.cargaMedia ?? 0
+                    const evoluiu = ultimaCarga > primeiraCarga && dados.length >= 2
+                    const reduziu = ultimaCarga < primeiraCarga && dados.length >= 2
+                    const manteve = dados.length < 2 || !evoluiu && !reduziu
+
+                    return (
+                      <div key={exercicio} className="rounded-xl bg-surface border border-surface-input p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-text truncate flex-1">{exercicio}</span>
+                          <span className={`shrink-0 ml-2 rounded-full px-2.5 py-0.5 text-xs font-bold border ${
+                            evoluiu ? 'bg-success/10 text-success border-success/20' :
+                            reduziu ? 'bg-warning/10 text-warning border-warning/20' :
+                            'bg-text-muted/10 text-text-muted border-text-muted/20'
+                          }`}>
+                            {evoluiu ? `▲ +${(ultimaCarga - primeiraCarga).toFixed(1)} kg` :
+                             reduziu ? `▼ ${(ultimaCarga - primeiraCarga).toFixed(1)} kg` :
+                             '➡ mantido'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-end gap-1 h-14">
+                          {semanasUnicas.map((sem) => {
+                            const entry = dados.find((d) => d.semana === sem)
+                            const h = entry ? Math.max(8, (entry.cargaMedia / Math.max(1, ultimaCarga)) * 100) : 0
+                            const isLast = sem === ultimaSemana
+                            return (
+                              <div key={sem} className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
+                                <span className="text-xs font-mono font-bold text-primary">
+                                  {entry ? `${entry.cargaMedia}kg` : '---'}
+                                </span>
+                                <div
+                                  className="w-full rounded-t-md transition-all duration-500 min-h-[4px]"
+                                  style={{
+                                    height: `${h}%`,
+                                    backgroundColor: isLast ? 'var(--color-primary)' : '#3f3f46',
+                                    opacity: entry ? 1 : 0.3,
+                                  }}
+                                />
+                                <span className="text-[10px] text-text-muted font-semibold">{sem}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {manteve && dados.length < 2 && (
+                          <p className="text-[10px] text-text-muted">Registre mais séries para ver progressão</p>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Card Motivacional Baseado em Evidências Científicas */}
           <div className="rounded-2xl bg-surface-card border border-surface-input p-5 shadow-md space-y-4">
             <div className="flex items-start gap-3">

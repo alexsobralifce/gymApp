@@ -214,13 +214,14 @@ model Treino {
 
 /// Log imutável de transições de estado — append-only
 model TreinoHistorico {
-  id              String       @id @default(cuid())
-  treino_id       String
-  status_anterior TreinoStatus
-  status_novo     TreinoStatus
-  ator_id         String       // usuario_id de quem acionou (ou "SISTEMA")
-  ator_tipo       TreinoAtor
-  timestamp       DateTime     @default(now())
+  id                String       @id @default(cuid())
+  treino_id         String
+  status_anterior   TreinoStatus
+  status_novo       TreinoStatus
+  ator_id           String       // usuario_id de quem acionou (ou "SISTEMA")
+  ator_tipo         TreinoAtor
+  timestamp         DateTime     @default(now())
+  duracao_segundos  Int?         // duração da sessão em segundos (preenchido em CONCLUIDO)
 
   treino Treino @relation(fields: [treino_id], references: [id])
 

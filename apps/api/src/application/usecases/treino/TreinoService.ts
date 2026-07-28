@@ -364,12 +364,17 @@ export async function finalizarTreino(treinoId: string, alunoId: string, avaliac
 
   assertTransicaoValida(treino.status, TreinoStatus.CONCLUIDO, TreinoAtor.ALUNO)
 
+  const finalizadoEm = new Date()
+  const duracaoSegundos = treino.iniciado_em
+    ? Math.max(0, Math.round((finalizadoEm.getTime() - treino.iniciado_em.getTime()) / 1000))
+    : null
+
   return prisma.$transaction(async (tx) => {
     await tx.treino.update({
       where: { id: treinoId },
       data: {
         status: TreinoStatus.CONCLUIDO,
-        finalizado_em: new Date(),
+        finalizado_em: finalizadoEm,
         ...(avaliacao ? { avaliacao_dificuldade: avaliacao } : {}),
       },
     })
@@ -380,6 +385,7 @@ export async function finalizarTreino(treinoId: string, alunoId: string, avaliac
         status_novo: TreinoStatus.CONCLUIDO,
         ator_id: alunoId,
         ator_tipo: TreinoAtor.ALUNO,
+        duracao_segundos: duracaoSegundos,
       },
     })
 
