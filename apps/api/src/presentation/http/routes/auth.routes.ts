@@ -28,6 +28,13 @@ const refreshBodySchema = z.object({
 
 export async function authRoutes(app: FastifyInstance) {
   /**
+   * OPTIONS /auth/* — Preflight CORS handler explícito
+   */
+  app.options('/google', async (_request, reply) => {
+    return reply.status(204).send()
+  })
+
+  /**
    * POST /auth/register
    * Cria conta base. Use UC-05, UC-09, UC-17 para criar o perfil específico.
    */

@@ -58,8 +58,28 @@ export async function buildApp(): Promise<FastifyInstance> {
   })
 
   await app.register(fastifyCors, {
-    origin: true,
+    origin: (origin, cb) => {
+      if (!origin || origin === 'null') {
+        cb(null, true)
+        return
+      }
+      const allowed = [
+        'https://web-production-c2d3c.up.railway.app',
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'capacitor://localhost',
+        'https://endorfinapp.com',
+      ]
+      if (env.WEB_BASE_URL) allowed.push(env.WEB_BASE_URL)
+      if (allowed.includes(origin)) {
+        cb(null, true)
+      } else {
+        cb(null, true)
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 
   // ─── Multipart (file uploads) ───────────────────────────────────────────
