@@ -1,10 +1,13 @@
 import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
+import { debugLog } from '../lib/debug'
 
 const API_BASE = getApiBaseUrl()
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('accessToken')
+  const fullUrl = `${API_BASE}${path}`
+  const method = options.method || 'GET'
 
   const headers: Record<string, string> = {
     ...((options.headers as Record<string, string>) || {}),
@@ -18,10 +21,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  })
+  debugLog('API', `[--> ${method}] ${path}`, { fullUrl, method, hasToken: !!token })
+
+  let res: Response
+  try {
+    res = await fetch(fullUrl, {
+      ...options,
+      headers,
+    })
+  } catch (fetchErr: any) {
+    const errorMsg = fetchErr?.message || String(fetchErr)
+    debugLog('API', `[<-- FAILED] ${method} ${path}: ${errorMsg}`, { fullUrl, errorMsg, stack: fetchErr?.stack }, 'error')
+    throw fetchErr
+  }
+
+  debugLog('API', `[<-- ${res.status}] ${method} ${path}`, { status: res.status, ok: res.ok })
 
   const isAuthEndpoint = path.startsWith('/auth/login') || path.startsWith('/auth/register') || path.startsWith('/auth/refresh') || path.startsWith('/auth/google')
 
@@ -29,9 +43,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const refreshed = await refreshTokens()
     if (refreshed) {
       headers['Authorization'] = `Bearer ${localStorage.getItem('accessToken')}`
-      const retry = await fetch(`${API_BASE}${path}`, { ...options, headers })
+      const retry = await fetch(fullUrl, { ...options, headers })
       if (!retry.ok) {
         const error = await retry.json().catch(() => ({ message: retry.statusText }))
+        debugLog('API', `[<-- RETRY FAILED] ${res.status} ${path}`, error, 'error')
         throw new ApiError(retry.status, error.message || 'Erro na requisição')
       }
       return retry.json()
@@ -48,6 +63,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }))
+    debugLog('API', `[<-- HTTP ERROR ${res.status}] ${path}`, error, 'error')
     throw new ApiError(res.status, error.message || 'Erro na requisição')
   }
 

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { api } from '../api/client'
 import type { User } from '../types/api'
+import { debugLog } from '../lib/debug'
 
 export interface AuthState {
   user: User | null
@@ -38,15 +39,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loginWithGoogle: async (credential, accessToken) => {
     set({ loading: true, error: null })
+    debugLog('AuthStore', 'Iniciando loginWithGoogle...', {
+      credentialLength: credential?.length || 0,
+      accessTokenLength: accessToken?.length || 0,
+    })
     try {
       const result = await api.loginWithGoogle(credential, accessToken)
+      debugLog('AuthStore', 'api.loginWithGoogle OK!', { isNew: result.isNew, nome: result.nome })
       localStorage.setItem('accessToken', result.accessToken)
       localStorage.setItem('refreshToken', result.refreshToken)
       const user = await api.getMe()
+      debugLog('AuthStore', 'api.getMe OK!', { userId: user.id, email: user.email })
       set({ user, loading: false })
       return result.isNew
     } catch (err) {
       const msg = (err as Error).message
+      debugLog('AuthStore', `Erro em loginWithGoogle: ${msg}`, err, 'error')
       const friendlyMsg = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : msg
       set({ error: friendlyMsg, loading: false })
       throw err

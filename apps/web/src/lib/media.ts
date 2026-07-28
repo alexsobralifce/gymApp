@@ -1,15 +1,18 @@
+import { debugLog } from './debug'
+
 const DEFAULT_API_URL = 'https://api-production-3360.up.railway.app'
 
 export function isNativePlatform(): boolean {
   try {
     const win = typeof window !== 'undefined' ? (window as any) : {}
-    return !!(
+    const result = !!(
       win.Capacitor?.isNativePlatform?.() ||
       win.Capacitor?.getPlatform?.() === 'android' ||
       win.Capacitor?.getPlatform?.() === 'ios' ||
       win.location?.protocol === 'capacitor:' ||
       win.location?.protocol === 'file:'
     )
+    return result
   } catch {
     return false
   }
@@ -20,11 +23,17 @@ export function getApiBaseUrl(): string {
     ? import.meta.env.VITE_API_URL.trim()
     : ''
 
-  if (isNativePlatform() && envUrl.includes('localhost')) {
-    return DEFAULT_API_URL
+  const native = isNativePlatform()
+  let finalUrl = envUrl || DEFAULT_API_URL
+
+  if (native && envUrl.includes('localhost')) {
+    finalUrl = DEFAULT_API_URL
+    debugLog('Config', `APK Nativo detectado com localhost! Substituído por ${finalUrl}`, { envUrl, finalUrl }, 'warn')
+  } else {
+    debugLog('Config', `API Base URL resolvida: ${finalUrl}`, { envUrl, isNative: native })
   }
 
-  return envUrl || DEFAULT_API_URL
+  return finalUrl
 }
 
 /**

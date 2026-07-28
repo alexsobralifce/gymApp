@@ -5,6 +5,7 @@ import { useNotifications } from './hooks/useNotifications'
 import { useCapacitorTheme } from './hooks/useCapacitorTheme'
 import AppShell from './components/layout/AppShell'
 import LoadingSpinner from './components/ui/LoadingSpinner'
+import { DebugOverlay } from './components/ui/DebugOverlay'
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
@@ -66,6 +67,7 @@ export default function App() {
   )
 
   return (
+    <>
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
@@ -137,5 +139,7 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <DebugOverlay />
+    </>
   )
 }

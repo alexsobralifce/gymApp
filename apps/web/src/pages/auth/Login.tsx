@@ -7,6 +7,7 @@ import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { clearGoogleOverlays } from '../../lib/googleOverlay'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { EndorfinappLogo, EndorfinappIcon } from '../../components/branding'
+import { DebugOverlay } from '../../components/ui/DebugOverlay'
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -211,6 +212,7 @@ export default function Login() {
           Não tem conta? <Link to="/register" className="text-primary">Cadastre-se</Link>
         </p>
       </form>
+      <DebugOverlay />
     </div>
   )
 }
