@@ -6,6 +6,11 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
+    // Live URL: carrega o frontend do Railway em vez de arquivos embutidos no APK.
+    // Mudanças no JS/CSS são publicadas automaticamente sem recompilar o APK.
+    // Para gerar um APK de produção offline, remova a linha `url` abaixo.
+    url: 'https://web-production-c2d3c.up.railway.app',
+    cleartext: false,
   },
   backgroundColor: '#0A1628',
   plugins: {
