@@ -38,19 +38,43 @@ export async function handleFanoutPost(job: Job<FanoutPayload>) {
 
   const tipo: PostTipo = eventType === 'treino.iniciado' ? 'TREINO_INICIADO' : 'TREINO_CONCLUIDO'
   const resumo = gruposMusculares.length > 0 ? gruposMusculares.join(', ') : null
+  const effectiveTreinoId = treinoId || null
 
-  const post = await prisma.socialPost.create({
-    data: {
-      aluno_id: alunoId,
-      treino_id: treinoId,
-      autor_nome: aluno.usuario.nome,
-      autor_foto_url: absolutizeMedia(aluno.usuario.foto_url),
-      academia_nome: aluno.academia?.nome ?? null,
-      grupo_muscular_resumo: resumo,
-      tipo,
-      visibilidade: aluno.visibilidade_padrao,
-    },
-  })
+  const post = effectiveTreinoId
+    ? await prisma.socialPost.upsert({
+        where: {
+          treino_id_aluno_id_tipo: {
+            treino_id: effectiveTreinoId,
+            aluno_id: alunoId,
+            tipo,
+          },
+        },
+        update: {
+          grupo_muscular_resumo: resumo,
+        },
+        create: {
+          aluno_id: alunoId,
+          treino_id: effectiveTreinoId,
+          autor_nome: aluno.usuario.nome,
+          autor_foto_url: absolutizeMedia(aluno.usuario.foto_url),
+          academia_nome: aluno.academia?.nome ?? null,
+          grupo_muscular_resumo: resumo,
+          tipo,
+          visibilidade: aluno.visibilidade_padrao,
+        },
+      })
+    : await prisma.socialPost.create({
+        data: {
+          aluno_id: alunoId,
+          treino_id: null,
+          autor_nome: aluno.usuario.nome,
+          autor_foto_url: absolutizeMedia(aluno.usuario.foto_url),
+          academia_nome: aluno.academia?.nome ?? null,
+          grupo_muscular_resumo: resumo,
+          tipo,
+          visibilidade: aluno.visibilidade_padrao,
+        },
+      })
 
   await socialNotifyQueue.add(
     'notify-friends',

@@ -34,20 +34,20 @@ enum Sexo {
 /// Aprovação em duas camadas: Academia → Root
 enum VinculoStatus {
   PENDENTE_ACADEMIA // aguarda academia aprovar
-  PENDENTE_ROOT     // academia aprovou, aguarda Root
+  PENDENTE_ROOT // academia aprovou, aguarda Root
   ATIVO
   REJEITADO
   REMOVIDO
 }
 
 enum TreinoStatus {
-  CADASTRADO   // professor cadastrou, não enviado
-  ENVIADO      // notificação disparada para aluno
-  ACEITO       // aluno aceitou
-  RECUSADO     // aluno recusou
-  EM_ABERTO    // aceito mas não iniciado no dia
-  EM_EXECUCAO  // aluno iniciou
-  CONCLUIDO    // aluno finalizou
+  CADASTRADO // professor cadastrou, não enviado
+  ENVIADO // notificação disparada para aluno
+  ACEITO // aluno aceitou
+  RECUSADO // aluno recusou
+  EM_ABERTO // aceito mas não iniciado no dia
+  EM_EXECUCAO // aluno iniciou
+  CONCLUIDO // aluno finalizou
 }
 
 enum TreinoAtor {
@@ -60,26 +60,26 @@ enum TreinoAtor {
 // ─── Usuário base ─────────────────────────────────────────────────────────────
 
 model Usuario {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  senha_hash   String?  // nullable — OAuth (Google) users have no password
-  nome         String
-  role         Role
-  telefone     String?
-  foto_url     String?
-  google_id    String?  @unique // sub from Google OAuth
-  ativo        Boolean  @default(true)
-  expo_push_token       String?  // token Expo para push notifications
-  web_push_subscription  Json?    // PushSubscription JSON (Web Push API)
-  email_verified         Boolean  @default(false)
-  email_verify_code      String?
+  id                       String    @id @default(cuid())
+  email                    String    @unique
+  senha_hash               String? // nullable — OAuth (Google) users have no password
+  nome                     String
+  role                     Role
+  telefone                 String?
+  foto_url                 String?
+  google_id                String?   @unique // sub from Google OAuth
+  ativo                    Boolean   @default(true)
+  expo_push_token          String? // token Expo para push notifications
+  web_push_subscription    Json? // PushSubscription JSON (Web Push API)
+  email_verified           Boolean   @default(false)
+  email_verify_code        String?
   email_verify_code_expira DateTime?
-  criado_em    DateTime @default(now())
-  atualizado_em DateTime @updatedAt
+  criado_em                DateTime  @default(now())
+  atualizado_em            DateTime  @updatedAt
 
-  academia   Academia?  // se role = ACADEMIA
-  professor  Professor? // se role = PROFESSOR
-  aluno      Aluno?     // se role = ALUNO
+  academia  Academia? // se role = ACADEMIA
+  professor Professor? // se role = PROFESSOR
+  aluno     Aluno? // se role = ALUNO
 
   refreshTokens RefreshToken[]
 
@@ -101,19 +101,19 @@ model RefreshToken {
 // ─── Academia (tenant) ────────────────────────────────────────────────────────
 
 model Academia {
-  id              String         @id @default(cuid())
-  usuario_id      String         @unique
-  nome            String
-  cnpj            String         @unique
-  status          AcademiaStatus @default(PENDENTE)
-  max_professores Int            @default(20)
+  id               String         @id @default(cuid())
+  usuario_id       String         @unique
+  nome             String
+  cnpj             String         @unique
+  status           AcademiaStatus @default(PENDENTE)
+  max_professores  Int            @default(20)
   rejeitado_motivo String?
-  criado_em       DateTime       @default(now())
-  atualizado_em   DateTime       @updatedAt
+  criado_em        DateTime       @default(now())
+  atualizado_em    DateTime       @updatedAt
 
-  usuario    Usuario              @relation(fields: [usuario_id], references: [id])
+  usuario     Usuario             @relation(fields: [usuario_id], references: [id])
   professores ProfessorAcademia[]
-  alunos     Aluno[]
+  alunos      Aluno[]
 
   @@map("academias")
 }
@@ -127,21 +127,21 @@ model Professor {
   criado_em     DateTime @default(now())
   atualizado_em DateTime @updatedAt
 
-  usuario    Usuario              @relation(fields: [usuario_id], references: [id])
-  academias  ProfessorAcademia[]
-  alunos     Aluno[]
+  usuario   Usuario             @relation(fields: [usuario_id], references: [id])
+  academias ProfessorAcademia[]
+  alunos    Aluno[]
 
   @@map("professores")
 }
 
 /// Vínculo M:N com aprovação em duas camadas
 model ProfessorAcademia {
-  id             String       @id @default(cuid())
-  professor_id   String
-  academia_id    String
-  status         VinculoStatus @default(PENDENTE_ACADEMIA)
-  criado_em      DateTime     @default(now())
-  atualizado_em  DateTime     @updatedAt
+  id            String        @id @default(cuid())
+  professor_id  String
+  academia_id   String
+  status        VinculoStatus @default(PENDENTE_ACADEMIA)
+  criado_em     DateTime      @default(now())
+  atualizado_em DateTime      @updatedAt
 
   professor Professor @relation(fields: [professor_id], references: [id])
   academia  Academia  @relation(fields: [academia_id], references: [id])
@@ -153,31 +153,31 @@ model ProfessorAcademia {
 // ─── Aluno ────────────────────────────────────────────────────────────────────
 
 model Aluno {
-  id              String    @id @default(cuid())
-  usuario_id      String    @unique
-  professor_id    String?   // null = modo autogestão
-  academia_id     String?
-  data_nascimento DateTime?
-  peso_kg         Float?
-  altura_cm       Float?
-  sexo            Sexo?
-  objetivo_treino String?
-  nivel_treino    String?
-  restricoes      String[]  @default([])
-  visibilidade_padrao       Visibilidade @default(AMIGOS)
-  permite_busca_email       Boolean      @default(true)
-  consentiu_feed_social_em  DateTime?
-  criado_em       DateTime  @default(now())
-  atualizado_em   DateTime  @updatedAt
+  id                       String       @id @default(cuid())
+  usuario_id               String       @unique
+  professor_id             String? // null = modo autogestão
+  academia_id              String?
+  data_nascimento          DateTime?
+  peso_kg                  Float?
+  altura_cm                Float?
+  sexo                     Sexo?
+  objetivo_treino          String?
+  nivel_treino             String?
+  restricoes               String[]     @default([])
+  visibilidade_padrao      Visibilidade @default(AMIGOS)
+  permite_busca_email      Boolean      @default(true)
+  consentiu_feed_social_em DateTime?
+  criado_em                DateTime     @default(now())
+  atualizado_em            DateTime     @updatedAt
 
-  usuario    Usuario          @relation(fields: [usuario_id], references: [id])
-  professor  Professor?       @relation(fields: [professor_id], references: [id])
-  academia   Academia?        @relation(fields: [academia_id], references: [id])
-  treinos    Treino[]
-  medidas    MedidaCorporal[]
-  notificacoes Notificacao[]
+  usuario           Usuario                       @relation(fields: [usuario_id], references: [id])
+  professor         Professor?                    @relation(fields: [professor_id], references: [id])
+  academia          Academia?                     @relation(fields: [academia_id], references: [id])
+  treinos           Treino[]
+  medidas           MedidaCorporal[]
+  notificacoes      Notificacao[]
   mensagensEnviadas MensagemMotivacionalEnviada[]
-  correlacao  CorrelacaoDesempenho?
+  correlacao        CorrelacaoDesempenho?
 
   @@map("alunos")
 }
@@ -185,24 +185,24 @@ model Aluno {
 // ─── Treino ───────────────────────────────────────────────────────────────────
 
 model Treino {
-  id                     String       @id @default(cuid())
-  aluno_id               String
-  nome                   String       // ex.: "Treino A — Peito e Tríceps"
-  dias_semana            Int[]        // 0=Dom, 1=Seg, ..., 6=Sáb
-  status                 TreinoStatus @default(CADASTRADO)
-  avaliacao_dificuldade  String?      // FACIL, MODERADO, INTENSO, MUITO_INTENSO
-  is_template            Boolean      @default(false)
-  criado_por_ia          Boolean      @default(false)
-  iniciado_em            DateTime?
-  finalizado_em          DateTime?
+  id                        String       @id @default(cuid())
+  aluno_id                  String
+  nome                      String // ex.: "Treino A — Peito e Tríceps"
+  dias_semana               Int[] // 0=Dom, 1=Seg, ..., 6=Sáb
+  status                    TreinoStatus @default(CADASTRADO)
+  avaliacao_dificuldade     String? // FACIL, MODERADO, INTENSO, MUITO_INTENSO
+  is_template               Boolean      @default(false)
+  criado_por_ia             Boolean      @default(false)
+  iniciado_em               DateTime?
+  finalizado_em             DateTime?
   /// Última interação na sessão (início ou série registrada)
-  ultima_atividade_em    DateTime?
+  ultima_atividade_em       DateTime?
   /// Evita spam do push de ociosidade
   notificado_inatividade_em DateTime?
   /// Push único quando sessão passa de 60 min
-  notificado_longo_em    DateTime?
-  criado_em              DateTime     @default(now())
-  atualizado_em          DateTime     @updatedAt
+  notificado_longo_em       DateTime?
+  criado_em                 DateTime     @default(now())
+  atualizado_em             DateTime     @updatedAt
 
   aluno      Aluno               @relation(fields: [aluno_id], references: [id])
   exercicios TreinoExercicio[]
@@ -214,14 +214,14 @@ model Treino {
 
 /// Log imutável de transições de estado — append-only
 model TreinoHistorico {
-  id                String       @id @default(cuid())
-  treino_id         String
-  status_anterior   TreinoStatus
-  status_novo       TreinoStatus
-  ator_id           String       // usuario_id de quem acionou (ou "SISTEMA")
-  ator_tipo         TreinoAtor
-  timestamp         DateTime     @default(now())
-  duracao_segundos  Int?         // duração da sessão em segundos (preenchido em CONCLUIDO)
+  id               String       @id @default(cuid())
+  treino_id        String
+  status_anterior  TreinoStatus
+  status_novo      TreinoStatus
+  ator_id          String // usuario_id de quem acionou (ou "SISTEMA")
+  ator_tipo        TreinoAtor
+  timestamp        DateTime     @default(now())
+  duracao_segundos Int? // duração da sessão em segundos (preenchido em CONCLUIDO)
 
   treino Treino @relation(fields: [treino_id], references: [id])
 
@@ -236,11 +236,11 @@ model Exercicio {
   maquina              String?
   dica                 String?  @db.Text
   imagem_url           String?
-  gif_url              String?           // URL do GIF animado
+  gif_url              String? // URL do GIF animado
   descricao_pt         String?  @db.Text // descrição completa em português
-  passos_pt            String[]           // passos de execução em português
-  musculo_alvo         String?            // músculo alvo principal
-  musculos_secundarios String[]           // músculos secundários
+  passos_pt            String[] // passos de execução em português
+  musculo_alvo         String? // músculo alvo principal
+  musculos_secundarios String[] // músculos secundários
   nivel                String?
   grupo_muscular       String?
   equipamento          String?
@@ -257,13 +257,13 @@ model Exercicio {
 
 /// Associação Treino ↔ Exercício com ordem, séries e reps prescritas
 model TreinoExercicio {
-  id            String @id @default(cuid())
-  treino_id     String
-  exercicio_id  String
-  ordem         Int
-  tipo          String @default("PRINCIPAL") // AQUECIMENTO | PRINCIPAL | ALONGAMENTO
-  series        Int    @default(3)
-  repeticoes    Int    @default(12)
+  id                String @id @default(cuid())
+  treino_id         String
+  exercicio_id      String
+  ordem             Int
+  tipo              String @default("PRINCIPAL") // AQUECIMENTO | PRINCIPAL | ALONGAMENTO
+  series            Int    @default(3)
+  repeticoes        Int    @default(12)
   carga_sugerida_kg Float?
 
   treino    Treino    @relation(fields: [treino_id], references: [id])
@@ -280,11 +280,11 @@ model PlanoBiblioteca {
   codigo          String   @unique
   nome            String
   descricao       String?  @db.Text
-  objetivo        String   // HIPERTROFIA | FORCA | EMAGRECIMENTO | SAUDE
-  nivel           String   // INICIANTE | INTERMEDIARIO | AVANCADO
+  objetivo        String // HIPERTROFIA | FORCA | EMAGRECIMENTO | SAUDE
+  nivel           String // INICIANTE | INTERMEDIARIO | AVANCADO
   sexo_alvo       String   @default("AMBOS") // MASCULINO | FEMININO | AMBOS
   dias_por_semana Int
-  split_tipo      String   // ABC | ABCD | FULL_BODY | UPPER_LOWER etc.
+  split_tipo      String // ABC | ABCD | FULL_BODY | UPPER_LOWER etc.
   ativo           Boolean  @default(true)
   criado_em       DateTime @default(now())
 
@@ -307,17 +307,17 @@ model PlanoSessao {
 }
 
 model PlanoSessaoExercicio {
-  id                      String   @id @default(cuid())
-  sessao_id               String
-  exercicio_id            String
-  ordem                   Int
-  tipo                    String   @default("PRINCIPAL")
-  series                  Int      @default(3)
-  repeticoes_min          Int      @default(8)
-  repeticoes_max          Int      @default(12)
-  carga_sugerida_kg       Float?
+  id                       String   @id @default(cuid())
+  sessao_id                String
+  exercicio_id             String
+  ordem                    Int
+  tipo                     String   @default("PRINCIPAL")
+  series                   Int      @default(3)
+  repeticoes_min           Int      @default(8)
+  repeticoes_max           Int      @default(12)
+  carga_sugerida_kg        Float?
   restricoes_incompativeis String[] @default([])
-  alternativo_id          String?
+  alternativo_id           String?
 
   sessao      PlanoSessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
   exercicio   Exercicio   @relation("ExercicioBase", fields: [exercicio_id], references: [id])
@@ -346,15 +346,15 @@ model ExecucaoExercicio {
 // ─── Medidas Corporais ────────────────────────────────────────────────────────
 
 model MedidaCorporal {
-  id              String   @id @default(cuid())
-  aluno_id        String
-  peso_kg         Float?
-  altura_cm       Float?
-  percentual_bf   Float?
-  massa_magra_kg  Float?
-  imc             Float?
-  data            DateTime @default(now())
-  observacao      String?
+  id             String   @id @default(cuid())
+  aluno_id       String
+  peso_kg        Float?
+  altura_cm      Float?
+  percentual_bf  Float?
+  massa_magra_kg Float?
+  imc            Float?
+  data           DateTime @default(now())
+  observacao     String?
 
   aluno Aluno @relation(fields: [aluno_id], references: [id])
 
@@ -364,13 +364,13 @@ model MedidaCorporal {
 // ─── Notificações ─────────────────────────────────────────────────────────────
 
 model Notificacao {
-  id        String           @id @default(cuid())
+  id        String          @id @default(cuid())
   aluno_id  String
   tipo      NotificacaoTipo
   mensagem  String
   dados     Json?
-  lida      Boolean          @default(false)
-  criado_em DateTime         @default(now())
+  lida      Boolean         @default(false)
+  criado_em DateTime        @default(now())
 
   aluno Aluno @relation(fields: [aluno_id], references: [id])
 
@@ -425,10 +425,10 @@ model MensagemMotivacional {
 
 /// Controle de rotação circular por aluno (UC-28 / UC-33)
 model MensagemMotivacionalEnviada {
-  id            String   @id @default(cuid())
-  aluno_id      String
-  mensagem_id   String
-  enviada_em    DateTime @default(now())
+  id          String   @id @default(cuid())
+  aluno_id    String
+  mensagem_id String
+  enviada_em  DateTime @default(now())
 
   aluno    Aluno                @relation(fields: [aluno_id], references: [id])
   mensagem MensagemMotivacional @relation(fields: [mensagem_id], references: [id])
@@ -441,14 +441,14 @@ model MensagemMotivacionalEnviada {
 /// Cache de correlações (UC-32) — worker recalcula, endpoint lê
 /// Sugere atualização quando calculado_em > 30 dias
 model CorrelacaoDesempenho {
-  id                     String   @id @default(cuid())
-  aluno_id               String   @unique
-  peso_volume_r          Float?   // Pearson r: variação de peso vs volume de carga
-  bf_volume_r            Float?   // Pearson r: variação de %BF vs volume de carga
-  massa_magra_volume_r   Float?   // Pearson r: variação de massa magra vs volume
-  volume_semanal         Json     // [{ semana, volumeTotalKg, treinos }]
-  pontos                 Json     // [{ data, deltaPesoKg, deltaBf, deltaMassaMagraKg, volumeAcumuladoKg }]
-  calculado_em           DateTime @default(now())
+  id                   String   @id @default(cuid())
+  aluno_id             String   @unique
+  peso_volume_r        Float? // Pearson r: variação de peso vs volume de carga
+  bf_volume_r          Float? // Pearson r: variação de %BF vs volume de carga
+  massa_magra_volume_r Float? // Pearson r: variação de massa magra vs volume
+  volume_semanal       Json // [{ semana, volumeTotalKg, treinos }]
+  pontos               Json // [{ data, deltaPesoKg, deltaBf, deltaMassaMagraKg, volumeAcumuladoKg }]
+  calculado_em         DateTime @default(now())
 
   aluno Aluno @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
 
@@ -472,12 +472,12 @@ model SocialFriendship {
 model SocialPost {
   id                    String       @id @default(cuid())
   aluno_id              String
-  treino_id             String?      // referência lógica, sem FK formal
+  treino_id             String? // referência lógica, sem FK formal
   clube_id              String?
   autor_nome            String
   autor_foto_url        String?
   grupo_muscular_resumo String?
-  academia_nome         String?   // desnormalizado para evitar JOIN no feed
+  academia_nome         String? // desnormalizado para evitar JOIN no feed
   tipo                  PostTipo
   visibilidade          Visibilidade
   midia_url             String?
@@ -485,6 +485,7 @@ model SocialPost {
   comentarios_count     Int          @default(0)
   criado_em             DateTime     @default(now())
 
+  @@unique([treino_id, aluno_id, tipo])
   @@index([aluno_id, criado_em])
   @@index([clube_id, criado_em])
   @@index([visibilidade, criado_em])
@@ -515,11 +516,11 @@ model SocialComment {
 }
 
 model SocialClub {
-  id           String    @id @default(cuid())
-  academia_id  String?   @unique  // 1:1 com academia, null se TEMATICO
-  nome         String
-  tipo         ClubTipo  @default(ACADEMIA)
-  criado_em    DateTime  @default(now())
+  id          String   @id @default(cuid())
+  academia_id String?  @unique // 1:1 com academia, null se TEMATICO
+  nome        String
+  tipo        ClubTipo @default(ACADEMIA)
+  criado_em   DateTime @default(now())
 
   @@map("social_clubs")
 }
