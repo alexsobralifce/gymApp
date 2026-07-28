@@ -100,18 +100,28 @@ export default function Login() {
       })
 
       if (!idToken && !accessToken) {
-        debugLog('Login', 'Nenhum token (idToken/accessToken/serverAuthCode) retornado pelo GoogleAuth!', gUser, 'error')
-        setGoogleError('Não foi possível obter a credencial do Google.')
-        return
+        debugLog('Login', 'Sem tokens nativos. Executando fallback Web OAuth...', gUser, 'warn')
+        try {
+          googleWebLogin()
+          return
+        } catch (webErr) {
+          debugLog('Login', 'Fallback Web OAuth falhou', webErr, 'error')
+          setGoogleError('Não foi possível obter a credencial do Google. Tente novamente.')
+          return
+        }
       }
+
       const isNew = await loginWithGoogle(idToken, accessToken)
       await finishGoogleLogin(isNew)
     } catch (err: any) {
-      debugLog('Login', `Erro nativo Google: ${err?.message || err}`, err, 'error')
-      console.error('[GoogleAuth] Native error:', err)
-      const msg = err?.message
-      const friendly = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : (msg || 'Falha na autenticação do Google.')
-      setGoogleError(friendly)
+      debugLog('Login', `Erro no Google Nativo (${err?.message || err}). Tentando Web OAuth...`, err, 'warn')
+      try {
+        googleWebLogin()
+      } catch (webErr) {
+        const msg = err?.message
+        const friendly = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : (msg || 'Falha na autenticação do Google.')
+        setGoogleError(friendly)
+      }
     } finally {
       setGoogleBusy(false)
       clearGoogleOverlays()
