@@ -8,6 +8,7 @@ import { clearGoogleOverlays } from '../../lib/googleOverlay'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { EndorfinappLogo, EndorfinappIcon } from '../../components/branding'
 import { DebugOverlay } from '../../components/ui/DebugOverlay'
+import { debugLog } from '../../lib/debug'
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -89,14 +90,24 @@ export default function Login() {
     try {
       const gUser = await googleNativeSignIn()
       const idToken = gUser?.authentication?.idToken || ''
-      const accessToken = gUser?.authentication?.accessToken || undefined
+      const accessToken = gUser?.authentication?.accessToken || gUser?.serverAuthCode || undefined
+
+      debugLog('Login', 'Retorno do Google Native:', {
+        email: gUser?.email,
+        idToken: idToken ? `presente (len: ${idToken.length})` : 'ausente',
+        accessToken: accessToken ? `presente (len: ${accessToken.length})` : 'ausente',
+        serverAuthCode: gUser?.serverAuthCode || 'ausente',
+      })
+
       if (!idToken && !accessToken) {
+        debugLog('Login', 'Nenhum token (idToken/accessToken/serverAuthCode) retornado pelo GoogleAuth!', gUser, 'error')
         setGoogleError('Não foi possível obter a credencial do Google.')
         return
       }
       const isNew = await loginWithGoogle(idToken, accessToken)
       await finishGoogleLogin(isNew)
     } catch (err: any) {
+      debugLog('Login', `Erro nativo Google: ${err?.message || err}`, err, 'error')
       console.error('[GoogleAuth] Native error:', err)
       const msg = err?.message
       const friendly = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : (msg || 'Falha na autenticação do Google.')
