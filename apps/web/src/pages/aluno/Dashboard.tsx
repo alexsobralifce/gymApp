@@ -13,7 +13,7 @@ import {
   RulerIcon,
 } from '../../components/icons/Icon'
 import { getInitials } from '../../lib/initials'
-import { HealthConnectCard } from '../../components/health/HealthConnectCard'
+
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 
@@ -300,8 +300,7 @@ export default function AlunoDashboard() {
         </div>
       </div>
 
-      {/* Dados de Saude (Apple Health / Health Connect) */}
-      <HealthConnectCard />
+
 
       {/* Treinos Pendentes */}
       {pendentes.length > 0 && (
