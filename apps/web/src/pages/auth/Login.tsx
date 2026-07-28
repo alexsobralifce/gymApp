@@ -37,24 +37,30 @@ export default function Login() {
 
   const googleWebLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      debugLog('GoogleWeb', 'Sucesso no Web OAuth! access_token obtido', { len: tokenResponse.access_token?.length })
       setGoogleBusy(true)
       setGoogleError(null)
       try {
         const isNew = await loginWithGoogle('', tokenResponse.access_token)
         await finishGoogleLogin(isNew)
-      } catch {
-        setGoogleError('Falha ao conectar com Google. Tente novamente.')
+      } catch (err: any) {
+        debugLog('GoogleWeb', 'Erro ao finalizar loginWithGoogle no Web OAuth', err, 'error')
+        const msg = err?.message
+        const friendly = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : (msg || 'Falha ao conectar com Google. Tente novamente.')
+        setGoogleError(friendly)
         clearGoogleOverlays()
       } finally {
         setGoogleBusy(false)
       }
     },
-    onError: () => {
+    onError: (err) => {
+      debugLog('GoogleWeb', 'onError em Google Web OAuth', err, 'error')
       clearGoogleOverlays()
       setGoogleBusy(false)
       setGoogleError('Login com Google cancelado ou bloqueado.')
     },
-    onNonOAuthError: () => {
+    onNonOAuthError: (err) => {
+      debugLog('GoogleWeb', 'onNonOAuthError em Google Web OAuth', err, 'error')
       clearGoogleOverlays()
       setGoogleBusy(false)
       setGoogleError('Não foi possível abrir o login Google. Tente novamente.')
