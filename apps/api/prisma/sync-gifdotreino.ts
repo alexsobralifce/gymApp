@@ -5,6 +5,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { translateToPt } from './translate-utils.js'
 
 const prisma = new PrismaClient()
 const BASE = 'https://www.gifdotreino.com'
@@ -247,7 +248,7 @@ function parseDescricao(html: string): {
   const passosIdx = rawSentences.findIndex((s) => /para execut|praticante|posicione|deite|sente|fique em pé|segure|comece|inicie|ajuste|mantenha|realize|eleve|flexione|estenda|coloque|apoie|deve|é importante|o movimento/i.test(s.toLowerCase()))
 
   return {
-    descricao_pt: cleanAndTranslateStep(clean) || null,
+    descricao_pt: translateToPt(clean) || null,
     dica: sentences[0] || null,
     passos_pt: passosIdx >= 0 ? sentences.slice(passosIdx) : sentences,
   }

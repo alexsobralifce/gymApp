@@ -6,6 +6,7 @@ import HuaweiBridgeGuide from './HuaweiBridgeGuide'
 export function HealthConnectCard() {
   const {
     available,
+    checked,
     authorized,
     checking,
     error,
@@ -23,6 +24,7 @@ export function HealthConnectCard() {
 
   const [hasData, setHasData] = useState<boolean | null>(null)
   const [showBridgeGuide, setShowBridgeGuide] = useState(false)
+  const [showWebInfo, setShowWebInfo] = useState(false)
 
   useEffect(() => {
     if (!authorized || !available) return
@@ -40,7 +42,76 @@ export function HealthConnectCard() {
     checkAuthorization()
   }, [available, checkAuthorization])
 
-  if (!available) return null
+  if (!checked) return null
+
+  // Web: sem acesso nativo — card informativo
+  if (!available) {
+    return (
+      <div className="rounded-2xl bg-surface-card border border-surface-input p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-input">
+            <HeartIcon className="h-5 w-5 text-text-muted" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-text">Dados de Saude</h3>
+            <p className="text-xs text-text-muted">
+              Sincronize seu relogio com o app nativo
+            </p>
+          </div>
+        </div>
+
+        {showWebInfo ? (
+          <div className="space-y-3">
+            <p className="text-xs text-text-muted leading-relaxed">
+              Para ler seus dados de frequencia cardiaca e calorias, instale o
+              app ENDORFINAPP no iPhone ou Android. O navegador nao tem acesso
+              ao Apple Health nem ao Health Connect.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className="rounded-xl bg-surface-input px-3 py-2 text-xs font-medium text-text-muted cursor-not-allowed"
+                disabled
+              >
+                App Store (iOS)
+              </button>
+              <button
+                type="button"
+                className="rounded-xl bg-surface-input px-3 py-2 text-xs font-medium text-text-muted cursor-not-allowed"
+                disabled
+              >
+                Play Store (Android)
+              </button>
+            </div>
+
+            <p className="text-xs text-text-muted">
+              Depois de instalar, voce pode conectar seu relogio Huawei e cruzar
+              os dados de saude com seus treinos.
+            </p>
+
+            <HuaweiBridgeGuide platform="android" />
+
+            <button
+              type="button"
+              onClick={() => setShowWebInfo(false)}
+              className="w-full rounded-lg bg-surface-input py-1.5 text-xs font-medium text-text-muted hover:text-text transition-colors cursor-pointer"
+            >
+              Fechar
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowWebInfo(true)}
+            className="w-full rounded-xl bg-surface-input px-4 py-2.5 text-sm font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-all cursor-pointer"
+          >
+            Como conectar meus dados de saude?
+          </button>
+        )}
+      </div>
+    )
+  }
 
   if (!authorized) {
     return (
