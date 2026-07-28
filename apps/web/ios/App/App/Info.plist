@@ -31,7 +31,12 @@
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
+		<string>healthkit</string>
 	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>O ENDORFINAPP utiliza seus dados de frequencia cardiaca e calorias ativas do Apple Health para cruzar com as metricas dos seus treinos de academia — como carga levantada, series executadas e duracao das sessoes — oferecendo uma analise integrada do seu desempenho.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>O ENDORFINAPP precisa de acesso de escrita ao Apple Health para registrar metricas complementares geradas durante seus treinos de academia.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
