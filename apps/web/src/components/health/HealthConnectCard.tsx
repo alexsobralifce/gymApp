@@ -76,13 +76,13 @@ export function HealthConnectCard() {
               >
                 App Store (iOS)
               </button>
-              <button
-                type="button"
-                className="rounded-xl bg-surface-input px-3 py-2 text-xs font-medium text-text-muted cursor-not-allowed"
-                disabled
+              <a
+                href="/endorfinapp.apk"
+                download
+                className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all cursor-pointer text-center"
               >
-                Play Store (Android)
-              </button>
+                Baixar APK
+              </a>
             </div>
 
             <p className="text-xs text-text-muted">
