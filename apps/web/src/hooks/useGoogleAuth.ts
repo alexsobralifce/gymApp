@@ -4,7 +4,14 @@ import type { User } from '@codetrix-studio/capacitor-google-auth'
 
 const isCapacitorNative = (): boolean => {
   try {
-    return !!(window as any).Capacitor?.isNativePlatform?.()
+    const win = window as any
+    return !!(
+      win.Capacitor?.isNativePlatform?.() ||
+      win.Capacitor?.getPlatform?.() === 'android' ||
+      win.Capacitor?.getPlatform?.() === 'ios' ||
+      win.location?.protocol === 'capacitor:' ||
+      win.location?.protocol === 'file:'
+    )
   } catch {
     return false
   }

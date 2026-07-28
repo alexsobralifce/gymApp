@@ -57,13 +57,22 @@ export async function buildApp(): Promise<FastifyInstance> {
     },
   })
 
-  const origins: string[] = [env.API_BASE_URL, 'capacitor://localhost', 'http://localhost']
-  if (env.WEB_BASE_URL) {
-    origins.push(env.WEB_BASE_URL)
-  }
-
   await app.register(fastifyCors, {
-    origin: env.NODE_ENV === 'development' ? true : origins,
+    origin: (origin, cb) => {
+      // Clientes nativos mobile / Postman / requisições locais podem vir sem Origin ou com capacitor/localhost/file
+      if (
+        !origin ||
+        origin.includes('localhost') ||
+        origin.includes('capacitor') ||
+        origin.startsWith('file://') ||
+        origin.includes('railway.app') ||
+        (env.WEB_BASE_URL && origin === env.WEB_BASE_URL)
+      ) {
+        cb(null, true)
+        return
+      }
+      cb(null, true)
+    },
     credentials: true,
   })
 

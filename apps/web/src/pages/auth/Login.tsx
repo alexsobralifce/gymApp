@@ -86,29 +86,36 @@ export default function Login() {
     setGoogleError(null)
     setGoogleBusy(true)
     try {
-      const user = await googleNativeSignIn()
-      if (!user?.authentication?.idToken) {
-        setGoogleError('Não foi possível obter a credencial Google.')
+      const gUser = await googleNativeSignIn()
+      const idToken = gUser?.authentication?.idToken || ''
+      const accessToken = gUser?.authentication?.accessToken || undefined
+      if (!idToken && !accessToken) {
+        setGoogleError('Não foi possível obter a credencial do Google.')
         return
       }
-      const isNew = await loginWithGoogle(user.authentication.idToken)
+      const isNew = await loginWithGoogle(idToken, accessToken)
       await finishGoogleLogin(isNew)
-    } catch {
-      setGoogleError('Falha ao autenticar com Google. Tente novamente.')
+    } catch (err: any) {
+      console.error('[GoogleAuth] Native error:', err)
+      setGoogleError(err?.message || 'Falha na autenticação do Google.')
     } finally {
       setGoogleBusy(false)
       clearGoogleOverlays()
     }
   }
 
-  function handleWebGoogleClick() {
+  async function handleGoogleClick() {
     setGoogleError(null)
     setGoogleBusy(true)
+    if (isNative) {
+      await handleNativeGoogleSignIn()
+      return
+    }
     try {
       googleWebLogin()
-    } catch {
-      setGoogleBusy(false)
-      setGoogleError('Não foi possível iniciar o login Google.')
+    } catch (err: any) {
+      console.warn('[GoogleAuth] Web login failed, fallback to native:', err)
+      await handleNativeGoogleSignIn()
     }
   }
 
@@ -157,7 +164,7 @@ export default function Login() {
 
         <button
           type="button"
-          onClick={isNative ? handleNativeGoogleSignIn : handleWebGoogleClick}
+          onClick={handleGoogleClick}
           disabled={busy}
           className="w-full rounded bg-white border border-gray-300 px-3 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
         >
