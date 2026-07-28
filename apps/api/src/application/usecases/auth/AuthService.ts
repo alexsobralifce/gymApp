@@ -242,21 +242,26 @@ export class AuthService {
     let googleId: string | null = null
 
     if (credential) {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: [
-          env.GOOGLE_CLIENT_ID,
-          '100874517602-l5ghfcrmukob6bfukopidmsqjin8e3h6.apps.googleusercontent.com',
-        ].filter(Boolean) as string[],
-      })
-      const payload = ticket.getPayload()
-      if (!payload || !payload.email) {
-        throw new UnauthorizedError('Token Google inválido.')
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: [
+            env.GOOGLE_CLIENT_ID,
+            '100874517602-l5ghfcrmukob6bfukopidmsqjin8e3h6.apps.googleusercontent.com',
+          ].filter(Boolean) as string[],
+        })
+        const payload = ticket.getPayload()
+        if (!payload || !payload.email) {
+          throw new UnauthorizedError('Token Google inválido.')
+        }
+        email = payload.email
+        nome = payload.name || email.split('@')[0]
+        fotoUrl = payload.picture || null
+        googleId = payload.sub
+      } catch (err: any) {
+        if (err instanceof UnauthorizedError) throw err
+        throw new UnauthorizedError('Token Google inválido ou expirado.')
       }
-      email = payload.email
-      nome = payload.name || email.split('@')[0]
-      fotoUrl = payload.picture || null
-      googleId = payload.sub
     } else if (googleAccessToken) {
       const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${googleAccessToken}` },

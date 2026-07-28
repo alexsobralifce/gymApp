@@ -97,7 +97,9 @@ export default function Login() {
       await finishGoogleLogin(isNew)
     } catch (err: any) {
       console.error('[GoogleAuth] Native error:', err)
-      setGoogleError(err?.message || 'Falha na autenticação do Google.')
+      const msg = err?.message
+      const friendly = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : (msg || 'Falha na autenticação do Google.')
+      setGoogleError(friendly)
     } finally {
       setGoogleBusy(false)
       clearGoogleOverlays()
@@ -142,10 +144,16 @@ export default function Login() {
         </div>
         <p className="text-sm text-text-muted">Entre na sua conta</p>
 
-        {error && !notVerified && <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">{error}</p>}
+        {error && !notVerified && !displayedGoogleError && (
+          <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">{error}</p>
+        )}
 
         {displayedGoogleError && (
-          <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">{displayedGoogleError}</p>
+          <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">
+            {displayedGoogleError === 'Failed to fetch'
+              ? 'Sem conexão com o servidor. Verifique sua internet.'
+              : displayedGoogleError}
+          </p>
         )}
 
         {notVerified && (
