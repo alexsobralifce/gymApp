@@ -1,4 +1,4 @@
-package com.gymapp.mobile;
+package com.endorfinapp.mobile;
 
 import com.getcapacitor.BridgeActivity;
 
