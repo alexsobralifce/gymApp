@@ -1,9 +1,7 @@
 import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
+import { getApiBaseUrl } from '../lib/media'
 
-const DEFAULT_API_URL = 'https://api-production-3360.up.railway.app'
-const API_BASE = (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim() !== '')
-  ? import.meta.env.VITE_API_URL
-  : DEFAULT_API_URL
+const API_BASE = getApiBaseUrl()
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('accessToken')
@@ -25,7 +23,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers,
   })
 
-  if (res.status === 401) {
+  const isAuthEndpoint = path.startsWith('/auth/login') || path.startsWith('/auth/register') || path.startsWith('/auth/refresh') || path.startsWith('/auth/google')
+
+  if (res.status === 401 && !isAuthEndpoint) {
     const refreshed = await refreshTokens()
     if (refreshed) {
       headers['Authorization'] = `Bearer ${localStorage.getItem('accessToken')}`

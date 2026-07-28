@@ -29,7 +29,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = await api.getMe()
       set({ user, loading: false })
     } catch (err) {
-      set({ error: (err as Error).message, loading: false })
+      const msg = (err as Error).message
+      const friendlyMsg = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : msg
+      set({ error: friendlyMsg, loading: false })
       throw err
     }
   },
@@ -44,7 +46,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user, loading: false })
       return result.isNew
     } catch (err) {
-      set({ error: (err as Error).message, loading: false })
+      const msg = (err as Error).message
+      const friendlyMsg = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : msg
+      set({ error: friendlyMsg, loading: false })
       throw err
     }
   },

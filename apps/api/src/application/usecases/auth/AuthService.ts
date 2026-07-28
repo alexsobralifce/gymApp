@@ -244,7 +244,10 @@ export class AuthService {
     if (credential) {
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,
-        audience: env.GOOGLE_CLIENT_ID,
+        audience: [
+          env.GOOGLE_CLIENT_ID,
+          '100874517602-l5ghfcrmukob6bfukopidmsqjin8e3h6.apps.googleusercontent.com',
+        ].filter(Boolean) as string[],
       })
       const payload = ticket.getPayload()
       if (!payload || !payload.email) {

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { api } from '../../api/client'
+import { getApiBaseUrl } from '../../lib/media'
 import { CheckIcon, XIcon } from '../icons/Icon'
 
 interface PostPhotoUploadProps {
@@ -37,7 +38,7 @@ export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
-        xhr.open('POST', `${import.meta.env.VITE_API_URL || ''}/social/upload/foto`)
+        xhr.open('POST', `${getApiBaseUrl()}/social/upload/foto`)
         xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('accessToken')}`)
 
         xhr.upload.onprogress = (e) => {
