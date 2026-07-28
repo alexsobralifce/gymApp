@@ -58,21 +58,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   })
 
   await app.register(fastifyCors, {
-    origin: (origin, cb) => {
-      // Clientes nativos mobile / Postman / requisições locais podem vir sem Origin ou com capacitor/localhost/file
-      if (
-        !origin ||
-        origin.includes('localhost') ||
-        origin.includes('capacitor') ||
-        origin.startsWith('file://') ||
-        origin.includes('railway.app') ||
-        (env.WEB_BASE_URL && origin === env.WEB_BASE_URL)
-      ) {
-        cb(null, true)
-        return
-      }
-      cb(null, true)
-    },
+    origin: true,
     credentials: true,
   })
 
