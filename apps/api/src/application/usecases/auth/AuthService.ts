@@ -263,17 +263,33 @@ export class AuthService {
         throw new UnauthorizedError('Token Google inválido ou expirado.')
       }
     } else if (googleAccessToken) {
-      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${googleAccessToken}` },
-      })
-      if (!response.ok) {
-        throw new UnauthorizedError('Access token Google inválido.')
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 8000)
+        let response: Response
+        try {
+          response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${googleAccessToken}` },
+            signal: controller.signal,
+          })
+        } finally {
+          clearTimeout(timeoutId)
+        }
+        if (!response.ok) {
+          throw new UnauthorizedError('Access token Google inválido.')
+        }
+        const data = await response.json() as any
+        if (!data.email) {
+          throw new UnauthorizedError('Não foi possível obter o e-mail do Google.')
+        }
+        email = data.email
+        nome = data.name || email.split('@')[0]
+        fotoUrl = data.picture || null
+        googleId = data.sub
+      } catch (err: any) {
+        if (err instanceof UnauthorizedError) throw err
+        throw new UnauthorizedError('Falha ao verificar access token do Google.')
       }
-      const data = await response.json() as any
-      email = data.email
-      nome = data.name || email.split('@')[0]
-      fotoUrl = data.picture || null
-      googleId = data.sub
     } else {
       throw new UnauthorizedError('Token Google inválido.')
     }
