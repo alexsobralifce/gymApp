@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { App } from '@capacitor/app'
 import { useHealth } from '../../hooks/useHealth'
+import { shouldSync, getLastSyncTime } from '../../lib/healthSync'
 import { HeartIcon, ActivityIcon } from '../icons/Icon'
 import HuaweiBridgeGuide from './HuaweiBridgeGuide'
 
@@ -17,6 +19,7 @@ export function HealthConnectCard() {
     checkAuthorization,
     fetchDailySummary,
     checkHasHistoricalData,
+    syncToBackend,
   } = useHealth()
 
   const [summary, setSummary] = useState<{
@@ -62,62 +65,71 @@ export function HealthConnectCard() {
     })
   }, [available, checkAuthorization])
 
+  const [lastSyncText, setLastSyncText] = useState<string>('')
+
+  // Função centralizada para forçar a busca manual
+  const forceUpdate = useCallback(async () => {
+    console.log(TAG, 'forceUpdate() — buscando...')
+    try {
+      const s = await fetchDailySummary()
+      setSummary(s)
+      if (s.heartRateAvg !== null && hasData === false) {
+        setHasData(true)
+      }
+      await syncToBackend(s)
+      const last = getLastSyncTime()
+      if (last) {
+        setLastSyncText(new Date(last).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+      }
+    } catch (err) {
+      console.error(TAG, 'forceUpdate() erro:', err)
+    }
+  }, [fetchDailySummary, hasData, syncToBackend])
+
+  // Lifecycle & Sync Automático
   useEffect(() => {
     if (!authorized || !available) return
 
-    console.log(TAG, 'Registrando listener visibilitychange + focus para auto-refresh')
-
-    const refresh = () => {
-      console.log(TAG, 'App retomou foco — atualizando dados de saude...')
-      fetchDailySummary().then((s) => {
-        console.log(TAG, 'Auto-refresh (resume) — resultado:', JSON.stringify(s))
-        setSummary(s)
-        if (s.heartRateAvg !== null && hasData === false) {
-          setHasData(true)
-        }
-      }).catch((err) => {
-        console.error(TAG, 'Auto-refresh (resume) — erro:', err)
-      })
+    const doSync = async (force = false) => {
+      if (!shouldSync(force)) {
+        console.log(TAG, 'doSync() ignorado — aguardando intervalo de 15min.')
+        return
+      }
+      console.log(TAG, 'doSync() disparado')
+      await forceUpdate()
     }
 
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') refresh()
-    }
+    // Tenta sincronizar ao inicializar
+    doSync()
 
-    document.addEventListener('visibilitychange', onVisibility)
-    window.addEventListener('focus', refresh)
-
-    return () => {
-      console.log(TAG, 'Removendo listener visibilitychange + focus')
-      document.removeEventListener('visibilitychange', onVisibility)
-      window.removeEventListener('focus', refresh)
-    }
-  }, [authorized, available, fetchDailySummary, hasData])
-
-  useEffect(() => {
-    if (!authorized || !available) return
-
+    // 1. Polling contínuo a cada 15min (enquanto app ativo)
     const POLL_INTERVAL_MS = 15 * 60 * 1000
-    console.log(TAG, 'Iniciando polling de saude a cada', POLL_INTERVAL_MS / 60000, 'minutos')
-
     const interval = setInterval(() => {
-      console.log(TAG, 'Polling 15min — atualizando dados de saude...')
-      fetchDailySummary().then((s) => {
-        console.log(TAG, 'Polling 15min — resultado:', JSON.stringify(s))
-        setSummary(s)
-        if (s.heartRateAvg !== null && hasData === false) {
-          setHasData(true)
-        }
-      }).catch((err) => {
-        console.error(TAG, 'Polling 15min — erro:', err)
-      })
+      console.log(TAG, 'Polling 15min tick')
+      doSync(true)
     }, POLL_INTERVAL_MS)
 
-    return () => {
-      console.log(TAG, 'Limpando intervalo de polling de saude')
-      clearInterval(interval)
+    // 2. Fallback Web Lifecycle
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') doSync()
     }
-  }, [authorized, available, fetchDailySummary, hasData])
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', () => doSync())
+
+    // 3. Lifecycle Nativo Capacitor (retorno de background)
+    const appStateListener = App.addListener('appStateChange', ({ isActive }) => {
+      console.log(TAG, 'appStateChange nativo:', isActive)
+      if (isActive) doSync()
+    })
+
+    return () => {
+      console.log(TAG, 'Limpando listeners de sync')
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', () => doSync())
+      appStateListener.then(l => l.remove()).catch(() => {})
+    }
+  }, [authorized, available, forceUpdate])
 
   if (!checked) return null
 
@@ -287,7 +299,9 @@ export function HealthConnectCard() {
         </div>
         <div>
           <h3 className="text-sm font-bold text-text">Saude Conectada</h3>
-          <p className="text-xs text-text-muted">Dados de hoje</p>
+          <p className="text-xs text-text-muted">
+            {lastSyncText ? `Atualizado às ${lastSyncText}` : 'Dados de hoje'}
+          </p>
         </div>
       </div>
 
@@ -323,17 +337,8 @@ export function HealthConnectCard() {
         <button
           type="button"
           onClick={() => {
-            console.log(TAG, 'Botao "Atualizar" clicado — buscando dailySummary...')
-            fetchDailySummary().then((s) => {
-              console.log(TAG, 'Botao "Atualizar" — resultado:', JSON.stringify(s))
-              setSummary(s)
-              if (s.heartRateAvg !== null && hasData === false) {
-                console.log(TAG, 'Botao "Atualizar" — detectou dados, atualizando hasData para true')
-                setHasData(true)
-              }
-            }).catch((err) => {
-              console.error(TAG, 'Botao "Atualizar" — erro:', err)
-            })
+            console.log(TAG, 'Botao "Atualizar" clicado')
+            forceUpdate()
           }}
           className="flex-1 rounded-lg bg-surface-input py-1.5 text-xs font-medium text-text-muted hover:text-text hover:bg-surface-input/70 transition-colors cursor-pointer"
         >

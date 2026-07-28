@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Health } from '@capgo/capacitor-health'
+import { api } from '../api/client'
+import { setLastSyncTime } from '../lib/healthSync'
 
 interface HealthState {
   available: boolean
@@ -149,13 +151,15 @@ export function useHealth() {
       console.log(TAG, 'fetchDailySummary() calories samples:', calorieData.samples.length)
 
       if (heartData.samples.length > 0) {
-        const sum = heartData.samples.reduce((acc, s) => acc + s.value, 0)
+        let sum = 0
+        for (const s of heartData.samples) sum += s.value
         summary.heartRateAvg = Math.round(sum / heartData.samples.length)
         summary.heartRateSamples = heartData.samples.length
         console.log(TAG, 'fetchDailySummary() heartRate avg:', summary.heartRateAvg, 'bpm (', summary.heartRateSamples, 'amostras)')
       }
 
-      const totalCal = calorieData.samples.reduce((acc, s) => acc + s.value, 0)
+      let totalCal = 0
+      for (const s of calorieData.samples) totalCal += s.value
       summary.activeCalories = Math.round(totalCal)
       console.log(TAG, 'fetchDailySummary() activeCalories:', summary.activeCalories, 'kcal')
     } catch (err) {
@@ -205,7 +209,8 @@ export function useHealth() {
 
         if (samples.length === 0) return null
 
-        const sum = samples.reduce((acc, s) => acc + s.value, 0)
+        let sum = 0
+        for (const s of samples) sum += s.value
         const avg = Math.round(sum / samples.length)
         console.log(TAG, 'getHeartRateDuringWorkout() avg:', avg, 'bpm')
         return avg
@@ -227,7 +232,9 @@ export function useHealth() {
           endDate,
         })
 
-        const total = Math.round(samples.reduce((acc, s) => acc + s.value, 0))
+        let sum = 0
+        for (const s of samples) sum += s.value
+        const total = Math.round(sum)
         console.log(TAG, 'getCaloriesDuringWorkout() samples:', samples.length, 'total:', total, 'kcal')
         return total
       } catch (err) {
@@ -238,6 +245,23 @@ export function useHealth() {
     [],
   )
 
+  const syncToBackend = useCallback(async (summary: DailySummary) => {
+    try {
+      if (summary.activeCalories > 0 || summary.heartRateAvg !== null) {
+        console.log(TAG, 'syncToBackend() — Enviando dados...', summary)
+        await api.syncHealthData({
+          heartRateAvg: summary.heartRateAvg,
+          activeCalories: summary.activeCalories,
+          data: new Date().toISOString()
+        })
+        setLastSyncTime(Date.now())
+        console.log(TAG, 'syncToBackend() — Sucesso')
+      }
+    } catch (err) {
+      console.error(TAG, 'syncToBackend() erro:', err)
+    }
+  }, [])
+
   return {
     ...state,
     requestAccess,
@@ -246,5 +270,6 @@ export function useHealth() {
     checkHasHistoricalData,
     getHeartRateDuringWorkout,
     getCaloriesDuringWorkout,
+    syncToBackend,
   }
 }

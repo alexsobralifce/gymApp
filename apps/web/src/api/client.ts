@@ -195,6 +195,9 @@ export const api = {
   updateMedida: (id: string, data: { pesoKg?: number; alturaCm?: number; percentualBf?: number; massaMagraKg?: number; observacao?: string }) =>
     api.patch<MedidaCorporal>(`/alunos/medidas/${id}`, data),
 
+  syncHealthData: (data: { heartRateAvg: number | null; activeCalories: number; steps?: number; data: string }) =>
+    api.post<MedidaCorporal>('/alunos/health-sync', data),
+
   // ─── Notificações ──────────────────────────────────
   getNotificacoes: () => api.get<import('../types/api').Notificacao[]>('/alunos/notificacoes'),
 

@@ -256,6 +256,67 @@ export async function alunoRoutes(app: FastifyInstance) {
     return reply.status(201).send(medida)
   })
 
+  /** POST /alunos/health-sync — UC-Health */
+  app.post('/health-sync', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const body = z.object({
+      heartRateAvg: z.number().nullable(),
+      activeCalories: z.number(),
+      steps: z.number().optional(),
+      data: z.string().datetime(), // ISO datetime
+    }).parse(request.body)
+
+    const dataBusca = new Date(body.data)
+    dataBusca.setUTCHours(0, 0, 0, 0)
+    
+    const fimBusca = new Date(dataBusca)
+    fimBusca.setUTCHours(23, 59, 59, 999)
+
+    // Busca se ja existe medida para esse dia
+    const existente = await prisma.medidaCorporal.findFirst({
+      where: {
+        aluno_id: aluno.id,
+        data: { gte: dataBusca, lte: fimBusca }
+      }
+    })
+
+    const observacaoSync = `HealthSync: FC Media ${body.heartRateAvg || '--'} bpm, ${body.activeCalories} kcal${body.steps ? `, ${body.steps} passos` : ''}`
+
+    if (existente) {
+      const updated = await prisma.medidaCorporal.update({
+        where: { id: existente.id },
+        data: {
+          observacao: existente.observacao 
+            ? existente.observacao.includes('HealthSync:') 
+              ? existente.observacao.replace(/HealthSync:.*$/, observacaoSync) 
+              : `${existente.observacao} | ${observacaoSync}`
+            : observacaoSync
+        }
+      })
+      return reply.status(200).send(updated)
+    }
+
+    // Se nao existe, pega as ultimas medidas de peso e altura para replicar
+    const ultima = await prisma.medidaCorporal.findFirst({
+      where: { aluno_id: aluno.id },
+      orderBy: { data: 'desc' }
+    })
+
+    const medida = await prisma.medidaCorporal.create({
+      data: {
+        aluno_id: aluno.id,
+        peso_kg: ultima?.peso_kg || aluno.peso_kg,
+        altura_cm: ultima?.altura_cm || aluno.altura_cm,
+        imc: ultima?.imc,
+        data: dataBusca,
+        observacao: observacaoSync,
+      }
+    })
+
+    return reply.status(201).send(medida)
+  })
+
   /** GET /alunos/medidas — UC-25 */
   app.get('/medidas', { preHandler }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
