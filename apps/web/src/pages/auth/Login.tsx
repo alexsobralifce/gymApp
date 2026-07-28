@@ -3,16 +3,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
 import { useAuthStore } from '../../stores/auth'
 import { api } from '../../api/client'
-import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { clearGoogleOverlays } from '../../lib/googleOverlay'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { EndorfinappLogo, EndorfinappIcon } from '../../components/branding'
 import { DebugOverlay } from '../../components/ui/DebugOverlay'
 import { debugLog } from '../../lib/debug'
 
-const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  '100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -22,12 +18,6 @@ export default function Login() {
   const [googleError, setGoogleError] = useState<string | null>(null)
   const [googleBusy, setGoogleBusy] = useState(false)
   const { login, loginWithGoogle, loading, error } = useAuthStore()
-  const {
-    loading: googleLoading,
-    error: nativeGoogleError,
-    isNative,
-    signIn: googleNativeSignIn,
-  } = useGoogleAuth(GOOGLE_CLIENT_ID)
   const navigate = useNavigate()
 
   async function finishGoogleLogin(isNew: boolean) {
@@ -90,67 +80,20 @@ export default function Login() {
     }
   }
 
-  async function handleNativeGoogleSignIn() {
-    setGoogleError(null)
-    setGoogleBusy(true)
-    try {
-      const gUser = await googleNativeSignIn()
-      const idToken = gUser?.authentication?.idToken || ''
-      const accessToken = gUser?.authentication?.accessToken || gUser?.serverAuthCode || undefined
-
-      debugLog('Login', 'Retorno do Google Native:', {
-        email: gUser?.email,
-        idToken: idToken ? `presente (len: ${idToken.length})` : 'ausente',
-        accessToken: accessToken ? `presente (len: ${accessToken.length})` : 'ausente',
-        serverAuthCode: gUser?.serverAuthCode || 'ausente',
-      })
-
-      if (!idToken && !accessToken) {
-        debugLog('Login', 'Sem tokens nativos. Executando fallback Web OAuth...', gUser, 'warn')
-        try {
-          googleWebLogin()
-          return
-        } catch (webErr) {
-          debugLog('Login', 'Fallback Web OAuth falhou', webErr, 'error')
-          setGoogleError('Não foi possível obter a credencial do Google. Tente novamente.')
-          return
-        }
-      }
-
-      const isNew = await loginWithGoogle(idToken, accessToken)
-      await finishGoogleLogin(isNew)
-    } catch (err: any) {
-      debugLog('Login', `Erro no Google Nativo (${err?.message || err}). Tentando Web OAuth...`, err, 'warn')
-      try {
-        googleWebLogin()
-      } catch (webErr) {
-        const msg = err?.message
-        const friendly = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : (msg || 'Falha na autenticação do Google.')
-        setGoogleError(friendly)
-      }
-    } finally {
-      setGoogleBusy(false)
-      clearGoogleOverlays()
-    }
-  }
-
   async function handleGoogleClick() {
     setGoogleError(null)
     setGoogleBusy(true)
-    if (isNative) {
-      await handleNativeGoogleSignIn()
-      return
-    }
     try {
       googleWebLogin()
     } catch (err: any) {
-      console.warn('[GoogleAuth] Web login failed, fallback to native:', err)
-      await handleNativeGoogleSignIn()
+      console.warn('[GoogleAuth] Web login failed:', err)
+      setGoogleBusy(false)
+      setGoogleError('Falha ao abrir login do Google.')
     }
   }
 
-  const displayedGoogleError = googleError || nativeGoogleError
-  const busy = loading || googleLoading || googleBusy
+  const displayedGoogleError = googleError
+  const busy = loading || googleBusy
 
   if (googleBusy) {
     return (

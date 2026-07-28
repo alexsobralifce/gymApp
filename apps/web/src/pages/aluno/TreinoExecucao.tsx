@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, useBlocker } from 'react-router-dom'
+import { KeepAwake } from '@capgo/capacitor-keep-awake'
 import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
@@ -188,24 +189,29 @@ export default function AlunoTreinoExecucao() {
   }, [syncTimer])
 
   useEffect(() => {
+    let cancelled = false
     let wakeLock: WakeLockSentinel | null = null
-    async function requestLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen')
+
+    KeepAwake.keepAwake().catch(() => {
+      if (!cancelled && 'wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').then(lock => { if (!cancelled) wakeLock = lock }).catch(() => {})
+      }
+    })
+
+    const onVis = () => {
+      if (document.visibilityState === 'visible') {
+        if (wakeLock) {
+          navigator.wakeLock.request('screen').then(l => { if (!cancelled) wakeLock = l }).catch(() => {})
         }
-      } catch {
-        /* ignore */
       }
     }
-    requestLock()
-    const onVis = () => {
-      if (document.visibilityState === 'visible') requestLock()
-    }
     document.addEventListener('visibilitychange', onVis)
+
     return () => {
+      cancelled = true
       document.removeEventListener('visibilitychange', onVis)
       wakeLock?.release().catch(() => {})
+      KeepAwake.allowSleep().catch(() => {})
     }
   }, [])
 

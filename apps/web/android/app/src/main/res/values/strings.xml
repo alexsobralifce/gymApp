@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">ENDORFINAPP</string>
-    <string name="title_activity_main">ENDORFINAPP</string>
-    <string name="package_name">com.endorfinapp.mobile</string>
-    <string name="custom_url_scheme">com.endorfinapp.mobile</string>
-    <string name="server_client_id">100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com</string>
-</resources>

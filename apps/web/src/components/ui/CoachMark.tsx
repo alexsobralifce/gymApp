@@ -107,8 +107,22 @@ export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNex
   if (!rect) return null
 
   const isLast = step === totalSteps - 1
-  const tooltipTop = rect.bottom + 12
-  const tooltipLeft = Math.max(16, rect.left + rect.width / 2 - 140)
+  const viewportW = window.innerWidth
+  const viewportH = window.innerHeight
+  const tooltipW = 280
+
+  let tooltipTop = rect.bottom + 12
+  const tooltipLeft = Math.max(16, Math.min(rect.left + rect.width / 2 - tooltipW / 2, viewportW - tooltipW - 16))
+
+  let isTooltipAbove = false
+  if (tooltipTop + 140 > viewportH) {
+    tooltipTop = Math.max(8, rect.top - 140 - 12)
+    isTooltipAbove = true
+  }
+
+  const arrowTop = isTooltipAbove
+    ? rect.top - 8
+    : rect.bottom + 6
 
   return (
     <div className="fixed inset-0 z-50" onClick={onDismiss}>
@@ -137,7 +151,7 @@ export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNex
       </div>
       <div
         className="absolute z-10 w-4 h-4 bg-surface-card border-l border-t border-primary/30 rotate-45"
-        style={{ top: rect.bottom + 6, left: rect.left + rect.width / 2 - 8 }}
+        style={{ top: arrowTop, left: rect.left + rect.width / 2 - 8 }}
       />
     </div>
   )
