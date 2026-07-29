@@ -85,6 +85,13 @@ O aluno tem acesso a:
 
 O aluno pode alterar nome, telefone, foto de perfil, dados fisicos e vinculos com professor ou academia.
 
+### 2.7 Clube de Vantagens (Parceiros)
+
+O aluno tem acesso a uma vitrine de parceiros do ecossistema, que permite:
+
+- Visualizar descontos exclusivos em suplementacao, vestuario, servicos de nutricao, entre outros.
+- Acessar promocoes destacadas com acesso facilitado as paginas dos parceiros.
+
 ---
 
 ## 3. Professor
@@ -232,6 +239,7 @@ Esta tabela resume o que cada perfil pode fazer no sistema.
 | Gerenciar usuarios do sistema | Nao | Nao | Nao | Sim |
 | Resetar senhas | Nao | Nao | Nao | Sim |
 | Acessar feed social, amizades e clubes | Sim | Sim | Sim | Nao |
+| Acessar vitrine de promocoes e parceiros | Sim | Nao | Nao | Nao |
 | Registrar medidas e ver evolucao | Sim, propria | Sim, dos alunos | Nao | Nao |
 | Alterar vinculos e dados pessoais | Sim, proprios | Sim, proprios | Sim, proprios | Nao |
 
