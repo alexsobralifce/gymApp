@@ -27,11 +27,18 @@ interface CriarAvaliacaoDTO {
 
 export class AvaliacaoService {
   static async criar(dto: CriarAvaliacaoDTO) {
-    const aluno = await prisma.aluno.findUnique({
-      where: { id: dto.alunoId },
+    const aluno = await prisma.aluno.findFirst({
+      where: {
+        OR: [
+          { id: dto.alunoId },
+          { usuario_id: dto.alunoId },
+        ],
+      },
       include: { usuario: true },
     })
     if (!aluno) throw new NotFoundError('Aluno não encontrado')
+
+    const targetAlunoId = aluno.id
 
     // Calcular IMC, RCQ e composição se houver dados
     let imc: number | undefined
@@ -74,7 +81,7 @@ export class AvaliacaoService {
 
     const avaliacao = await prisma.avaliacaoFisica.create({
       data: {
-        aluno_id: dto.alunoId,
+        aluno_id: targetAlunoId,
         avaliador_id: dto.avaliadorId,
         parq_positivo: dto.parqPositivo ?? false,
         risco_cardiaco: dto.riscoCardiaco ?? 'BAIXO',
@@ -111,8 +118,20 @@ export class AvaliacaoService {
   }
 
   static async listarPorAluno(alunoId: string) {
+    const aluno = await prisma.aluno.findFirst({
+      where: {
+        OR: [
+          { id: alunoId },
+          { usuario_id: alunoId },
+        ],
+      },
+      select: { id: true },
+    })
+
+    const targetAlunoId = aluno ? aluno.id : alunoId
+
     return prisma.avaliacaoFisica.findMany({
-      where: { aluno_id: alunoId },
+      where: { aluno_id: targetAlunoId },
       orderBy: { data: 'desc' },
       include: {
         avaliador: { select: { nome: true } },
