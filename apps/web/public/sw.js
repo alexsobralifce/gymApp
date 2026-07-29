@@ -1,6 +1,7 @@
-const SW_VERSION = 'endorfinapp-v2'
+const SW_VERSION = 'endorfinapp-v3'
+const GIF_CACHE_NAME = 'gymapp-workout-gifs-v1'
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
@@ -8,10 +9,45 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const cacheNames = await caches.keys()
-      await Promise.all(cacheNames.map((name) => caches.delete(name)))
+      await Promise.all(
+        cacheNames
+          .filter((name) => name !== GIF_CACHE_NAME)
+          .map((name) => caches.delete(name))
+      )
       await self.clients.claim()
     })(),
   )
+})
+
+// Interceptador Cache-First para GIFs e imagens de treino
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url)
+  const isImageOrGif =
+    event.request.destination === 'image' ||
+    /\.(gif|png|jpg|jpeg|webp)$/i.test(url.pathname) ||
+    url.pathname.includes('/uploads/')
+
+  if (isImageOrGif && event.request.method === 'GET') {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(GIF_CACHE_NAME)
+        const cachedResponse = await cache.match(event.request)
+        if (cachedResponse) {
+          return cachedResponse
+        }
+
+        try {
+          const networkResponse = await fetch(event.request)
+          if (networkResponse && networkResponse.status === 200) {
+            cache.put(event.request, networkResponse.clone())
+          }
+          return networkResponse
+        } catch {
+          return new Response('', { status: 408, statusText: 'Offline GIF Unavailable' })
+        }
+      })(),
+    )
+  }
 })
 
 self.addEventListener('push', (event) => {

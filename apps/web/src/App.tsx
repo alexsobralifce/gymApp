@@ -107,6 +107,7 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route index element={<ProfessorDashboard />} />
           <Route path="treinos" element={<ProfessorTreinos />} />
+          <Route path="alunos/:alunoId/evolucao" element={<ProfessorAlunoCorrelacoes />} />
           <Route path="alunos/:alunoId/correlacoes" element={<ProfessorAlunoCorrelacoes />} />
           <Route path="treinos/criar" element={<ProfessorCriarTreino />} />
           <Route path="exercicios/criar" element={<ProfessorCriarExercicio />} />

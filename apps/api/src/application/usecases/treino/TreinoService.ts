@@ -613,3 +613,246 @@ export async function historicoDiasTreino(alunoId: string, mes: string) {
     })),
   }))
 }
+
+// ─── UC-Evolucao: Obter Resumo Mensal do Aluno ──────────────────────────────
+
+export async function obterEvolucaoMensal(alunoId: string, mes?: string) {
+  const agora = new Date()
+  const mesAlvoStr = mes || `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`
+
+  const [anoStr, mesStr] = mesAlvoStr.split('-')
+  const ano = parseInt(anoStr, 10)
+  const mesNum = parseInt(mesStr, 10) - 1 // 0-indexed
+
+  const inicioMes = new Date(ano, mesNum, 1, 0, 0, 0, 0)
+  const fimMes = new Date(ano, mesNum + 1, 0, 23, 59, 59, 999)
+
+  const inicioMesAnt = new Date(ano, mesNum - 1, 1, 0, 0, 0, 0)
+  const fimMesAnt = new Date(ano, mesNum, 0, 23, 59, 59, 999)
+
+  const conclusoesMes = await prisma.treinoHistorico.findMany({
+    where: {
+      treino: { aluno_id: alunoId },
+      status_novo: 'CONCLUIDO',
+      timestamp: { gte: inicioMes, lte: fimMes },
+    },
+    orderBy: { timestamp: 'asc' },
+  })
+
+  const conclusoesMesAnt = await prisma.treinoHistorico.findMany({
+    where: {
+      treino: { aluno_id: alunoId },
+      status_novo: 'CONCLUIDO',
+      timestamp: { gte: inicioMesAnt, lte: fimMesAnt },
+    },
+  })
+
+  const treinosIdsMes = [...new Set(conclusoesMes.map((h) => h.treino_id))]
+
+  const execucoesMes = await prisma.execucaoExercicio.findMany({
+    where: {
+      treino: { aluno_id: alunoId },
+      registrado_em: { gte: inicioMes, lte: fimMes },
+    },
+    include: {
+      exercicio: { select: { id: true, nome: true, grupo_muscular: true } },
+    },
+  })
+
+  const execucoesMesAnt = await prisma.execucaoExercicio.findMany({
+    where: {
+      treino: { aluno_id: alunoId },
+      registrado_em: { gte: inicioMesAnt, lte: fimMesAnt },
+    },
+  })
+
+  const volumeTotalKg = Math.round(
+    execucoesMes.reduce((acc, e) => acc + e.carga_kg * e.repeticoes, 0)
+  )
+
+  const volumeMesAnteriorKg = Math.round(
+    execucoesMesAnt.reduce((acc, e) => acc + e.carga_kg * e.repeticoes, 0)
+  )
+
+  let variacaoVolumePercent = 0
+  if (volumeMesAnteriorKg > 0) {
+    variacaoVolumePercent = parseFloat(
+      (((volumeTotalKg - volumeMesAnteriorKg) / volumeMesAnteriorKg) * 100).toFixed(1)
+    )
+  } else if (volumeTotalKg > 0) {
+    variacaoVolumePercent = 100
+  }
+
+  let duracaoTotalMinutos = 0
+  let treinosComDuracao = 0
+
+  for (const h of conclusoesMes) {
+    if (h.duracao_segundos && h.duracao_segundos >= 60) {
+      const diffMin = Math.round(h.duracao_segundos / 60)
+      duracaoTotalMinutos += diffMin > 3 && diffMin < 240 ? diffMin : 45
+      treinosComDuracao++
+    } else {
+      duracaoTotalMinutos += 45
+      treinosComDuracao++
+    }
+  }
+
+  const totalTreinos = treinosIdsMes.length
+  const duracaoMediaMinutos = treinosComDuracao > 0 ? Math.round(duracaoTotalMinutos / treinosComDuracao) : 0
+
+  const semanasMap = [
+    { semana: 'S1', treinos: 0, volumeKg: 0 },
+    { semana: 'S2', treinos: 0, volumeKg: 0 },
+    { semana: 'S3', treinos: 0, volumeKg: 0 },
+    { semana: 'S4', treinos: 0, volumeKg: 0 },
+  ]
+
+  for (const h of conclusoesMes) {
+    const dia = h.timestamp.getDate()
+    const sIdx = dia <= 7 ? 0 : dia <= 14 ? 1 : dia <= 21 ? 2 : 3
+    semanasMap[sIdx].treinos++
+  }
+
+  for (const e of execucoesMes) {
+    const dia = e.registrado_em.getDate()
+    const sIdx = dia <= 7 ? 0 : dia <= 14 ? 1 : dia <= 21 ? 2 : 3
+    semanasMap[sIdx].volumeKg += Math.round(e.carga_kg * e.repeticoes)
+  }
+
+  let maiorCargaExercicio: { nome: string; cargaKg: number; mes_anterior: number } | null = null
+  if (execucoesMes.length > 0) {
+    const topExec = [...execucoesMes].sort((a, b) => b.carga_kg - a.carga_kg)[0]
+    if (topExec && topExec.carga_kg > 0) {
+      const topAnt = execucoesMesAnt
+        .filter((e) => e.exercicio_id === topExec.exercicio_id)
+        .sort((a, b) => b.carga_kg - a.carga_kg)[0]
+
+      maiorCargaExercicio = {
+        nome: topExec.exercicio.nome,
+        cargaKg: topExec.carga_kg,
+        mes_anterior: topAnt ? topAnt.carga_kg : 0,
+      }
+    }
+  }
+
+  const cargasSemanais: { semana: string; exercicio: string; cargaMedia: number; series: number }[] = []
+  for (const e of execucoesMes) {
+    const dia = e.registrado_em.getDate()
+    const semana = dia <= 7 ? 'S1' : dia <= 14 ? 'S2' : dia <= 21 ? 'S3' : 'S4'
+    cargasSemanais.push({
+      semana,
+      exercicio: e.exercicio.nome,
+      cargaMedia: e.carga_kg,
+      series: 1,
+    })
+  }
+
+  const metaSemanal = 3
+  const frequenciaPercent = Math.min(100, Math.round((totalTreinos / (4 * metaSemanal)) * 100))
+
+  return {
+    mes: mesAlvoStr,
+    totalTreinos,
+    metaSemanal,
+    semanas: semanasMap,
+    volumeTotalKg,
+    volumeMesAnteriorKg,
+    variacaoVolumePercent,
+    duracaoMediaMinutos,
+    duracaoTotalMinutos,
+    frequenciaPercent,
+    maiorCargaExercicio,
+    cargasSemanais,
+  }
+}
+
+// ─── UC-Evolucao: Obter Timeline Detalhada de Treinos Executados ────────────
+
+export async function obterHistoricoExecucoesDetalhado(alunoId: string, mes?: string) {
+  let dateFilter: { gte?: Date; lte?: Date } | undefined = undefined
+
+  if (mes) {
+    const [anoStr, mesStr] = mes.split('-')
+    const ano = parseInt(anoStr, 10)
+    const mesNum = parseInt(mesStr, 10) - 1
+    const inicio = new Date(ano, mesNum, 1, 0, 0, 0, 0)
+    const fim = new Date(ano, mesNum + 1, 0, 23, 59, 59, 999)
+    dateFilter = { gte: inicio, lte: fim }
+  }
+
+  const conclusoes = await prisma.treinoHistorico.findMany({
+    where: {
+      treino: { aluno_id: alunoId },
+      status_novo: 'CONCLUIDO',
+      ...(dateFilter ? { timestamp: dateFilter } : {}),
+    },
+    include: {
+      treino: { select: { id: true, nome: true } },
+    },
+    orderBy: { timestamp: 'desc' },
+  })
+
+  const execucoes = await prisma.execucaoExercicio.findMany({
+    where: {
+      treino: { aluno_id: alunoId },
+      ...(dateFilter ? { registrado_em: dateFilter } : {}),
+    },
+    include: {
+      exercicio: { select: { id: true, nome: true, grupo_muscular: true } },
+      treino: { select: { id: true, nome: true } },
+    },
+    orderBy: { registrado_em: 'asc' },
+  })
+
+  return conclusoes.map((h) => {
+    const dataConclusao = h.timestamp
+    const inicioJanela = new Date(dataConclusao.getTime() - 24 * 60 * 60 * 1000)
+
+    const execsDaSessao = execucoes.filter(
+      (e) => e.treino_id === h.treino_id && e.registrado_em <= dataConclusao && e.registrado_em >= inicioJanela
+    )
+
+    const exerciciosMap: Record<string, {
+      exercicioId: string
+      nome: string
+      grupoMuscular: string | null
+      series: Array<{
+        serieNumero: number
+        cargaKg: number
+        repeticoes: number
+        registradoEm: Date
+      }>
+    }> = {}
+
+    for (const e of execsDaSessao) {
+      if (!exerciciosMap[e.exercicio_id]) {
+        exerciciosMap[e.exercicio_id] = {
+          exercicioId: e.exercicio_id,
+          nome: e.exercicio.nome,
+          grupoMuscular: e.exercicio.grupo_muscular,
+          series: [],
+        }
+      }
+      exerciciosMap[e.exercicio_id].series.push({
+        serieNumero: e.serie_numero,
+        cargaKg: e.carga_kg,
+        repeticoes: e.repeticoes,
+        registradoEm: e.registrado_em,
+      })
+    }
+
+    const duracaoMinutos = h.duracao_segundos
+      ? Math.round(h.duracao_segundos / 60)
+      : 45
+
+    return {
+      historicoId: h.id,
+      treinoId: h.treino_id,
+      treinoNome: h.treino.nome,
+      dataConclusao: h.timestamp.toISOString(),
+      duracaoSegundos: h.duracao_segundos,
+      duracaoMinutos,
+      exercicios: Object.values(exerciciosMap),
+    }
+  })
+}

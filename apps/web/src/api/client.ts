@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -234,6 +234,15 @@ export const api = {
 
   getAlunoCorrelacoes: (alunoId: string) =>
     api.get<CorrelacaoResponse>(`/professores/alunos/${alunoId}/correlacoes`),
+
+  getAlunoEvolucaoMensal: (alunoId: string, mes?: string) =>
+    api.get<EvolucaoMensal>(`/professores/alunos/${alunoId}/evolucao/mensal${mes ? `?mes=${mes}` : ''}`),
+
+  getAlunoHistoricoExecucoes: (alunoId: string, mes?: string) =>
+    api.get<SessaoExecucaoDetalhada[]>(`/professores/alunos/${alunoId}/historico-execucoes${mes ? `?mes=${mes}` : ''}`),
+
+  getAlunoMedidas: (alunoId: string) =>
+    api.get<MedidaCorporal[]>(`/professores/alunos/${alunoId}/medidas`),
 
   // ─── Exercícios ────────────────────────────────────
   getExercicios: (params?: { grupo_muscular?: string; equipamento?: string; nivel?: string; busca?: string }) => {

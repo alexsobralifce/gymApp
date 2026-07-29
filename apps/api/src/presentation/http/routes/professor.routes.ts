@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role, VinculoStatus } from '@prisma/client'
-import { dashboardProfessor } from '../../../application/usecases/treino/TreinoService.js'
+import { dashboardProfessor, obterEvolucaoMensal, obterHistoricoExecucoesDetalhado } from '../../../application/usecases/treino/TreinoService.js'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { obterCorrelacoes } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
@@ -12,6 +12,29 @@ async function resolveProfessor(usuarioId: string) {
     create: { usuario_id: usuarioId },
     update: {},
   })
+}
+
+async function validarAcessoProfessorAluno(professorId: string, alunoId: string) {
+  const aluno = await prisma.aluno.findUnique({
+    where: { id: alunoId },
+    select: { id: true, professor_id: true, academia_id: true },
+  })
+  if (!aluno) throw new NotFoundError('Aluno')
+
+  if (aluno.professor_id === professorId) return aluno
+
+  if (aluno.academia_id) {
+    const vinculo = await prisma.professorAcademia.findFirst({
+      where: {
+        professor_id: professorId,
+        academia_id: aluno.academia_id,
+        status: 'ATIVO',
+      },
+    })
+    if (vinculo) return aluno
+  }
+
+  throw new TenantAccessError()
 }
 
 export async function professorRoutes(app: FastifyInstance) {
@@ -187,12 +210,49 @@ export async function professorRoutes(app: FastifyInstance) {
     const { alunoId } = z.object({ alunoId: z.string() }).parse(request.params)
     const professor = await resolveProfessor(request.currentUser.sub)
 
-    const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
-    if (!aluno) throw new NotFoundError('Aluno')
-    if (aluno.professor_id !== professor.id) throw new TenantAccessError()
+    await validarAcessoProfessorAluno(professor.id, alunoId)
 
     const resultado = await obterCorrelacoes(alunoId)
     return reply.status(200).send(resultado)
+  })
+
+  /** GET /professores/alunos/:alunoId/evolucao/mensal — resumo mensal de frequência, volume e duração */
+  app.get('/alunos/:alunoId/evolucao/mensal', { preHandler }, async (request, reply) => {
+    const { alunoId } = z.object({ alunoId: z.string() }).parse(request.params)
+    const { mes } = z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/).optional() }).parse(request.query || {})
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    await validarAcessoProfessorAluno(professor.id, alunoId)
+
+    const resultado = await obterEvolucaoMensal(alunoId, mes)
+    return reply.status(200).send(resultado)
+  })
+
+  /** GET /professores/alunos/:alunoId/historico-execucoes — timeline detalhada de treinos e cargas */
+  app.get('/alunos/:alunoId/historico-execucoes', { preHandler }, async (request, reply) => {
+    const { alunoId } = z.object({ alunoId: z.string() }).parse(request.params)
+    const { mes } = z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/).optional() }).parse(request.query || {})
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    await validarAcessoProfessorAluno(professor.id, alunoId)
+
+    const resultado = await obterHistoricoExecucoesDetalhado(alunoId, mes)
+    return reply.status(200).send(resultado)
+  })
+
+  /** GET /professores/alunos/:alunoId/medidas — histórico de medidas corporais do aluno */
+  app.get('/alunos/:alunoId/medidas', { preHandler }, async (request, reply) => {
+    const { alunoId } = z.object({ alunoId: z.string() }).parse(request.params)
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    await validarAcessoProfessorAluno(professor.id, alunoId)
+
+    const medidas = await prisma.medidaCorporal.findMany({
+      where: { aluno_id: alunoId },
+      orderBy: { data: 'desc' },
+    })
+
+    return reply.status(200).send(medidas)
   })
 
   /** GET /professores/workoutx/exercicios — Busca exercícios locais simulando API WorkoutX */

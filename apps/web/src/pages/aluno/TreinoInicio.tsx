@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import type { Treino } from '../../types/api'
 import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, TimerIcon, TrophyIcon, ActivityIcon, ChevronLeftIcon } from '../../components/icons/Icon'
+import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 
 export default function AlunoTreinoInicio() {
   const { id } = useParams<{ id: string }>()
@@ -110,6 +111,8 @@ export default function AlunoTreinoInicio() {
             {error}
           </div>
         )}
+
+        <OfflinePreloadBadge exercicios={exercicios} className="mt-6" />
 
         <button
           onClick={handleIniciar}

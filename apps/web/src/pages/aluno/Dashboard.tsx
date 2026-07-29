@@ -176,6 +176,11 @@ export default function AlunoDashboard() {
                     {idade} anos
                   </span>
                 )}
+                {perfil?.professor?.usuario?.nome && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs text-blue-400 font-semibold">
+                    🏋️ Treinador: {perfil.professor.usuario.nome}
+                  </span>
+                )}
                 {perfil?.academia && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs text-text-muted">
                     {perfil.academia.nome}

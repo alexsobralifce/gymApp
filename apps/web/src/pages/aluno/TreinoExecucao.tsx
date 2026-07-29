@@ -5,6 +5,7 @@ import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import type { UltimaCarga } from '../../types/api'
 
 const DIFICULDADE_OPCOES = [
@@ -442,6 +443,7 @@ export default function AlunoTreinoExecucao() {
 
       {/* Exercise List */}
       <div className="flex-1 px-4 py-4 space-y-4 max-w-xl mx-auto w-full pb-28">
+        <OfflinePreloadBadge exercicios={exercicios} className="w-full justify-center text-center" />
         {exercicios.map((ex, exIdx) => {
           const exDetail = ex.exercicio
           const seriesRegistradas = execucoes.filter((e) => e.exercicio_id === ex.exercicio_id).length

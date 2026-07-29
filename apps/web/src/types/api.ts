@@ -162,6 +162,30 @@ export interface EvolucaoMensal {
   cargasSemanais: CargaSemanal[]
 }
 
+export interface SerieExecutadaDetalhe {
+  serieNumero: number
+  cargaKg: number
+  repeticoes: number
+  registradoEm: string
+}
+
+export interface ExercicioExecutadoDetalhe {
+  exercicioId: string
+  nome: string
+  grupoMuscular: string | null
+  series: SerieExecutadaDetalhe[]
+}
+
+export interface SessaoExecucaoDetalhada {
+  historicoId: string
+  treinoId: string
+  treinoNome: string
+  dataConclusao: string
+  duracaoSegundos: number | null
+  duracaoMinutos: number
+  exercicios: ExercicioExecutadoDetalhe[]
+}
+
 export interface Academia {
   id: string
   nome: string
