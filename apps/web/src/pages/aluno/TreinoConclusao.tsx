@@ -53,7 +53,7 @@ export default function AlunoTreinoConclusao() {
         </div>
 
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/', { state: { refreshKey: Date.now() } })}
           className="mt-8 w-full max-w-xs rounded-2xl gradient-primary py-3.5 text-base font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
         >
           Voltar para o Início

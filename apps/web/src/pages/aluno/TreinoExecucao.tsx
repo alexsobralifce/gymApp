@@ -251,7 +251,7 @@ export default function AlunoTreinoExecucao() {
     if (blocker.state === 'blocked') {
       blocker.proceed()
     } else {
-      navigate('/')
+      navigate('/', { state: { refreshKey: Date.now() } })
     }
     setTimeout(() => { allowLeaveRef.current = false }, 500)
   }, [blocker, navigate])

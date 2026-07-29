@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import type { Treino, PerfilAluno, Notificacao } from '../../types/api'
@@ -49,7 +49,10 @@ export default function AlunoDashboard() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [modalNotificacao, setModalNotificacao] = useState<Notificacao | null>(null)
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useAuthStore((s) => s.user)
+
+  const refreshKey = (location.state as { refreshKey?: number })?.refreshKey ?? 0
 
   async function carregarDados() {
     try {
@@ -70,8 +73,9 @@ export default function AlunoDashboard() {
   }
 
   useEffect(() => {
+    setLoading(true)
     carregarDados().finally(() => setLoading(false))
-  }, [])
+  }, [refreshKey, location.key])
 
   async function handleResponder(treinoId: string, acao: 'ACEITAR' | 'RECUSAR') {
     try {
