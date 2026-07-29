@@ -536,6 +536,13 @@ export default function AppShell() {
                             Dados do Aluno
                           </button>
                           <button
+                            onClick={() => { setMenuOpen(false); navigate('/dados') }}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                          >
+                            <UserPlusIcon className="h-4 w-4 text-primary" />
+                            Tornar-se Professor
+                          </button>
+                          <button
                             onClick={() => { setMenuOpen(false); navigate('/privacidade') }}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
                           >

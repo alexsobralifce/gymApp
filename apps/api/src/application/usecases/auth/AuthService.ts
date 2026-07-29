@@ -346,4 +346,63 @@ export class AuthService {
   static async logout(refreshToken: string): Promise<void> {
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } })
   }
+
+  /**
+   * Converte o perfil do usuário atual para PROFESSOR e re-emite os tokens JWT
+   */
+  static async mudarParaProfessor(
+    usuarioId: string,
+    cref: string | undefined,
+    jwtSign: (payload: object, opts?: object) => string,
+  ): Promise<AuthTokens & { usuario: { id: string; nome: string; email: string; role: Role; fotoUrl: string | null } }> {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+    })
+
+    if (!usuario) {
+      throw new NotFoundError('Usuário não encontrado')
+    }
+
+    // 1. Atualizar role para PROFESSOR
+    const usuarioAtualizado = await prisma.usuario.update({
+      where: { id: usuarioId },
+      data: { role: Role.PROFESSOR },
+      select: { id: true, nome: true, email: true, role: true, foto_url: true },
+    })
+
+    // 2. Upsert do perfil Professor
+    await prisma.professor.upsert({
+      where: { usuario_id: usuarioId },
+      create: { usuario_id: usuarioId, cref: cref || null },
+      update: { cref: cref || null },
+    })
+
+    // 3. Re-emitir tokens JWT com role PROFESSOR
+    const payload = { sub: usuario.id, role: Role.PROFESSOR }
+    const accessToken = jwtSign(payload, { expiresIn: env.JWT_EXPIRES_IN })
+    const refreshToken = jwtSign(
+      { sub: usuario.id },
+      { secret: env.JWT_REFRESH_SECRET, expiresIn: env.JWT_REFRESH_EXPIRES_IN },
+    )
+
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        usuario_id: usuario.id,
+        expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    })
+
+    return {
+      accessToken,
+      refreshToken,
+      usuario: {
+        id: usuarioAtualizado.id,
+        nome: usuarioAtualizado.nome,
+        email: usuarioAtualizado.email,
+        role: usuarioAtualizado.role,
+        fotoUrl: usuarioAtualizado.foto_url,
+      },
+    }
+  }
 }

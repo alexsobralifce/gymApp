@@ -233,4 +233,17 @@ export async function authRoutes(app: FastifyInstance) {
 
     return reply.status(200).send({ message: 'Senha alterada com sucesso!' })
   })
+
+  /**
+   * POST /auth/mudar-para-professor — Converte a conta para PROFESSOR e re-emite os tokens
+   */
+  app.post('/mudar-para-professor', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { cref } = z.object({ cref: z.string().optional() }).parse(request.body || {})
+    const result = await AuthService.mudarParaProfessor(
+      request.currentUser.sub,
+      cref,
+      app.jwt.sign.bind(app.jwt),
+    )
+    return reply.status(200).send(result)
+  })
 }

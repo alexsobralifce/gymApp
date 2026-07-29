@@ -145,6 +145,9 @@ export const api = {
   alterarSenha: (senhaAtual: string, novaSenha: string) =>
     api.post('/auth/change-password', { senhaAtual, novaSenha }),
 
+  mudarParaProfessor: (cref?: string) =>
+    api.post<AuthTokens & { usuario: User }>('/auth/mudar-para-professor', { cref }),
+
   // ─── Aluno ─────────────────────────────────────────
   criarPerfilAluno: (data?: { dataNascimento?: string; pesoKg?: number; alturaCm?: number; sexo?: 'MASCULINO' | 'FEMININO'; objetivoTreino?: string; nivelTreino?: string; restricoes?: string[]; consentiuFeedSocial?: boolean }) =>
     api.post('/alunos/perfil', data),

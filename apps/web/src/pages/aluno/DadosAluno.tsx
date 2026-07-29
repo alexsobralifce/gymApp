@@ -68,7 +68,11 @@ export default function DadosAluno() {
   const [modalSairAcademia, setModalSairAcademia] = useState(false)
 
   const [modalAutogestao, setModalAutogestao] = useState(false)
-  const [salvandoProfessor, setSalvandoProfessor] = useState(false)
+  const [salvandoRemoverProfessor, setSalvandoRemoverProfessor] = useState(false)
+
+  const [modalProfessorOpen, setModalProfessorOpen] = useState(false)
+  const [cref, setCref] = useState('')
+  const [salvandoTornarProfessor, setSalvandoTornarProfessor] = useState(false)
 
   const [feedbackGeral, setFeedbackGeral] = useState<string | null>(null)
 
@@ -223,7 +227,7 @@ export default function DadosAluno() {
   }
 
   async function handleConfirmarAutogestao() {
-    setSalvandoProfessor(true)
+    setSalvandoRemoverProfessor(true)
     try {
       const pData = await api.atualizarProfessorAluno(null)
       setPerfil(pData)
@@ -233,7 +237,20 @@ export default function DadosAluno() {
     } catch {
       setFeedbackGeral('Erro ao mudar para autogestão.')
     } finally {
-      setSalvandoProfessor(false)
+      setSalvandoRemoverProfessor(false)
+    }
+  }
+
+  async function handleTornarProfessor() {
+    setSalvandoTornarProfessor(true)
+    try {
+      await useAuthStore.getState().mudarParaProfessor(cref)
+      setModalProfessorOpen(false)
+      navigate('/')
+    } catch (err: any) {
+      setFeedbackGeral(err.message || 'Erro ao mudar perfil para Professor.')
+    } finally {
+      setSalvandoTornarProfessor(false)
     }
   }
 
@@ -645,6 +662,26 @@ export default function DadosAluno() {
             </button>
           )}
         </div>
+
+        {/* Opção para se tornar Professor */}
+        <div className="rounded-xl bg-surface p-3.5 border border-surface-input space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-text-muted uppercase">Perfil de Atuação</span>
+            <span className="text-xs font-semibold text-text-muted bg-surface-input px-2 py-0.5 rounded-full">
+              Aluno / Praticante
+            </span>
+          </div>
+          <p className="text-xs text-text-muted leading-relaxed">
+            É um Personal Trainer ou Professor de Educação Física? Altere seu perfil para ter acesso à gestão de alunos e envio de fichas de treino.
+          </p>
+          <button
+            type="button"
+            onClick={() => setModalProfessorOpen(true)}
+            className="w-full rounded-lg border border-primary/30 bg-primary/10 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer"
+          >
+            Mudar meu Perfil para Professor
+          </button>
+        </div>
       </div>
 
       {/* 4. Segurança e Privacidade */}
@@ -686,8 +723,47 @@ export default function DadosAluno() {
         message="Você desvinculará seu professor atual. Todos os treinos que você possui serão mantidos na sua conta para que você possa continuar usando e editando."
         onConfirm={handleConfirmarAutogestao}
         onCancel={() => setModalAutogestao(false)}
-        loading={salvandoProfessor}
+        loading={salvandoRemoverProfessor}
       />
+
+      {/* Modal Confirmação: Tornar-se Professor */}
+      {modalProfessorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface-card border border-surface-input w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-lg font-bold text-text">Tornar-se Professor</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Ao confirmar, seu perfil será alterado para <strong className="text-primary">Professor</strong>. Você terá acesso ao Dashboard de Personal Trainer, criação e envio de fichas de treino para alunos.
+            </p>
+            <div>
+              <label className="block text-xs font-medium text-text-muted mb-1">Número do CREF (Opcional)</label>
+              <input
+                type="text"
+                value={cref}
+                onChange={(e) => setCref(e.target.value)}
+                placeholder="Ex: 123456-G/SP"
+                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setModalProfessorOpen(false)}
+                className="rounded-xl border border-surface-input bg-surface px-4 py-2 text-xs font-semibold text-text hover:bg-surface-input"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleTornarProfessor}
+                disabled={salvandoTornarProfessor}
+                className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50"
+              >
+                {salvandoTornarProfessor ? 'Convertendo...' : 'Confirmar e Mudar Perfil'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

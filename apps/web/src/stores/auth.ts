@@ -14,6 +14,7 @@ export interface AuthState {
   logout: () => void
   fetchUser: () => Promise<void>
   updatePushSubscription: (subscription: PushSubscriptionJSON | null) => Promise<void>
+  mudarParaProfessor: (cref?: string) => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -96,6 +97,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await api.updateMe({ webPushSubscription: subscription })
     } catch {
       // falha silenciosa — push é opcional
+    }
+  },
+
+  mudarParaProfessor: async (cref) => {
+    set({ loading: true, error: null })
+    try {
+      const res = await api.mudarParaProfessor(cref)
+      localStorage.setItem('accessToken', res.accessToken)
+      localStorage.setItem('refreshToken', res.refreshToken)
+      const user = await api.getMe()
+      set({ user, loading: false })
+    } catch (err) {
+      set({ error: (err as Error).message, loading: false })
+      throw err
     }
   },
 }))
