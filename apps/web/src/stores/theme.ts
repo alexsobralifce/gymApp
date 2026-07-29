@@ -27,6 +27,11 @@ function applyDom(theme: ThemeBrand, mode: ThemeMode) {
   document.documentElement.setAttribute('data-mode', mode)
 }
 
+function getAutoModeByTime(): ThemeMode {
+  const hour = new Date().getHours()
+  return hour >= 6 && hour < 18 ? 'day' : 'night'
+}
+
 const getStoredBrand = (): ThemeBrand => {
   if (typeof window === 'undefined') return 'lime'
   const saved = localStorage.getItem('gymapp_theme')
@@ -41,7 +46,8 @@ const getStoredBrand = (): ThemeBrand => {
 const getStoredMode = (): ThemeMode => {
   if (typeof window === 'undefined') return 'night'
   const saved = localStorage.getItem('gymapp_mode')
-  return saved === 'day' ? 'day' : 'night'
+  if (saved === 'day' || saved === 'night') return saved
+  return getAutoModeByTime()
 }
 
 const INITIAL_THEME = getStoredBrand()
@@ -73,3 +79,18 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     get().setTheme(next)
   },
 }))
+
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const saved = localStorage.getItem('gymapp_mode')
+    if (!saved) {
+      const autoMode = getAutoModeByTime()
+      if (useThemeStore.getState().mode !== autoMode) {
+        useThemeStore.setState((state) => {
+          applyDom(state.theme, autoMode)
+          return { mode: autoMode }
+        })
+      }
+    }
+  }, 60000)
+}

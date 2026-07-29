@@ -1,11 +1,17 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { NotFoundError } from '../../../domain/errors/AppError.js'
+
+async function resolveAluno(usuarioId: string) {
+  let aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
+  if (!aluno) {
+    aluno = await prisma.aluno.create({ data: { usuario_id: usuarioId } })
+  }
+  return aluno
+}
 
 export async function privacyRoutes(app: FastifyInstance) {
-  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
+  const preHandler = [app.authenticate]
 
   /** PATCH /alunos/privacidade — atualiza configurações de privacidade */
   app.patch('/alunos/privacidade', { preHandler }, async (request, reply) => {
@@ -14,8 +20,7 @@ export async function privacyRoutes(app: FastifyInstance) {
       permiteBuscaEmail: z.boolean().optional(),
     }).parse(request.body)
 
-    const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const updated = await prisma.aluno.update({
       where: { id: aluno.id },
@@ -34,8 +39,7 @@ export async function privacyRoutes(app: FastifyInstance) {
 
   /** GET /alunos/privacidade — retorna configurações atuais */
   app.get('/alunos/privacidade', { preHandler }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     return reply.status(200).send({
       visibilidadePadrao: aluno.visibilidade_padrao,

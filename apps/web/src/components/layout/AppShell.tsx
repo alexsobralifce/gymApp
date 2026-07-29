@@ -139,6 +139,7 @@ function getNavItems(role: string): NavEntry[] {
     case 'PROFESSOR':
       return [
         { to: '/', label: 'Dashboard', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
+        { to: '/dados', label: 'Meu Perfil', icon: <UserCircleIcon className="h-5 w-5" /> },
         {
           label: 'Treino',
           icon: <DumbbellIcon className="h-5 w-5" />,
@@ -526,31 +527,29 @@ export default function AppShell() {
                     </div>
 
                     <div className="py-1.5">
+                      <button
+                        onClick={handleDados}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
+                      >
+                        <UserCircleIcon className="h-4 w-4 text-text-muted" />
+                        Dados do Usuário
+                      </button>
                       {isAluno && (
-                        <>
-                          <button
-                            onClick={handleDados}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
-                          >
-                            <UserCircleIcon className="h-4 w-4 text-text-muted" />
-                            Dados do Aluno
-                          </button>
-                          <button
-                            onClick={() => { setMenuOpen(false); navigate('/dados') }}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                          >
-                            <UserPlusIcon className="h-4 w-4 text-primary" />
-                            Tornar-se Professor
-                          </button>
-                          <button
-                            onClick={() => { setMenuOpen(false); navigate('/privacidade') }}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
-                          >
-                            <ShieldIcon className="h-4 w-4 text-text-muted" />
-                            Privacidade
-                          </button>
-                        </>
+                        <button
+                          onClick={() => { setMenuOpen(false); navigate('/dados') }}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        >
+                          <UserPlusIcon className="h-4 w-4 text-primary" />
+                          Tornar-se Professor
+                        </button>
                       )}
+                      <button
+                        onClick={() => { setMenuOpen(false); navigate('/privacidade') }}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
+                      >
+                        <ShieldIcon className="h-4 w-4 text-text-muted" />
+                        Privacidade
+                      </button>
                       <button
                         onClick={handleAlterarSenha}
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"

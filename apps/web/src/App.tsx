@@ -115,6 +115,8 @@ export default function App() {
           <Route path="alunos/vincular" element={<ProfessorVincularAluno />} />
           <Route path="fichas" element={<ProfessorFichas />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
+          <Route path="dados" element={<AlunoDados />} />
+          <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
@@ -127,6 +129,9 @@ export default function App() {
           <Route path="usuarios" element={<RootUsuarios />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="social" element={<RootSocial />} />
+          <Route path="dados" element={<AlunoDados />} />
+          <Route path="privacidade" element={<AlunoPrivacidade />} />
+          <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}
@@ -139,6 +144,8 @@ export default function App() {
           <Route path="alunos" element={<AcademiaAlunos />} />
           <Route path="treinos/criar" element={<AcademiaCriarTreino />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
+          <Route path="dados" element={<AlunoDados />} />
+          <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>

@@ -267,7 +267,7 @@ export default function DadosAluno() {
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6 pb-24">
       <div>
-        <h1 className="text-2xl font-bold text-text">Dados do Aluno</h1>
+        <h1 className="text-2xl font-bold text-text">Dados do Usuário</h1>
         <p className="text-xs text-text-muted">Gerencie suas informações cadastrais, corporais e vínculos</p>
       </div>
 
@@ -664,24 +664,26 @@ export default function DadosAluno() {
         </div>
 
         {/* Opção para se tornar Professor */}
-        <div className="rounded-xl bg-surface p-3.5 border border-surface-input space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-muted uppercase">Perfil de Atuação</span>
-            <span className="text-xs font-semibold text-text-muted bg-surface-input px-2 py-0.5 rounded-full">
-              Aluno / Praticante
-            </span>
+        {user?.role === 'ALUNO' && (
+          <div className="rounded-xl bg-surface p-3.5 border border-surface-input space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-text-muted uppercase">Perfil de Atuação</span>
+              <span className="text-xs font-semibold text-text-muted bg-surface-input px-2 py-0.5 rounded-full">
+                Aluno / Praticante
+              </span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              É um Personal Trainer ou Professor de Educação Física? Altere seu perfil para ter acesso à gestão de alunos e envio de fichas de treino.
+            </p>
+            <button
+              type="button"
+              onClick={() => setModalProfessorOpen(true)}
+              className="w-full rounded-lg border border-primary/30 bg-primary/10 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer"
+            >
+              Mudar meu Perfil para Professor
+            </button>
           </div>
-          <p className="text-xs text-text-muted leading-relaxed">
-            É um Personal Trainer ou Professor de Educação Física? Altere seu perfil para ter acesso à gestão de alunos e envio de fichas de treino.
-          </p>
-          <button
-            type="button"
-            onClick={() => setModalProfessorOpen(true)}
-            className="w-full rounded-lg border border-primary/30 bg-primary/10 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer"
-          >
-            Mudar meu Perfil para Professor
-          </button>
-        </div>
+        )}
       </div>
 
       {/* 4. Segurança e Privacidade */}
