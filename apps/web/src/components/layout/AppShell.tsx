@@ -32,11 +32,13 @@ import {
   PaletteIcon,
   MoreHorizontalIcon,
   PhoneIcon,
+  StarIcon,
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
 import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
 import { EndorfinappLogo } from '../branding'
+import { DebugMenuTrigger, DebugOverlay } from '../ui/DebugOverlay'
 
 const WHATSAPP_SUPORTE = {
   numero: '5588993573809',
@@ -132,6 +134,7 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/evolucao', label: 'Evolução', icon: <ChartLineIcon className="h-5 w-5" /> },
         { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
+        { to: '/parceiros', label: 'Parceiros', icon: <StarIcon className="h-5 w-5" /> },
       ]
     case 'PROFESSOR':
       return [
@@ -262,6 +265,7 @@ export default function AppShell() {
   const [moreSheetOpen, setMoreSheetOpen] = useState(false)
   const [colegasSheetOpen, setColegasSheetOpen] = useState(false)
   const [atividadeMural, setAtividadeMural] = useState(0)
+  const [debugOpen, setDebugOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -555,6 +559,14 @@ export default function AppShell() {
                         <PhoneIcon className="h-4 w-4" />
                         Suporte via WhatsApp
                       </a>
+                      {(user?.role === 'ROOT' || import.meta.env.VITE_DEBUG_VISIBLE === 'true') && (
+                        <DebugMenuTrigger
+                          onClick={() => {
+                            setMenuOpen(false)
+                            setDebugOpen(true)
+                          }}
+                        />
+                      )}
                       <div className="my-1 border-t border-border" />
                       <button
                         onClick={handleLogout}
@@ -761,6 +773,7 @@ export default function AppShell() {
         {/* Bottom nav placeholder for non-ALUNO on mobile when not in execution */}
         {!isAluno && !hideNav && <div className="md:hidden h-4" />}
       </div>
+      <DebugOverlay open={debugOpen} onClose={() => setDebugOpen(false)} />
     </div>
   )
 }

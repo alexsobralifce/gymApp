@@ -5,7 +5,6 @@ import { useNotifications } from './hooks/useNotifications'
 import { useCapacitorTheme } from './hooks/useCapacitorTheme'
 import AppShell from './components/layout/AppShell'
 import LoadingSpinner from './components/ui/LoadingSpinner'
-import { DebugOverlay } from './components/ui/DebugOverlay'
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt'
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
@@ -42,6 +41,7 @@ import AlunoMural from './pages/aluno/Mural'
 import AlunoAmizades from './pages/aluno/Amizades'
 import AlunoPrivacidade from './pages/aluno/Privacidade'
 import AlunoClubes from './pages/aluno/Clubes'
+import Parceiros from './pages/aluno/Parceiros'
 import WelcomeCards from './pages/aluno/WelcomeCards'
 import AlterarSenha from './pages/auth/AlterarSenha'
 
@@ -95,6 +95,7 @@ export default function App() {
           <Route path="amizades" element={<AlunoAmizades />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="clubes" element={<AlunoClubes />} />
+          <Route path="parceiros" element={<Parceiros />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
@@ -140,7 +141,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    <DebugOverlay />
     <PWAInstallPrompt />
     </>
   )

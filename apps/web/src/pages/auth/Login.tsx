@@ -6,7 +6,6 @@ import { api } from '../../api/client'
 import { clearGoogleOverlays } from '../../lib/googleOverlay'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { EndorfinappLogo, EndorfinappIcon } from '../../components/branding'
-import { DebugOverlay } from '../../components/ui/DebugOverlay'
 import { debugLog } from '../../lib/debug'
 
 
@@ -182,7 +181,6 @@ export default function Login() {
           Não tem conta? <Link to="/register" className="text-primary">Cadastre-se</Link>
         </p>
       </form>
-      <DebugOverlay />
     </div>
   )
 }
