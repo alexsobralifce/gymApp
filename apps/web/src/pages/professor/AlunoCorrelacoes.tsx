@@ -151,42 +151,42 @@ export default function ProfessorAlunoEvolucao() {
       </div>
 
       {/* Navegação por Abas */}
-      <div className="flex rounded-2xl bg-surface-card border border-surface-input p-1 gap-1">
+      <div className="flex rounded-2xl bg-surface-card border border-surface-input p-1 gap-1 overflow-x-auto scrollbar-hide">
         <button
           type="button"
           onClick={() => setAbaAtiva('evolucao')}
-          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-w-[110px] whitespace-nowrap py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
             abaAtiva === 'evolucao'
               ? 'bg-primary text-primary-foreground shadow-sm'
               : 'text-text-muted hover:text-text hover:bg-surface-input/50'
           }`}
         >
-          <ActivityIcon className="h-3.5 w-3.5" />
+          <ActivityIcon className="h-3.5 w-3.5 shrink-0" />
           Resumo & Ciência
         </button>
         <button
           type="button"
           onClick={() => setAbaAtiva('timeline')}
-          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-w-[130px] whitespace-nowrap py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
             abaAtiva === 'timeline'
               ? 'bg-primary text-primary-foreground shadow-sm'
               : 'text-text-muted hover:text-text hover:bg-surface-input/50'
           }`}
         >
-          <DumbbellIcon className="h-3.5 w-3.5" />
-          Timeline de Cargas ({historicoExecucoes.length})
+          <DumbbellIcon className="h-3.5 w-3.5 shrink-0" />
+          Timeline ({historicoExecucoes.length})
         </button>
         <button
           type="button"
           onClick={() => setAbaAtiva('medidas')}
-          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-w-[110px] whitespace-nowrap py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
             abaAtiva === 'medidas'
               ? 'bg-primary text-primary-foreground shadow-sm'
               : 'text-text-muted hover:text-text hover:bg-surface-input/50'
           }`}
         >
-          <RulerIcon className="h-3.5 w-3.5" />
-          Medidas & Métricas
+          <RulerIcon className="h-3.5 w-3.5 shrink-0" />
+          Medidas
         </button>
       </div>
 

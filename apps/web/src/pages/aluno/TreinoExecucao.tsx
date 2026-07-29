@@ -505,7 +505,7 @@ export default function AlunoTreinoExecucao() {
                           value={isLogged ? log.carga_kg : inputVal.carga}
                           onChange={(e) => handleInputChange(ex.exercicio_id, sNum, 'carga', e.target.value)}
                           placeholder="Kg"
-                          className="w-[56px] rounded-lg border border-border bg-surface px-2 py-2 text-center text-sm font-semibold text-text disabled:opacity-40 focus:border-primary focus:outline-none"
+                          className="w-[62px] rounded-lg border border-border bg-surface px-1.5 py-2 text-center text-sm font-semibold text-text disabled:opacity-40 focus:border-primary focus:outline-none"
                         />
                         <span className="text-xs text-text-muted font-medium">kg</span>
                         <input
@@ -515,7 +515,7 @@ export default function AlunoTreinoExecucao() {
                           value={isLogged ? log.repeticoes : inputVal.reps}
                           onChange={(e) => handleInputChange(ex.exercicio_id, sNum, 'reps', e.target.value)}
                           placeholder="Reps"
-                          className="w-[56px] rounded-lg border border-border bg-surface px-2 py-2 text-center text-sm font-semibold text-text disabled:opacity-40 focus:border-primary focus:outline-none"
+                          className="w-[58px] rounded-lg border border-border bg-surface px-1.5 py-2 text-center text-sm font-semibold text-text disabled:opacity-40 focus:border-primary focus:outline-none"
                         />
                         <span className="text-xs text-text-muted font-medium">reps</span>
                         <div className="flex-1" />

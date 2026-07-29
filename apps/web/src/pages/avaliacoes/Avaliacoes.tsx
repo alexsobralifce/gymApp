@@ -270,21 +270,21 @@ export default function Avaliacoes() {
                 <div className="space-y-4">
                   {avaliacoes.map((av) => (
                     <div key={av.id} className="p-4 rounded-xl bg-surface border border-border space-y-3">
-                      <div className="flex justify-between items-center text-sm">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm">
                         <span className="font-semibold text-text">
                           Data: {new Date(av.data).toLocaleDateString('pt-BR')}
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                           <button
                             onClick={() => handleGerarLaudo(av.id)}
-                            className="flex items-center gap-1 px-3 py-1 bg-surface-card border border-border text-text rounded-lg text-xs font-medium hover:border-primary"
+                            className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-3 py-1.5 bg-surface-card border border-border text-text rounded-lg text-xs font-medium hover:border-primary min-h-[36px]"
                           >
                             <ClipboardListIcon className="h-3.5 w-3.5 text-primary" />
                             {av.laudo_markdown ? 'Ver Laudo' : 'Gerar Laudo'}
                           </button>
                           <button
                             onClick={() => handleGerarPrescricao(av.id)}
-                            className="flex items-center gap-1 px-3 py-1 bg-primary/20 text-primary rounded-lg text-xs font-medium hover:opacity-80"
+                            className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-3 py-1.5 bg-primary/20 text-primary rounded-lg text-xs font-medium hover:opacity-80 min-h-[36px]"
                           >
                             <DumbbellIcon className="h-3.5 w-3.5" />
                             {av.prescricao_json ? 'Ver Prescrição' : 'Gerar Treino 4 Semanas'}
@@ -449,7 +449,7 @@ export default function Avaliacoes() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-text-muted mb-1">Cintura (cm)</label>
                   <input
@@ -484,7 +484,7 @@ export default function Avaliacoes() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-text-muted mb-1">PA Sistólica</label>
                   <input
