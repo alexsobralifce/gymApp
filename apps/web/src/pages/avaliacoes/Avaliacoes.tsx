@@ -57,15 +57,19 @@ export default function Avaliacoes() {
   async function carregarAlunos() {
     try {
       setLoading(true)
-      const res: any = await api.get('/professores/alunos').catch(() => null)
-      if (res && res.data) {
-        setAlunos(res.data)
+      let list: any[] = []
+      const resProf: any = await api.getAlunosProfessor().catch(() => null)
+      if (Array.isArray(resProf) && resProf.length > 0) {
+        list = resProf
       } else {
-        const resAcad: any = await api.get('/academias/alunos').catch(() => null)
-        if (resAcad && resAcad.data) {
-          setAlunos(resAcad.data)
+        const resAcad: any = await api.getAlunosAcademia().catch(() => null)
+        if (Array.isArray(resAcad) && resAcad.length > 0) {
+          list = resAcad
+        } else if (Array.isArray(resProf)) {
+          list = resProf
         }
       }
+      setAlunos(list)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao carregar alunos', type: 'error' })
     } finally {
@@ -76,7 +80,8 @@ export default function Avaliacoes() {
   async function carregarAvaliacoes(alunoId: string) {
     try {
       const res: any = await api.get(`/avaliacoes/aluno/${alunoId}`)
-      setAvaliacoes(res.data || [])
+      const data = Array.isArray(res) ? res : res?.data ?? []
+      setAvaliacoes(data)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao carregar avaliações', type: 'error' })
     }
@@ -144,9 +149,10 @@ export default function Avaliacoes() {
     try {
       setLoading(true)
       const res: any = await api.post(`/avaliacoes/${id}/gerar-laudo`, {})
-      setActiveLaudo(res.data.laudo)
+      const laudo = res?.laudo ?? res?.data?.laudo
+      setActiveLaudo(laudo)
       setToast({ message: 'Laudo inteligente gerado com sucesso!', type: 'success' })
-      carregarAvaliacoes(selectedAluno.id)
+      if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao gerar laudo', type: 'error' })
     } finally {
@@ -158,9 +164,10 @@ export default function Avaliacoes() {
     try {
       setLoading(true)
       const res: any = await api.post(`/avaliacoes/${id}/gerar-prescricao`, {})
-      setActivePrescricao(res.data.prescricao)
+      const prescricao = res?.prescricao ?? res?.data?.prescricao
+      setActivePrescricao(prescricao)
       setToast({ message: 'Prescrição de 4 semanas gerada com sucesso!', type: 'success' })
-      carregarAvaliacoes(selectedAluno.id)
+      if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao gerar prescrição', type: 'error' })
     } finally {
@@ -175,7 +182,8 @@ export default function Avaliacoes() {
       const atualId = avaliacoes[0].id
       const anteriorId = avaliacoes[1].id
       const res: any = await api.get(`/avaliacoes/comparar?atualId=${atualId}&anteriorId=${anteriorId}`)
-      setActiveComparativo(res.data)
+      const comp = res?.deltas ? res : res?.data
+      setActiveComparativo(comp)
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao comparar avaliações', type: 'error' })
     } finally {
