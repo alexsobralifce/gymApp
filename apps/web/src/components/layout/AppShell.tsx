@@ -147,6 +147,7 @@ function getNavItems(role: string): NavEntry[] {
             { to: '/treinos/criar', label: 'Criar Treino', icon: <PlusIcon className="h-4 w-4" /> },
           ],
         },
+        { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/alunos/vincular', label: 'Vincular Aluno', icon: <UserPlusIcon className="h-5 w-5" /> },
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },
         { to: '/exercicios/criar', label: 'Exercícios', icon: <BookOpenIcon className="h-5 w-5" /> },
@@ -163,6 +164,7 @@ function getNavItems(role: string): NavEntry[] {
             { to: '/treinos/criar', label: 'Criar Treino', icon: <PlusIcon className="h-4 w-4" /> },
           ],
         },
+        { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/professores', label: 'Professores', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/alunos', label: 'Alunos', icon: <UsersIcon className="h-5 w-5" /> },
       ]
@@ -171,6 +173,7 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/', label: 'Painel Global', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
         { to: '/vinculos', label: 'Vínculos Pendentes', icon: <LinkIcon className="h-5 w-5" /> },
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
+        { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
       ]
     default:

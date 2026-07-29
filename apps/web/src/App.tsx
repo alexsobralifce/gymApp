@@ -44,6 +44,7 @@ import AlunoClubes from './pages/aluno/Clubes'
 import Parceiros from './pages/aluno/Parceiros'
 import WelcomeCards from './pages/aluno/WelcomeCards'
 import AlterarSenha from './pages/auth/AlterarSenha'
+import Avaliacoes from './pages/avaliacoes/Avaliacoes'
 
 import { EndorfinappIcon } from './components/branding'
 
@@ -112,6 +113,7 @@ export default function App() {
           <Route path="academias" element={<ProfessorAcademias />} />
           <Route path="alunos/vincular" element={<ProfessorVincularAluno />} />
           <Route path="fichas" element={<ProfessorFichas />} />
+          <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
@@ -122,6 +124,7 @@ export default function App() {
           <Route index element={<RootPainel />} />
           <Route path="vinculos" element={<RootVinculos />} />
           <Route path="usuarios" element={<RootUsuarios />} />
+          <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="social" element={<RootSocial />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
@@ -134,6 +137,7 @@ export default function App() {
           <Route path="professores" element={<AcademiaProfessores />} />
           <Route path="alunos" element={<AcademiaAlunos />} />
           <Route path="treinos/criar" element={<AcademiaCriarTreino />} />
+          <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>

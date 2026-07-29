@@ -1,7 +1,3 @@
-// This is your Prisma schema file
-// GymApp — Multi-tenant Gym Management Platform
-// https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,77 +7,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
-enum Role {
-  ROOT
-  ACADEMIA
-  PROFESSOR
-  ALUNO
-}
-
-enum AcademiaStatus {
-  PENDENTE
-  ATIVO
-  REJEITADO
-}
-
-enum Sexo {
-  MASCULINO
-  FEMININO
-}
-
-/// Aprovação em duas camadas: Academia → Root
-enum VinculoStatus {
-  PENDENTE_ACADEMIA // aguarda academia aprovar
-  PENDENTE_ROOT // academia aprovou, aguarda Root
-  ATIVO
-  REJEITADO
-  REMOVIDO
-}
-
-enum TreinoStatus {
-  CADASTRADO // professor cadastrou, não enviado
-  ENVIADO // notificação disparada para aluno
-  ACEITO // aluno aceitou
-  RECUSADO // aluno recusou
-  EM_ABERTO // aceito mas não iniciado no dia
-  EM_EXECUCAO // aluno iniciou
-  CONCLUIDO // aluno finalizou
-}
-
-enum TreinoAtor {
-  ALUNO
-  PROFESSOR
-  ACADEMIA
-  SISTEMA
-}
-
-// ─── Usuário base ─────────────────────────────────────────────────────────────
-
 model Usuario {
-  id                       String    @id @default(cuid())
-  email                    String    @unique
-  senha_hash               String? // nullable — OAuth (Google) users have no password
+  id                       String            @id @default(cuid())
+  email                    String            @unique
+  senha_hash               String?
   nome                     String
   role                     Role
-  telefone                 String?
   foto_url                 String?
-  google_id                String?   @unique // sub from Google OAuth
-  ativo                    Boolean   @default(true)
-  expo_push_token          String? // token Expo para push notifications
-  web_push_subscription    Json? // PushSubscription JSON (Web Push API)
-  email_verified           Boolean   @default(false)
+  criado_em                DateTime          @default(now())
+  atualizado_em            DateTime          @updatedAt
+  expo_push_token          String?
+  web_push_subscription    Json?
+  telefone                 String?
+  ativo                    Boolean           @default(true)
+  email_verified           Boolean           @default(false)
   email_verify_code        String?
   email_verify_code_expira DateTime?
-  criado_em                DateTime  @default(now())
-  atualizado_em            DateTime  @updatedAt
-
-  academia  Academia? // se role = ACADEMIA
-  professor Professor? // se role = PROFESSOR
-  aluno     Aluno? // se role = ALUNO
-
-  refreshTokens RefreshToken[]
+  google_id                String?           @unique
+  academia                 Academia?
+  aluno                    Aluno?
+  avaliacoesAvalidadas     AvaliacaoFisica[]
+  professor                Professor?
+  refreshTokens            RefreshToken[]
 
   @@map("usuarios")
 }
@@ -92,44 +39,37 @@ model RefreshToken {
   usuario_id String
   expira_em  DateTime
   criado_em  DateTime @default(now())
-
-  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  usuario    Usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
 }
 
-// ─── Academia (tenant) ────────────────────────────────────────────────────────
-
 model Academia {
-  id               String         @id @default(cuid())
-  usuario_id       String         @unique
+  id               String              @id @default(cuid())
+  usuario_id       String              @unique
   nome             String
-  cnpj             String         @unique
-  status           AcademiaStatus @default(PENDENTE)
-  max_professores  Int            @default(20)
+  cnpj             String              @unique
+  status           AcademiaStatus      @default(PENDENTE)
+  max_professores  Int                 @default(20)
   rejeitado_motivo String?
-  criado_em        DateTime       @default(now())
-  atualizado_em    DateTime       @updatedAt
-
-  usuario     Usuario             @relation(fields: [usuario_id], references: [id])
-  professores ProfessorAcademia[]
-  alunos      Aluno[]
+  criado_em        DateTime            @default(now())
+  atualizado_em    DateTime            @updatedAt
+  usuario          Usuario             @relation(fields: [usuario_id], references: [id])
+  alunos           Aluno[]
+  professores      ProfessorAcademia[]
 
   @@map("academias")
 }
 
-// ─── Professor ────────────────────────────────────────────────────────────────
-
 model Professor {
-  id            String   @id @default(cuid())
-  usuario_id    String   @unique
+  id            String              @id @default(cuid())
+  usuario_id    String              @unique
   cref          String?
-  criado_em     DateTime @default(now())
-  atualizado_em DateTime @updatedAt
-
-  usuario   Usuario             @relation(fields: [usuario_id], references: [id])
-  academias ProfessorAcademia[]
-  alunos    Aluno[]
+  criado_em     DateTime            @default(now())
+  atualizado_em DateTime            @updatedAt
+  alunos        Aluno[]
+  academias     ProfessorAcademia[]
+  usuario       Usuario             @relation(fields: [usuario_id], references: [id])
 
   @@map("professores")
 }
@@ -142,72 +82,66 @@ model ProfessorAcademia {
   status        VinculoStatus @default(PENDENTE_ACADEMIA)
   criado_em     DateTime      @default(now())
   atualizado_em DateTime      @updatedAt
-
-  professor Professor @relation(fields: [professor_id], references: [id])
-  academia  Academia  @relation(fields: [academia_id], references: [id])
+  academia      Academia      @relation(fields: [academia_id], references: [id])
+  professor     Professor     @relation(fields: [professor_id], references: [id])
 
   @@unique([professor_id, academia_id])
   @@map("professor_academia")
 }
 
-// ─── Aluno ────────────────────────────────────────────────────────────────────
-
 model Aluno {
-  id                       String       @id @default(cuid())
-  usuario_id               String       @unique
-  professor_id             String? // null = modo autogestão
+  id                       String                        @id @default(cuid())
+  usuario_id               String                        @unique
+  professor_id             String?
   academia_id              String?
-  data_nascimento          DateTime?
-  peso_kg                  Float?
+  criado_em                DateTime                      @default(now())
+  atualizado_em            DateTime                      @updatedAt
   altura_cm                Float?
-  sexo                     Sexo?
-  objetivo_treino          String?
-  nivel_treino             String?
-  restricoes               String[]     @default([])
-  visibilidade_padrao      Visibilidade @default(AMIGOS)
-  permite_busca_email      Boolean      @default(true)
   consentiu_feed_social_em DateTime?
-  criado_em                DateTime     @default(now())
-  atualizado_em            DateTime     @updatedAt
-
-  usuario           Usuario                       @relation(fields: [usuario_id], references: [id])
-  professor         Professor?                    @relation(fields: [professor_id], references: [id])
-  academia          Academia?                     @relation(fields: [academia_id], references: [id])
-  treinos           Treino[]
-  medidas           MedidaCorporal[]
-  notificacoes      Notificacao[]
-  mensagensEnviadas MensagemMotivacionalEnviada[]
-  correlacao        CorrelacaoDesempenho?
+  data_nascimento          DateTime?
+  permite_busca_email      Boolean                       @default(true)
+  peso_kg                  Float?
+  sexo                     Sexo?
+  visibilidade_padrao      Visibilidade                  @default(AMIGOS)
+  nivel_treino             String?
+  objetivo_treino          String?
+  restricoes               String[]                      @default([])
+  academia                 Academia?                     @relation(fields: [academia_id], references: [id])
+  professor                Professor?                    @relation(fields: [professor_id], references: [id])
+  usuario                  Usuario                       @relation(fields: [usuario_id], references: [id])
+  avaliacoes               AvaliacaoFisica[]
+  correlacao               CorrelacaoDesempenho?
+  medidas                  MedidaCorporal[]
+  mensagensEnviadas        MensagemMotivacionalEnviada[]
+  notificacoes             Notificacao[]
+  treinos                  Treino[]
 
   @@map("alunos")
 }
 
-// ─── Treino ───────────────────────────────────────────────────────────────────
-
 model Treino {
-  id                        String       @id @default(cuid())
+  id                        String              @id @default(cuid())
   aluno_id                  String
-  nome                      String // ex.: "Treino A — Peito e Tríceps"
-  dias_semana               Int[] // 0=Dom, 1=Seg, ..., 6=Sáb
-  status                    TreinoStatus @default(CADASTRADO)
-  avaliacao_dificuldade     String? // FACIL, MODERADO, INTENSO, MUITO_INTENSO
-  is_template               Boolean      @default(false)
-  criado_por_ia             Boolean      @default(false)
+  nome                      String
+  dias_semana               Int[]
+  status                    TreinoStatus        @default(CADASTRADO)
   iniciado_em               DateTime?
   finalizado_em             DateTime?
-  /// Última interação na sessão (início ou série registrada)
-  ultima_atividade_em       DateTime?
+  criado_em                 DateTime            @default(now())
+  atualizado_em             DateTime            @updatedAt
+  avaliacao_dificuldade     String?
+  is_template               Boolean             @default(false)
+  criado_por_ia             Boolean             @default(false)
   /// Evita spam do push de ociosidade
   notificado_inatividade_em DateTime?
   /// Push único quando sessão passa de 60 min
   notificado_longo_em       DateTime?
-  criado_em                 DateTime     @default(now())
-  atualizado_em             DateTime     @updatedAt
-
-  aluno      Aluno               @relation(fields: [aluno_id], references: [id])
-  exercicios TreinoExercicio[]
-  historico  TreinoHistorico[]
-  execucoes  ExecucaoExercicio[]
+  /// Última interação na sessão (início ou série registrada)
+  ultima_atividade_em       DateTime?
+  execucoes                 ExecucaoExercicio[]
+  exercicios                TreinoExercicio[]
+  historico                 TreinoHistorico[]
+  aluno                     Aluno               @relation(fields: [aluno_id], references: [id])
 
   @@map("treinos")
 }
@@ -218,110 +152,100 @@ model TreinoHistorico {
   treino_id        String
   status_anterior  TreinoStatus
   status_novo      TreinoStatus
-  ator_id          String // usuario_id de quem acionou (ou "SISTEMA")
+  ator_id          String
   ator_tipo        TreinoAtor
   timestamp        DateTime     @default(now())
-  duracao_segundos Int? // duração da sessão em segundos (preenchido em CONCLUIDO)
-
-  treino Treino @relation(fields: [treino_id], references: [id])
+  duracao_segundos Int?
+  treino           Treino       @relation(fields: [treino_id], references: [id])
 
   @@map("treino_historico")
 }
 
-// ─── Exercício ────────────────────────────────────────────────────────────────
-
 model Exercicio {
-  id                   String   @id @default(cuid())
-  nome                 String
-  maquina              String?
-  dica                 String?  @db.Text
-  imagem_url           String?
-  gif_url              String? // URL do GIF animado
-  descricao_pt         String?  @db.Text // descrição completa em português
-  passos_pt            String[] // passos de execução em português
-  musculo_alvo         String? // músculo alvo principal
-  musculos_secundarios String[] // músculos secundários
-  nivel                String?
-  grupo_muscular       String?
-  equipamento          String?
-  criado_em            DateTime @default(now())
-  atualizado_em        DateTime @updatedAt
-
-  treinos                 TreinoExercicio[]
+  id                      String                 @id @default(cuid())
+  nome                    String
+  maquina                 String?
+  dica                    String?
+  imagem_url              String?
+  criado_em               DateTime               @default(now())
+  atualizado_em           DateTime               @updatedAt
+  equipamento             String?
+  grupo_muscular          String?
+  nivel                   String?
+  descricao_pt            String?
+  gif_url                 String?
+  musculo_alvo            String?
+  musculos_secundarios    String[]
+  passos_pt               String[]
   execucoes               ExecucaoExercicio[]
-  planoSessaoExercicios   PlanoSessaoExercicio[] @relation("ExercicioBase")
   planoSessaoAlternativos PlanoSessaoExercicio[] @relation("ExercicioAlternativo")
+  planoSessaoExercicios   PlanoSessaoExercicio[] @relation("ExercicioBase")
+  treinos                 TreinoExercicio[]
 
   @@map("exercicios")
 }
 
 /// Associação Treino ↔ Exercício com ordem, séries e reps prescritas
 model TreinoExercicio {
-  id                String @id @default(cuid())
+  id                String    @id @default(cuid())
   treino_id         String
   exercicio_id      String
   ordem             Int
-  tipo              String @default("PRINCIPAL") // AQUECIMENTO | PRINCIPAL | ALONGAMENTO
-  series            Int    @default(3)
-  repeticoes        Int    @default(12)
+  series            Int       @default(3)
+  repeticoes        Int       @default(12)
   carga_sugerida_kg Float?
-
-  treino    Treino    @relation(fields: [treino_id], references: [id])
-  exercicio Exercicio @relation(fields: [exercicio_id], references: [id])
+  tipo              String    @default("PRINCIPAL")
+  exercicio         Exercicio @relation(fields: [exercicio_id], references: [id])
+  treino            Treino    @relation(fields: [treino_id], references: [id])
 
   @@unique([treino_id, ordem])
   @@map("treino_exercicios")
 }
 
-// ─── Biblioteca de Planos de Treino ──────────────────────────────────────────
-
 model PlanoBiblioteca {
-  id              String   @id @default(cuid())
-  codigo          String   @unique
+  id              String        @id @default(cuid())
+  codigo          String        @unique
   nome            String
-  descricao       String?  @db.Text
-  objetivo        String // HIPERTROFIA | FORCA | EMAGRECIMENTO | SAUDE
-  nivel           String // INICIANTE | INTERMEDIARIO | AVANCADO
-  sexo_alvo       String   @default("AMBOS") // MASCULINO | FEMININO | AMBOS
+  descricao       String?
+  objetivo        String
+  nivel           String
+  sexo_alvo       String        @default("AMBOS")
   dias_por_semana Int
-  split_tipo      String // ABC | ABCD | FULL_BODY | UPPER_LOWER etc.
-  ativo           Boolean  @default(true)
-  criado_em       DateTime @default(now())
-
-  sessoes PlanoSessao[]
+  split_tipo      String
+  ativo           Boolean       @default(true)
+  criado_em       DateTime      @default(now())
+  sessoes         PlanoSessao[]
 
   @@map("planos_biblioteca")
 }
 
 model PlanoSessao {
-  id        String @id @default(cuid())
-  plano_id  String
-  nome      String // "Treino A — Peito, Tríceps e Ombro"
-  dia_label String // "A" | "B" | "C"
-  ordem     Int
-
-  plano      PlanoBiblioteca        @relation(fields: [plano_id], references: [id], onDelete: Cascade)
+  id         String                 @id @default(cuid())
+  plano_id   String
+  nome       String
+  dia_label  String
+  ordem      Int
   exercicios PlanoSessaoExercicio[]
+  plano      PlanoBiblioteca        @relation(fields: [plano_id], references: [id], onDelete: Cascade)
 
   @@map("plano_sessoes")
 }
 
 model PlanoSessaoExercicio {
-  id                       String   @id @default(cuid())
+  id                       String      @id @default(cuid())
   sessao_id                String
   exercicio_id             String
   ordem                    Int
-  tipo                     String   @default("PRINCIPAL")
-  series                   Int      @default(3)
-  repeticoes_min           Int      @default(8)
-  repeticoes_max           Int      @default(12)
+  tipo                     String      @default("PRINCIPAL")
+  series                   Int         @default(3)
+  repeticoes_min           Int         @default(8)
+  repeticoes_max           Int         @default(12)
   carga_sugerida_kg        Float?
-  restricoes_incompativeis String[] @default([])
+  restricoes_incompativeis String[]    @default([])
   alternativo_id           String?
-
-  sessao      PlanoSessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
-  exercicio   Exercicio   @relation("ExercicioBase", fields: [exercicio_id], references: [id])
-  alternativo Exercicio?  @relation("ExercicioAlternativo", fields: [alternativo_id], references: [id])
+  alternativo              Exercicio?  @relation("ExercicioAlternativo", fields: [alternativo_id], references: [id])
+  exercicio                Exercicio   @relation("ExercicioBase", fields: [exercicio_id], references: [id])
+  sessao                   PlanoSessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
   @@unique([sessao_id, ordem])
   @@map("plano_sessao_exercicios")
@@ -329,21 +253,18 @@ model PlanoSessaoExercicio {
 
 /// Registro de execução real pelo aluno (carga e reps realizadas)
 model ExecucaoExercicio {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   treino_id     String
   exercicio_id  String
   serie_numero  Int
   repeticoes    Int
   carga_kg      Float
-  registrado_em DateTime @default(now())
-
-  treino    Treino    @relation(fields: [treino_id], references: [id])
-  exercicio Exercicio @relation(fields: [exercicio_id], references: [id])
+  registrado_em DateTime  @default(now())
+  exercicio     Exercicio @relation(fields: [exercicio_id], references: [id])
+  treino        Treino    @relation(fields: [treino_id], references: [id])
 
   @@map("execucao_exercicios")
 }
-
-// ─── Medidas Corporais ────────────────────────────────────────────────────────
 
 model MedidaCorporal {
   id             String   @id @default(cuid())
@@ -352,16 +273,13 @@ model MedidaCorporal {
   altura_cm      Float?
   percentual_bf  Float?
   massa_magra_kg Float?
-  imc            Float?
   data           DateTime @default(now())
   observacao     String?
-
-  aluno Aluno @relation(fields: [aluno_id], references: [id])
+  imc            Float?
+  aluno          Aluno    @relation(fields: [aluno_id], references: [id])
 
   @@map("medidas_corporais")
 }
-
-// ─── Notificações ─────────────────────────────────────────────────────────────
 
 model Notificacao {
   id        String          @id @default(cuid())
@@ -371,91 +289,49 @@ model Notificacao {
   dados     Json?
   lida      Boolean         @default(false)
   criado_em DateTime        @default(now())
-
-  aluno Aluno @relation(fields: [aluno_id], references: [id])
+  aluno     Aluno           @relation(fields: [aluno_id], references: [id])
 
   @@map("notificacoes")
 }
 
-enum NotificacaoTipo {
-  PROFESSOR_ATRIBUIDO
-  NOVO_TREINO
-}
-
-// ─── Módulo Social ──────────────────────────────────────────────────────────
-
-enum FriendshipStatus {
-  PENDENTE
-  ACEITO
-  BLOQUEADO
-}
-
-enum PostTipo {
-  TREINO_INICIADO
-  TREINO_CONCLUIDO
-  RECORDE_PESSOAL
-  BADGE_CONQUISTADO
-  DESAFIO_COMPLETO
-}
-
-enum Visibilidade {
-  AMIGOS
-  PUBLICO
-  PRIVADO
-}
-
-enum ClubTipo {
-  ACADEMIA
-  TEMATICO
-}
-
-// ─── Mensagens Motivacionais ──────────────────────────────────────────────────
-
 model MensagemMotivacional {
-  id         String   @id @default(cuid())
+  id         String                        @id @default(cuid())
   titulo     String
-  resumo     String   @db.Text
+  resumo     String
   url_estudo String
-  criado_em  DateTime @default(now())
-
-  enviadas MensagemMotivacionalEnviada[]
+  criado_em  DateTime                      @default(now())
+  enviadas   MensagemMotivacionalEnviada[]
 
   @@map("mensagens_motivacionais")
 }
 
 /// Controle de rotação circular por aluno (UC-28 / UC-33)
 model MensagemMotivacionalEnviada {
-  id          String   @id @default(cuid())
+  id          String               @id @default(cuid())
   aluno_id    String
   mensagem_id String
-  enviada_em  DateTime @default(now())
-
-  aluno    Aluno                @relation(fields: [aluno_id], references: [id])
-  mensagem MensagemMotivacional @relation(fields: [mensagem_id], references: [id])
+  enviada_em  DateTime             @default(now())
+  aluno       Aluno                @relation(fields: [aluno_id], references: [id])
+  mensagem    MensagemMotivacional @relation(fields: [mensagem_id], references: [id])
 
   @@map("mensagens_motivacionais_enviadas")
 }
-
-// ─── Correlações de Desempenho ──────────────────────────────────────────────
 
 /// Cache de correlações (UC-32) — worker recalcula, endpoint lê
 /// Sugere atualização quando calculado_em > 30 dias
 model CorrelacaoDesempenho {
   id                   String   @id @default(cuid())
   aluno_id             String   @unique
-  peso_volume_r        Float? // Pearson r: variação de peso vs volume de carga
-  bf_volume_r          Float? // Pearson r: variação de %BF vs volume de carga
-  massa_magra_volume_r Float? // Pearson r: variação de massa magra vs volume
-  volume_semanal       Json // [{ semana, volumeTotalKg, treinos }]
-  pontos               Json // [{ data, deltaPesoKg, deltaBf, deltaMassaMagraKg, volumeAcumuladoKg }]
+  peso_volume_r        Float?
+  bf_volume_r          Float?
+  massa_magra_volume_r Float?
+  volume_semanal       Json
+  pontos               Json
   calculado_em         DateTime @default(now())
-
-  aluno Aluno @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+  aluno                Aluno    @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
 
   @@map("correlacoes_desempenho")
 }
-
-// ─── Módulo Social ───────────────────────────────────────────────────────────
 
 model SocialFriendship {
   id        String           @id @default(cuid())
@@ -472,18 +348,18 @@ model SocialFriendship {
 model SocialPost {
   id                    String       @id @default(cuid())
   aluno_id              String
-  treino_id             String? // referência lógica, sem FK formal
+  treino_id             String?
   clube_id              String?
   autor_nome            String
   autor_foto_url        String?
   grupo_muscular_resumo String?
-  academia_nome         String? // desnormalizado para evitar JOIN no feed
   tipo                  PostTipo
   visibilidade          Visibilidade
   midia_url             String?
   curtidas_count        Int          @default(0)
   comentarios_count     Int          @default(0)
   criado_em             DateTime     @default(now())
+  academia_nome         String?
 
   @@unique([treino_id, aluno_id, tipo])
   @@index([aluno_id, criado_em])
@@ -517,7 +393,7 @@ model SocialComment {
 
 model SocialClub {
   id          String   @id @default(cuid())
-  academia_id String?  @unique // 1:1 com academia, null se TEMATICO
+  academia_id String?  @unique
   nome        String
   tipo        ClubTipo @default(ACADEMIA)
   criado_em   DateTime @default(now())
@@ -530,10 +406,136 @@ model SocialClubMember {
   clube_id     String
   aluno_id     String
   xp_semana    Int      @default(0)
-  xp_reset_ano Int      @default(2026)
   criado_em    DateTime @default(now())
+  xp_reset_ano Int      @default(2026)
 
   @@unique([clube_id, aluno_id])
   @@index([clube_id, xp_semana])
   @@map("social_club_members")
+}
+
+model AvaliacaoFisica {
+  id                 String          @id @default(cuid())
+  aluno_id           String
+  avaliador_id       String
+  data               DateTime        @default(now())
+  status             AvaliacaoStatus @default(CONCLUIDA)
+  parq_positivo      Boolean         @default(false)
+  risco_cardiaco     RiscoCardiaco   @default(BAIXO)
+  liberado_teste_max Boolean         @default(true)
+  anamnese_json      Json?
+  pas                Int?
+  pad                Int?
+  fc_repouso         Int?
+  peso_kg            Float?
+  estatura_m         Float?
+  imc                Float?
+  rcq                Float?
+  perimetros_cm      Json?
+  protocolo_dobras   String?
+  soma_dobras_mm     Float?
+  densidade_corporal Float?
+  percentual_gordura Float?
+  massa_gorda_kg     Float?
+  massa_magra_kg     Float?
+  classificacao_gc   String?
+  postural_json      Json?
+  flexibilidade_json Json?
+  cardio_json        Json?
+  neuro_json         Json?
+  laudo_markdown     String?
+  prescricao_json    Json?
+  criado_em          DateTime        @default(now())
+  atualizado_em      DateTime        @updatedAt
+  aluno              Aluno           @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+  avaliador          Usuario         @relation(fields: [avaliador_id], references: [id])
+
+  @@index([aluno_id])
+  @@index([avaliador_id])
+  @@map("avaliacoes_fisicas")
+}
+
+enum Role {
+  ROOT
+  ACADEMIA
+  PROFESSOR
+  ALUNO
+}
+
+enum AcademiaStatus {
+  PENDENTE
+  ATIVO
+  REJEITADO
+}
+
+enum Sexo {
+  MASCULINO
+  FEMININO
+}
+
+/// Aprovação em duas camadas: Academia → Root
+enum VinculoStatus {
+  PENDENTE_ACADEMIA
+  PENDENTE_ROOT
+  ATIVO
+  REJEITADO
+  REMOVIDO
+}
+
+enum TreinoStatus {
+  CADASTRADO
+  ENVIADO
+  ACEITO
+  RECUSADO
+  EM_ABERTO
+  EM_EXECUCAO
+  CONCLUIDO
+}
+
+enum TreinoAtor {
+  ALUNO
+  PROFESSOR
+  SISTEMA
+  ACADEMIA
+}
+
+enum NotificacaoTipo {
+  PROFESSOR_ATRIBUIDO
+  NOVO_TREINO
+}
+
+enum FriendshipStatus {
+  PENDENTE
+  ACEITO
+  BLOQUEADO
+}
+
+enum PostTipo {
+  TREINO_INICIADO
+  TREINO_CONCLUIDO
+  RECORDE_PESSOAL
+  BADGE_CONQUISTADO
+  DESAFIO_COMPLETO
+}
+
+enum Visibilidade {
+  AMIGOS
+  PUBLICO
+  PRIVADO
+}
+
+enum ClubTipo {
+  ACADEMIA
+  TEMATICO
+}
+
+enum AvaliacaoStatus {
+  RASCUNHO
+  CONCLUIDA
+}
+
+enum RiscoCardiaco {
+  BAIXO
+  MODERADO
+  ALTO
 }
