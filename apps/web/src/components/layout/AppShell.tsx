@@ -31,11 +31,19 @@ import {
   TrophyIcon,
   PaletteIcon,
   MoreHorizontalIcon,
+  PhoneIcon,
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
 import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
 import { EndorfinappLogo } from '../branding'
+
+const WHATSAPP_SUPORTE = {
+  numero: '5588993573809',
+  get url() {
+    return `https://wa.me/${this.numero}?text=Olá!%20Preciso%20de%20suporte%20no%20EndorfinApp.`
+  },
+}
 
 interface NavItem {
   to: string
@@ -536,6 +544,17 @@ export default function AppShell() {
                         <KeyIcon className="h-4 w-4 text-text-muted" />
                         Alterar Senha
                       </button>
+                      <a
+                        id="menu-whatsapp-suporte"
+                        href={WHATSAPP_SUPORTE.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#25D366] hover:bg-[#25D366]/10 transition-colors cursor-pointer"
+                      >
+                        <PhoneIcon className="h-4 w-4" />
+                        Suporte via WhatsApp
+                      </a>
                       <div className="my-1 border-t border-border" />
                       <button
                         onClick={handleLogout}
@@ -634,6 +653,18 @@ export default function AppShell() {
                   <ShieldIcon className="h-4 w-4" />
                   <span>Privacidade</span>
                 </button>
+
+                <a
+                  id="sheet-whatsapp-suporte"
+                  href={WHATSAPP_SUPORTE.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMoreSheetOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#25D366] hover:text-[#25D366]/80 cursor-pointer"
+                >
+                  <PhoneIcon className="h-4 w-4" />
+                  <span>Suporte WhatsApp</span>
+                </a>
 
                 <button
                   type="button"
