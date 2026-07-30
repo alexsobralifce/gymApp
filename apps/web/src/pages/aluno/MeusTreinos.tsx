@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Treino, Exercicio, TreinoExercicio, HistoricoDia } from '../../types/api'
@@ -7,6 +7,8 @@ import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, PencilIcon, Trash2Icon } from '../../components/icons/Icon'
 import EmptyState from '../../components/ui/EmptyState'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
+import { preloadWorkoutGifs, extractWorkoutGifUrls } from '../../lib/offlineGifPreloader'
 import { formatExerciseStep } from '../../lib/exerciseFormatter'
 
 function formatMes(ano: number, mes: number) {
@@ -25,6 +27,8 @@ export default function AlunoMeusTreinos() {
   const [hasProfessor, setHasProfessor] = useState<boolean | null>(null)
   const [deletingTreino, setDeletingTreino] = useState<Treino | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [gifUrls, setGifUrls] = useState<string[]>([])
+  const preloadedRef = useRef(false)
   const navigate = useNavigate()
 
   const hoje = useMemo(() => new Date(), [])
@@ -45,6 +49,22 @@ export default function AlunoMeusTreinos() {
         )
         .sort((a, b) => a.nome.localeCompare(b.nome))
       setTreinos(disponiveis)
+
+      // Extrair URLs de GIFs de todos os treinos carregados e iniciar pré-carga
+      const allUrls: string[] = []
+      for (const t of disponiveis) {
+        if (t.exercicios) {
+          allUrls.push(...extractWorkoutGifUrls(t.exercicios))
+        }
+      }
+      const uniqueUrls = [...new Set(allUrls)]
+      setGifUrls(uniqueUrls)
+
+      // Iniciar pré-carga em background (uma vez)
+      if (uniqueUrls.length > 0 && !preloadedRef.current) {
+        preloadedRef.current = true
+        preloadWorkoutGifs(uniqueUrls).catch(() => {})
+      }
     } catch (err) {
       console.error(err)
     } finally {
@@ -65,6 +85,27 @@ export default function AlunoMeusTreinos() {
     carregarTreinos()
     carregarHistorico(mesCalendario.ano, mesCalendario.mes)
   }, [carregarTreinos, carregarHistorico, mesCalendario])
+
+  // Injetar <link rel="preload"> para agilizar o cache do navegador nos primeiros GIFs
+  useEffect(() => {
+    if (gifUrls.length === 0) return
+    const links: HTMLLinkElement[] = []
+    // Pré-carregar os primeiros 6 GIFs (2 treinos completos)
+    const urlsToPreload = gifUrls.slice(0, 6)
+    for (const url of urlsToPreload) {
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'image'
+      link.href = url
+      document.head.appendChild(link)
+      links.push(link)
+    }
+    return () => {
+      for (const link of links) {
+        document.head.removeChild(link)
+      }
+    }
+  }, [gifUrls])
 
   const diasComTreino = useMemo(() => {
     const set = new Set<string>()
@@ -214,6 +255,11 @@ export default function AlunoMeusTreinos() {
         </div>
       )}
 
+      {/* Indicador de pré-carga de GIFs */}
+      {treino.exercicios && (
+        <OfflinePreloadBadge exercicios={treino.exercicios} />
+      )}
+
       {/* Calendário de Treinos */}
       <div className="bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
@@ -315,17 +361,20 @@ export default function AlunoMeusTreinos() {
               onClick={() => setSelectedExercicio(ex.exercicio)}
               className="flex gap-4 p-3.5 bg-surface rounded-2xl border border-surface-input items-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] select-none group"
             >
-              {/* GIF animado real ou imagem estática */}
+              {/* GIF animado real ou imagem estática com lazy loading e prioridade */}
               {ex.exercicio.gif_url ? (
                 <img
                   src={ex.exercicio.gif_url}
                   alt={ex.exercicio.nome}
+                  loading="lazy"
+                  {...(ex.ordem <= 3 ? { fetchpriority: 'high' as any } : {})}
                   className="w-16 h-16 rounded-xl border border-surface-input shrink-0 object-cover bg-black"
                 />
               ) : ex.exercicio.imagem_url ? (
                 <img
                   src={ex.exercicio.imagem_url}
                   alt={ex.exercicio.nome}
+                  loading="lazy"
                   className="w-16 h-16 rounded-xl border border-surface-input shrink-0 object-cover bg-surface-input"
                 />
               ) : (
@@ -473,6 +522,7 @@ export default function AlunoMeusTreinos() {
                 <img
                   src={selectedExercicio.gif_url}
                   alt={selectedExercicio.nome}
+                  loading="lazy"
                   className="w-full h-64 sm:h-72 object-contain animate-gif-enter"
                 />
               ) : selectedExercicio.imagem_url ? (
