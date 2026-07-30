@@ -43,9 +43,10 @@ export function DebugMenuTrigger({ onClick }: { onClick: () => void }) {
 function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
   if (!snap) return null
   const ok = !snap.mismatch
+  const isDay = snap.dataMode === 'day'
   return (
     <div
-      className={`mx-3 mt-3 rounded-xl border p-3 text-xs space-y-1.5 ${
+      className={`mx-3 mt-3 rounded-xl border p-3 text-xs space-y-2 ${
         ok
           ? 'border-success/30 bg-success/5'
           : 'border-destructive/40 bg-destructive/10'
@@ -57,6 +58,23 @@ function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
           {ok ? 'OK' : 'FALHA'}
         </span>
       </div>
+
+      {/* Amostra visual grande: se ESTE retângulo não for branco no Dia, o problema é cache/navegador */}
+      <div
+        className="rounded-lg border-2 border-dashed border-border p-3 text-center"
+        style={{
+          backgroundColor: snap.computed.surface || '#ccc',
+          color: snap.computed.text || '#000',
+        }}
+      >
+        <p className="text-sm font-bold">
+          {isDay ? 'DIA deve ser BRANCO/CLARO' : 'NOITE deve ser ESCURO'}
+        </p>
+        <p className="font-mono text-[10px] opacity-80 mt-1">
+          surface={snap.computed.surface || '—'} · body={snap.bodyBg || '—'}
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px] text-text-muted">
         <span>data-theme</span>
         <span className="text-text font-semibold">{snap.dataTheme ?? '—'}</span>
@@ -64,21 +82,19 @@ function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
         <span className="text-text font-semibold">{snap.dataMode ?? '—'}</span>
         <span>ls mode</span>
         <span className="text-text">{snap.localStorageMode ?? '—'}</span>
-        <span>--color-surface</span>
-        <span className="text-text font-semibold flex items-center gap-1.5">
-          <span
-            className="inline-block h-3 w-3 rounded border border-border shrink-0"
-            style={{ backgroundColor: snap.computed.surface || 'transparent' }}
-          />
-          {snap.computed.surface || '—'}
-        </span>
-        <span>body bg</span>
-        <span className="text-text truncate">{snap.bodyBg || '—'}</span>
+        <span>prefers dark</span>
+        <span className="text-text">{String(snap.prefersColorSchemeDark)}</span>
         <span>boot eff</span>
         <span className="text-text">{snap.bootstrap?.resolvedEff ?? '—'}</span>
       </div>
       {snap.mismatch && (
         <p className="text-destructive font-medium pt-1 leading-snug">{snap.mismatch}</p>
+      )}
+      {ok && isDay && (
+        <p className="text-[10px] text-text-muted leading-snug">
+          O app reporta fundo claro. Se a tela ainda parece escura: feche todas as abas do site,
+          limpe dados do site no Chrome, reabra (cache do PWA).
+        </p>
       )}
     </div>
   )

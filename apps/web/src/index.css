@@ -76,13 +76,19 @@
 ╚══════════════════════════════════════════════════════════╝
 */
 
-/* Browser/WebView: suportamos os dois esquemas; o modo ativo força light|dark */
+/*
+ * Chrome Android "Auto Dark Mode" / Force Dark escurece páginas claras
+ * quando o SO está em dark — MESMO com CSS vars claras (getComputedStyle
+ * ainda reporta o valor original). Opt-out: color-scheme: only light|dark.
+ * Ref: https://developer.chrome.com/blog/auto-dark-theme
+ */
 html {
   color-scheme: light dark;
 }
 
 /* ─── Modo Noite (fundo escuro) — NÃO usar :root aqui ─── */
 html[data-mode="night"] {
+  color-scheme: only dark;
   color-scheme: dark;
 
   --color-glass-bg: rgba(18, 32, 64, 0.92);
@@ -108,27 +114,29 @@ html[data-mode="night"] {
 
 /* ─── Modo Dia (fundo claro) — idêntico em qualquer viewport ─── */
 html[data-mode="day"] {
+  /* "only light" bloqueia Auto Dark do Chrome Android */
+  color-scheme: only light;
   color-scheme: light;
 
-  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-glass-bg: rgba(255, 255, 255, 0.92);
   --color-menu-hover: rgba(10, 22, 40, 0.06);
-  --color-menu-border: #D5D8E0;
-  --color-surface: #F2F4F7;
-  --color-surface-card: #F9FAFB;
-  --color-surface-input: #EBEDF1;
+  --color-menu-border: #E2E5EB;
+  --color-surface: #FFFFFF;
+  --color-surface-card: #F4F6F9;
+  --color-surface-input: #EEF1F5;
   --color-text: #0A1628;
   --color-text-muted: #4A5A72;
   --color-text-disabled: #8A96A8;
-  --color-background: #F2F4F7;
+  --color-background: #FFFFFF;
   --color-foreground: #0A1628;
-  --color-card: #F9FAFB;
+  --color-card: #F4F6F9;
   --color-card-foreground: #0A1628;
-  --color-secondary: #EBEDF1;
+  --color-secondary: #EEF1F5;
   --color-secondary-foreground: #0A1628;
-  --color-muted: #EEF0F3;
+  --color-muted: #F0F2F5;
   --color-muted-foreground: #4A5A72;
-  --color-border: #D5D8E0;
-  --color-input: #EBEDF1;
+  --color-border: #E2E5EB;
+  --color-input: #EEF1F5;
 }
 
 /* Fallback se data-mode ausente (antes do script inline) — escuro seguro */
@@ -155,11 +163,32 @@ html:not([data-mode]) {
   --color-input: #1A2D52;
 }
 
-/* html/body: fundo e texto sempre via tokens (mobile WebView + desktop) */
+/* html/body/#root: fundo via tokens — !important vence utilities e force-dark residual */
 html,
-body {
-  background-color: var(--color-surface);
-  color: var(--color-text);
+body,
+#root {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+/* Reforço anti Auto-Dark: em day, nenhum ancestral declara suporte a dark */
+html[data-mode="day"],
+html[data-mode="day"] body,
+html[data-mode="day"] #root {
+  color-scheme: only light;
+  color-scheme: light;
+  background-color: #FFFFFF !important;
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+html[data-mode="night"],
+html[data-mode="night"] body,
+html[data-mode="night"] #root {
+  color-scheme: only dark;
+  color-scheme: dark;
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
 }
 
 /* ─── 1. Lima (Lime) ─── */
@@ -176,6 +205,7 @@ html[data-theme="lime"] {
 }
 
 html[data-theme="lime"][data-mode="night"] {
+  color-scheme: only dark;
   color-scheme: dark;
   --color-glass-bg: rgba(18, 32, 64, 0.92);
   --color-menu-hover: rgba(255, 255, 255, 0.08);
@@ -199,6 +229,7 @@ html[data-theme="lime"][data-mode="night"] {
 }
 
 html[data-theme="lime"][data-mode="day"] {
+  color-scheme: only light;
   color-scheme: light;
   --color-primary: #6B9A00;
   --color-primary-dark: #557A00;
@@ -210,21 +241,21 @@ html[data-theme="lime"][data-mode="day"] {
   --color-accent-foreground: #FFFFFF;
   --color-ring: #6B9A00;
 
-  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-glass-bg: rgba(255, 255, 255, 0.92);
   --color-menu-hover: rgba(10, 22, 40, 0.06);
-  --color-menu-border: #D5D8E0;
-  --color-surface: #F2F4F7;
-  --color-surface-card: #F9FAFB;
-  --color-surface-input: #EBEDF1;
-  --color-background: #F2F4F7;
-  --color-card: #F9FAFB;
+  --color-menu-border: #E2E5EB;
+  --color-surface: #FFFFFF;
+  --color-surface-card: #F4F6F9;
+  --color-surface-input: #EEF1F5;
+  --color-background: #FFFFFF;
+  --color-card: #F4F6F9;
   --color-card-foreground: #0A1628;
-  --color-secondary: #EBEDF1;
+  --color-secondary: #EEF1F5;
   --color-secondary-foreground: #0A1628;
-  --color-muted: #EEF0F3;
+  --color-muted: #F0F2F5;
   --color-muted-foreground: #4A5A72;
-  --color-border: #D5D8E0;
-  --color-input: #EBEDF1;
+  --color-border: #E2E5EB;
+  --color-input: #EEF1F5;
   --color-text: #0A1628;
   --color-text-muted: #4A5A72;
   --color-text-disabled: #8A96A8;
@@ -245,6 +276,7 @@ html[data-theme="red"] {
 }
 
 html[data-theme="red"][data-mode="night"] {
+  color-scheme: only dark;
   color-scheme: dark;
   --color-glass-bg: rgba(22, 22, 22, 0.92);
   --color-menu-hover: rgba(255, 255, 255, 0.08);
@@ -268,6 +300,7 @@ html[data-theme="red"][data-mode="night"] {
 }
 
 html[data-theme="red"][data-mode="day"] {
+  color-scheme: only light;
   color-scheme: light;
   --color-primary: #DC2626;
   --color-primary-dark: #B91C1C;
@@ -279,21 +312,21 @@ html[data-theme="red"][data-mode="day"] {
   --color-accent-foreground: #FFFFFF;
   --color-ring: #DC2626;
 
-  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-glass-bg: rgba(255, 255, 255, 0.92);
   --color-menu-hover: rgba(20, 20, 20, 0.06);
-  --color-menu-border: #D8DAE0;
-  --color-surface: #F3F4F5;
-  --color-surface-card: #FAFAFB;
-  --color-surface-input: #ECEDEF;
-  --color-background: #F3F4F5;
-  --color-card: #FAFAFB;
+  --color-menu-border: #E4E5E8;
+  --color-surface: #FFFFFF;
+  --color-surface-card: #F5F5F6;
+  --color-surface-input: #EEEFF1;
+  --color-background: #FFFFFF;
+  --color-card: #F5F5F6;
   --color-card-foreground: #141414;
-  --color-secondary: #ECEDEF;
+  --color-secondary: #EEEFF1;
   --color-secondary-foreground: #141414;
-  --color-muted: #EEF0F2;
+  --color-muted: #F2F2F3;
   --color-muted-foreground: #4A4A4A;
-  --color-border: #D8DAE0;
-  --color-input: #ECEDEF;
+  --color-border: #E4E5E8;
+  --color-input: #EEEFF1;
   --color-text: #141414;
   --color-text-muted: #4A4A4A;
   --color-text-disabled: #949494;
@@ -314,6 +347,7 @@ html[data-theme="violet"] {
 }
 
 html[data-theme="violet"][data-mode="night"] {
+  color-scheme: only dark;
   color-scheme: dark;
   --color-glass-bg: rgba(16, 16, 18, 0.92);
   --color-menu-hover: rgba(255, 255, 255, 0.08);
@@ -337,6 +371,7 @@ html[data-theme="violet"][data-mode="night"] {
 }
 
 html[data-theme="violet"][data-mode="day"] {
+  color-scheme: only light;
   color-scheme: light;
   --color-primary: #B794F6;
   --color-primary-dark: #9F7AEA;
@@ -348,21 +383,21 @@ html[data-theme="violet"][data-mode="day"] {
   --color-accent-foreground: #FFFFFF;
   --color-ring: #B794F6;
 
-  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-glass-bg: rgba(255, 255, 255, 0.92);
   --color-menu-hover: rgba(18, 18, 26, 0.06);
-  --color-menu-border: #D4D4E0;
-  --color-surface: #F4F4F7;
-  --color-surface-card: #FBFBFC;
-  --color-surface-input: #ECECF0;
-  --color-background: #F4F4F7;
-  --color-card: #FBFBFC;
+  --color-menu-border: #E0E0EA;
+  --color-surface: #FFFFFF;
+  --color-surface-card: #F5F5F8;
+  --color-surface-input: #EEEFF3;
+  --color-background: #FFFFFF;
+  --color-card: #F5F5F8;
   --color-card-foreground: #12121A;
-  --color-secondary: #ECECF0;
+  --color-secondary: #EEEFF3;
   --color-secondary-foreground: #12121A;
-  --color-muted: #F0F0F4;
+  --color-muted: #F2F2F6;
   --color-muted-foreground: #42425A;
-  --color-border: #D4D4E0;
-  --color-input: #ECECF0;
+  --color-border: #E0E0EA;
+  --color-input: #EEEFF3;
   --color-text: #12121A;
   --color-text-muted: #42425A;
   --color-text-disabled: #7E7E96;
@@ -394,9 +429,10 @@ html[data-theme="orange"][data-mode="night"] {
 }
 
 html[data-theme="orange"][data-mode="day"] {
+  color-scheme: only light;
   color-scheme: light;
-  --color-surface: #F3F4F5;
-  --color-surface-card: #FAFAFB;
+  --color-surface: #FFFFFF;
+  --color-surface-card: #F5F5F6;
   --color-surface-input: #ECEDEF;
   --color-background: #F3F4F5;
   --color-text: #141414;

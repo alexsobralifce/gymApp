@@ -26,9 +26,11 @@ O **ENDORFINAPP** possui um sistema dinâmico de temas baseado em atributos HTML
    - Reavalia a cada 30s quando o relógio cruza 06h/18h.
 
 2. **Dia (`day`):**
-   - Força visual claro sempre (ex. Lima: superfície `#F2F4F7`, cards `#F9FAFB`, texto `#0A1628`).
-   - `color-scheme: light` — desativa Auto Dark Mode de Android/iOS WebView.
+   - Força visual **branco** sempre (superfície `#FFFFFF`, cards `#F4F6F9`, texto `#0A1628`).
+   - `color-scheme: only light` — bloqueia Auto Dark / force-dark do Chrome Android.
    - **Independente do horário e do tema do celular.**
+   - Logs de produção (2026-07-30) já mostravam `bodyBg: rgb(242,244,247)` com mode=day —
+     o motor CSS estava correto; se a UI ainda “parecia escura”, limpar cache PWA/SW.
 
 3. **Noite (`night`):**
    - Força visual escuro sempre (ex. Lima: superfície `#0A1628`, cards `#122040`, texto `#F7F9FC`).

@@ -181,9 +181,9 @@ function readBootstrap(): ThemeBootstrapInfo | null {
 }
 
 const EXPECTED_DAY: Record<string, string> = {
-  lime: '#f2f4f7',
-  red: '#f3f4f5',
-  violet: '#f4f4f7',
+  lime: '#ffffff',
+  red: '#ffffff',
+  violet: '#ffffff',
 }
 
 const EXPECTED_NIGHT: Record<string, string> = {

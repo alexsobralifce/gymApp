@@ -57,10 +57,11 @@
           boot.isDay=eff==='day';
           var isDay=boot.isDay;
           var cs=document.getElementById('meta-color-scheme');
-          if(cs)cs.setAttribute('content',isDay?'light':'dark');
+          /* only light = opt-out Chrome Auto Dark (mesmo com prefers-color-scheme:dark) */
+          if(cs)cs.setAttribute('content',isDay?'only light':'dark');
           var tc=document.getElementById('meta-theme-color');
           if(tc){
-            var surfaces={lime:{day:'#F2F4F7',night:'#0A1628'},red:{day:'#F3F4F5',night:'#0F0F0F'},violet:{day:'#F4F4F7',night:'#0C0C0E'}};
+            var surfaces={lime:{day:'#FFFFFF',night:'#0A1628'},red:{day:'#FFFFFF',night:'#0F0F0F'},violet:{day:'#FFFFFF',night:'#0C0C0E'}};
             var pack=surfaces[t]||surfaces.lime;
             tc.setAttribute('content',isDay?pack.day:pack.night);
           }

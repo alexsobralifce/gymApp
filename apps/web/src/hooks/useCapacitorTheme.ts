@@ -3,9 +3,9 @@ import { useThemeStore } from '../stores/theme'
 import { debugLog } from '../lib/debug'
 
 const DAY_SURFACE_FALLBACK: Record<string, string> = {
-  lime: '#F2F4F7',
-  red: '#F3F4F5',
-  violet: '#F4F4F7',
+  lime: '#FFFFFF',
+  red: '#FFFFFF',
+  violet: '#FFFFFF',
 }
 
 const NIGHT_SURFACE_FALLBACK: Record<string, string> = {
@@ -39,7 +39,8 @@ export function useCapacitorTheme() {
     if (themeColor) themeColor.setAttribute('content', finalSurface)
 
     const colorScheme = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]')
-    if (colorScheme) colorScheme.setAttribute('content', isDay ? 'light' : 'dark')
+    // "only light" impede Chrome Android de reescurecer a página no modo Dia
+    if (colorScheme) colorScheme.setAttribute('content', isDay ? 'only light' : 'dark')
 
     const statusBarMeta = document.querySelector<HTMLMetaElement>(
       'meta[name="apple-mobile-web-app-status-bar-style"]',
