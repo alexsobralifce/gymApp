@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
-    <meta name="theme-color" content="#1A1A1A" id="meta-theme-color" />
+    <meta name="theme-color" content="#0A1628" id="meta-theme-color" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="ENDORFINAPP" />
@@ -19,7 +20,7 @@
     <title>ENDORFINAPP — A Química do Crescimento</title>
     <!-- ⚡ Define tema ANTES do CSS carregar — evita flash de modo noite em celulares -->
     <script>
-      !function(){var e=document.documentElement;try{var t=localStorage.getItem('gymapp_theme')||'lime';var m=localStorage.getItem('gymapp_mode');if(!m||m!=='day'&&m!=='night'){var h=(new Date).getHours();m=h>=6&&h<18?'day':'night'}e.setAttribute('data-theme',t);e.setAttribute('data-mode',m)}catch(o){var h=(new Date).getHours();e.setAttribute('data-theme','lime');e.setAttribute('data-mode',h>=6&&h<18?'day':'night')}}();
+      !function(){var e=document.documentElement;try{var t=localStorage.getItem('gymapp_theme')||'lime';var m=localStorage.getItem('gymapp_mode');if(!m||(m!=='day'&&m!=='night')){var h=(new Date).getHours();m=h>=6&&h<18?'day':'night'}e.setAttribute('data-theme',t);e.setAttribute('data-mode',m);e.style.colorScheme=m==='day'?'light':'dark'}catch(o){var h=(new Date).getHours();e.setAttribute('data-theme','lime');var m=h>=6&&h<18?'day':'night';e.setAttribute('data-mode',m);e.style.colorScheme=m==='day'?'light':'dark'}}();
     </script>
   </head>
   <body class="bg-surface">

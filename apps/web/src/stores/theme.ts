@@ -25,6 +25,7 @@ function applyDom(theme: ThemeBrand, mode: ThemeMode) {
   if (typeof document === 'undefined') return
   document.documentElement.setAttribute('data-theme', theme)
   document.documentElement.setAttribute('data-mode', mode)
+  document.documentElement.style.colorScheme = mode === 'day' ? 'light' : 'dark'
 }
 
 function getAutoModeByTime(): ThemeMode {
