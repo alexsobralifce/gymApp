@@ -31,7 +31,7 @@ No painel do seu projeto no Railway:
    - Renomeie o serviço para `gymapp-api` ou `api` para melhor organização.
    - **Root Directory**: Defina como `apps/api`.
    - **Build Command**: `npm run build` (como definimos o root directory para `apps/api`, ele rodará o build do workspace automaticamente).
-   - **Start Command**: `npx prisma migrate deploy && npm run start` (isso aplicará as migrações no banco PostgreSQL antes de iniciar o servidor).
+   - **Start Command**: `bash railway-start.sh` (esse script aplica migrações, inicia o servidor e roda a sincronização de exercícios em segundo plano sem bloquear).
 
 3. Vá para a aba **Variables** e adicione as seguintes variáveis de ambiente:
    - `PORT`: (Gerada automaticamente pelo Railway).
