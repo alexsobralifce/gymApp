@@ -3,7 +3,9 @@ import { api } from '../../api/client'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import Toast from '../../components/ui/Toast'
-import { RulerIcon, PlusIcon, UserCircleIcon, ClipboardListIcon, DumbbellIcon, ChartLineIcon } from '../../components/icons/Icon'
+import ConfirmModal from '../../components/ui/ConfirmModal'
+import { RulerIcon, PlusIcon, UserCircleIcon, ClipboardListIcon, DumbbellIcon, ChartLineIcon, PencilIcon, TrashIcon } from '../../components/icons/Icon'
+import ReactMarkdown from 'react-markdown'
 
 export default function Avaliacoes() {
   const [alunos, setAlunos] = useState<any[]>([])
@@ -12,6 +14,10 @@ export default function Avaliacoes() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null)
 
   // Laudo / Prescrição / Comparativo Modal state
   const [activeLaudo, setActiveLaudo] = useState<string | null>(null)
@@ -93,7 +99,7 @@ export default function Avaliacoes() {
 
     try {
       setLoading(true)
-      const payload = {
+      const payload: any = {
         alunoId: selectedAluno.id,
         parqPositivo,
         riscoCardiaco: parqPositivo ? 'MODERADO' : 'BAIXO',
@@ -119,8 +125,14 @@ export default function Avaliacoes() {
         neuroJson: carga1Rm && reps1Rm ? { cargaKg: parseFloat(carga1Rm), reps: parseInt(reps1Rm) } : undefined,
       }
 
-      await api.post('/avaliacoes', payload)
-      setToast({ message: 'Avaliação física completa registrada com sucesso!', type: 'success' })
+      if (modalMode === 'edit' && editingId) {
+        await api.patch(`/avaliacoes/${editingId}`, payload)
+        setToast({ message: 'Avaliação física atualizada com sucesso!', type: 'success' })
+      } else {
+        await api.post('/avaliacoes', payload)
+        setToast({ message: 'Avaliação física completa registrada com sucesso!', type: 'success' })
+      }
+
       setShowModal(false)
       carregarAvaliacoes(selectedAluno.id)
       setPesoKg('')
@@ -142,6 +154,81 @@ export default function Avaliacoes() {
       setToast({ message: err.message || 'Erro ao registrar avaliação', type: 'error' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleOpenNovaAvaliacao() {
+    setModalMode('create')
+    setEditingId(null)
+    setPesoKg('')
+    setEstaruraM('')
+    setCinturaCm('')
+    setQuadrilCm('')
+    setPas('')
+    setPad('')
+    setFcRepouso('')
+    setProtocoloDobras('JP7')
+    setTriceps('')
+    setSubescapular('')
+    setPeitoral('')
+    setAxilarMedia('')
+    setSuprailiaca('')
+    setAbdominal('')
+    setCoxa('')
+    setWellsCm('')
+    setCooperMetros('')
+    setCarga1Rm('')
+    setReps1Rm('')
+    setParqPositivo(false)
+    setShowModal(true)
+  }
+
+  function handleOpenEditarAvaliacao(av: any) {
+    setModalMode('edit')
+    setEditingId(av.id)
+    setPesoKg(av.peso_kg ? String(av.peso_kg) : '')
+    setEstaruraM(av.estatura_m ? String(av.estatura_m) : '')
+    setCinturaCm(av.perimetros_cm?.cintura ? String(av.perimetros_cm.cintura) : '')
+    setQuadrilCm(av.perimetros_cm?.quadril ? String(av.perimetros_cm.quadril) : '')
+    setPas(av.pas ? String(av.pas) : '')
+    setPad(av.pad ? String(av.pad) : '')
+    setFcRepouso(av.fc_repouso ? String(av.fc_repouso) : '')
+    setProtocoloDobras(av.protocolo_dobras || 'JP7')
+    
+    // Dobras
+    // Backend returns dobras calculated sum, but we can't reverse engineer easily without storing raw. 
+    // If we haven't stored raw dobras, they might be lost, but for now we reset them if not available.
+    // Ideally the backend stores the raw JSON. Here we try to map if it exists.
+    const dobras = av.dobras_mm || {}
+    setTriceps(dobras.triceps ? String(dobras.triceps) : '')
+    setSubescapular(dobras.subescapular ? String(dobras.subescapular) : '')
+    setPeitoral(dobras.peitoral ? String(dobras.peitoral) : '')
+    setAxilarMedia(dobras.axilar_media ? String(dobras.axilar_media) : '')
+    setSuprailiaca(dobras.suprailiaca ? String(dobras.suprailiaca) : '')
+    setAbdominal(dobras.abdominal ? String(dobras.abdominal) : '')
+    setCoxa(dobras.coxa ? String(dobras.coxa) : '')
+
+    setWellsCm(av.flexibilidade_json?.bancoWellsCm ? String(av.flexibilidade_json.bancoWellsCm) : '')
+    setCooperMetros(av.cardio_json?.cooperDistanciaMetros ? String(av.cardio_json.cooperDistanciaMetros) : '')
+    setCarga1Rm(av.neuro_json?.cargaKg ? String(av.neuro_json.cargaKg) : '')
+    setReps1Rm(av.neuro_json?.reps ? String(av.neuro_json.reps) : '')
+    setParqPositivo(av.parq_positivo || false)
+
+    setShowModal(true)
+  }
+
+  async function handleConfirmDelete() {
+    if (!showConfirmDelete) return
+    try {
+      setLoading(true)
+      await api.delete(`/avaliacoes/${showConfirmDelete}`)
+      setToast({ message: 'Avaliação excluída com sucesso!', type: 'success' })
+      if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
+    } catch (err: any) {
+      setToast({ message: err.message || 'Erro ao excluir avaliação', type: 'error' })
+    } finally {
+      setLoading(false)
+      setShowConfirmDelete(null)
     }
   }
 
@@ -263,7 +350,7 @@ export default function Avaliacoes() {
                     </button>
                   )}
                   <button
-                    onClick={() => setShowModal(true)}
+                    onClick={handleOpenNovaAvaliacao}
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-all shadow-lg shadow-primary/20"
                   >
                     <PlusIcon className="h-5 w-5" />
@@ -279,9 +366,17 @@ export default function Avaliacoes() {
                   {avaliacoes.map((av) => (
                     <div key={av.id} className="p-4 rounded-xl bg-surface border border-border space-y-3">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm">
-                        <span className="font-semibold text-text">
-                          Data: {new Date(av.data).toLocaleDateString('pt-BR')}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold text-text">
+                            Data: {new Date(av.data).toLocaleDateString('pt-BR')}
+                          </span>
+                          <button onClick={() => handleOpenEditarAvaliacao(av)} className="text-text-muted hover:text-primary transition-colors" title="Editar">
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => setShowConfirmDelete(av.id)} className="text-text-muted hover:text-destructive transition-colors" title="Excluir">
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                           <button
                             onClick={() => handleGerarLaudo(av.id)}
@@ -380,9 +475,9 @@ export default function Avaliacoes() {
               <h3 className="text-xl font-bold text-text">Laudo Consolidado da Avaliação</h3>
               <button onClick={() => setActiveLaudo(null)} className="text-text-muted hover:text-text font-bold text-lg">✕</button>
             </div>
-            <pre className="whitespace-pre-wrap font-sans text-sm text-text bg-surface p-4 rounded-xl border border-border leading-relaxed">
-              {activeLaudo}
-            </pre>
+            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-text bg-surface p-4 rounded-xl border border-border">
+              <ReactMarkdown>{activeLaudo}</ReactMarkdown>
+            </div>
             <div className="flex justify-end pt-2">
               <button onClick={() => setActiveLaudo(null)} className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl">Fechar</button>
             </div>
@@ -427,7 +522,9 @@ export default function Avaliacoes() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-card border border-border w-full max-w-2xl rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-text mb-4">Nova Avaliação Física — {selectedAluno?.usuario?.nome}</h3>
+            <h3 className="text-xl font-bold text-text mb-4">
+              {modalMode === 'edit' ? 'Editar Avaliação Física' : 'Nova Avaliação Física'} — {selectedAluno?.usuario?.nome}
+            </h3>
             
             <form onSubmit={handleCriarAvaliacao} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -615,6 +712,14 @@ export default function Avaliacoes() {
           </div>
         </div>
       )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        open={!!showConfirmDelete}
+        title="Excluir Avaliação"
+        message="Tem certeza que deseja excluir esta avaliação física? Esta ação não pode ser desfeita e os dados evolutivos e de comparativos serão removidos do gráfico do aluno."
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowConfirmDelete(null)}
+      />
     </div>
   )
 }

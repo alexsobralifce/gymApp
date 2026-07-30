@@ -73,6 +73,48 @@ export async function avaliacaoRoutes(app: FastifyInstance) {
     }
   )
 
+  // Atualizar avaliação
+  app.patch(
+    '/avaliacoes/:id',
+    { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA, Role.ROOT)] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string }
+      
+      const schema = z.object({
+        parqPositivo: z.boolean().optional(),
+        riscoCardiaco: z.enum(['BAIXO', 'MODERADO', 'ALTO']).optional(),
+        liberadoTesteMax: z.boolean().optional(),
+        anamneseJson: z.any().optional(),
+        pas: z.number().optional(),
+        pad: z.number().optional(),
+        fcRepouso: z.number().optional(),
+        pesoKg: z.number().optional(),
+        estaturaM: z.number().optional(),
+        cinturaCm: z.number().optional(),
+        quadrilCm: z.number().optional(),
+        perimetrosCm: z.any().optional(),
+        protocoloDobras: z.enum(['JP7', 'JP3', 'GUEDES']).optional(),
+        dobrasMm: z.object({
+          triceps: z.number().optional(),
+          subescapular: z.number().optional(),
+          peitoral: z.number().optional(),
+          axilar_media: z.number().optional(),
+          suprailiaca: z.number().optional(),
+          abdominal: z.number().optional(),
+          coxa: z.number().optional(),
+        }).optional(),
+        posturalJson: z.any().optional(),
+        flexibilidadeJson: z.any().optional(),
+        cardioJson: z.any().optional(),
+        neuroJson: z.any().optional(),
+      })
+
+      const data = schema.parse(request.body)
+      const res = await AvaliacaoService.editar(id, data)
+      return reply.send(res)
+    }
+  )
+
   // Excluir avaliação
   app.delete(
     '/avaliacoes/:id',

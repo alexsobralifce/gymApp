@@ -1,4 +1,5 @@
 import { prisma } from '../../../infrastructure/database/prisma.js'
+import { Prisma } from '@prisma/client'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { AvaliacaoMatematicaService, DobrasInput } from './AvaliacaoMatematicaService.js'
 
@@ -164,35 +165,54 @@ export class AvaliacaoService {
     const nome = aluno.usuario.nome
     const data = new Date(av.data).toLocaleDateString('pt-BR')
 
-    const laudo = `# Avaliação Física — ${nome} — ${data}
+    const imc = av.imc ? this.interpretarImc(av.imc) : 'Não avaliado'
 
-## 1. Resumo Executivo
-Avaliação física realizada sob diretrizes ACSM. Aluno(a) com peso de **${av.peso_kg ?? '—'} kg**, estatura de **${av.estatura_m ?? '—'} m**, IMC de **${av.imc ?? '—'}** e percentual de gordura estimado em **${av.percentual_gordura ?? '—'}%** (${av.classificacao_gc || 'Classificação Padrão'}).
+    const laudo = `📋 **AVALIAÇÃO FÍSICA INTEGRADA** — ${nome} — ${data}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## 2. Triagem e Segurança (PAR-Q+)
+## 1. TRIAGEM DE SEGURANÇA (PAR-Q+)
 - **PAR-Q+ Positivo:** ${av.parq_positivo ? 'Sim (Requer atenção / liberação médica)' : 'Não'}
 - **Risco Cardíaco:** ${av.risco_cardiaco}
-- **Pressão Arterial de Repouso:** ${av.pas && av.pad ? `${av.pas}/${av.pad} mmHg` : 'Não aferida'}
-- **Frequência Cardíaca de Repouso:** ${av.fc_repouso ? `${av.fc_repouso} bpm` : 'Não aferida'}
 
-## 3. Composição Corporal & Antropometria
-- **Protocolo de Dobras:** ${av.protocolo_dobras || 'Antropometria Básica'}
-- **Soma das Dobras:** ${av.soma_dobras_mm ? `${av.soma_dobras_mm} mm` : '—'}
-- **Densidade Corporal:** ${av.densidade_corporal ?? '—'}
-- **Massa Gorda:** ${av.massa_gorda_kg ? `${av.massa_gorda_kg} kg` : '—'}
-- **Massa Magra:** ${av.massa_magra_kg ? `${av.massa_magra_kg} kg` : '—'}
-- **Razão Cintura-Quadril (RCQ):** ${av.rcq ?? '—'}
+## 2. SINAIS VITAIS & PRESSÃO ARTERIAL
+- **Pressão Arterial de Repouso:** ${av.pas && av.pad ? av.pas + '/' + av.pad + ' mmHg' : 'Não aferida'}
+- **Frequência Cardíaca de Repouso:** ${av.fc_repouso ? av.fc_repouso + ' bpm' : 'Não aferida'}
 
-## 4. Testes Funcionais & Condicionamento
-- **Flexibilidade (Banco de Wells):** ${(av.flexibilidade_json as any)?.bancoWellsCm ? `${(av.flexibilidade_json as any).bancoWellsCm} cm` : 'Não realizado'}
-- **Capacidade Cardiorrespiratória (Cooper):** ${(av.cardio_json as any)?.cooperDistanciaMetros ? `${(av.cardio_json as any).cooperDistanciaMetros} metros` : 'Não realizado'}
-- **VO₂máx Estimado:** ${(av.cardio_json as any)?.vo2max ? `${(av.cardio_json as any).vo2max} ml/kg/min` : '—'}
-- **Força Máxima (1RM Estimada):** ${(av.neuro_json as any)?.oneRmEstimada ? `${(av.neuro_json as any).oneRmEstimada} kg` : '—'}
+## 3. COMPOSIÇÃO CORPORAL & ANTROPOMETRIA
+- **Peso:** ${av.peso_kg ?? '—'} kg
+- **Estatura:** ${av.estatura_m ?? '—'} m
+- **IMC:** ${av.imc ?? '—'} (${imc})
+- **Percentual de Gordura:** ${av.percentual_gordura ? av.percentual_gordura + '%' : '—'} (${av.classificacao_gc || '—'})
+- **Massa Magra:** ${av.massa_magra_kg ? av.massa_magra_kg + ' kg' : '—'}
+- **Massa Gorda:** ${av.massa_gorda_kg ? av.massa_gorda_kg + ' kg' : '—'}
+${av.soma_dobras_mm ? '- **Protocolo Utilizado:** ' + av.protocolo_dobras + ' (Soma de Dobras: ' + av.soma_dobras_mm + ' mm)' : ''}
 
-## 5. Metas SMART & Recomendações
-1. Manter constância no treinamento de força semanal para preservação de massa magra.
-2. Atentar-se aos volumes de aeróbico baseados nas zonas de FC calculadas.
-3. Reavaliação sugerida em 60 dias para acompanhamento de deltas.
+## 4. CAPACIDADE CARDIORRESPIRATÓRIA (VO₂máx)
+- **Teste Realizado:** Teste de Cooper (12 minutos)
+- **Distância (Metros):** ${(av.cardio_json as any)?.cooperDistanciaMetros ? (av.cardio_json as any).cooperDistanciaMetros + ' metros' : 'Não realizado'}
+- **VO₂máx Estimado:** ${(av.cardio_json as any)?.vo2max ? (av.cardio_json as any).vo2max + ' ml/kg/min' : '—'}
+
+## 5. FORÇA & POTÊNCIA NEUROMUSCULAR (1RM)
+- **Carga / Repetições Testadas:** ${(av.neuro_json as any)?.cargaKg ? (av.neuro_json as any).cargaKg + ' kg para ' + (av.neuro_json as any).reps + ' repetições' : 'Não realizado'}
+- **Força Máxima (1RM Estimada):** ${(av.neuro_json as any)?.oneRmEstimada ? (av.neuro_json as any).oneRmEstimada + ' kg' : '—'}
+
+## 6. FLEXIBILIDADE
+- **Teste Banco de Wells:** ${(av.flexibilidade_json as any)?.bancoWellsCm ? (av.flexibilidade_json as any).bancoWellsCm + ' cm' : 'Não realizado'}
+
+## 7. METAS SMART & CRONOGRAMA DE REAVALIAÇÃO
+1. **Curto Prazo:** Manter constância no treinamento de força semanal para preservação e desenvolvimento de massa magra.
+2. **Médio Prazo:** Adequar volumes de exercício aeróbico baseados na Frequência Cardíaca (se houver monitoramento).
+3. **Reavaliação:** Sugerida uma nova avaliação em 60 a 90 dias para acompanhamento de deltas e progresso.
+
+---
+### 📚 REFERÊNCIAS CIENTÍFICAS
+1. GARBER, C.E. et al. *Quantity and quality of exercise for developing and maintaining cardiorespiratory, musculoskeletal, and neuromotor fitness in apparently healthy adults.* Medicine & Science in Sports & Exercise, v.43, n.7, p.1334-1359, 2011. DOI: 10.1249/MSS.0b013e318213fefb
+2. WORLD HEALTH ORGANIZATION. *Obesity: Preventing and Managing the Global Epidemic.* WHO Technical Report Series, n.894, Geneva, 2000.
+3. JACKSON, A.S.; POLLOCK, M.L. *Generalized equations for predicting body density of men.* British Journal of Nutrition, v.40, n.3, p.497-504, 1978. DOI: 10.1079/BJN19780152
+4. GUEDES, D.P. *Composição corporal: princípios, técnicas e aplicações.* 2.ed. Londrina: APEF, 1994.
+5. COOPER, K.H. *A means of assessing maximal oxygen uptake.* JAMA, v.203, n.3, p.201-204, 1968. DOI: 10.1001/jama.1968.03140030033008
+6. WELLS, K.F.; DILLON, E.K. *The sit and reach – a test of back and leg flexibility.* Research Quarterly, v.23, n.1, p.115-118, 1952.
+7. BRZYCKI, M. *Strength testing: predicting a one-rep max from reps-to-fatigue.* Journal of Physical Education, Recreation & Dance, v.64, n.1, p.88-90, 1993. DOI: 10.1080/07303084.1993.10606684
 `
 
     await prisma.avaliacaoFisica.update({
@@ -201,6 +221,104 @@ Avaliação física realizada sob diretrizes ACSM. Aluno(a) com peso de **${av.p
     })
 
     return { laudo }
+  }
+
+  private static interpretarImc(imc: number) {
+    if (imc < 18.5) return 'Baixo peso'
+    if (imc <= 24.9) return 'Peso normal'
+    if (imc <= 29.9) return 'Sobrepeso'
+    if (imc <= 34.9) return 'Obesidade Grau I'
+    if (imc <= 39.9) return 'Obesidade Grau II'
+    return 'Obesidade Grau III'
+  }
+
+  static async editar(id: string, dto: Partial<CriarAvaliacaoDTO>) {
+    const avaliacaoExistente = await this.obterPorId(id)
+    if (!avaliacaoExistente) throw new NotFoundError('Avaliação não encontrada')
+
+    const aluno = avaliacaoExistente.aluno
+    
+    let imc = avaliacaoExistente.imc
+    let rcq = avaliacaoExistente.rcq
+    let calcResult: any = {
+      somaDobrasMm: avaliacaoExistente.soma_dobras_mm,
+      densidadeCorporal: avaliacaoExistente.densidade_corporal,
+      percentualGordura: avaliacaoExistente.percentual_gordura,
+      massaGordaKg: avaliacaoExistente.massa_gorda_kg,
+      massaMagraKg: avaliacaoExistente.massa_magra_kg,
+      classificacaoGc: avaliacaoExistente.classificacao_gc
+    }
+
+    if (dto.pesoKg !== undefined && dto.estaturaM !== undefined) {
+       const ant = AvaliacaoMatematicaService.calcularAntropometria(dto.pesoKg, dto.estaturaM, dto.cinturaCm, dto.quadrilCm)
+       imc = ant.imc
+       rcq = ant.rcq ?? null
+    }
+
+    if (dto.protocoloDobras && dto.dobrasMm && dto.pesoKg && dto.estaturaM && aluno.data_nascimento && aluno.sexo) {
+      const idade = new Date().getFullYear() - new Date(aluno.data_nascimento).getFullYear()
+      calcResult = AvaliacaoMatematicaService.calcularComposicaoCorporal({
+        pesoKg: dto.pesoKg,
+        estaturaM: dto.estaturaM,
+        idade,
+        sexo: aluno.sexo,
+        cinturaCm: dto.cinturaCm,
+        quadril_cm: dto.quadrilCm,
+        protocolo: dto.protocoloDobras,
+        dobras: dto.dobrasMm,
+      })
+    }
+
+    let processedCardio = dto.cardioJson ?? avaliacaoExistente.cardio_json
+    if (dto.cardioJson?.cooperDistanciaMetros) {
+      const vo2 = AvaliacaoMatematicaService.calcularVo2Cooper(parseFloat(dto.cardioJson.cooperDistanciaMetros))
+      const idade = aluno.data_nascimento ? new Date().getFullYear() - new Date(aluno.data_nascimento).getFullYear() : 30
+      const zonas = AvaliacaoMatematicaService.calcularZonasCardio(idade, dto.fcRepouso ?? avaliacaoExistente.fc_repouso ?? undefined)
+      processedCardio = { ...dto.cardioJson, vo2max: vo2, zonas }
+    }
+
+    let processedNeuro = dto.neuroJson ?? avaliacaoExistente.neuro_json
+    if (dto.neuroJson?.cargaKg && dto.neuroJson?.reps) {
+      const rm1 = AvaliacaoMatematicaService.calcular1RMBrzycki(parseFloat(dto.neuroJson.cargaKg), parseInt(dto.neuroJson.reps))
+      processedNeuro = { ...dto.neuroJson, oneRmEstimada: rm1 }
+    }
+
+    const atualizada = await prisma.avaliacaoFisica.update({
+      where: { id },
+      data: {
+        parq_positivo: dto.parqPositivo ?? avaliacaoExistente.parq_positivo,
+        risco_cardiaco: dto.riscoCardiaco ?? avaliacaoExistente.risco_cardiaco,
+        liberado_teste_max: dto.liberadoTesteMax ?? avaliacaoExistente.liberado_teste_max,
+        anamnese_json: dto.anamneseJson ?? avaliacaoExistente.anamnese_json,
+        pas: dto.pas !== undefined ? dto.pas : avaliacaoExistente.pas,
+        pad: dto.pad !== undefined ? dto.pad : avaliacaoExistente.pad,
+        fc_repouso: dto.fcRepouso !== undefined ? dto.fcRepouso : avaliacaoExistente.fc_repouso,
+        peso_kg: dto.pesoKg !== undefined ? dto.pesoKg : avaliacaoExistente.peso_kg,
+        estatura_m: dto.estaturaM !== undefined ? dto.estaturaM : avaliacaoExistente.estatura_m,
+        imc: imc,
+        rcq: rcq,
+        perimetros_cm: dto.perimetrosCm ?? avaliacaoExistente.perimetros_cm,
+        protocolo_dobras: dto.protocoloDobras ?? avaliacaoExistente.protocolo_dobras,
+        soma_dobras_mm: calcResult.somaDobrasMm,
+        densidade_corporal: calcResult.densidadeCorporal,
+        percentual_gordura: calcResult.percentualGordura,
+        massa_gorda_kg: calcResult.massaGordaKg,
+        massa_magra_kg: calcResult.massaMagraKg,
+        classificacao_gc: calcResult.classificacaoGc,
+        postural_json: dto.posturalJson ?? avaliacaoExistente.postural_json,
+        flexibilidade_json: dto.flexibilidadeJson ?? avaliacaoExistente.flexibilidade_json,
+        cardio_json: processedCardio,
+        neuro_json: processedNeuro,
+        laudo_markdown: null, 
+        prescricao_json: Prisma.DbNull 
+      },
+      include: {
+        aluno: { include: { usuario: { select: { nome: true, email: true } } } },
+        avaliador: { select: { nome: true, email: true } },
+      },
+    })
+
+    return atualizada
   }
 
   static async gerarPrescricao(id: string) {
