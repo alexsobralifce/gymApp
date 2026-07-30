@@ -32,12 +32,19 @@ function getAutoModeByTime(): ThemeMode {
   return hour >= 6 && hour < 18 ? 'day' : 'night'
 }
 
+function safeGetItem(key: string): string | null {
+  try { return localStorage.getItem(key) } catch { return null }
+}
+function safeSetItem(key: string, value: string): void {
+  try { localStorage.setItem(key, value) } catch {}
+}
+
 const getStoredBrand = (): ThemeBrand => {
   if (typeof window === 'undefined') return 'lime'
-  const saved = localStorage.getItem('gymapp_theme')
+  const saved = safeGetItem('gymapp_theme')
   if (saved === 'red' || saved === 'violet' || saved === 'lime') return saved
   if (saved === 'orange') {
-    localStorage.setItem('gymapp_theme', 'red')
+    safeSetItem('gymapp_theme', 'red')
     return 'red'
   }
   return 'lime'
@@ -45,7 +52,7 @@ const getStoredBrand = (): ThemeBrand => {
 
 const getStoredMode = (): ThemeMode => {
   if (typeof window === 'undefined') return 'night'
-  const saved = localStorage.getItem('gymapp_mode')
+  const saved = safeGetItem('gymapp_mode')
   if (saved === 'day' || saved === 'night') return saved
   return getAutoModeByTime()
 }
@@ -59,12 +66,12 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: INITIAL_THEME,
   mode: INITIAL_MODE,
   setTheme: (theme: ThemeBrand) => {
-    localStorage.setItem('gymapp_theme', theme)
+    try { localStorage.setItem('gymapp_theme', theme) } catch {}
     applyDom(theme, get().mode)
     set({ theme })
   },
   setMode: (mode: ThemeMode) => {
-    localStorage.setItem('gymapp_mode', mode)
+    try { localStorage.setItem('gymapp_mode', mode) } catch {}
     applyDom(get().theme, mode)
     set({ mode })
   },
@@ -82,7 +89,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
 if (typeof window !== 'undefined') {
   setInterval(() => {
-    const saved = localStorage.getItem('gymapp_mode')
+    const saved = safeGetItem('gymapp_mode')
     if (!saved) {
       const autoMode = getAutoModeByTime()
       if (useThemeStore.getState().mode !== autoMode) {
