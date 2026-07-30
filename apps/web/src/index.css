@@ -67,21 +67,22 @@
   --animate-scale-in: scale-in 0.2s ease-out;
 }
 
-/* ─── Sinaliza ao navegador mobile que tratamos ambos os temas ─── */
-:root {
-  color-scheme: light dark;
-}
-
 /*
 ╔══════════════════════════════════════════════════════════╗
-║  TODOS os tokens de cor modo-dependentes estão AQUI.     ║
-║  NADA no @theme — zero conflito com Tailwind v4.         ║
+║  TEMA ÚNICO — mobile e desktop usam os MESMOS tokens.    ║
+║  NUNCA amarrar cores de noite em :root nu (sempre casa). ║
+║  Override só via html[data-mode] / html[data-theme].     ║
+║  @theme acima = dummies p/ Tailwind gerar utilities.     ║
 ╚══════════════════════════════════════════════════════════╝
 */
 
-/* ─── Modo Noite (fallback global — aplica se data-mode não está setado) ─── */
-:root,
-[data-mode="night"] {
+/* Browser/WebView: suportamos os dois esquemas; o modo ativo força light|dark */
+html {
+  color-scheme: light dark;
+}
+
+/* ─── Modo Noite (fundo escuro) — NÃO usar :root aqui ─── */
+html[data-mode="night"] {
   color-scheme: dark;
 
   --color-glass-bg: rgba(18, 32, 64, 0.92);
@@ -105,12 +106,12 @@
   --color-input: #1A2D52;
 }
 
-/* ─── Modo Dia (global) ─── */
-[data-mode="day"] {
+/* ─── Modo Dia (fundo claro) — idêntico em qualquer viewport ─── */
+html[data-mode="day"] {
   color-scheme: light;
 
   --color-glass-bg: rgba(245, 246, 248, 0.95);
-  --color-menu-hover: rgba(10, 22, 40, 0.05);
+  --color-menu-hover: rgba(10, 22, 40, 0.06);
   --color-menu-border: #D5D8E0;
   --color-surface: #F2F4F7;
   --color-surface-card: #F9FAFB;
@@ -130,8 +131,39 @@
   --color-input: #EBEDF1;
 }
 
+/* Fallback se data-mode ausente (antes do script inline) — escuro seguro */
+html:not([data-mode]) {
+  color-scheme: dark;
+  --color-glass-bg: rgba(18, 32, 64, 0.92);
+  --color-menu-hover: rgba(255, 255, 255, 0.08);
+  --color-menu-border: #2A3F66;
+  --color-surface: #0A1628;
+  --color-surface-card: #122040;
+  --color-surface-input: #1A2D52;
+  --color-text: #F7F9FC;
+  --color-text-muted: #B8C5D9;
+  --color-text-disabled: #6B7A94;
+  --color-background: #0A1628;
+  --color-foreground: #F7F9FC;
+  --color-card: #122040;
+  --color-card-foreground: #F7F9FC;
+  --color-secondary: #1A2D52;
+  --color-secondary-foreground: #F7F9FC;
+  --color-muted: #122040;
+  --color-muted-foreground: #B8C5D9;
+  --color-border: #2A3F66;
+  --color-input: #1A2D52;
+}
+
+/* html/body: fundo e texto sempre via tokens (mobile WebView + desktop) */
+html,
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
 /* ─── 1. Lima (Lime) ─── */
-[data-theme="lime"] {
+html[data-theme="lime"] {
   --color-primary: #B8F000;
   --color-primary-dark: #8FCC00;
   --color-primary-hover: #C8FF33;
@@ -143,7 +175,8 @@
   --color-ring: #B8F000;
 }
 
-[data-theme="lime"][data-mode="night"] {
+html[data-theme="lime"][data-mode="night"] {
+  color-scheme: dark;
   --color-glass-bg: rgba(18, 32, 64, 0.92);
   --color-menu-hover: rgba(255, 255, 255, 0.08);
   --color-menu-border: #2A3F66;
@@ -152,14 +185,21 @@
   --color-surface-input: #1A2D52;
   --color-background: #0A1628;
   --color-card: #122040;
+  --color-card-foreground: #F7F9FC;
   --color-secondary: #1A2D52;
+  --color-secondary-foreground: #F7F9FC;
+  --color-muted: #122040;
+  --color-muted-foreground: #B8C5D9;
   --color-border: #2A3F66;
   --color-input: #1A2D52;
   --color-text: #F7F9FC;
+  --color-text-muted: #B8C5D9;
+  --color-text-disabled: #6B7A94;
   --color-foreground: #F7F9FC;
 }
 
-[data-theme="lime"][data-mode="day"] {
+html[data-theme="lime"][data-mode="day"] {
+  color-scheme: light;
   --color-primary: #6B9A00;
   --color-primary-dark: #557A00;
   --color-primary-hover: #7BB000;
@@ -171,22 +211,28 @@
   --color-ring: #6B9A00;
 
   --color-glass-bg: rgba(245, 246, 248, 0.95);
-  --color-menu-hover: rgba(10, 22, 40, 0.05);
+  --color-menu-hover: rgba(10, 22, 40, 0.06);
   --color-menu-border: #D5D8E0;
   --color-surface: #F2F4F7;
   --color-surface-card: #F9FAFB;
   --color-surface-input: #EBEDF1;
   --color-background: #F2F4F7;
   --color-card: #F9FAFB;
+  --color-card-foreground: #0A1628;
   --color-secondary: #EBEDF1;
+  --color-secondary-foreground: #0A1628;
+  --color-muted: #EEF0F3;
+  --color-muted-foreground: #4A5A72;
   --color-border: #D5D8E0;
   --color-input: #EBEDF1;
   --color-text: #0A1628;
+  --color-text-muted: #4A5A72;
+  --color-text-disabled: #8A96A8;
   --color-foreground: #0A1628;
 }
 
 /* ─── 2. Vermelho (Red) ─── */
-[data-theme="red"] {
+html[data-theme="red"] {
   --color-primary: #FF4D4D;
   --color-primary-dark: #E02020;
   --color-primary-hover: #FF6B6B;
@@ -198,7 +244,8 @@
   --color-ring: #FF4D4D;
 }
 
-[data-theme="red"][data-mode="night"] {
+html[data-theme="red"][data-mode="night"] {
+  color-scheme: dark;
   --color-glass-bg: rgba(22, 22, 22, 0.92);
   --color-menu-hover: rgba(255, 255, 255, 0.08);
   --color-menu-border: #3A3A3A;
@@ -207,14 +254,21 @@
   --color-surface-input: #2C2C2C;
   --color-background: #0F0F0F;
   --color-card: #1C1C1C;
+  --color-card-foreground: #FAFAFA;
   --color-secondary: #2C2C2C;
+  --color-secondary-foreground: #FAFAFA;
+  --color-muted: #1C1C1C;
+  --color-muted-foreground: #C8C8C8;
   --color-border: #3A3A3A;
   --color-input: #2C2C2C;
   --color-text: #FAFAFA;
+  --color-text-muted: #C8C8C8;
+  --color-text-disabled: #6E6E6E;
   --color-foreground: #FAFAFA;
 }
 
-[data-theme="red"][data-mode="day"] {
+html[data-theme="red"][data-mode="day"] {
+  color-scheme: light;
   --color-primary: #DC2626;
   --color-primary-dark: #B91C1C;
   --color-primary-hover: #EF4444;
@@ -226,22 +280,28 @@
   --color-ring: #DC2626;
 
   --color-glass-bg: rgba(245, 246, 248, 0.95);
-  --color-menu-hover: rgba(20, 20, 20, 0.04);
+  --color-menu-hover: rgba(20, 20, 20, 0.06);
   --color-menu-border: #D8DAE0;
   --color-surface: #F3F4F5;
   --color-surface-card: #FAFAFB;
   --color-surface-input: #ECEDEF;
   --color-background: #F3F4F5;
   --color-card: #FAFAFB;
+  --color-card-foreground: #141414;
   --color-secondary: #ECEDEF;
+  --color-secondary-foreground: #141414;
+  --color-muted: #EEF0F2;
+  --color-muted-foreground: #4A4A4A;
   --color-border: #D8DAE0;
   --color-input: #ECEDEF;
   --color-text: #141414;
+  --color-text-muted: #4A4A4A;
+  --color-text-disabled: #949494;
   --color-foreground: #141414;
 }
 
 /* ─── 3. Violeta (Violet) ─── */
-[data-theme="violet"] {
+html[data-theme="violet"] {
   --color-primary: #A78BFA;
   --color-primary-dark: #8B5CF6;
   --color-primary-hover: #C4B5FD;
@@ -253,7 +313,8 @@
   --color-ring: #A78BFA;
 }
 
-[data-theme="violet"][data-mode="night"] {
+html[data-theme="violet"][data-mode="night"] {
+  color-scheme: dark;
   --color-glass-bg: rgba(16, 16, 18, 0.92);
   --color-menu-hover: rgba(255, 255, 255, 0.08);
   --color-menu-border: #33333A;
@@ -262,14 +323,21 @@
   --color-surface-input: #222228;
   --color-background: #0C0C0E;
   --color-card: #16161A;
+  --color-card-foreground: #FAFAFC;
   --color-secondary: #222228;
+  --color-secondary-foreground: #FAFAFC;
+  --color-muted: #16161A;
+  --color-muted-foreground: #B8B8C8;
   --color-border: #33333A;
   --color-input: #222228;
   --color-text: #FAFAFC;
+  --color-text-muted: #B8B8C8;
+  --color-text-disabled: #6B6B7B;
   --color-foreground: #FAFAFC;
 }
 
-[data-theme="violet"][data-mode="day"] {
+html[data-theme="violet"][data-mode="day"] {
+  color-scheme: light;
   --color-primary: #B794F6;
   --color-primary-dark: #9F7AEA;
   --color-primary-hover: #C4B5FD;
@@ -281,22 +349,28 @@
   --color-ring: #B794F6;
 
   --color-glass-bg: rgba(245, 246, 248, 0.95);
-  --color-menu-hover: rgba(18, 18, 26, 0.04);
+  --color-menu-hover: rgba(18, 18, 26, 0.06);
   --color-menu-border: #D4D4E0;
   --color-surface: #F4F4F7;
   --color-surface-card: #FBFBFC;
   --color-surface-input: #ECECF0;
   --color-background: #F4F4F7;
   --color-card: #FBFBFC;
+  --color-card-foreground: #12121A;
   --color-secondary: #ECECF0;
+  --color-secondary-foreground: #12121A;
+  --color-muted: #F0F0F4;
+  --color-muted-foreground: #42425A;
   --color-border: #D4D4E0;
   --color-input: #ECECF0;
   --color-text: #12121A;
+  --color-text-muted: #42425A;
+  --color-text-disabled: #7E7E96;
   --color-foreground: #12121A;
 }
 
-/* ─── 4. Laranja (Legacy → mapeia para Vermelho) ─── */
-[data-theme="orange"] {
+/* ─── 4. Laranja (Legacy → Vermelho) ─── */
+html[data-theme="orange"] {
   --color-primary: #FF4D4D;
   --color-primary-dark: #E02020;
   --color-primary-hover: #FF6B6B;
@@ -306,6 +380,28 @@
   --color-accent: #FBBF24;
   --color-accent-foreground: #0F0F0F;
   --color-ring: #FF4D4D;
+}
+
+html[data-theme="orange"][data-mode="night"] {
+  color-scheme: dark;
+  --color-surface: #0F0F0F;
+  --color-surface-card: #1C1C1C;
+  --color-surface-input: #2C2C2C;
+  --color-background: #0F0F0F;
+  --color-text: #FAFAFA;
+  --color-foreground: #FAFAFA;
+  --color-border: #3A3A3A;
+}
+
+html[data-theme="orange"][data-mode="day"] {
+  color-scheme: light;
+  --color-surface: #F3F4F5;
+  --color-surface-card: #FAFAFB;
+  --color-surface-input: #ECEDEF;
+  --color-background: #F3F4F5;
+  --color-text: #141414;
+  --color-foreground: #141414;
+  --color-border: #D8DAE0;
 }
 
 /* ─── Animações ─── */
@@ -351,7 +447,9 @@
   }
 
   body {
-    @apply bg-surface text-text antialiased;
+    @apply antialiased;
+    /* bg/text já vêm de html,body { background-color/color: var(--color-*) } —
+       garante mobile WebView e desktop com a mesma cascata, sem divergência. */
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 

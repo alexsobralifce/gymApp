@@ -1,9 +1,22 @@
 import { useEffect } from 'react'
 import { useThemeStore } from '../stores/theme'
 
-/** 
- * Sincroniza o meta theme-color com a cor de superfície atual.
- * Remove inline styles de body/html — o CSS já faz isso via @apply bg-surface.
+const DAY_SURFACE_FALLBACK: Record<string, string> = {
+  lime: '#F2F4F7',
+  red: '#F3F4F5',
+  violet: '#F4F4F7',
+}
+
+const NIGHT_SURFACE_FALLBACK: Record<string, string> = {
+  lime: '#0A1628',
+  red: '#0F0F0F',
+  violet: '#0C0C0E',
+}
+
+/**
+ * Sincroniza meta tags com o tema ativo.
+ * Mobile e desktop usam a mesma fonte: CSS vars em html[data-theme][data-mode].
+ * NÃO setar colorScheme como inline style — bloqueia a cascata CSS.
  */
 export function useCapacitorTheme() {
   const { theme, mode, effectiveMode } = useThemeStore()
@@ -11,31 +24,26 @@ export function useCapacitorTheme() {
   useEffect(() => {
     const isDay = effectiveMode === 'day'
 
-    // NÃO setar colorScheme como inline style — isso bloqueia o CSS [data-mode="day"]
-    // O CSS já faz isso via [data-mode] { color-scheme: light/dark }
-
-    // Lê o valor atual de --color-surface do CSS (já atualizado pelo data-theme/data-mode)
     const surface = getComputedStyle(document.documentElement)
       .getPropertyValue('--color-surface')
       .trim()
 
-    const defaultSurface = isDay ? '#E4E6ED' : '#0A1628'
-    const finalSurface = surface || defaultSurface
+    const fallback = isDay
+      ? (DAY_SURFACE_FALLBACK[theme] ?? '#F2F4F7')
+      : (NIGHT_SURFACE_FALLBACK[theme] ?? '#0A1628')
+    const finalSurface = surface || fallback
 
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-    if (meta) {
-      meta.setAttribute('content', finalSurface)
-    }
+    const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (themeColor) themeColor.setAttribute('content', finalSurface)
 
-    // iOS status bar style
+    const colorScheme = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]')
+    if (colorScheme) colorScheme.setAttribute('content', isDay ? 'light' : 'dark')
+
     const statusBarMeta = document.querySelector<HTMLMetaElement>(
       'meta[name="apple-mobile-web-app-status-bar-style"]'
     )
     if (statusBarMeta) {
-      statusBarMeta.setAttribute(
-        'content',
-        isDay ? 'default' : 'black-translucent'
-      )
+      statusBarMeta.setAttribute('content', isDay ? 'default' : 'black-translucent')
     }
   }, [theme, mode, effectiveMode])
 }

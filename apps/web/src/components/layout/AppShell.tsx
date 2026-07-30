@@ -219,7 +219,7 @@ function NavSectionComponent({ section, collapsed = false, onClick }: { section:
       <button
         onClick={() => setOpen(!open)}
         className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
-          isChildActive ? 'text-text bg-white/5' : 'text-text-muted hover:bg-white/5 hover:text-text'
+          isChildActive ? 'text-text bg-[var(--color-menu-hover)]' : 'text-text-muted hover:bg-[var(--color-menu-hover)] hover:text-text'
         }`}
       >
         <span className="shrink-0">{section.icon}</span>
@@ -240,7 +240,7 @@ function NavSectionComponent({ section, collapsed = false, onClick }: { section:
               onClick={onClick}
               className={({ isActive }: { isActive: boolean }) =>
                 `flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-all duration-200 ${
-                  isActive ? 'bg-white/5 text-text font-medium' : 'text-text-muted hover:bg-white/5 hover:text-text'
+                  isActive ? 'bg-[var(--color-menu-hover)] text-text font-medium' : 'text-text-muted hover:bg-[var(--color-menu-hover)] hover:text-text'
                 }`
               }
             >
@@ -312,7 +312,7 @@ export default function AppShell() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-      isActive ? 'bg-white/5 text-text' : 'text-text-muted hover:bg-white/5 hover:text-text'
+      isActive ? 'bg-[var(--color-menu-hover)] text-text' : 'text-text-muted hover:bg-[var(--color-menu-hover)] hover:text-text'
     }`
 
   function handleLogout() {

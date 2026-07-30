@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light dark" id="meta-color-scheme" />
     <meta name="theme-color" content="#0A1628" id="meta-theme-color" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="ENDORFINAPP" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" id="meta-status-bar" />
     <meta name="description" content="ENDORFINAPP — A Química do Crescimento. Gestão de treinos, evolução e rede social fitness." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -18,9 +18,42 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet" />
     <title>ENDORFINAPP — A Química do Crescimento</title>
-    <!-- ⚡ Define tema ANTES do CSS carregar — evita flash de modo errado -->
+    <!-- ⚡ Tema síncrono no <head>: mobile e desktop idênticos antes do 1º paint -->
     <script>
-      !function(){var e=document.documentElement;try{var t=localStorage.getItem('gymapp_theme')||'lime';var m=localStorage.getItem('gymapp_mode')||'auto';var eff='night';if(m==='day'){eff='day'}else if(m==='night'){eff='night'}else{try{if(window.matchMedia('(prefers-color-scheme:dark)').matches)eff='night';else if(window.matchMedia('(prefers-color-scheme:light)').matches)eff='day';else{var h=(new Date).getHours();eff=h>=6&&h<18?'day':'night'}}catch(o){var h=(new Date).getHours();eff=h>=6&&h<18?'day':'night'}}e.setAttribute('data-theme',t);e.setAttribute('data-mode',eff)}catch(o){e.setAttribute('data-theme','lime');e.setAttribute('data-mode','night')}}();
+      !function(){
+        var e=document.documentElement;
+        try{
+          var t=localStorage.getItem('gymapp_theme')||'lime';
+          if(t==='orange')t='red';
+          var m=localStorage.getItem('gymapp_mode')||'auto';
+          var eff='night';
+          if(m==='day'){eff='day'}
+          else if(m==='night'){eff='night'}
+          else{
+            try{
+              if(window.matchMedia('(prefers-color-scheme:dark)').matches)eff='night';
+              else if(window.matchMedia('(prefers-color-scheme:light)').matches)eff='day';
+              else{var h=(new Date).getHours();eff=h>=6&&h<18?'day':'night'}
+            }catch(o){var h2=(new Date).getHours();eff=h2>=6&&h2<18?'day':'night'}
+          }
+          e.setAttribute('data-theme',t);
+          e.setAttribute('data-mode',eff);
+          var isDay=eff==='day';
+          var cs=document.getElementById('meta-color-scheme');
+          if(cs)cs.setAttribute('content',isDay?'light':'dark');
+          var tc=document.getElementById('meta-theme-color');
+          if(tc){
+            var surfaces={lime:{day:'#F2F4F7',night:'#0A1628'},red:{day:'#F3F4F5',night:'#0F0F0F'},violet:{day:'#F4F4F7',night:'#0C0C0E'}};
+            var pack=surfaces[t]||surfaces.lime;
+            tc.setAttribute('content',isDay?pack.day:pack.night);
+          }
+          var sb=document.getElementById('meta-status-bar');
+          if(sb)sb.setAttribute('content',isDay?'default':'black-translucent');
+        }catch(o){
+          e.setAttribute('data-theme','lime');
+          e.setAttribute('data-mode','night');
+        }
+      }();
     </script>
   </head>
   <body class="bg-surface">
