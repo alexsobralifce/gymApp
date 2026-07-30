@@ -30,5 +30,10 @@ O sistema suporta **3 opções de modo** no menu do usuário:
 
 ---
 
-## 🔧 Correção Efetuada no CSS
-Identificado e corrigido um erro de sintaxe no arquivo `apps/web/src/index.css` (chave `}` ausente na linha 247). A correção garantiu a compilação limpa do Vite em 670ms e a aplicação imediata do modo claro no mobile.
+---
+
+## 🔧 Correções Efetuadas
+
+1. **Compilação CSS (Sintaxe):** Identificado e corrigido um erro de sintaxe no arquivo `apps/web/src/index.css` (chave `}` ausente na linha 247). A correção garantiu a compilação limpa do Vite em 670ms e a aplicação imediata do modo claro no mobile.
+2. **Sincronização Capacitor/Meta Tags (`useCapacitorTheme`):** Corrigido o hook `useCapacitorTheme.ts` que utilizava `mode === 'day'` em vez de `effectiveMode === 'day'`. Anteriormente, quando o modo estava em `auto` das 06:00 às 18:00, as meta tags (`theme-color`, status bar iOS e `colorScheme`) eram configuradas incorretamente como escuro, divergindo do botão `Dia`. Com o uso de `effectiveMode`, tanto o botão `Auto` (entre 06h-18h) quanto o botão `Dia` aplicam rigorosamente as mesmas cores de fundo, superfície e meta-tags do navegador/dispositivo.
+

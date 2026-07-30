@@ -6,18 +6,20 @@ import { useThemeStore } from '../stores/theme'
  * Remove inline styles de body/html — o CSS já faz isso via @apply bg-surface.
  */
 export function useCapacitorTheme() {
-  const { theme, mode } = useThemeStore()
+  const { theme, mode, effectiveMode } = useThemeStore()
 
   useEffect(() => {
+    const isDay = effectiveMode === 'day'
+
     // Força colorScheme no document.documentElement
-    document.documentElement.style.colorScheme = mode === 'day' ? 'light' : 'dark'
+    document.documentElement.style.colorScheme = isDay ? 'light' : 'dark'
 
     // Lê o valor atual de --color-surface do CSS (já atualizado pelo data-theme/data-mode)
     const surface = getComputedStyle(document.documentElement)
       .getPropertyValue('--color-surface')
       .trim()
 
-    const defaultSurface = mode === 'day' ? '#E4E6ED' : '#0A1628'
+    const defaultSurface = isDay ? '#E4E6ED' : '#0A1628'
     const finalSurface = surface || defaultSurface
 
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
@@ -32,8 +34,8 @@ export function useCapacitorTheme() {
     if (statusBarMeta) {
       statusBarMeta.setAttribute(
         'content',
-        mode === 'day' ? 'default' : 'black-translucent'
+        isDay ? 'default' : 'black-translucent'
       )
     }
-  }, [theme, mode])
+  }, [theme, mode, effectiveMode])
 }
