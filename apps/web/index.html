@@ -18,9 +18,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet" />
     <title>ENDORFINAPP — A Química do Crescimento</title>
-    <!-- ⚡ Define tema ANTES do CSS carregar — evita flash de modo noite em celulares -->
+    <!-- ⚡ Define tema ANTES do CSS carregar — evita flash de modo errado -->
     <script>
-      !function(){var e=document.documentElement;try{var t=localStorage.getItem('gymapp_theme')||'lime';var m=localStorage.getItem('gymapp_mode');if(!m||(m!=='day'&&m!=='night')){var h=(new Date).getHours();m=h>=6&&h<18?'day':'night'}e.setAttribute('data-theme',t);e.setAttribute('data-mode',m);e.style.colorScheme=m==='day'?'light':'dark'}catch(o){var h=(new Date).getHours();e.setAttribute('data-theme','lime');var m=h>=6&&h<18?'day':'night';e.setAttribute('data-mode',m);e.style.colorScheme=m==='day'?'light':'dark'}}();
+      !function(){var e=document.documentElement;try{var t=localStorage.getItem('gymapp_theme')||'lime';var m=localStorage.getItem('gymapp_mode')||'auto';var eff='night';if(m==='day'){eff='day'}else if(m==='night'){eff='night'}else{try{if(window.matchMedia('(prefers-color-scheme:dark)').matches)eff='night';else if(window.matchMedia('(prefers-color-scheme:light)').matches)eff='day';else{var h=(new Date).getHours();eff=h>=6&&h<18?'day':'night'}}catch(o){var h=(new Date).getHours();eff=h>=6&&h<18?'day':'night'}}e.setAttribute('data-theme',t);e.setAttribute('data-mode',eff)}catch(o){e.setAttribute('data-theme','lime');e.setAttribute('data-mode','night')}}();
     </script>
   </head>
   <body class="bg-surface">
