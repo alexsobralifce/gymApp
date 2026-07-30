@@ -43,7 +43,6 @@ function applyDom(theme: ThemeBrand, mode: ThemeMode) {
   const eff = computeEffectiveMode(mode)
   document.documentElement.setAttribute('data-theme', theme)
   document.documentElement.setAttribute('data-mode', eff)
-  document.documentElement.style.colorScheme = eff === 'day' ? 'light' : 'dark'
 }
 
 function safeGetItem(key: string): string | null {

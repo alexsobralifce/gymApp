@@ -67,6 +67,11 @@
   --animate-scale-in: scale-in 0.2s ease-out;
 }
 
+/* ─── Sinaliza ao navegador mobile que tratamos ambos os temas ─── */
+:root {
+  color-scheme: light dark;
+}
+
 /*
 ╔══════════════════════════════════════════════════════════╗
 ║  TODOS os tokens de cor modo-dependentes estão AQUI.     ║

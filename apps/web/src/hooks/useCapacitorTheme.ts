@@ -11,8 +11,8 @@ export function useCapacitorTheme() {
   useEffect(() => {
     const isDay = effectiveMode === 'day'
 
-    // Força colorScheme no document.documentElement
-    document.documentElement.style.colorScheme = isDay ? 'light' : 'dark'
+    // NÃO setar colorScheme como inline style — isso bloqueia o CSS [data-mode="day"]
+    // O CSS já faz isso via [data-mode] { color-scheme: light/dark }
 
     // Lê o valor atual de --color-surface do CSS (já atualizado pelo data-theme/data-mode)
     const surface = getComputedStyle(document.documentElement)
