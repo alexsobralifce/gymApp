@@ -823,7 +823,32 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 
 ---
 
-## 8. Comandos Úteis
+## 8. Documentação do Projeto
+
+### Docs de Planejamento
+| Arquivo | Conteúdo |
+|---------|----------|
+| `docs/planning/clubes-sociais-estudantes.md` | Plano para clubes de alunos: criação, convite, feed do clube, dashboard marketing mobile-first |
+| `docs/planning/social-module-master-plan.md` | Plano mestre do módulo social |
+| `docs/planning/social-frontend-plan.md` | Plano do frontend social |
+| `docs/planning/editar-treino-e-ia-grupos-musculares.md` | Edição de treino e IA por grupos musculares |
+| `docs/planning/onboarding-aluno.md` | Onboarding do aluno |
+| `docs/planning/template-treino.md` | Templates de treino |
+| `docs/planning/root-master-plan.md` | Plano do módulo Root |
+| `docs/planning/seed-comprehensive-plan.md` | Seed de dados |
+| `docs/planning/sync-gifdotreino.md` | Sincronização de exercícios |
+| `docs/planning/landingpage-integration-plan.md` | Integração com Landing Page |
+| `docs/planning/sexo-aluno-exercicios.md` | Sexo e filtros de exercícios |
+
+### Docs de Marketing
+| Arquivo | Conteúdo |
+|---------|----------|
+| `docs/FUNCIONALIDADES.md` | Guia completo de funcionalidades por perfil para marketing e stakeholders |
+| `docs/user-guide.md` | Guia do usuário do sistema |
+
+---
+
+## 9. Comandos Úteis
 
 ```bash
 npm run dev:api                        # Backend dev
