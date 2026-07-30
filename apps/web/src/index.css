@@ -104,25 +104,25 @@
 [data-mode="day"] {
   color-scheme: light;
 
-  --color-glass-bg: rgba(237, 239, 244, 0.95);
-  --color-menu-hover: rgba(10, 22, 40, 0.06);
-  --color-menu-border: #C8D0E0;
-  --color-surface: #E4E6ED;
-  --color-surface-card: #EDEFF4;
-  --color-surface-input: #DCDFE8;
+  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-menu-hover: rgba(10, 22, 40, 0.05);
+  --color-menu-border: #D5D8E0;
+  --color-surface: #F2F4F7;
+  --color-surface-card: #F9FAFB;
+  --color-surface-input: #EBEDF1;
   --color-text: #0A1628;
-  --color-text-muted: #3D4D66;
-  --color-text-disabled: #7A8AA0;
-  --color-background: #E4E6ED;
+  --color-text-muted: #4A5A72;
+  --color-text-disabled: #8A96A8;
+  --color-background: #F2F4F7;
   --color-foreground: #0A1628;
-  --color-card: #EDEFF4;
+  --color-card: #F9FAFB;
   --color-card-foreground: #0A1628;
-  --color-secondary: #DCDFE8;
+  --color-secondary: #EBEDF1;
   --color-secondary-foreground: #0A1628;
-  --color-muted: #E2E4EC;
-  --color-muted-foreground: #3D4D66;
-  --color-border: #C8D0E0;
-  --color-input: #DCDFE8;
+  --color-muted: #EEF0F3;
+  --color-muted-foreground: #4A5A72;
+  --color-border: #D5D8E0;
+  --color-input: #EBEDF1;
 }
 
 /* ─── 1. Lima (Lime) ─── */
@@ -165,17 +165,17 @@
   --color-accent-foreground: #FFFFFF;
   --color-ring: #6B9A00;
 
-  --color-glass-bg: rgba(237, 239, 244, 0.95);
-  --color-menu-hover: rgba(10, 22, 40, 0.06);
-  --color-menu-border: #C8D0E0;
-  --color-surface: #E4E6ED;
-  --color-surface-card: #EDEFF4;
-  --color-surface-input: #DCDFE8;
-  --color-background: #E4E6ED;
-  --color-card: #EDEFF4;
-  --color-secondary: #DCDFE8;
-  --color-border: #C8D0E0;
-  --color-input: #DCDFE8;
+  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-menu-hover: rgba(10, 22, 40, 0.05);
+  --color-menu-border: #D5D8E0;
+  --color-surface: #F2F4F7;
+  --color-surface-card: #F9FAFB;
+  --color-surface-input: #EBEDF1;
+  --color-background: #F2F4F7;
+  --color-card: #F9FAFB;
+  --color-secondary: #EBEDF1;
+  --color-border: #D5D8E0;
+  --color-input: #EBEDF1;
   --color-text: #0A1628;
   --color-foreground: #0A1628;
 }
