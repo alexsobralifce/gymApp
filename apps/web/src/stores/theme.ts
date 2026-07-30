@@ -24,6 +24,10 @@ interface ThemeState {
 
 function getAutoMode(): EffectiveMode {
   if (typeof window === 'undefined') return 'night'
+  try {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'night'
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'day'
+  } catch {}
   const hour = new Date().getHours()
   return hour >= 6 && hour < 18 ? 'day' : 'night'
 }

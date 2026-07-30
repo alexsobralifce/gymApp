@@ -137,6 +137,21 @@
   --color-ring: #B8F000;
 }
 
+[data-theme="lime"][data-mode="night"] {
+  --color-surface: #0A1628;
+  --color-surface-card: #122040;
+  --color-surface-input: #1A2D52;
+  --color-background: #0A1628;
+  --color-card: #122040;
+  --color-secondary: #1A2D52;
+  --color-border: #2A3F66;
+  --color-input: #1A2D52;
+  --color-glass-bg: rgba(18, 32, 64, 0.92);
+  --color-menu-border: #2A3F66;
+  --color-text: #F7F9FC;
+  --color-foreground: #F7F9FC;
+}
+
 [data-theme="lime"][data-mode="day"] {
   --color-primary: #6B9A00;
   --color-primary-dark: #557A00;
@@ -147,6 +162,19 @@
   --color-accent: #6B9A00;
   --color-accent-foreground: #FFFFFF;
   --color-ring: #6B9A00;
+
+  --color-surface: #E4E6ED;
+  --color-surface-card: #EDEFF4;
+  --color-surface-input: #DCDFE8;
+  --color-background: #E4E6ED;
+  --color-card: #EDEFF4;
+  --color-secondary: #DCDFE8;
+  --color-border: #C8D0E0;
+  --color-input: #DCDFE8;
+  --color-glass-bg: rgba(237, 239, 244, 0.95);
+  --color-menu-border: #D0D8E8;
+  --color-text: #0A1628;
+  --color-foreground: #0A1628;
 }
 
 /* ─── 2. Vermelho (Brand: Red) ─── */

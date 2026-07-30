@@ -34,6 +34,7 @@ O sistema suporta **3 opções de modo** no menu do usuário:
 
 ## 🔧 Correções Efetuadas
 
-1. **Compilação CSS (Sintaxe):** Identificado e corrigido um erro de sintaxe no arquivo `apps/web/src/index.css` (chave `}` ausente na linha 247). A correção garantiu a compilação limpa do Vite em 670ms e a aplicação imediata do modo claro no mobile.
-2. **Sincronização Capacitor/Meta Tags (`useCapacitorTheme`):** Corrigido o hook `useCapacitorTheme.ts` que utilizava `mode === 'day'` em vez de `effectiveMode === 'day'`. Anteriormente, quando o modo estava em `auto` das 06:00 às 18:00, as meta tags (`theme-color`, status bar iOS e `colorScheme`) eram configuradas incorretamente como escuro, divergindo do botão `Dia`. Com o uso de `effectiveMode`, tanto o botão `Auto` (entre 06h-18h) quanto o botão `Dia` aplicam rigorosamente as mesmas cores de fundo, superfície e meta-tags do navegador/dispositivo.
+1. **Variáveis de Superfície no Tema Lima (`index.css`):** O seletor `[data-theme="lime"][data-mode="day"]` não possuía a definição explícita das variáveis de superfície (`--color-surface: #E4E6ED`, `--color-background`, `--color-card`, `--color-text: #0A1628`), o que fazia com que o tema Lima (padrão) mantivesse o fundo escuro `#0A1628` mesmo no modo Dia. Adicionadas todas as variáveis claras para `lime` em modo dia e escuras em modo noite.
+2. **Separação & Suporte OS em Modo Auto (`theme.ts` & `useCapacitorTheme.ts`):** O modo `Auto` agora verifica prioritariamente a preferência do sistema operacional (`prefers-color-scheme`), utilizando o horário (06h-18h) como fallback. As configurações de `Auto`, `Dia` e `Noite` permanecem 100% independentes no Zustand store.
+
 
