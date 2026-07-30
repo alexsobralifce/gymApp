@@ -193,7 +193,18 @@ const EXPECTED_NIGHT: Record<string, string> = {
 }
 
 function normalizeHex(value: string): string {
-  return value.trim().toLowerCase().replace(/\s/g, '')
+  let v = value.trim().toLowerCase().replace(/\s/g, '')
+  // browsers report #fff; tokens usam #ffffff
+  if (/^#[0-9a-f]{3}$/.test(v)) {
+    v = `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}`
+  }
+  // rgb(255, 255, 255) → #ffffff
+  const rgb = v.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/)
+  if (rgb) {
+    const hex = (n: string) => Number(n).toString(16).padStart(2, '0')
+    v = `#${hex(rgb[1])}${hex(rgb[2])}${hex(rgb[3])}`
+  }
+  return v
 }
 
 /** Snapshot completo do estado de tema no DOM — para debug do modo dia/noite. */
