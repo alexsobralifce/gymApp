@@ -1,4 +1,4 @@
-const SW_VERSION = 'endorfinapp-v3'
+const SW_VERSION = 'endorfinapp-v4'
 const GIF_CACHE_NAME = 'gymapp-workout-gifs-v1'
 
 self.addEventListener('install', () => {

@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 
 export type ThemeBrand = 'lime' | 'red' | 'violet'
-export type ThemeMode = 'night' | 'day'
+export type ThemeMode = 'auto' | 'night' | 'day'
+export type EffectiveMode = 'night' | 'day'
 /** @deprecated use ThemeBrand */
 export type Theme = ThemeBrand
 
@@ -14,23 +15,31 @@ export const THEME_BRANDS: { id: ThemeBrand; label: string; swatch: string }[] =
 interface ThemeState {
   theme: ThemeBrand
   mode: ThemeMode
+  effectiveMode: EffectiveMode
   setTheme: (theme: ThemeBrand) => void
   setMode: (mode: ThemeMode) => void
   toggleMode: () => void
-  /** Cycles brand only (kept for compatibility) */
   toggleTheme: () => void
+}
+
+function getAutoMode(): EffectiveMode {
+  if (typeof window === 'undefined') return 'night'
+  const hour = new Date().getHours()
+  return hour >= 6 && hour < 18 ? 'day' : 'night'
+}
+
+export function computeEffectiveMode(mode: ThemeMode): EffectiveMode {
+  if (mode === 'day') return 'day'
+  if (mode === 'night') return 'night'
+  return getAutoMode()
 }
 
 function applyDom(theme: ThemeBrand, mode: ThemeMode) {
   if (typeof document === 'undefined') return
+  const eff = computeEffectiveMode(mode)
   document.documentElement.setAttribute('data-theme', theme)
-  document.documentElement.setAttribute('data-mode', mode)
-  document.documentElement.style.colorScheme = mode === 'day' ? 'light' : 'dark'
-}
-
-function getAutoModeByTime(): ThemeMode {
-  const hour = new Date().getHours()
-  return hour >= 6 && hour < 18 ? 'day' : 'night'
+  document.documentElement.setAttribute('data-mode', eff)
+  document.documentElement.style.colorScheme = eff === 'day' ? 'light' : 'dark'
 }
 
 function safeGetItem(key: string): string | null {
@@ -52,10 +61,10 @@ const getStoredBrand = (): ThemeBrand => {
 }
 
 const getStoredMode = (): ThemeMode => {
-  if (typeof window === 'undefined') return 'night'
+  if (typeof window === 'undefined') return 'auto'
   const saved = safeGetItem('gymapp_mode')
-  if (saved === 'day' || saved === 'night') return saved
-  return getAutoModeByTime()
+  if (saved === 'day' || saved === 'night' || saved === 'auto') return saved
+  return 'auto'
 }
 
 const INITIAL_THEME = getStoredBrand()
@@ -66,19 +75,22 @@ applyDom(INITIAL_THEME, INITIAL_MODE)
 export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: INITIAL_THEME,
   mode: INITIAL_MODE,
+  effectiveMode: computeEffectiveMode(INITIAL_MODE),
   setTheme: (theme: ThemeBrand) => {
-    try { localStorage.setItem('gymapp_theme', theme) } catch {}
+    safeSetItem('gymapp_theme', theme)
     applyDom(theme, get().mode)
     set({ theme })
   },
   setMode: (mode: ThemeMode) => {
-    try { localStorage.setItem('gymapp_mode', mode) } catch {}
+    safeSetItem('gymapp_mode', mode)
+    const eff = computeEffectiveMode(mode)
     applyDom(get().theme, mode)
-    set({ mode })
+    set({ mode, effectiveMode: eff })
   },
   toggleMode: () => {
-    const next: ThemeMode = get().mode === 'night' ? 'day' : 'night'
-    get().setMode(next)
+    const currentEff = get().effectiveMode
+    const nextMode: ThemeMode = currentEff === 'night' ? 'day' : 'night'
+    get().setMode(nextMode)
   },
   toggleTheme: () => {
     const current = get().theme
@@ -89,16 +101,21 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 }))
 
 if (typeof window !== 'undefined') {
-  setInterval(() => {
-    const saved = safeGetItem('gymapp_mode')
-    if (!saved) {
-      const autoMode = getAutoModeByTime()
-      if (useThemeStore.getState().mode !== autoMode) {
-        useThemeStore.setState((state) => {
-          applyDom(state.theme, autoMode)
-          return { mode: autoMode }
-        })
+  const syncAutoMode = () => {
+    const { mode, theme } = useThemeStore.getState()
+    if (mode === 'auto') {
+      const newEff = getAutoMode()
+      if (useThemeStore.getState().effectiveMode !== newEff) {
+        applyDom(theme, 'auto')
+        useThemeStore.setState({ effectiveMode: newEff })
       }
     }
-  }, 60000)
+  }
+
+  setInterval(syncAutoMode, 30000)
+
+  try {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', syncAutoMode)
+  } catch {}
 }

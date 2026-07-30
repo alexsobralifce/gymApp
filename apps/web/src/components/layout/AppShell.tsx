@@ -500,28 +500,40 @@ export default function AppShell() {
                           )
                         })}
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-1.5">
                         <button
                           type="button"
-                          onClick={() => setMode('night')}
-                          className={`rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer border ${
-                            mode === 'night'
+                          onClick={() => setMode('auto')}
+                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                            mode === 'auto'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
+                          title="Alterna automaticamente de acordo com o horário (6h-18h) ou sistema OS"
                         >
-                          Noite
+                          Auto ⚡
                         </button>
                         <button
                           type="button"
                           onClick={() => setMode('day')}
-                          className={`rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border ${
                             mode === 'day'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
                         >
                           Dia
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMode('night')}
+                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                            mode === 'night'
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
+                          }`}
+                        >
+                          Noite
                         </button>
                       </div>
                     </div>
