@@ -4,6 +4,32 @@ Este guia explica o passo a passo para colocar a aplicação **GymApp** (monorep
 
 ---
 
+## 0. Otimizações de Build (Railway Config)
+
+Dois arquivos `railway.json` foram adicionados para acelerar deploys:
+
+### Watch Paths
+- `apps/api/railway.json` → muda algo em `apps/api/**`? **Só rebuilda a API**
+- `apps/web/railway.json` → muda algo em `apps/web/**`? **Só rebuilda o Web**
+- Mudanças em ambos? Ambos rebuildam. Mudanças na raiz? Ambos rebuildam.
+
+### Healthcheck
+```json
+"healthcheckPath": "/health",
+"healthcheckTimeout": 60
+```
+A API expõe `GET /health` que retorna `{ status: "ok" }`. O Railway monitora esse endpoint e só considera o deploy saudável quando recebe 200.
+
+### O que mais acelera
+| Otimização | Impacto |
+|---|---|
+| **Watch paths** | Evita rebuild desnecessário (ex: mudar frontend não rebuilda backend) |
+| **Healthcheck rápido (60s)** | Deploy confirmado em 1 minuto, não 5 minutos |
+| **Railpack builder** | Cache de dependências entre deploys |
+| **railway-start.sh** | Sinc de exercícios em background, server inicia em segundos |
+
+---
+
 ## 1. Pré-requisitos
 1. Uma conta no [Railway](https://railway.app).
 2. O código do projeto commitado e enviado para um repositório no **GitHub**.
