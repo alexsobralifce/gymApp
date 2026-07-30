@@ -79,7 +79,7 @@
 
 /* ─── Lima & Navy — day ─── */
 [data-theme="lime"][data-mode="day"] {
-  --color-glass-bg: rgba(255, 255, 255, 0.92);
+  --color-glass-bg: rgba(237, 239, 244, 0.95);
   --color-menu-hover: rgba(10, 22, 40, 0.06);
   --color-menu-border: #D0D8E8;
 
@@ -90,13 +90,13 @@
   --color-primary-light: #A3D930;
   --color-primary-foreground: #FFFFFF;
 
-  --color-surface: #F4F6FA;
-  --color-surface-card: #FFFFFF;
-  --color-surface-input: #E8ECF4;
+  --color-surface: #E4E6ED;
+  --color-surface-card: #EDEFF4;
+  --color-surface-input: #DCDFE8;
 
   --color-text: #0A1628;
-  --color-text-muted: #4A5A72;
-  --color-text-disabled: #8A96A8;
+  --color-text-muted: #3D4D66;
+  --color-text-disabled: #7A8AA0;
 
   --color-accent: #6B9A00;
   --color-accent-foreground: #FFFFFF;
@@ -105,16 +105,16 @@
   --color-success: #059669;
   --color-warning: #D97706;
 
-  --color-background: #F4F6FA;
+  --color-background: #E4E6ED;
   --color-foreground: #0A1628;
-  --color-card: #FFFFFF;
+  --color-card: #EDEFF4;
   --color-card-foreground: #0A1628;
-  --color-secondary: #E8ECF4;
+  --color-secondary: #DCDFE8;
   --color-secondary-foreground: #0A1628;
-  --color-muted: #EEF1F7;
-  --color-muted-foreground: #4A5A72;
-  --color-border: #D0D8E8;
-  --color-input: #E8ECF4;
+  --color-muted: #E2E4EC;
+  --color-muted-foreground: #3D4D66;
+  --color-border: #C8D0E0;
+  --color-input: #DCDFE8;
   --color-ring: #6B9A00;
 }
 
@@ -161,9 +161,9 @@
 
 /* ─── Vermelho — day ─── */
 [data-theme="red"][data-mode="day"] {
-  --color-glass-bg: rgba(255, 255, 255, 0.92);
+  --color-glass-bg: rgba(237, 239, 242, 0.95);
   --color-menu-hover: rgba(15, 15, 15, 0.06);
-  --color-menu-border: #E0E0E0;
+  --color-menu-border: #D8D8D8;
 
   --color-primary: #DC2626;
   --color-primary-dark: #B91C1C;
@@ -172,13 +172,13 @@
   --color-primary-light: #F87171;
   --color-primary-foreground: #FFFFFF;
 
-  --color-surface: #F7F7F7;
-  --color-surface-card: #FFFFFF;
-  --color-surface-input: #EBEBEB;
+  --color-surface: #E8E9EC;
+  --color-surface-card: #EFF0F3;
+  --color-surface-input: #E0E2E7;
 
   --color-text: #141414;
-  --color-text-muted: #525252;
-  --color-text-disabled: #A3A3A3;
+  --color-text-muted: #4A4A4A;
+  --color-text-disabled: #949494;
 
   --color-accent: #D97706;
   --color-accent-foreground: #FFFFFF;
@@ -187,16 +187,16 @@
   --color-success: #059669;
   --color-warning: #D97706;
 
-  --color-background: #F7F7F7;
+  --color-background: #E8E9EC;
   --color-foreground: #141414;
-  --color-card: #FFFFFF;
+  --color-card: #EFF0F3;
   --color-card-foreground: #141414;
-  --color-secondary: #EBEBEB;
+  --color-secondary: #E0E2E7;
   --color-secondary-foreground: #141414;
-  --color-muted: #F0F0F0;
-  --color-muted-foreground: #525252;
-  --color-border: #E0E0E0;
-  --color-input: #EBEBEB;
+  --color-muted: #E4E5E9;
+  --color-muted-foreground: #4A4A4A;
+  --color-border: #D0D0D0;
+  --color-input: #E0E2E7;
   --color-ring: #DC2626;
 }
 
@@ -244,9 +244,9 @@
 /* ─── Violeta — day ─── */
 /* Primary mais claro no dia para texto preto legível no botão */
 [data-theme="violet"][data-mode="day"] {
-  --color-glass-bg: rgba(255, 255, 255, 0.92);
+  --color-glass-bg: rgba(237, 237, 242, 0.95);
   --color-menu-hover: rgba(12, 12, 14, 0.06);
-  --color-menu-border: #DCDCE8;
+  --color-menu-border: #D4D4E0;
 
   --color-primary: #B794F6;
   --color-primary-dark: #9F7AEA;
@@ -255,13 +255,13 @@
   --color-primary-light: #DDD6FE;
   --color-primary-foreground: #000000;
 
-  --color-surface: #F5F4FA;
-  --color-surface-card: #FFFFFF;
-  --color-surface-input: #EAE8F4;
+  --color-surface: #E4E4EB;
+  --color-surface-card: #EDEDF4;
+  --color-surface-input: #DCDCE8;
 
   --color-text: #12121A;
-  --color-text-muted: #4A4A5C;
-  --color-text-disabled: #8A8A9C;
+  --color-text-muted: #42425A;
+  --color-text-disabled: #7E7E96;
 
   --color-accent: #65A30D;
   --color-accent-foreground: #FFFFFF;
@@ -270,16 +270,16 @@
   --color-success: #059669;
   --color-warning: #D97706;
 
-  --color-background: #F5F4FA;
+  --color-background: #E4E4EB;
   --color-foreground: #12121A;
-  --color-card: #FFFFFF;
+  --color-card: #EDEDF4;
   --color-card-foreground: #12121A;
-  --color-secondary: #EAE8F4;
+  --color-secondary: #DCDCE8;
   --color-secondary-foreground: #12121A;
-  --color-muted: #F0EFF6;
-  --color-muted-foreground: #4A4A5C;
-  --color-border: #DCDCE8;
-  --color-input: #EAE8F4;
+  --color-muted: #E2E2EB;
+  --color-muted-foreground: #42425A;
+  --color-border: #CCCCD8;
+  --color-input: #DCDCE8;
   --color-ring: #B794F6;
 }
 

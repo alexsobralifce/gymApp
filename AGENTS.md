@@ -434,16 +434,19 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `--color-primary-active` | `#A3D900` | `#5C8500` |
 | `--color-primary-light` | `#D4F56A` | `#A3D930` |
 | `--color-primary-foreground` | `#000000` | `#FFFFFF` |
-| `--color-surface` | `#0A1628` | `#F4F6FA` |
-| `--color-surface-card` | `#122040` | `#FFFFFF` |
-| `--color-surface-input` | `#1A2D52` | `#E8ECF4` |
+| `--color-surface` | `#0A1628` | `#E4E6ED` |
+| `--color-surface-card` | `#122040` | `#EDEFF4` |
+| `--color-surface-input` | `#1A2D52` | `#DCDFE8` |
 | `--color-text` | `#F7F9FC` | `#0A1628` |
-| `--color-text-muted` | `#B8C5D9` | `#4A5A72` |
-| `--color-text-disabled` | `#6B7A94` | `#8A96A8` |
-| `--color-border` | `#2A3F66` | `#D0D8E8` |
+| `--color-text-muted` | `#B8C5D9` | `#3D4D66` |
+| `--color-text-disabled` | `#6B7A94` | `#7A8AA0` |
+| `--color-border` | `#2A3F66` | `#C8D0E0` |
 | `--color-ring` | `#B8F000` | `#6B9A00` |
 
+---
+
 #### Paleta 2: Vermelho & Carvão (`data-theme="red"`)
+
 | Token | Night | Day |
 |---|---|---|
 | `--color-primary` | `#FF4D4D` | `#DC2626` |
@@ -452,14 +455,14 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `--color-primary-active` | `#F03333` | `#C41E1E` |
 | `--color-primary-light` | `#FF8A8A` | `#F87171` |
 | `--color-primary-foreground` | `#FFFFFF` | `#FFFFFF` |
-| `--color-surface` | `#0F0F0F` | `#F7F7F7` |
-| `--color-surface-card` | `#1C1C1C` | `#FFFFFF` |
-| `--color-surface-input` | `#2C2C2C` | `#EBEBEB` |
+| `--color-surface` | `#0F0F0F` | `#E8E9EC` |
+| `--color-surface-card` | `#1C1C1C` | `#EFF0F3` |
+| `--color-surface-input` | `#2C2C2C` | `#E0E2E7` |
 | `--color-text` | `#FAFAFA` | `#141414` |
-| `--color-text-muted` | `#C8C8C8` | `#525252` |
-| `--color-text-disabled` | `#6E6E6E` | `#A3A3A3` |
+| `--color-text-muted` | `#C8C8C8` | `#4A4A4A` |
+| `--color-text-disabled` | `#6E6E6E` | `#949494` |
 | `--color-accent` | `#FBBF24` | `#D97706` |
-| `--color-border` | `#3A3A3A` | `#E0E0E0` |
+| `--color-border` | `#3A3A3A` | `#D0D0D0` |
 | `--color-ring` | `#FF4D4D` | `#DC2626` |
 
 #### Paleta 3: Violeta & Grafite (`data-theme="violet"`)
@@ -471,14 +474,14 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `--color-primary-active` | `#9F7AEA` | `#A78BFA` |
 | `--color-primary-light` | `#DDD6FE` | `#DDD6FE` |
 | `--color-primary-foreground` | `#000000` | `#000000` |
-| `--color-surface` | `#0C0C0E` | `#F5F4FA` |
-| `--color-surface-card` | `#16161A` | `#FFFFFF` |
-| `--color-surface-input` | `#222228` | `#EAE8F4` |
+| `--color-surface` | `#0C0C0E` | `#E4E4EB` |
+| `--color-surface-card` | `#16161A` | `#EDEDF4` |
+| `--color-surface-input` | `#222228` | `#DCDCE8` |
 | `--color-text` | `#FAFAFC` | `#12121A` |
-| `--color-text-muted` | `#B8B8C8` | `#4A4A5C` |
-| `--color-text-disabled` | `#6B6B7B` | `#8A8A9C` |
+| `--color-text-muted` | `#B8B8C8` | `#42425A` |
+| `--color-text-disabled` | `#6B6B7B` | `#7E7E96` |
 | `--color-accent` | `#C6FF33` | `#65A30D` |
-| `--color-border` | `#33333A` | `#DCDCE8` |
+| `--color-border` | `#33333A` | `#CCCCD8` |
 | `--color-ring` | `#A78BFA` | `#B794F6` |
 
 #### Tokens Semânticos Comuns
