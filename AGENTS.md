@@ -421,8 +421,10 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 
 #### Estrutura de Temas
 - **3 Marcas (brand)**: `lime` | `red` | `violet`
-- **2 Modos (mode)**: `night` (escuro) | `day` (claro)
-- **6 combinações** via `data-theme` e `data-mode` no DOM
+- **3 opções de modo**: `auto` | `day` | `night` → efetivo sempre `day` ou `night` no DOM
+- **Auto**: só horário local (claro 06h–18h, escuro 18h–06h) — **não** segue dark mode do SO
+- **Dia / Noite**: forçam fundo claro / escuro 24h
+- **6 combinações de cor** via `data-theme` × `data-mode` no DOM
 - **Persistência**: `localStorage` (`gymapp_theme`, `gymapp_mode`)
 
 #### Cascata de tema (mobile = desktop)

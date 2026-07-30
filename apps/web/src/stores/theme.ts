@@ -23,20 +23,27 @@ interface ThemeState {
   toggleTheme: () => void
 }
 
-function getAutoMode(): EffectiveMode {
-  if (typeof window === 'undefined') return 'night'
-  try {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'night'
-    if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'day'
-  } catch {}
-  const hour = new Date().getHours()
+/**
+ * Auto = horário local (NÃO segue dark mode do SO).
+ * Motivo: Android com tema escuro do sistema fazia Auto = sempre noite,
+ * impedindo fundo claro durante o dia. Dia forçado já funciona no CSS.
+ * - 06:00 ≤ hora < 18:00 → day (fundo claro)
+ * - caso contrário → night (fundo escuro)
+ */
+export function getAutoModeByTime(date: Date = new Date()): EffectiveMode {
+  const hour = date.getHours()
   return hour >= 6 && hour < 18 ? 'day' : 'night'
 }
 
-export function computeEffectiveMode(mode: ThemeMode): EffectiveMode {
+/** @deprecated use getAutoModeByTime — mantido para imports legados */
+function getAutoMode(): EffectiveMode {
+  return getAutoModeByTime()
+}
+
+export function computeEffectiveMode(mode: ThemeMode, date?: Date): EffectiveMode {
   if (mode === 'day') return 'day'
   if (mode === 'night') return 'night'
-  return getAutoMode()
+  return getAutoModeByTime(date)
 }
 
 function readComputedSurface(): string {
@@ -50,6 +57,7 @@ function readComputedSurface(): string {
 
 function applyDom(theme: ThemeBrand, mode: ThemeMode, source: string) {
   if (typeof document === 'undefined') return
+  const hour = new Date().getHours()
   const eff = computeEffectiveMode(mode)
   const before = {
     dataTheme: document.documentElement.getAttribute('data-theme'),
@@ -58,17 +66,24 @@ function applyDom(theme: ThemeBrand, mode: ThemeMode, source: string) {
   }
   document.documentElement.setAttribute('data-theme', theme)
   document.documentElement.setAttribute('data-mode', eff)
-  // force style recalc before reading
   void document.documentElement.offsetHeight
   const afterSurface = readComputedSurface()
+
+  const dayLooksDark =
+    eff === 'day' &&
+    afterSurface &&
+    parseInt(afterSurface.replace('#', '').slice(0, 2), 16) < 180
+
   debugLog(
     'THEME',
-    `applyDom[${source}]: mode=${mode} → data-mode=${eff} theme=${theme}`,
+    `applyDom[${source}]: mode=${mode} → data-mode=${eff} theme=${theme}${mode === 'auto' ? ` (hora=${hour})` : ''}`,
     {
       source,
       requestedMode: mode,
       effectiveMode: eff,
       theme,
+      hour,
+      autoRule: mode === 'auto' ? 'time 06h-18h day, else night (ignora OS dark)' : null,
       before,
       after: {
         dataTheme: document.documentElement.getAttribute('data-theme'),
@@ -77,9 +92,7 @@ function applyDom(theme: ThemeBrand, mode: ThemeMode, source: string) {
       },
       inlineColorScheme: document.documentElement.style.colorScheme || '(none)',
     },
-    mode === 'day' && afterSurface && parseInt(afterSurface.replace('#', '').slice(0, 2), 16) < 180
-      ? 'error'
-      : 'info',
+    dayLooksDark ? 'error' : 'info',
   )
 }
 
@@ -121,13 +134,16 @@ const INITIAL_EFF = computeEffectiveMode(INITIAL_MODE)
 debugLog('THEME', `init store: brand=${INITIAL_THEME} mode=${INITIAL_MODE} eff=${INITIAL_EFF}`, {
   storageTheme: safeGetItem('gymapp_theme'),
   storageMode: safeGetItem('gymapp_mode'),
+  hour: new Date().getHours(),
+  autoByTime: getAutoModeByTime(),
   bootstrap: typeof window !== 'undefined' ? window.__themeBootstrap ?? null : null,
-  htmlBeforeApply: typeof document !== 'undefined'
-    ? {
-        dataTheme: document.documentElement.getAttribute('data-theme'),
-        dataMode: document.documentElement.getAttribute('data-mode'),
-      }
-    : null,
+  htmlBeforeApply:
+    typeof document !== 'undefined'
+      ? {
+          dataTheme: document.documentElement.getAttribute('data-theme'),
+          dataMode: document.documentElement.getAttribute('data-mode'),
+        }
+      : null,
 })
 
 applyDom(INITIAL_THEME, INITIAL_MODE, 'module-init')
@@ -150,7 +166,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   toggleMode: () => {
     const currentEff = get().effectiveMode
     const nextMode: ThemeMode = currentEff === 'night' ? 'day' : 'night'
-    debugLog('THEME', `toggleMode: ${currentEff} → ${nextMode}`)
+    debugLog('THEME', `toggleMode: ${currentEff} → ${nextMode} (força explícito, não auto)`)
     get().setMode(nextMode)
   },
   toggleTheme: () => {
@@ -162,31 +178,23 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 }))
 
 if (typeof window !== 'undefined') {
+  // Só reavalia Auto por horário (a cada 30s). NÃO escuta prefers-color-scheme —
+  // no Android dark do SO isso mantinha a UI sempre em night.
   const syncAutoMode = () => {
     const { mode, theme, effectiveMode } = useThemeStore.getState()
-    if (mode === 'auto') {
-      const newEff = getAutoMode()
-      if (effectiveMode !== newEff) {
-        debugLog('THEME', `syncAutoMode: ${effectiveMode} → ${newEff}`, {
-          prefersDark: (() => {
-            try {
-              return window.matchMedia('(prefers-color-scheme: dark)').matches
-            } catch {
-              return null
-            }
-          })(),
-          hour: new Date().getHours(),
-        }, 'warn')
-        applyDom(theme, 'auto', 'syncAutoMode')
-        useThemeStore.setState({ effectiveMode: newEff })
-      }
+    if (mode !== 'auto') return
+    const newEff = getAutoMode()
+    if (effectiveMode !== newEff) {
+      debugLog(
+        'THEME',
+        `syncAutoMode (horário): ${effectiveMode} → ${newEff}`,
+        { hour: new Date().getHours() },
+        'warn',
+      )
+      applyDom(theme, 'auto', 'syncAutoMode')
+      useThemeStore.setState({ effectiveMode: newEff })
     }
   }
 
   setInterval(syncAutoMode, 30000)
-
-  try {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    mediaQuery.addEventListener('change', syncAutoMode)
-  } catch {}
 }

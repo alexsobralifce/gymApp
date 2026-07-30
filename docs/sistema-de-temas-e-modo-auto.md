@@ -20,18 +20,25 @@ O **ENDORFINAPP** possui um sistema dinâmico de temas baseado em atributos HTML
 
 ## Modos de Exibição
 
-1. **Auto ⚡ (`auto`) — Padrão:**
-   - Prioriza `prefers-color-scheme` do SO.
-   - Fallback por horário (Dia 06:00–18:00, Noite 18:00–06:00).
-   - Reavalia a cada 30s e em mudanças do SO.
+1. **Auto (`auto`) — Padrão:**
+   - **Somente horário local:** Dia 06:00–18:00 (fundo claro), Noite 18:00–06:00 (fundo escuro).
+   - **Não** segue `prefers-color-scheme` do SO (Android em dark mode deixava Auto = sempre noite).
+   - Reavalia a cada 30s quando o relógio cruza 06h/18h.
 
 2. **Dia (`day`):**
-   - Força visual claro (ex. Lima: superfície `#F2F4F7`, cards `#F9FAFB`, texto `#0A1628`).
+   - Força visual claro sempre (ex. Lima: superfície `#F2F4F7`, cards `#F9FAFB`, texto `#0A1628`).
    - `color-scheme: light` — desativa Auto Dark Mode de Android/iOS WebView.
+   - **Independente do horário e do tema do celular.**
 
 3. **Noite (`night`):**
-   - Força visual escuro (ex. Lima: superfície `#0A1628`, cards `#122040`, texto `#F7F9FC`).
+   - Força visual escuro sempre (ex. Lima: superfície `#0A1628`, cards `#122040`, texto `#F7F9FC`).
    - `color-scheme: dark`.
+
+### Diagnóstico (logs de produção 2026-07-30)
+Em Android Chrome com SO escuro:
+- Bootstrap + `mode=day` → `surface=#f2f4f7` / body claro ✅ (CSS OK)
+- `setMode(auto)` com `prefers-color-scheme: dark` (algoritmo antigo) → `surface=#0a1628` ❌
+- Correção: Auto deixa de usar o SO; Dia forçado permanece a forma de garantir fundo claro 24h.
 
 ---
 

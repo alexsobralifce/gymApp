@@ -41,21 +41,15 @@
           if(t==='orange')t='red';
           var m=localStorage.getItem('gymapp_mode')||'auto';
           boot.storageMode=localStorage.getItem('gymapp_mode');
+          // Auto = só horário 06h-18h (NÃO segue dark do SO — Android ficava sempre night)
+          try{
+            boot.matchMediaDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+            boot.matchMediaLight=window.matchMedia('(prefers-color-scheme:light)').matches;
+          }catch(o){boot.error='matchMedia:'+String(o&&o.message||o)}
           var eff='night';
           if(m==='day'){eff='day'}
           else if(m==='night'){eff='night'}
-          else{
-            try{
-              boot.matchMediaDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-              boot.matchMediaLight=window.matchMedia('(prefers-color-scheme:light)').matches;
-              if(boot.matchMediaDark)eff='night';
-              else if(boot.matchMediaLight)eff='day';
-              else{eff=hour>=6&&hour<18?'day':'night'}
-            }catch(o){
-              boot.error='matchMedia:'+String(o&&o.message||o);
-              eff=hour>=6&&hour<18?'day':'night';
-            }
-          }
+          else{eff=hour>=6&&hour<18?'day':'night'}
           e.setAttribute('data-theme',t);
           e.setAttribute('data-mode',eff);
           boot.resolvedTheme=t;

@@ -504,38 +504,47 @@ export default function AppShell() {
                         <button
                           type="button"
                           onClick={() => setMode('auto')}
-                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border min-h-11 ${
                             mode === 'auto'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
-                          title="Alterna automaticamente de acordo com o horário (6h-18h) ou sistema OS"
+                          title="Auto por horário: claro 06h–18h, escuro 18h–06h (não usa tema do celular)"
                         >
-                          Auto ⚡
+                          Auto
                         </button>
                         <button
                           type="button"
                           onClick={() => setMode('day')}
-                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border min-h-11 ${
                             mode === 'day'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
+                          title="Força fundo claro"
                         >
                           Dia
                         </button>
                         <button
                           type="button"
                           onClick={() => setMode('night')}
-                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border ${
+                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border min-h-11 ${
                             mode === 'night'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
+                          title="Força fundo escuro"
                         >
                           Noite
                         </button>
                       </div>
+                      <p className="text-[10px] text-text-muted leading-snug">
+                        {mode === 'auto'
+                          ? 'Auto: claro das 06h às 18h (horário do aparelho). Para claro sempre, use Dia.'
+                          : mode === 'day'
+                            ? 'Modo Dia: fundo claro forçado.'
+                            : 'Modo Noite: fundo escuro forçado.'}
+                      </p>
                     </div>
 
                     <div className="py-1.5">
