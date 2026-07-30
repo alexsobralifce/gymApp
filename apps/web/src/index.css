@@ -225,17 +225,17 @@
   --color-accent-foreground: #FFFFFF;
   --color-ring: #DC2626;
 
-  --color-glass-bg: rgba(237, 239, 242, 0.95);
-  --color-menu-hover: rgba(15, 15, 15, 0.06);
-  --color-menu-border: #D0D0D0;
-  --color-surface: #E8E9EC;
-  --color-surface-card: #EFF0F3;
-  --color-surface-input: #E0E2E7;
-  --color-background: #E8E9EC;
-  --color-card: #EFF0F3;
-  --color-secondary: #E0E2E7;
-  --color-border: #D0D0D0;
-  --color-input: #E0E2E7;
+  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-menu-hover: rgba(20, 20, 20, 0.04);
+  --color-menu-border: #D8DAE0;
+  --color-surface: #F3F4F5;
+  --color-surface-card: #FAFAFB;
+  --color-surface-input: #ECEDEF;
+  --color-background: #F3F4F5;
+  --color-card: #FAFAFB;
+  --color-secondary: #ECEDEF;
+  --color-border: #D8DAE0;
+  --color-input: #ECEDEF;
   --color-text: #141414;
   --color-foreground: #141414;
 }
@@ -280,17 +280,17 @@
   --color-accent-foreground: #FFFFFF;
   --color-ring: #B794F6;
 
-  --color-glass-bg: rgba(237, 237, 242, 0.95);
-  --color-menu-hover: rgba(12, 12, 14, 0.06);
-  --color-menu-border: #CCCCD8;
-  --color-surface: #E4E4EB;
-  --color-surface-card: #EDEDF4;
-  --color-surface-input: #DCDCE8;
-  --color-background: #E4E4EB;
-  --color-card: #EDEDF4;
-  --color-secondary: #DCDCE8;
-  --color-border: #CCCCD8;
-  --color-input: #DCDCE8;
+  --color-glass-bg: rgba(245, 246, 248, 0.95);
+  --color-menu-hover: rgba(18, 18, 26, 0.04);
+  --color-menu-border: #D4D4E0;
+  --color-surface: #F4F4F7;
+  --color-surface-card: #FBFBFC;
+  --color-surface-input: #ECECF0;
+  --color-background: #F4F4F7;
+  --color-card: #FBFBFC;
+  --color-secondary: #ECECF0;
+  --color-border: #D4D4E0;
+  --color-input: #ECECF0;
   --color-text: #12121A;
   --color-foreground: #12121A;
 }
