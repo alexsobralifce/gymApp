@@ -580,14 +580,13 @@ export default function AppShell() {
                         <PhoneIcon className="h-4 w-4" />
                         Suporte via WhatsApp
                       </a>
-                      {(user?.role === 'ROOT' || import.meta.env.VITE_DEBUG_VISIBLE === 'true') && (
-                        <DebugMenuTrigger
-                          onClick={() => {
-                            setMenuOpen(false)
-                            setDebugOpen(true)
-                          }}
-                        />
-                      )}
+                      {/* Debug sempre visível enquanto diagnosticamos tema dia/noite no mobile */}
+                      <DebugMenuTrigger
+                        onClick={() => {
+                          setMenuOpen(false)
+                          setDebugOpen(true)
+                        }}
+                      />
                       <div className="my-1 border-t border-border" />
                       <button
                         onClick={handleLogout}

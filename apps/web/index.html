@@ -18,27 +18,50 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet" />
     <title>ENDORFINAPP — A Química do Crescimento</title>
-    <!-- ⚡ Tema síncrono no <head>: mobile e desktop idênticos antes do 1º paint -->
+    <!-- ⚡ Tema síncrono no <head> + bootstrap debug para o painel Debug -->
     <script>
       !function(){
         var e=document.documentElement;
+        var hour=(new Date).getHours();
+        var boot={
+          storageTheme:null,
+          storageMode:null,
+          resolvedTheme:'lime',
+          resolvedEff:'night',
+          isDay:false,
+          matchMediaDark:null,
+          matchMediaLight:null,
+          hour:hour,
+          error:null,
+          at:new Date().toISOString()
+        };
         try{
           var t=localStorage.getItem('gymapp_theme')||'lime';
+          boot.storageTheme=localStorage.getItem('gymapp_theme');
           if(t==='orange')t='red';
           var m=localStorage.getItem('gymapp_mode')||'auto';
+          boot.storageMode=localStorage.getItem('gymapp_mode');
           var eff='night';
           if(m==='day'){eff='day'}
           else if(m==='night'){eff='night'}
           else{
             try{
-              if(window.matchMedia('(prefers-color-scheme:dark)').matches)eff='night';
-              else if(window.matchMedia('(prefers-color-scheme:light)').matches)eff='day';
-              else{var h=(new Date).getHours();eff=h>=6&&h<18?'day':'night'}
-            }catch(o){var h2=(new Date).getHours();eff=h2>=6&&h2<18?'day':'night'}
+              boot.matchMediaDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+              boot.matchMediaLight=window.matchMedia('(prefers-color-scheme:light)').matches;
+              if(boot.matchMediaDark)eff='night';
+              else if(boot.matchMediaLight)eff='day';
+              else{eff=hour>=6&&hour<18?'day':'night'}
+            }catch(o){
+              boot.error='matchMedia:'+String(o&&o.message||o);
+              eff=hour>=6&&hour<18?'day':'night';
+            }
           }
           e.setAttribute('data-theme',t);
           e.setAttribute('data-mode',eff);
-          var isDay=eff==='day';
+          boot.resolvedTheme=t;
+          boot.resolvedEff=eff;
+          boot.isDay=eff==='day';
+          var isDay=boot.isDay;
           var cs=document.getElementById('meta-color-scheme');
           if(cs)cs.setAttribute('content',isDay?'light':'dark');
           var tc=document.getElementById('meta-theme-color');
@@ -49,10 +72,17 @@
           }
           var sb=document.getElementById('meta-status-bar');
           if(sb)sb.setAttribute('content',isDay?'default':'black-translucent');
+          console.log('[GymApp:THEME-BOOT]',boot);
         }catch(o){
+          boot.error=String(o&&o.message||o);
           e.setAttribute('data-theme','lime');
           e.setAttribute('data-mode','night');
+          console.warn('[GymApp:THEME-BOOT] fallback night',boot);
         }
+        try{
+          window.__themeBootstrap=boot;
+          sessionStorage.setItem('__theme_bootstrap',JSON.stringify(boot));
+        }catch(o2){}
       }();
     </script>
   </head>
