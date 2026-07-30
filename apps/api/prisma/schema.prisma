@@ -346,7 +346,7 @@ model SocialFriendship {
 }
 
 model SocialPost {
-  id                    String       @id @default(cuid())
+  id                    String           @id @default(cuid())
   aluno_id              String
   treino_id             String?
   clube_id              String?
@@ -356,10 +356,11 @@ model SocialPost {
   tipo                  PostTipo
   visibilidade          Visibilidade
   midia_url             String?
-  curtidas_count        Int          @default(0)
-  comentarios_count     Int          @default(0)
-  criado_em             DateTime     @default(now())
+  curtidas_count        Int              @default(0)
+  comentarios_count     Int              @default(0)
+  criado_em             DateTime         @default(now())
   academia_nome         String?
+  post_clubes           SocialPostClub[]
 
   @@unique([treino_id, aluno_id, tipo])
   @@index([aluno_id, criado_em])
@@ -392,26 +393,42 @@ model SocialComment {
 }
 
 model SocialClub {
-  id          String   @id @default(cuid())
-  academia_id String?  @unique
-  nome        String
-  tipo        ClubTipo @default(ACADEMIA)
-  criado_em   DateTime @default(now())
+  id            String              @id @default(cuid())
+  academia_id   String?             @unique
+  nome          String
+  tipo          ClubTipo            @default(ACADEMIA)
+  codigo_convite String?             @unique
+  descricao     String?
+  criado_em     DateTime            @default(now())
+  membros       SocialClubMember[]
+  posts         SocialPostClub[]
 
   @@map("social_clubs")
 }
 
 model SocialClubMember {
-  id           String   @id @default(cuid())
+  id           String          @id @default(cuid())
   clube_id     String
   aluno_id     String
-  xp_semana    Int      @default(0)
-  criado_em    DateTime @default(now())
-  xp_reset_ano Int      @default(2026)
+  xp_semana    Int             @default(0)
+  criado_em    DateTime        @default(now())
+  xp_reset_ano Int             @default(2026)
+  role         ClubMemberRole  @default(MEMBRO)
+  clube        SocialClub      @relation(fields: [clube_id], references: [id], onDelete: Cascade)
 
   @@unique([clube_id, aluno_id])
   @@index([clube_id, xp_semana])
   @@map("social_club_members")
+}
+
+model SocialPostClub {
+  post_id  String
+  clube_id String
+  post     SocialPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  clube    SocialClub @relation(fields: [clube_id], references: [id], onDelete: Cascade)
+
+  @@id([post_id, clube_id])
+  @@map("social_post_clubes")
 }
 
 model AvaliacaoFisica {
@@ -527,6 +544,11 @@ enum Visibilidade {
 enum ClubTipo {
   ACADEMIA
   TEMATICO
+}
+
+enum ClubMemberRole {
+  CRIADOR
+  MEMBRO
 }
 
 enum AvaliacaoStatus {

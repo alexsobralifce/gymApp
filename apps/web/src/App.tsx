@@ -43,6 +43,7 @@ import AlunoPrivacidade from './pages/aluno/Privacidade'
 import AlunoClubes from './pages/aluno/Clubes'
 import Parceiros from './pages/aluno/Parceiros'
 import WelcomeCards from './pages/aluno/WelcomeCards'
+import ClubeFeed from './pages/aluno/ClubeFeed'
 import AlterarSenha from './pages/auth/AlterarSenha'
 import Avaliacoes from './pages/avaliacoes/Avaliacoes'
 
@@ -96,6 +97,7 @@ export default function App() {
           <Route path="amizades" element={<AlunoAmizades />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="clubes" element={<AlunoClubes />} />
+          <Route path="clubes/:id" element={<ClubeFeed />} />
           <Route path="parceiros" element={<Parceiros />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />

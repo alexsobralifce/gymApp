@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -497,6 +497,32 @@ export const api = {
   // ─── Social — Clubes ───────────────────────────────
   getClube: (id: string) => api.get<Clube>(`/social/clubes/${id}`),
   getLeaderboard: (id: string) => api.get<LeaderboardEntry[]>(`/social/clubes/${id}/leaderboard`),
+
+  // ─── Social — Clubes de Alunos ─────────────────────
+  getClubes: () => api.get<ClubesResponse>('/social/clubes'),
+
+  criarClube: (data: CreateClubeInput) =>
+    api.post<ClubeDetalhe>('/social/clubes', data),
+
+  getClubeDetalhe: (id: string) =>
+    api.get<ClubeDetalhe>(`/social/clubes/${id}`),
+
+  getMembrosClube: (id: string) =>
+    api.get<MembroClube[]>(`/social/clubes/${id}/membros`),
+
+  entrarClube: (id: string, codigo?: string) =>
+    api.post<{ message: string }>(`/social/clubes/${id}/entrar`, codigo ? { codigo } : {}),
+
+  sairClube: (id: string) =>
+    api.post<{ message: string }>(`/social/clubes/${id}/sair`),
+
+  getMuralClube: (id: string, cursor?: string, limit?: number) => {
+    const qs = new URLSearchParams()
+    if (cursor) qs.set('cursor', cursor)
+    if (limit) qs.set('limit', String(limit))
+    const query = qs.toString()
+    return api.get<MuralResponse>(`/social/clubes/${id}/mural${query ? `?${query}` : ''}`)
+  },
 
   // ─── Biblioteca de Planos ───────────────────────────
   listarPlanos: (params?: { objetivo?: string; nivel?: string; sexo?: string; splitTipo?: string }) => {

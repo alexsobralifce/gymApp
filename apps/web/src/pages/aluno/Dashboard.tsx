@@ -11,6 +11,9 @@ import {
   ActivityIcon,
   TimerIcon,
   RulerIcon,
+  MessageCircleIcon,
+  UsersIcon,
+  ChevronRightIcon,
 } from '../../components/icons/Icon'
 import { getInitials } from '../../lib/initials'
 
@@ -417,6 +420,51 @@ export default function AlunoDashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Sua Comunidade — Mobile First */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-bold text-text uppercase tracking-wider">Sua Comunidade</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/amizades')}
+            className="rounded-2xl bg-surface-card border border-surface-input p-4 hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform mb-2">
+              <UsersIcon className="h-5 w-5" />
+            </div>
+            <p className="text-xs font-bold text-text">Amigos</p>
+            <p className="text-xs text-text-muted">Conecte-se e treine junto</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/clubes')}
+            className="rounded-2xl bg-surface-card border border-surface-input p-4 hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform mb-2">
+              <TrophyIcon className="h-5 w-5" />
+            </div>
+            <p className="text-xs font-bold text-text">Clubes</p>
+            <p className="text-xs text-text-muted">Crie ou entre em clubes</p>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/mural')}
+          className="w-full rounded-2xl bg-surface-card border border-surface-input p-4 hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <MessageCircleIcon className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-text">Mural de Atividades</p>
+            <p className="text-xs text-text-muted truncate">Veja o que seus amigos estão fazendo</p>
+          </div>
+          <ChevronRightIcon className="h-4 w-4 text-text-muted shrink-0" />
+        </button>
       </div>
 
       {/* Ciencia & Bem-estar */}

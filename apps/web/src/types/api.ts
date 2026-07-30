@@ -412,6 +412,34 @@ export interface Clube {
   nome: string
   tipo: 'ACADEMIA' | 'TEMATICO'
   total_membros: number
+  codigo_convite?: string | null
+  descricao?: string | null
+}
+
+export interface ClubeDetalhe extends Clube {}
+
+export type ClubMemberRole = 'CRIADOR' | 'MEMBRO'
+
+export interface MeuClube extends Clube {
+  role: ClubMemberRole
+}
+
+export interface ClubesResponse {
+  meus: MeuClube[]
+  disponiveis: ClubeDetalhe[]
+}
+
+export interface MembroClube {
+  alunoId: string
+  nome: string
+  fotoUrl: string | null
+  xpSemana: number
+  role: ClubMemberRole
+}
+
+export interface CreateClubeInput {
+  nome: string
+  descricao?: string
 }
 
 export interface LeaderboardEntry {
