@@ -46,7 +46,8 @@ export async function clubRoutes(app: FastifyInstance) {
   /** GET /social/clubes/:id/membros — listar membros do clube */
   app.get('/social/clubes/:id/membros', { preHandler }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const membros = await ClubService.listarMembros(id)
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const membros = await ClubService.listarMembros(id, aluno.id)
     return reply.status(200).send(membros)
   })
 

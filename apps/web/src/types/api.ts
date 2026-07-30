@@ -435,6 +435,7 @@ export interface MembroClube {
   fotoUrl: string | null
   xpSemana: number
   role: ClubMemberRole
+  seguindo?: boolean
 }
 
 export interface CreateClubeInput {

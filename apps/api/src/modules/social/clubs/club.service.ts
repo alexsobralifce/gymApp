@@ -121,7 +121,7 @@ export class ClubService {
     return { message: 'Saiu do clube com sucesso.' }
   }
 
-  static async listarMembros(clubeId: string) {
+  static async listarMembros(clubeId: string, solicitanteAlunoId?: string) {
     const membros = await prisma.socialClubMember.findMany({
       where: { clube_id: clubeId },
       orderBy: { xp_semana: 'desc' },
@@ -132,6 +132,22 @@ export class ClubService {
       include: { usuario: { select: { nome: true, foto_url: true } } },
     })
 
+    // Verificar amizades do solicitante (se informado)
+    let amigoIds = new Set<string>()
+    if (solicitanteAlunoId) {
+      const friendships = await prisma.socialFriendship.findMany({
+        where: {
+          OR: [
+            { aluno_id: solicitanteAlunoId, status: 'ACEITO' },
+            { amigo_id: solicitanteAlunoId, status: 'ACEITO' },
+          ],
+        },
+      })
+      amigoIds = new Set(friendships.map((f) =>
+        f.aluno_id === solicitanteAlunoId ? f.amigo_id : f.aluno_id
+      ))
+    }
+
     return membros.map((m) => {
       const a = alunos.find((al) => al.id === m.aluno_id)
       return {
@@ -140,6 +156,7 @@ export class ClubService {
         fotoUrl: a?.usuario.foto_url ?? null,
         xpSemana: m.xp_semana,
         role: m.role,
+        seguindo: amigoIds.has(m.aluno_id),
       }
     })
   }
@@ -149,6 +166,17 @@ export class ClubService {
       where: { clube_id_aluno_id: { clube_id: clubeId, aluno_id: alunoId } },
     })
     if (!member) throw new ForbiddenError('Você não é membro deste clube.')
+
+    // Buscar post_ids da junction table para este clube
+    const clubPosts = await prisma.socialPostClub.findMany({
+      where: { clube_id: clubeId },
+      select: { post_id: true },
+    })
+    const postIds = clubPosts.map((cp) => cp.post_id)
+
+    if (postIds.length === 0) {
+      return { items: [], nextCursor: null }
+    }
 
     const cursorWhere: Record<string, unknown> = {}
     if (cursor) {
@@ -161,8 +189,8 @@ export class ClubService {
 
     const posts = await prisma.socialPost.findMany({
       where: {
+        id: { in: postIds },
         ...cursorWhere,
-        clube_id: clubeId,
         visibilidade: { not: 'PRIVADO' },
       },
       orderBy: [{ criado_em: 'desc' }, { id: 'desc' }],

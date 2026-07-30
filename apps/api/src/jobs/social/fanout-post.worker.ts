@@ -76,6 +76,19 @@ export async function handleFanoutPost(job: Job<FanoutPayload>) {
         },
       })
 
+  // ─── Fanout para clubes do aluno ──────────────────────────────
+  const clubes = await prisma.socialClubMember.findMany({
+    where: { aluno_id: alunoId },
+    select: { clube_id: true },
+  })
+
+  if (clubes.length > 0) {
+    await prisma.socialPostClub.createMany({
+      data: clubes.map((c) => ({ post_id: post.id, clube_id: c.clube_id })),
+      skipDuplicates: true,
+    })
+  }
+
   await socialNotifyQueue.add(
     'notify-friends',
     { postId: post.id, alunoId },
