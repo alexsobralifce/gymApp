@@ -480,37 +480,18 @@ export default function AppShell() {
                   className="flex items-center gap-2.5 rounded-xl p-1.5 pr-2.5 hover:bg-surface-input transition-all cursor-pointer active:scale-95 min-w-0"
                 >
                   <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="sm" ringClass={ringColor} />
-                  {/* Mobile: only name */}
-                  <span className="text-sm font-semibold text-text truncate max-w-28 md:hidden">
+                  <span className="text-sm font-semibold text-text truncate max-w-28">
                     {user?.nome || 'Usuário'}
                   </span>
-                  {/* Desktop: name + badge on line 1, email on line 2 */}
-                  <div className="hidden md:flex flex-col items-start min-w-0 leading-tight">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-sm font-semibold text-text truncate">
-                        {user?.nome || 'Usuário'}
-                      </span>
-                      <span className="rounded-full bg-secondary px-2 py-px text-[10px] font-bold text-text shrink-0">
-                        {user?.admin ? 'Admin' : getRoleLabel(role)}
-                      </span>
-                    </div>
-                    <span className="text-xs text-text-muted truncate max-w-40">
-                      {user?.email || ''}
-                    </span>
-                  </div>
                 </button>
 
                 {menuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-border bg-surface-card shadow-2xl z-30 overflow-hidden animate-scale-in">
-                    <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-                      <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="md" ringClass={`${ringColor} ring-offset-surface-card`} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
-                        <p className="text-xs text-text-muted truncate">{user?.email || ''}</p>
-                        <span className="inline-block mt-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-text">
-                          {user?.admin ? 'Admin' : getRoleLabel(role)}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Status</span>
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-text">
+                        {user?.admin ? 'Admin' : getRoleLabel(role)}
+                      </span>
                     </div>
 
                     <div className="px-4 py-3 border-b border-border space-y-3">
@@ -646,6 +627,9 @@ export default function AppShell() {
                         <LogOutIcon className="h-4 w-4" />
                         Sair
                       </button>
+                    </div>
+                    <div className="px-4 py-2.5 border-t border-border">
+                      <p className="text-xs text-text-muted truncate text-center">{user?.email || ''}</p>
                     </div>
                   </div>
                 )}
