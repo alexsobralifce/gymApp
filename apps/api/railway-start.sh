@@ -41,8 +41,10 @@ fi
 echo "=== Setting up ROOT user ==="
 npx tsx prisma/set-root-user.ts || true
 
-echo "=== Cleaning up seed users ==="
+echo "=== Cleaning up seed users, seed_prof professors & seed_aluno students ==="
 npx tsx prisma/cleanup-seed-users.ts || true
+npx tsx prisma/remove-seed-professors.ts || true
+npx tsx prisma/remove-seed-alunos.ts || true
 
 echo "=== Backfill do Mural (posts de treinos concluidos hoje) ==="
 nohup bash -c '
