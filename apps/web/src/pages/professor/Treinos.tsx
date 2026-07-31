@@ -339,24 +339,24 @@ export default function ProfessorTreinos() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1.5 justify-end">
                       <button
                         onClick={() => handleToggleTemplate(t.id, !t.is_template)}
-                        className={`text-xs hover:underline cursor-pointer ${t.is_template ? 'text-warning' : 'text-amber-500'}`}
+                        className={`text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center ${t.is_template ? 'text-warning' : 'text-amber-500'}`}
                       >
                         {t.is_template ? 'Desmarcar Template' : 'Template'}
                       </button>
                       {t.is_template && (
                         <button
                           onClick={() => { setViewingTreinos(null); openCloneLoteModal(t.id, t.nome) }}
-                          className="text-xs text-success hover:underline cursor-pointer"
+                          className="text-xs text-success hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                         >
                           Clonar em Lote
                         </button>
                       )}
                       <button
                         onClick={() => { setViewingTreinos(null); navigate(`/treino/${t.id}/inicio`) }}
-                        className="text-xs text-primary hover:underline cursor-pointer"
+                        className="text-xs text-primary hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                       >
                         Exibir
                       </button>
@@ -365,7 +365,7 @@ export default function ProfessorTreinos() {
                         setViewingTreinos(null)
                         openCloneModal(t.id, t.nome)
                       }}
-                      className="text-xs text-blue-400 hover:underline cursor-pointer"
+                      className="text-xs text-blue-400 hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                     >
                       Clonar
                     </button>
@@ -376,7 +376,7 @@ export default function ProfessorTreinos() {
                         setForm({ nome: treino.nome, diasSemana: treino.dias_semana ? [...treino.dias_semana] : [] })
                         setViewingTreinos(null)
                       }}
-                      className="text-xs text-blue-400 hover:underline cursor-pointer"
+                      className="text-xs text-blue-400 hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                     >
                       Editar
                     </button>
@@ -385,7 +385,7 @@ export default function ProfessorTreinos() {
                         setDeletingTreino({ id: t.id, nome: t.nome })
                         setViewingTreinos(null)
                       }}
-                      className="text-xs text-destructive hover:underline cursor-pointer"
+                      className="text-xs text-destructive hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                     >
                       Deletar
                     </button>
@@ -545,7 +545,7 @@ export default function ProfessorTreinos() {
                   </label>
                 ))}
             </div>
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedAlunoIds(alunosLoteDisponiveis.map((a) => a.id))}
                 className="text-xs text-primary hover:underline cursor-pointer"

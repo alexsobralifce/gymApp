@@ -50,10 +50,10 @@ const inputClass =
   'w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none'
 
 const btnPrimary =
-  'rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40'
+  'rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 min-h-[36px] inline-flex items-center'
 
 const btnGhost =
-  'rounded border border-surface-input px-4 py-2 text-sm text-text-muted'
+  'rounded border border-surface-input px-4 py-2 text-sm text-text-muted min-h-[36px] inline-flex items-center'
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
@@ -487,7 +487,7 @@ function AdminToggleButton({ usuarioId, isAdmin }: { usuarioId: string; isAdmin:
     <button
       onClick={handleToggle}
       disabled={busy}
-      className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+      className={`rounded px-3 py-1.5 text-sm font-medium transition-colors min-h-[36px] inline-flex items-center ${
         admin
           ? 'bg-primary/20 text-primary hover:bg-primary/30'
           : 'bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20'
@@ -516,13 +516,13 @@ function AcademiasTab({
   return (
     <div className="space-y-2">
       {academias.map((a) => (
-        <div key={a.id} className={`flex items-center justify-between rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(a.id) ? 'border-primary' : 'border-transparent'}`}>
-          <div className="flex items-center gap-3">
+        <div key={a.id} className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(a.id) ? 'border-primary' : 'border-transparent'}`}>
+          <div className="flex items-start gap-3">
             <input
               type="checkbox"
               checked={selectedIds.includes(a.id)}
               onChange={() => onToggleSelect(a.id)}
-              className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
+              className="mt-1 rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
             />
             <div>
               <div className="flex items-center gap-2">
@@ -536,10 +536,10 @@ function AcademiasTab({
               </p>
             </div>
           </div>
-          <div className="flex gap-1">
-            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
+          <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
+            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
-            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
+            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
           </div>
         </div>
       ))}
@@ -565,8 +565,8 @@ function ProfessoresTab({
   return (
     <div className="space-y-2">
       {professores.map((p) => (
-        <div key={p.id} className={`rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(p.id) ? 'border-primary' : 'border-transparent'}`}>
-          <div className="flex items-start justify-between">
+        <div key={p.id} className={`flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(p.id) ? 'border-primary' : 'border-transparent'}`}>
+          <div className="flex items-start justify-between sm:justify-start sm:gap-0">
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"
@@ -582,12 +582,17 @@ function ProfessoresTab({
                 </p>
               </div>
             </div>
-            <div className="flex gap-1">
-              <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
+            <div className="flex flex-wrap gap-1.5 justify-end sm:hidden sm:self-start ml-3">
+              <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
               <AdminToggleButton usuarioId={p.usuario.id} isAdmin={!!p.usuario.admin} />
-              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
+              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
             </div>
           </div>
+            <div className="hidden sm:flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-start">
+              <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+              <AdminToggleButton usuarioId={p.usuario.id} isAdmin={!!p.usuario.admin} />
+              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
+            </div>
           {p.academias.length > 0 && (
             <div className="mt-2 ml-7 flex flex-wrap gap-1">
               {p.academias.map((v) => (
@@ -621,13 +626,13 @@ function AlunosTab({
   return (
     <div className="space-y-2">
       {alunos.map((a) => (
-        <div key={a.id} className={`flex items-center justify-between rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(a.id) ? 'border-primary' : 'border-transparent'}`}>
-          <div className="flex items-center gap-3">
+        <div key={a.id} className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(a.id) ? 'border-primary' : 'border-transparent'}`}>
+          <div className="flex items-start gap-3">
             <input
               type="checkbox"
               checked={selectedIds.includes(a.id)}
               onChange={() => onToggleSelect(a.id)}
-              className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
+              className="mt-1 rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
             />
             <div>
               <h3 className="font-semibold text-text">{a.usuario.nome}</h3>
@@ -643,10 +648,10 @@ function AlunosTab({
               )}
             </div>
           </div>
-          <div className="flex gap-1">
-            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
+          <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
+            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
-            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
+            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
           </div>
         </div>
       ))}
@@ -726,7 +731,7 @@ function EditAcademiaModal({
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
         <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="password"
             placeholder="Nova senha (min. 8 caracteres)"
@@ -843,7 +848,7 @@ function EditProfessorModal({
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
         <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="password"
             placeholder="Nova senha (min. 8 caracteres)"
@@ -974,7 +979,7 @@ function EditAlunoModal({
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
         <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="password"
             placeholder="Nova senha (min. 8 caracteres)"

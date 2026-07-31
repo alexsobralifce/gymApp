@@ -545,7 +545,7 @@ export default function Documentacao() {
         </div>
 
         {/* Ações */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setExpandirTudo(!expandirTudo)}
             className="flex-1 rounded-lg border border-surface-input bg-surface px-3 py-2 text-xs font-medium text-text-muted hover:text-text transition-colors cursor-pointer"
