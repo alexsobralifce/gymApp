@@ -122,8 +122,10 @@ function UserAvatar({
   )
 }
 
-function getNavItems(role: string): NavEntry[] {
-  switch (role) {
+function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
+  // Admin global vê menus ROOT independente do role base
+  const effectiveRole = isAdmin ? 'ROOT' : role
+  switch (effectiveRole) {
     case 'ALUNO':
       return [
         { to: '/', label: 'Dashboard', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
@@ -193,8 +195,8 @@ const alunoBottomTabs = [
   { to: '/evolucao', label: 'Evolução', icon: ChartLineIcon },
 ]
 
-function getPageTitle(pathname: string, role: string): string {
-  const navItems = getNavItems(role)
+function getPageTitle(pathname: string, role: string, isAdmin: boolean): string {
+  const navItems = getNavItems(role, isAdmin)
   for (const entry of navItems) {
     if (isSection(entry)) {
       for (const child of entry.children) {
@@ -310,9 +312,10 @@ export default function AppShell() {
   const role = user?.role || 'ALUNO'
   const isAluno = role === 'ALUNO'
   const hideNav = location.pathname.includes('/execucao')
-  const navItems = getNavItems(role)
-  const pageTitle = getPageTitle(location.pathname, role)
-  const ringColor = getRoleRingColor(role)
+  const navItems = getNavItems(role, user?.admin ?? false)
+  const pageTitle = getPageTitle(location.pathname, role, user?.admin ?? false)
+  const effectiveRole = user?.admin ? 'ROOT' : role
+  const ringColor = getRoleRingColor(effectiveRole)
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
@@ -470,7 +473,7 @@ export default function AppShell() {
                         <p className="text-sm font-semibold text-text truncate">{user?.nome || 'Usuário'}</p>
                         <p className="text-xs text-text-muted truncate">{user?.email || ''}</p>
                         <span className="inline-block mt-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-text">
-                          {getRoleLabel(role)}
+                          {user?.admin ? 'Admin' : getRoleLabel(role)}
                         </span>
                       </div>
                     </div>

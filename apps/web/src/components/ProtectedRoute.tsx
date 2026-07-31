@@ -6,7 +6,8 @@ export default function ProtectedRoute({ role }: { role?: string }) {
   const user = useAuthStore((s: AuthState) => s.user)
 
   if (!user) return <Navigate to="/login" />
-  if (role && user.role !== role) return <Navigate to="/" />
+  // Admin global bypassa qualquer restrição de role
+  if (role && user.role !== role && !user.admin) return <Navigate to="/" />
 
   return <Outlet />
 }

@@ -6,6 +6,7 @@ import { UnauthorizedError, ForbiddenError } from '../../domain/errors/AppError.
 export type JwtPayload = {
   sub: string      // usuario_id
   role: Role
+  admin: boolean   // admin global (acessa menus ROOT independente do role)
   tenantId?: string // academia_id (quando role = ACADEMIA, PROFESSOR, ALUNO)
 }
 
@@ -30,9 +31,10 @@ async function plugin(app: FastifyInstance) {
     }
   })
 
-  // Helper para verificar role específico
+  // Helper para verificar role específico — admin global bypassa qualquer role check
   app.decorate('requireRole', (...roles: Role[]) => {
     return async (request: FastifyRequest, _reply: FastifyReply) => {
+      if (request.currentUser.admin) return // admin global tem acesso a tudo
       if (!roles.includes(request.currentUser.role)) {
         throw new ForbiddenError(
           `Acesso restrito a: ${roles.join(', ')}`,

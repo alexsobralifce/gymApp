@@ -129,7 +129,7 @@ export default function App() {
         </Route>
       )}
 
-      {user?.role === 'ROOT' && (
+      {(user?.role === 'ROOT' || user?.admin) && (
         <Route element={<AppShell />}>
           <Route index element={<RootPainel />} />
           <Route path="vinculos" element={<RootVinculos />} />

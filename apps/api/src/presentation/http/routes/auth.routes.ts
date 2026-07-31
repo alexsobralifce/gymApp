@@ -127,7 +127,7 @@ export async function authRoutes(app: FastifyInstance) {
    * GET /auth/me
    */
   app.get('/me', { preHandler: [app.authenticate] }, async (request, reply) => {
-    const { sub: id, role, tenantId } = request.currentUser
+    const { sub: id, role, admin, tenantId } = request.currentUser
     const usuario = await prisma.usuario.findUnique({
       where: { id },
       select: { nome: true, email: true, telefone: true, foto_url: true, expo_push_token: true },
@@ -145,6 +145,7 @@ export async function authRoutes(app: FastifyInstance) {
       telefone: usuario.telefone ?? null,
       fotoUrl,
       role,
+      admin: admin ?? false,
       tenantId,
       expoPushToken: usuario.expo_push_token ?? null,
     })

@@ -143,7 +143,7 @@ export default function Documentacao() {
     conteudo = CONTEUDO_ACADEMIA
     titulo = 'Guia da Academia'
     introducao = 'Gerencie professores, alunos e treinos da sua academia.'
-  } else if (user?.role === 'ROOT') {
+  } else if (user?.role === 'ROOT' || user?.admin) {
     conteudo = CONTEUDO_ROOT
     titulo = 'Guia do Root'
     introducao = 'Administração da plataforma: vínculos, usuários e moderação social.'

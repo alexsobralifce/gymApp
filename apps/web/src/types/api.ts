@@ -5,6 +5,7 @@ export interface User {
   telefone?: string | null
   fotoUrl?: string | null
   role: 'ROOT' | 'ACADEMIA' | 'PROFESSOR' | 'ALUNO'
+  admin: boolean
   tenantId?: string | null
   expoPushToken?: string | null
 }

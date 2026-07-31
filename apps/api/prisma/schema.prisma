@@ -20,6 +20,7 @@ model Usuario {
   web_push_subscription    Json?
   telefone                 String?
   ativo                    Boolean           @default(true)
+  admin                    Boolean           @default(false)
   email_verified           Boolean           @default(false)
   email_verify_code        String?
   email_verify_code_expira DateTime?

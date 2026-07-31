@@ -223,6 +223,22 @@ export async function rootRoutes(app: FastifyInstance) {
     return reply.status(200).send({ message: 'Senha resetada com sucesso!' })
   })
 
+  /** PATCH /root/usuarios/:id/admin — concede ou revoga admin global */
+  app.patch('/usuarios/:id/admin', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { admin } = z.object({ admin: z.boolean() }).parse(request.body)
+
+    const usuario = await prisma.usuario.findUnique({ where: { id } })
+    if (!usuario) throw new NotFoundError('Usuário')
+
+    await prisma.usuario.update({
+      where: { id },
+      data: { admin },
+    })
+
+    return reply.status(200).send({ id, admin, message: admin ? 'Admin concedido' : 'Admin revogado' })
+  })
+
   /** GET /root/academias — lista academias com paginação */
   app.get('/academias', { preHandler }, async (request, reply) => {
     const rawQuery = request.query as Record<string, string>

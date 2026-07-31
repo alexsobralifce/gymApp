@@ -102,7 +102,7 @@ export class AuthService {
   static async login(input: LoginInput, jwtSign: (payload: object, opts?: object) => string): Promise<AuthTokens> {
     const usuario = await prisma.usuario.findUnique({
       where: { email: input.email },
-      select: { id: true, nome: true, email: true, role: true, senha_hash: true, email_verified: true },
+      select: { id: true, nome: true, email: true, role: true, senha_hash: true, email_verified: true, admin: true },
     })
 
     if (!usuario) {
@@ -135,7 +135,7 @@ export class AuthService {
       tenantId = aluno?.academia_id ?? undefined
     }
 
-    const payload = { sub: usuario.id, role: usuario.role, tenantId }
+    const payload = { sub: usuario.id, role: usuario.role, admin: usuario.admin, tenantId }
 
     const accessToken = jwtSign(payload, { expiresIn: env.JWT_EXPIRES_IN })
     const refreshToken = jwtSign(
@@ -345,7 +345,7 @@ export class AuthService {
       }
     }
 
-    const tokenPayload = { sub: usuario.id, role: usuario.role }
+    const tokenPayload = { sub: usuario.id, role: usuario.role, admin: usuario.admin }
     const accessToken = jwtSign(tokenPayload, { expiresIn: env.JWT_EXPIRES_IN })
     const refreshToken = jwtSign(
       { sub: usuario.id },

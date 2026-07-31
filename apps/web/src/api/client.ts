@@ -383,6 +383,8 @@ export const api = {
   },
   updateRootAluno: (id: string, data: any) => api.put(`/root/alunos/${id}`, data),
   deleteRootAluno: (id: string) => api.delete(`/root/alunos/${id}`),
+  toggleAdmin: (usuarioId: string, admin: boolean) =>
+    api.patch<{ id: string; admin: boolean; message: string }>(`/root/usuarios/${usuarioId}/admin`, { admin }),
 
   getRootVinculos: (params?: { page?: number; limit?: number; status?: string }) => {
     const qs = new URLSearchParams()

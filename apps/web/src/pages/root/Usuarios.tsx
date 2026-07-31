@@ -11,7 +11,7 @@ interface AcademiaItem {
   status: string
   max_professores: number
   usuario_id: string
-  usuario: { id: string; email: string; nome: string }
+  usuario: { id: string; email: string; nome: string; admin?: boolean }
   _count: { professores: number; alunos: number }
 }
 
@@ -19,7 +19,7 @@ interface ProfessorItem {
   id: string
   cref: string | null
   usuario_id: string
-  usuario: { id: string; email: string; nome: string }
+  usuario: { id: string; email: string; nome: string; admin?: boolean }
   academias: Array<{ id: string; academia: { id: string; nome: string } }>
   _count: { alunos: number }
 }
@@ -32,7 +32,7 @@ interface AlunoItem {
   data_nascimento: string | null
   peso_kg: number | null
   altura_cm: number | null
-  usuario: { id: string; email: string; nome: string; telefone: string | null }
+  usuario: { id: string; email: string; nome: string; telefone: string | null; admin?: boolean }
   academia: { id: string; nome: string } | null
   professor: { id: string; usuario: { nome: string } } | null
 }
@@ -352,6 +352,37 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
   )
 }
 
+function AdminToggleButton({ usuarioId, isAdmin }: { usuarioId: string; isAdmin: boolean }) {
+  const [busy, setBusy] = useState(false)
+  const [admin, setAdmin] = useState(isAdmin)
+
+  async function handleToggle() {
+    setBusy(true)
+    try {
+      await api.toggleAdmin(usuarioId, !admin)
+      setAdmin(!admin)
+    } catch {
+      // silencioso — o botão reverte visualmente no próximo reload
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleToggle}
+      disabled={busy}
+      className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+        admin
+          ? 'bg-primary/20 text-primary hover:bg-primary/30'
+          : 'bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20'
+      }`}
+    >
+      {busy ? '...' : admin ? 'Admin' : 'Tornar Admin'}
+    </button>
+  )
+}
+
 function AcademiasTab({
   academias,
   onEdit,
@@ -380,6 +411,7 @@ function AcademiasTab({
           </div>
           <div className="flex gap-1">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
+            <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
             <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
           </div>
         </div>
@@ -413,6 +445,7 @@ function ProfessoresTab({
             </div>
             <div className="flex gap-1">
               <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
+              <AdminToggleButton usuarioId={p.usuario.id} isAdmin={!!p.usuario.admin} />
               <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
             </div>
           </div>
@@ -461,6 +494,7 @@ function AlunosTab({
           </div>
           <div className="flex gap-1">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
+            <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
             <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive">Excluir</button>
           </div>
         </div>
