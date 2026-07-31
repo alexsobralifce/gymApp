@@ -5,14 +5,16 @@ export function registerSocialEventListeners() {
   eventBus.on('treino.iniciado', async (event) => {
     if (event.type !== 'treino.iniciado') return
     try {
+      const ts = event.payload.timestamp
       await socialFanoutQueue.add('fanout-post', {
         treinoId: event.payload.treinoId,
         alunoId: event.payload.alunoId,
         gruposMusculares: event.payload.gruposMusculares,
-        timestamp: event.payload.timestamp,
+        timestamp: ts,
         eventType: 'treino.iniciado',
       }, {
-        jobId: `fanout:${event.payload.treinoId}:iniciado`,
+        // jobId único por sessão — permite novo post a cada início de treino
+        jobId: `fanout:${event.payload.treinoId}:${ts}:iniciado`,
       })
     } catch (err) {
       console.warn('[Social] Falha ao enfileirar treino.iniciado:', err)
@@ -22,14 +24,15 @@ export function registerSocialEventListeners() {
   eventBus.on('treino.concluido', async (event) => {
     if (event.type !== 'treino.concluido') return
     try {
+      const ts = event.payload.timestamp
       await socialFanoutQueue.add('fanout-post', {
         treinoId: event.payload.treinoId,
         alunoId: event.payload.alunoId,
         gruposMusculares: [],
-        timestamp: event.payload.timestamp,
+        timestamp: ts,
         eventType: 'treino.concluido',
       }, {
-        jobId: `fanout:${event.payload.treinoId}:concluido`,
+        jobId: `fanout:${event.payload.treinoId}:${ts}:concluido`,
       })
 
       await socialBadgeQueue.add('award-badge', {
@@ -43,7 +46,7 @@ export function registerSocialEventListeners() {
         treinoId: event.payload.treinoId,
         alunoId: event.payload.alunoId,
       }, {
-        jobId: `xp:${event.payload.treinoId}`,
+        jobId: `xp:${event.payload.treinoId}:${ts}`,
       })
     } catch (err) {
       console.warn('[Social] Falha ao enfileirar treino.concluido:', err)

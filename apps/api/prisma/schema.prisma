@@ -362,7 +362,6 @@ model SocialPost {
   academia_nome         String?
   post_clubes           SocialPostClub[]
 
-  @@unique([treino_id, aluno_id, tipo])
   @@index([aluno_id, criado_em])
   @@index([clube_id, criado_em])
   @@index([visibilidade, criado_em])

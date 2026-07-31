@@ -38,6 +38,12 @@ else
   ' > /dev/null 2>&1 &
 fi
 
+echo "=== Backfill do Mural (posts de treinos concluidos hoje) ==="
+nohup bash -c '
+  sleep 10
+  npx tsx prisma/backfill-mural.ts >> /tmp/backfill-mural.log 2>&1
+' > /dev/null 2>&1 &
+
 echo "=== Starting server ==="
 npm run start
 

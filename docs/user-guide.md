@@ -305,6 +305,12 @@ O feed mostra a atividade de treino dos seus amigos e posts publicos.
 4. Outro worker (`notify-friends`) envia push notifications para ate 50 amigos
 5. Os amigos veem o post no feed e recebem notificacao no celular/web
 
+> **Nota (correção 2026-07-30):** cada sessão de treino agora cria UM post novo.
+> Antes, o mesmo treino reciclado (`CONCLUIDO → ACEITO`) atualizava o post
+> antigo, e o mural não mostrava os treinos concluídos no mesmo dia. O backfill
+> `prisma/backfill-mural.ts` roda no deploy para preencher postagens de treinos
+> concluídos hoje que ficaram sem post.
+
 **Ver o feed:**
 ```
 GET /social/mural?cursor=&limit=20

@@ -690,6 +690,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `*` | Alterar Senha | `/alterar-senha` | `pages/auth/AlterarSenha.tsx` |
 | `*` | Dados Pessoais | `/dados` | `pages/aluno/DadosAluno.tsx` |
 | `*` | Privacidade | `/privacidade` | `pages/aluno/Privacidade.tsx` |
+| `*` | Documentação | `/documentacao` | `pages/Documentacao.tsx` |
 | `ALUNO` | Boas-Vindas | `/welcome` | `pages/aluno/WelcomeCards.tsx` |
 | `ALUNO` | Dashboard | `/` | `pages/aluno/Dashboard.tsx` |
 | `ALUNO` | Meus Treinos | `/meus-treinos` | `pages/aluno/MeusTreinos.tsx` |
@@ -842,6 +843,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `docs/planning/clubes-sociais-estudantes.md` | Plano para clubes de alunos: criação, convite, feed do clube, dashboard marketing mobile-first |
 | `docs/planning/social-module-master-plan.md` | Plano mestre do módulo social |
 | `docs/planning/social-frontend-plan.md` | Plano do frontend social |
+| `docs/planning/documentacao-uso-menu.md` | Plano de documentação de uso e correção do mural/avatar |
 | `docs/planning/editar-treino-e-ia-grupos-musculares.md` | Edição de treino e IA por grupos musculares |
 | `docs/planning/onboarding-aluno.md` | Onboarding do aluno |
 | `docs/planning/template-treino.md` | Templates de treino |
