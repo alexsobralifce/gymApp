@@ -57,7 +57,10 @@ export async function treinoIARoutes(app: FastifyInstance) {
   })
 
   /** POST /treinos/ia/gerar — Gerar ficha de treino por IA sem salvar */
-  app.post('/gerar', { preHandler: prehandlerAluno }, async (request, reply) => {
+  app.post('/gerar', {
+    preHandler: prehandlerAluno,
+    config: { rateLimit: { max: 10, timeWindow: '1 hour' } },
+  }, async (request, reply) => {
     const aluno = await prisma.aluno.findUnique({
       where: { usuario_id: request.currentUser.sub },
     })
@@ -80,7 +83,10 @@ export async function treinoIARoutes(app: FastifyInstance) {
   })
 
   /** POST /treinos/ia/gerar-e-salvar — Gerar e salvar treinos na conta do aluno */
-  app.post('/gerar-e-salvar', { preHandler: prehandlerAluno }, async (request, reply) => {
+  app.post('/gerar-e-salvar', {
+    preHandler: prehandlerAluno,
+    config: { rateLimit: { max: 10, timeWindow: '1 hour' } },
+  }, async (request, reply) => {
     const aluno = await prisma.aluno.findUnique({
       where: { usuario_id: request.currentUser.sub },
     })

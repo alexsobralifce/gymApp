@@ -5,6 +5,7 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { ConflictError, NotFoundError, UnauthorizedError, ForbiddenError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
 import { sendVerificationEmail } from '../../../infrastructure/email/mailer.js'
+import crypto from 'crypto'
 
 const googleClient = env.GOOGLE_CLIENT_ID
   ? new OAuth2Client(env.GOOGLE_CLIENT_ID)
@@ -40,6 +41,23 @@ export class AuthService {
     AuthService._jwtSign = fn
   }
 
+  /** Garante no máximo 5 refresh tokens por usuário, removendo os mais antigos */
+  private static async enforceRefreshTokenLimit(usuarioId: string): Promise<void> {
+    const existingTokens = await prisma.refreshToken.count({
+      where: { usuario_id: usuarioId },
+    })
+    if (existingTokens >= 5) {
+      const oldest = await prisma.refreshToken.findMany({
+        where: { usuario_id: usuarioId },
+        orderBy: { criado_em: 'asc' },
+        take: existingTokens - 4,
+      })
+      await prisma.refreshToken.deleteMany({
+        where: { id: { in: oldest.map((t) => t.id) } },
+      })
+    }
+  }
+
   /**
    * UC relacionado: UC-05 (academia), UC-09 (professor), UC-17 (aluno)
    * Cria usuário base. O perfil específico (Academia, Professor, Aluno)
@@ -55,6 +73,8 @@ export class AuthService {
     }
 
     const senhaHash = await bcrypt.hash(input.senha, 12)
+    const code = crypto.randomInt(1000, 9999).toString()
+    const codeExpira = new Date(Date.now() + 15 * 60 * 1000)
 
     const usuario = await prisma.usuario.create({
       data: {
@@ -63,12 +83,15 @@ export class AuthService {
         senha_hash: senhaHash,
         role: input.role,
         telefone: input.telefone || null,
-        email_verify_code: null,
-        email_verify_code_expira: null,
-        email_verified: true, // ← verificação desabilitada temporariamente
+        email_verify_code: code,
+        email_verify_code_expira: codeExpira,
+        email_verified: false,
       },
       select: { id: true, nome: true, email: true, role: true, criado_em: true },
     })
+
+    // Enviar e-mail de verificação em background
+    sendVerificationEmail(input.email, code).catch(() => {})
 
     return { message: 'Conta criada com sucesso.', usuario }
   }
@@ -95,10 +118,9 @@ export class AuthService {
       throw new UnauthorizedError('E-mail ou senha inválidos')
     }
 
-    // email_verified check temporarily disabled
-    /* if (!usuario.email_verified) {
+    if (!usuario.email_verified) {
       throw new ForbiddenError('E-mail não verificado. Verifique sua caixa de entrada.')
-    } */
+    }
 
     // Montar payload com tenantId dependendo do role
     let tenantId: string | undefined
@@ -119,6 +141,9 @@ export class AuthService {
       { sub: usuario.id },
       { secret: env.JWT_REFRESH_SECRET, expiresIn: env.JWT_REFRESH_EXPIRES_IN },
     )
+
+    // Limitar refresh tokens por usuário
+    await AuthService.enforceRefreshTokenLimit(usuario.id)
 
     // Persistir refresh token
     const expiresIn = 7 * 24 * 60 * 60 * 1000 // 7 dias em ms
@@ -213,7 +238,7 @@ export class AuthService {
     if (!usuario) throw new NotFoundError('Usuário')
     if (usuario.email_verified) throw new ConflictError('E-mail já verificado.')
 
-    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const code = crypto.randomInt(1000, 9999).toString()
     const codeExpira = new Date(Date.now() + 15 * 60 * 1000)
 
     await prisma.usuario.update({
@@ -245,10 +270,7 @@ export class AuthService {
       try {
         const ticket = await googleClient.verifyIdToken({
           idToken: credential,
-          audience: [
-            env.GOOGLE_CLIENT_ID,
-            '100874517602-l5ghfcrmukob6bfukopidmsqjin8e3h6.apps.googleusercontent.com',
-          ].filter(Boolean) as string[],
+          audience: env.GOOGLE_CLIENT_ID,
         })
         const payload = ticket.getPayload()
         if (!payload || !payload.email) {
@@ -329,6 +351,9 @@ export class AuthService {
       { secret: env.JWT_REFRESH_SECRET, expiresIn: env.JWT_REFRESH_EXPIRES_IN },
     )
 
+    // Limitar refresh tokens do usuário
+    await AuthService.enforceRefreshTokenLimit(usuario.id)
+
     await prisma.refreshToken.create({
       data: {
         token: refreshToken,
@@ -384,6 +409,8 @@ export class AuthService {
       { sub: usuario.id },
       { secret: env.JWT_REFRESH_SECRET, expiresIn: env.JWT_REFRESH_EXPIRES_IN },
     )
+
+    await AuthService.enforceRefreshTokenLimit(usuario.id)
 
     await prisma.refreshToken.create({
       data: {

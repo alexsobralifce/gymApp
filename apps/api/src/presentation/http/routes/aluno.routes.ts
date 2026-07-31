@@ -33,7 +33,7 @@ export async function alunoRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
 
   /** POST /alunos/perfil — UC-17 */
-  app.post('/perfil', { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.post('/perfil', { preHandler }, async (request, reply) => {
     const usuarioId = request.currentUser.sub
     const body = z.object({
       dataNascimento: z.string().optional(),

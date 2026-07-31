@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
-import { ensureDir, getAvatarsDir, getFeedDir } from '../../../infrastructure/storage/paths.js'
+import { ensureDir, getAvatarsDir, getFeedDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
 
 async function resolveAluno(usuarioId: string) {
   const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
@@ -55,6 +55,12 @@ export async function uploadRoutes(app: FastifyInstance) {
     const year = now.getFullYear().toString()
     const month = String(now.getMonth() + 1).padStart(2, '0')
     const ext = EXTENSOES[mimetype] || '.jpg'
+
+    // Validar magic bytes para evitar arquivos maliciosos com MIME forjado
+    if (!validateMagicBytes(buffer, ext)) {
+      return reply.status(400).send({ message: 'Formato de imagem inválido.' })
+    }
+
     const filename = `${Date.now()}${ext}`
 
     const uploadDir = getFeedDir(year, month)

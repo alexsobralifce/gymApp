@@ -42,7 +42,7 @@ export async function professorRoutes(app: FastifyInstance) {
   const preHandlerExercicios = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA, Role.ALUNO)]
 
   /** POST /professores/perfil — cria perfil professor após registro */
-  app.post('/perfil', { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.post('/perfil', { preHandler }, async (request, reply) => {
     const { cref } = z.object({ cref: z.string().optional() }).parse(request.body)
     const professor = await prisma.professor.upsert({
       where: { usuario_id: request.currentUser.sub },

@@ -147,11 +147,17 @@ export async function rootRoutes(app: FastifyInstance) {
 
     if (hasPagination) {
       const skip = (parsed.page - 1) * parsed.limit
+      const orderMap: Record<string, Prisma.UsuarioOrderByWithRelationInput> = {
+        nome: { nome: parsed.order },
+        email: { email: parsed.order },
+        criado_em: { criado_em: parsed.order },
+        role: { role: parsed.order },
+      }
       const [usuarios, total] = await Promise.all([
         prisma.usuario.findMany({
           where,
           include: { academia: true, professor: true, aluno: true },
-          orderBy: { [parsed.sortBy]: parsed.order },
+          orderBy: orderMap[parsed.sortBy],
           skip,
           take: parsed.limit,
         }),
@@ -192,9 +198,17 @@ export async function rootRoutes(app: FastifyInstance) {
   })
 
   /** POST /root/usuarios/:id/reset-password — reseta senha */
-  app.post('/usuarios/:id/reset-password', { preHandler }, async (request, reply) => {
+  app.post('/usuarios/:id/reset-password', {
+    preHandler,
+    config: { rateLimit: { max: 3, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const { senha } = z.object({ senha: z.string().min(8) }).parse(request.body)
+    const { senha } = z.object({
+      senha: z.string().min(8).regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        'Senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número',
+      ),
+    }).parse(request.body)
 
     const usuario = await prisma.usuario.findUnique({ where: { id } })
     if (!usuario) throw new NotFoundError('Usuário não encontrado')

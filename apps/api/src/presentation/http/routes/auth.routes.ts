@@ -7,12 +7,15 @@ import fs from 'fs/promises'
 import { AuthService } from '../../../application/usecases/auth/AuthService.js'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { env } from '../../../shared/env.js'
-import { ensureDir, getAvatarsDir } from '../../../infrastructure/storage/paths.js'
+import { ensureDir, getAvatarsDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
 
 const registerBodySchema = z.object({
   nome: z.string().min(2).max(100),
   email: z.string().email(),
-  senha: z.string().min(8),
+  senha: z.string().min(8).regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+    'Senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número',
+  ),
   role: z.enum([Role.ACADEMIA, Role.PROFESSOR, Role.ALUNO]),
   telefone: z.string().optional(),
 })
@@ -38,7 +41,9 @@ export async function authRoutes(app: FastifyInstance) {
    * POST /auth/register
    * Cria conta base. Use UC-05, UC-09, UC-17 para criar o perfil específico.
    */
-  app.post('/register', async (request, reply) => {
+  app.post('/register', {
+    config: { rateLimit: { max: 3, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const body = registerBodySchema.parse(request.body)
     const result = await AuthService.register(body)
     return reply.status(201).send(result)
@@ -48,7 +53,9 @@ export async function authRoutes(app: FastifyInstance) {
    * POST /auth/google
    * Login com Google OAuth — recebe credential (ID token) ou access_token
    */
-  app.post('/google', async (request, reply) => {
+  app.post('/google', {
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const body = z.object({ credential: z.string().optional(), access_token: z.string().optional() }).parse(request.body)
     const result = await AuthService.loginWithGoogle(body.credential || '', app.jwt.sign.bind(app.jwt), body.access_token)
     return reply.status(200).send(result)
@@ -58,10 +65,12 @@ export async function authRoutes(app: FastifyInstance) {
    * POST /auth/verify-email
    * Verifica o código enviado por e-mail
    */
-  app.post('/verify-email', async (request, reply) => {
+  app.post('/verify-email', {
+    config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const body = z.object({
       email: z.string().email(),
-      code: z.string().length(6),
+      code: z.string().length(4),
     }).parse(request.body)
     await AuthService.verifyEmail(body.email, body.code)
     return reply.status(200).send({ message: 'E-mail verificado com sucesso.' })
@@ -71,7 +80,9 @@ export async function authRoutes(app: FastifyInstance) {
    * POST /auth/resend-code
    * Reenvia o código de verificação
    */
-  app.post('/resend-code', async (request, reply) => {
+  app.post('/resend-code', {
+    config: { rateLimit: { max: 3, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const body = z.object({ email: z.string().email() }).parse(request.body)
     await AuthService.resendCode(body.email)
     return reply.status(200).send({ message: 'Código reenviado.' })
@@ -80,7 +91,9 @@ export async function authRoutes(app: FastifyInstance) {
   /**
    * POST /auth/login
    */
-  app.post('/login', async (request, reply) => {
+  app.post('/login', {
+    config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const body = loginBodySchema.parse(request.body)
     const tokens = await AuthService.login(body, app.jwt.sign.bind(app.jwt))
     return reply.status(200).send(tokens)
@@ -89,7 +102,9 @@ export async function authRoutes(app: FastifyInstance) {
   /**
    * POST /auth/refresh
    */
-  app.post('/refresh', async (request, reply) => {
+  app.post('/refresh', {
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const { refreshToken } = refreshBodySchema.parse(request.body)
     const tokens = await AuthService.refresh(
       refreshToken,
@@ -186,6 +201,12 @@ export async function authRoutes(app: FastifyInstance) {
       'image/gif': '.gif',
     }
     const ext = extMap[mimetype] || '.jpg'
+
+    // Validar magic bytes para evitar arquivos maliciosos com MIME forjado
+    if (!validateMagicBytes(buffer, ext)) {
+      return reply.status(400).send({ message: 'Formato de imagem inválido.' })
+    }
+
     const filename = `${request.currentUser.sub}_${Date.now()}${ext}`
 
     const uploadDir = getAvatarsDir()
@@ -207,10 +228,16 @@ export async function authRoutes(app: FastifyInstance) {
   /**
    * POST /auth/change-password — Permite ao usuário logado alterar sua própria senha
    */
-  app.post('/change-password', { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.post('/change-password', {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 3, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const { senhaAtual, novaSenha } = z.object({
       senhaAtual: z.string().min(1),
-      novaSenha: z.string().min(8),
+      novaSenha: z.string().min(8).regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        'Senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número',
+      ),
     }).parse(request.body)
 
     const usuario = await prisma.usuario.findUnique({

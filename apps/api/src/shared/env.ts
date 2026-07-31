@@ -25,11 +25,12 @@ const envSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional().default(''),
   VAPID_SUBJECT: z.string().optional().default('mailto:admin@endorfinapp.com'),
 
-  SMTP_HOST: z.string().optional().default('smtp.gmail.com'),
+  SMTP_HOST: z.string().optional().default('smtp.sendgrid.net'),
   SMTP_PORT: z.coerce.number().optional().default(587),
-  SMTP_USER: z.string().optional().default(''),
+  SMTP_USER: z.string().optional().default('apikey'),
   SMTP_PASS: z.string().optional().default(''),
-  FROM_EMAIL: z.string().optional().default('noreply@endorfinapp.com'),
+  FROM_EMAIL: z.string().optional().default('suportendorfinapp@gmail.com'),
+  SENDGRID_API_KEY: z.string().optional().default(''),
 
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
 })

@@ -172,10 +172,12 @@ export async function feedRoutes(app: FastifyInstance) {
 
     try {
       await prisma.socialLike.deleteMany({ where: { post_id: postId, aluno_id: aluno.id } })
-      await prisma.$executeRawUnsafe(
-        `UPDATE social_posts SET curtidas_count = GREATEST(curtidas_count - 1, 0) WHERE id = $1`,
-        postId,
-      )
+      await prisma.socialPost.update({
+        where: { id: postId },
+        data: { curtidas_count: { decrement: 1 } },
+      })
+      // Garante que nunca fique negativo
+      await prisma.$executeRaw`UPDATE social_posts SET curtidas_count = GREATEST(curtidas_count, 0) WHERE id = ${postId}`
     } catch {
       // ignora
     }

@@ -2,6 +2,7 @@ import fastify, { FastifyInstance } from 'fastify'
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyJwt from '@fastify/jwt'
+import fastifyRateLimit from '@fastify/rate-limit'
 import fastifyStatic from '@fastify/static'
 import fastifyMultipart from '@fastify/multipart'
 import fastifySwagger from '@fastify/swagger'
@@ -58,6 +59,15 @@ export async function buildApp(): Promise<FastifyInstance> {
     },
   })
 
+  await app.register(fastifyRateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+    errorResponseBuilder: (_request, _context) => ({
+      error: 'RATE_LIMIT',
+      message: 'Muitas requisições. Aguarde antes de tentar novamente.',
+    }),
+  })
+
   await app.register(fastifyCors, {
     origin: (origin, cb) => {
       if (!origin || origin === 'null') {
@@ -75,7 +85,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       if (allowed.includes(origin)) {
         cb(null, true)
       } else {
-        cb(null, true)
+        cb(new Error('Origem não permitida pelo CORS'), false)
       }
     },
     credentials: true,
