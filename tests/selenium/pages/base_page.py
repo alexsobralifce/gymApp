@@ -1,4 +1,5 @@
 import os
+import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -39,6 +40,18 @@ class BasePage:
             lambda d: text not in (d.current_url or "")
         )
 
+    def navigate_to(self, path, timeout=10):
+        """Full-page navigation to a route, waiting for the SPA to finish booting.
+
+        The app shows a "Carregando..." screen until the session is restored, so the
+        AppShell header (present on every authenticated page) is used as the signal
+        that the app finished loading.
+        """
+        self.driver.get(f"{self.base_url}{path}")
+        self.wait_for_url_contains(path, timeout=timeout)
+        self.wait_for_visible(By.TAG_NAME, "header", timeout=timeout)
+        return self
+
     def capture_screenshot(self, name):
         os.makedirs(SCREENSHOT_DIR, exist_ok=True)
         path = os.path.join(SCREENSHOT_DIR, f"{name}.png")
@@ -50,3 +63,64 @@ class BasePage:
         logs = self.driver.get_log("browser")
         errors = [entry["message"] for entry in logs if entry.get("level") == "SEVERE"]
         return errors
+
+    def logout(self, timeout=10):
+        """Real logout via the AppShell user menu: click avatar in the top bar, then 'Sair'.
+
+        handleLogout() in AppShell clears the auth state and sets window.location.href = '/',
+        so this waits until the AppShell header (with the avatar) is gone after the reload.
+        """
+        self._dismiss_popups()
+        avatar = WebDriverWait(self.driver, timeout).until(
+            EC.element_to_be_clickable((By.XPATH, "//header//div[contains(@class,'relative')]//button"))
+        )
+        avatar.click()
+        sair = WebDriverWait(self.driver, timeout).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[normalize-space(.)='Sair']"))
+        )
+        sair.click()
+        WebDriverWait(self.driver, timeout).until(
+            EC.invisibility_of_element_located((By.XPATH, "//header//div[contains(@class,'relative')]//button"))
+        )
+
+    def _dismiss_popups(self, timeout=5):
+        """Dismiss transient overlay prompts that can intercept clicks.
+
+        - OnboardingPopup: full-screen modal for ALUNO/PROFESSOR on first visit
+          (button "Começar").
+        - NotificationPrompt: bottom bar asking for push notification permission
+          (button "Agora não"). It is z-50 and can cover the "Sair" menu item.
+
+        Fast no-op when neither prompt is present. Also pre-empts both by
+        setting their localStorage flags.
+        """
+        try:
+            self.driver.execute_script(
+                "localStorage.setItem('gymapp_onboarding_seen','true');"
+                "localStorage.setItem('gymapp_notification_prompt','true');"
+            )
+        except Exception:
+            pass
+        dismiss_buttons = (
+            (By.XPATH, "//button[normalize-space(.)='Começar']"),
+            (By.XPATH, "//button[normalize-space(.)='Agora não']"),
+        )
+        # Temporarily disable implicit wait so presence polls are fast.
+        try:
+            self.driver.implicitly_wait(0)
+            deadline = time.time() + timeout
+            while time.time() < deadline:
+                clicked = False
+                for by, loc in dismiss_buttons:
+                    try:
+                        btn = self.driver.find_element(by, loc)
+                        if btn.is_displayed():
+                            btn.click()
+                            clicked = True
+                    except Exception:
+                        pass
+                if not clicked:
+                    return
+                time.sleep(0.3)
+        finally:
+            self.driver.implicitly_wait(2)
