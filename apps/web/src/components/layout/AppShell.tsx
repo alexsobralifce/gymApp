@@ -477,9 +477,27 @@ export default function AppShell() {
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="rounded-full hover:brightness-110 active:scale-95 transition-all cursor-pointer overflow-hidden"
+                  className="flex items-center gap-2.5 rounded-xl p-1.5 pr-2.5 hover:bg-surface-input transition-all cursor-pointer active:scale-95 min-w-0"
                 >
                   <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="sm" ringClass={ringColor} />
+                  {/* Mobile: only name */}
+                  <span className="text-sm font-semibold text-text truncate max-w-28 md:hidden">
+                    {user?.nome || 'Usuário'}
+                  </span>
+                  {/* Desktop: name + badge on line 1, email on line 2 */}
+                  <div className="hidden md:flex flex-col items-start min-w-0 leading-tight">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-sm font-semibold text-text truncate">
+                        {user?.nome || 'Usuário'}
+                      </span>
+                      <span className="rounded-full bg-secondary px-2 py-px text-[10px] font-bold text-text shrink-0">
+                        {user?.admin ? 'Admin' : getRoleLabel(role)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-text-muted truncate max-w-40">
+                      {user?.email || ''}
+                    </span>
+                  </div>
                 </button>
 
                 {menuOpen && (
