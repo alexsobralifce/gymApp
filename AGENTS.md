@@ -322,6 +322,7 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 
 #### Gestão Própria & Edição de Treinos pelo Aluno
 - Aluno pode criar treinos próprios (`POST /treinos/autogestao`) mesmo se tiver professor.
+- **Professor** também pode criar treinos próprios via autogestão (roteiro `/treinos/autogestao`, rotas de execução e tenant checks aceitam role PROFESSOR). Internamente, um registro self de `alunos` é criado sob demanda (chaveado por `usuario_id`, com `professor_id = null`), mantendo `treinos.aluno_id` obrigatório — sem mudança de schema.
 - Edição de treino salvo: `PATCH /treinos/:id` via `CriarTreinoAluno` em modo edit.
 - Exclusão de treinos que possui (`DELETE /treinos/:id`).
 - Edição não apaga histórico de execução nem altera status.
@@ -613,13 +614,13 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | Método | Rota | Descrição | Role |
 |--------|------|-----------|------|
 | POST | `/treinos` | Criar | PROFESSOR |
-| POST | `/treinos/autogestao` | Criar (autogestão) | ALUNO |
+| POST | `/treinos/autogestao` | Criar (autogestão) | ALUNO, PROFESSOR |
 | GET/POST | `/treinos/exercicios` | Listar/criar exercício | auth/PROF |
 | POST | `/treinos/:id/enviar` | Enviar ao aluno | PROFESSOR |
 | PATCH | `/treinos/:id/responder` | Aceitar/recusar | ALUNO |
-| POST | `/treinos/:id/iniciar` | Iniciar execução | ALUNO |
-| POST | `/treinos/:id/execucoes` | Registrar série | ALUNO |
-| POST | `/treinos/:id/finalizar` | Finalizar + avaliar dificuldade | ALUNO |
+| POST | `/treinos/:id/iniciar` | Iniciar execução | ALUNO, PROFESSOR |
+| POST | `/treinos/:id/execucoes` | Registrar série | ALUNO, PROFESSOR |
+| POST | `/treinos/:id/finalizar` | Finalizar + avaliar dificuldade | ALUNO, PROFESSOR |
 | GET | `/treinos/:id` | Detalhe + últimas cargas | auth |
 | PATCH | `/treinos/:id` | Editar | PROF/ACAD/ALUNO |
 | DELETE | `/treinos/:id` | Remover | PROF/ACAD/ALUNO |

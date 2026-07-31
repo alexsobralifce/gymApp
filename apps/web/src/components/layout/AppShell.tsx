@@ -152,6 +152,14 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
             { to: '/treinos/criar', label: 'Criar Treino', icon: <PlusIcon className="h-4 w-4" /> },
           ],
         },
+        {
+          label: 'Meu Treino',
+          icon: <DumbbellIcon className="h-5 w-5" />,
+          children: [
+            { to: '/meus-treinos', label: 'Meus Treinos', icon: <ClipboardListIcon className="h-4 w-4" /> },
+            { to: '/treino/novo', label: 'Criar Meu Treino', icon: <PlusIcon className="h-4 w-4" /> },
+          ],
+        },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/alunos/vincular', label: 'Vincular Aluno', icon: <UserPlusIcon className="h-5 w-5" /> },
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },

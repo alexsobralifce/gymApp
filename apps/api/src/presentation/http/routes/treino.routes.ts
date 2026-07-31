@@ -20,6 +20,27 @@ import {
 export async function treinoRoutes(app: FastifyInstance) {
   const prehandlerProfessor = [app.authenticate, app.requireRole(Role.PROFESSOR)]
   const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO)]
+  const prehandlerAlunoProfessor = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)]
+
+  async function resolveAlunoSelf(usuarioId: string, role: Role) {
+    const existing = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
+    if (existing) {
+      // Professor self-flow: ensure consent is set for feed social
+      if (role === Role.PROFESSOR && !existing.consentiu_feed_social_em) {
+        return prisma.aluno.update({
+          where: { id: existing.id },
+          data: { consentiu_feed_social_em: new Date() },
+        })
+      }
+      return existing
+    }
+    return prisma.aluno.create({
+      data: {
+        usuario_id: usuarioId,
+        ...(role === Role.PROFESSOR ? { consentiu_feed_social_em: new Date() } : {}),
+      },
+    })
+  }
 
   async function resolveProfessor(usuarioId: string) {
     return prisma.professor.upsert({
@@ -56,11 +77,9 @@ export async function treinoRoutes(app: FastifyInstance) {
   })
 
   /** POST /treinos/autogestao — UC-18 (aluno cadastra próprio treino) */
-  app.post('/autogestao', { preHandler: prehandlerAluno }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+  app.post('/autogestao', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
+    const { role } = request.currentUser
+    const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
     const body = z.object({
       nome: z.string().min(2),
@@ -145,10 +164,10 @@ export async function treinoRoutes(app: FastifyInstance) {
   })
 
   /** POST /treinos/:id/iniciar — UC-20 */
-  app.post('/:id/iniciar', { preHandler: prehandlerAluno }, async (request, reply) => {
+  app.post('/:id/iniciar', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const { role } = request.currentUser
+    const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
     const treino = await iniciarTreino(id, aluno.id)
     try {
@@ -160,10 +179,10 @@ export async function treinoRoutes(app: FastifyInstance) {
   })
 
   /** POST /treinos/:id/execucoes — UC-22 */
-  app.post('/:id/execucoes', { preHandler: prehandlerAluno }, async (request, reply) => {
+  app.post('/:id/execucoes', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const { role } = request.currentUser
+    const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
     const body = z.object({
       exercicioId: z.string(),
@@ -177,11 +196,11 @@ export async function treinoRoutes(app: FastifyInstance) {
   })
 
   /** POST /treinos/:id/finalizar — UC-23 */
-  app.post('/:id/finalizar', { preHandler: prehandlerAluno }, async (request, reply) => {
+  app.post('/:id/finalizar', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
     const { avaliacao } = z.object({ avaliacao: z.string().optional() }).parse(request.body || {})
-    const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const { role } = request.currentUser
+    const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
     const treino = await finalizarTreino(id, aluno.id, avaliacao)
     try {
@@ -267,8 +286,11 @@ export async function treinoRoutes(app: FastifyInstance) {
       const aluno = await prisma.aluno.findUnique({ where: { usuario_id: sub } })
       if (!aluno || treinoBase.aluno_id !== aluno.id) throw new TenantAccessError()
     } else if (role === Role.PROFESSOR) {
+      const selfAluno = await prisma.aluno.findUnique({ where: { usuario_id: sub } })
       const professor = await prisma.professor.findUnique({ where: { usuario_id: sub } })
-      if (!professor || treinoBase.aluno.professor_id !== professor.id) throw new TenantAccessError()
+      const ownsViaSelf = selfAluno && treinoBase.aluno_id === selfAluno.id
+      const ownsViaStudent = professor && treinoBase.aluno.professor_id === professor.id
+      if (!ownsViaSelf && !ownsViaStudent) throw new TenantAccessError()
     } else if (role === Role.ACADEMIA) {
       if (!tenantId || treinoBase.aluno.academia_id !== tenantId) throw new TenantAccessError()
     }
@@ -321,7 +343,10 @@ export async function treinoRoutes(app: FastifyInstance) {
       if (treino.aluno.usuario_id !== sub) throw new TenantAccessError()
     } else if (role === Role.PROFESSOR) {
       const professor = await resolveProfessor(sub)
-      if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
+      // Allow if: (a) professor owns the student through professor_id, OR (b) professor owns the treino through their own self-aluno record
+      if (treino.aluno.usuario_id !== sub && treino.aluno.professor_id !== professor.id) {
+        throw new TenantAccessError()
+      }
     } else if (role === Role.ACADEMIA) {
       if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
     } else {
@@ -386,7 +411,9 @@ export async function treinoRoutes(app: FastifyInstance) {
       if (treino.aluno.usuario_id !== sub) throw new TenantAccessError()
     } else if (role === Role.PROFESSOR) {
       const professor = await resolveProfessor(sub)
-      if (treino.aluno.professor_id !== professor.id) throw new TenantAccessError()
+      if (treino.aluno.usuario_id !== sub && treino.aluno.professor_id !== professor.id) {
+        throw new TenantAccessError()
+      }
     } else if (role === Role.ACADEMIA) {
       if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
     }

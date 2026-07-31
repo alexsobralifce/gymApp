@@ -209,7 +209,7 @@ export async function alunoRoutes(app: FastifyInstance) {
   })
 
   /** GET /alunos/treinos — lista treinos do aluno */
-  app.get('/treinos', { preHandler }, async (request, reply) => {
+  app.get('/treinos', { preHandler: [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)] }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
 
     const treinos = await prisma.treino.findMany({
@@ -221,7 +221,7 @@ export async function alunoRoutes(app: FastifyInstance) {
   })
 
   /** GET /alunos/treinos/historico-dias — calendário de dias treinados no mês */
-  app.get('/treinos/historico-dias', { preHandler }, async (request, reply) => {
+  app.get('/treinos/historico-dias', { preHandler: [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)] }, async (request, reply) => {
     const { mes } = z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/) }).parse(request.query)
     const aluno = await resolveAluno(request.currentUser.sub)
     const dias = await historicoDiasTreino(aluno.id, mes)

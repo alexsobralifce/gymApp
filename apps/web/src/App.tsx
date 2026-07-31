@@ -125,6 +125,12 @@ export default function App() {
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
+          <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
+          <Route path="treino/novo" element={<AlunoCriarTreino />} />
+          <Route path="treino/:id/editar" element={<AlunoCriarTreino />} />
+          <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
+          <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />
+          <Route path="treino/:id/conclusao" element={<AlunoTreinoConclusao />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}
