@@ -359,7 +359,7 @@ export default function AppShell() {
   }
 
   const renderDrawerContent = () => (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col safe-top safe-bottom">
       <div className="flex items-center justify-between p-4 border-b border-surface-input">
         <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center gap-2">
           <EndorfinappLogo variant="horizontal" iconSize={26} size={15} showSlogan={false} />
@@ -452,7 +452,7 @@ export default function AppShell() {
       <div className="flex flex-1 flex-col min-w-0">
         {/* Top bar */}
         {!hideNav && (
-          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-surface-input glass px-4 shrink-0 safe-top" style={{ minHeight: `calc(3.5rem + env(safe-area-inset-top, 0px))` }}>
+          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-surface-input glass px-4 shrink-0 safe-top h-[calc(3.5rem+env(safe-area-inset-top,0px))]">
             <div className="flex items-center gap-3 min-w-0">
               {/* Hamburger for all users on mobile */}
               <button

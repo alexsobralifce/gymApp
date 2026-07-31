@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useId, type CSSProperties } from 'react'
 
 interface EndorfinappIconProps {
   size?: number | string
@@ -17,7 +17,8 @@ export function EndorfinappIcon({
   withBackground = false,
   color,
 }: EndorfinappIconProps) {
-  const glowFilterId = `ecg-glow-${Math.random().toString(36).slice(2, 9)}`
+  const reactId = useId()
+  const glowFilterId = `ecg-glow-${reactId.replace(/:/g, '')}`
   const activeColor = color || 'var(--color-primary, #FF4D4D)'
 
   return (

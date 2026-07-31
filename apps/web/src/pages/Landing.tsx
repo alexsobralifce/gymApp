@@ -86,7 +86,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       {/* ─── NAV ─── */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/90 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export default function Landing() {
         </div>
 
         {mobileOpen && (
-          <div className="md:hidden bg-card border-t border-border px-4 pb-4 pt-2">
+          <div className="md:hidden bg-card border-t border-border px-4 pb-4 pt-2 safe-bottom">
             {NAV_LINKS.map((link) => (
               <a
                 key={link}
@@ -156,7 +156,7 @@ export default function Landing() {
       </header>
 
       {/* ─── HERO ─── */}
-      <section className="relative pt-24 pb-0 overflow-hidden">
+      <section className="relative pt-[calc(6rem+env(safe-area-inset-top,0px))] pb-0 overflow-hidden">
         <div className="absolute inset-0 z-0 bg-gradient-to-br from-background via-background to-surface-card" />
         <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-primary/15 blur-[100px] pointer-events-none z-0" />
         <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-accent/10 blur-[100px] pointer-events-none z-0" />
@@ -581,7 +581,7 @@ export default function Landing() {
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer className="border-t border-border bg-background py-12">
+      <footer className="border-t border-border bg-background py-12 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 md:col-span-1">
