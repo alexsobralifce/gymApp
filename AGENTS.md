@@ -54,7 +54,7 @@ apps/api/src/
 
 - **RF02 - Onboarding e Wizard do Aluno**: Cadastro guiado em 3 passos: Dados Básicos (nome, email, senha, WhatsApp, role), Dados Físicos (data nascimento, peso, altura, sexo) com validação inline debounce 400ms, e Vínculo (academia ativa ou autogestão). Inclui checkbox de consentimento LGPD para feed social.
 
-- **RF03 - Painel de Boas-Vindas (Welcome)**: Tela standalone pós-cadastro com 3 cards explicativos. Conteúdo adaptado: "Aceitar Treino" (aluno com professor) vs "Criar Treino" (autogestão). Controlado por `localStorage` (`gymapp_welcome_seen`).
+- **RF03 - Painel de Boas-Vindas (Welcome) + Onboarding Popup**: Tela standalone pós-cadastro com 3 cards explicativos. Conteúdo adaptado: "Aceitar Treino" (aluno com professor) vs "Criar Treino" (autogestão). Controlado por `localStorage` (`gymapp_welcome_seen`). Após o primeiro login no Dashboard, um popup modal (`OnboardingPopup`) aparece para ALUNO e PROFESSOR com links diretos para criar treinos e acessar a documentação, controlado por `localStorage` (`gymapp_onboarding_seen`).
 
 - **RF04 - Gestão de Fichas de Treino**:
   - **Professor/Academia**: Criar, editar, excluir e enviar treinos para alunos. Clonagem individual ou em lote para múltiplos alunos. Marcar fichas como templates reutilizáveis.
@@ -747,6 +747,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `FriendRequestCard` | `components/social/FriendRequestCard.tsx` | Card de solicitação de amizade |
 | `CoachMark` | `components/ui/CoachMark.tsx` | Tooltips de onboarding (hook + overlay) |
 | `ConfirmModal` | `components/ui/ConfirmModal.tsx` | Modal de confirmação (z-40) |
+| `OnboardingPopup` | `components/ui/OnboardingPopup.tsx` | Popup de onboarding pós-login para ALUNO e PROFESSOR |
 | `EmptyState` | `components/ui/EmptyState.tsx` | Estado vazio: ícone, título, descrição, CTA |
 | `Toast` | `components/ui/Toast.tsx` | Feedback de sucesso/erro |
 | `StatusBadge` | `components/ui/StatusBadge.tsx` | Badge com 7 variantes + helpers |
@@ -792,6 +793,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | Key | Uso |
 |-----|-----|
 | `gymapp_welcome_seen` | Boas-vindas já exibida |
+| `gymapp_onboarding_seen` | Popup de onboarding pós-login já exibido |
 | `gymapp_first_workout_done` | Coach marks já exibidas |
 | `gymapp_theme` | Tema (red/lime/violet) |
 | `gymapp_mode` | Modo (day/night) |

@@ -5,6 +5,7 @@ import type { AuthState } from '../../stores/auth'
 import { api } from '../../api/client'
 import { useThemeStore, THEME_BRANDS } from '../../stores/theme'
 import type { ThemeBrand } from '../../stores/theme'
+import OnboardingPopup from '../ui/OnboardingPopup'
 import {
   HomeIcon,
   DumbbellIcon,
@@ -276,6 +277,7 @@ export default function AppShell() {
   const [colegasSheetOpen, setColegasSheetOpen] = useState(false)
   const [atividadeMural, setAtividadeMural] = useState(0)
   const [debugOpen, setDebugOpen] = useState(false)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -308,6 +310,21 @@ export default function AppShell() {
     }, 30000)
     return () => clearInterval(interval)
   }, [user])
+
+  // Onboarding popup — mostra uma vez por dispositivo para ALUNO e PROFESSOR
+  useEffect(() => {
+    if (!user) return
+    const key = 'gymapp_onboarding_seen'
+    if (localStorage.getItem(key)) return
+    if (user.role === 'ALUNO' || user.role === 'PROFESSOR') {
+      setOnboardingOpen(true)
+    }
+  }, [user])
+
+  function dismissOnboarding() {
+    localStorage.setItem('gymapp_onboarding_seen', 'true')
+    setOnboardingOpen(false)
+  }
 
   const role = user?.role || 'ALUNO'
   const isAluno = role === 'ALUNO'
@@ -810,6 +827,11 @@ export default function AppShell() {
         {!isAluno && !hideNav && <div className="md:hidden h-4" />}
       </div>
       <DebugOverlay open={debugOpen} onClose={() => setDebugOpen(false)} />
+      <OnboardingPopup
+        open={onboardingOpen}
+        role={role as 'ALUNO' | 'PROFESSOR'}
+        onDismiss={dismissOnboarding}
+      />
     </div>
   )
 }
