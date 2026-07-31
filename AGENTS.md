@@ -701,7 +701,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `ALUNO` | Conclusão | `/treino/:id/conclusao` | `pages/aluno/TreinoConclusao.tsx` |
 | `ALUNO` | Medidas | `/medidas` | `pages/aluno/Medidas.tsx` |
 | `ALUNO` | Evolução | `/evolucao` | `pages/aluno/Evolucao.tsx` |
-| `ALUNO` | Mural Social | `/mural` | `pages/aluno/Mural.tsx` |
+| `ALUNO` | Feed Social | `/feed` (redireciona `/mural`) | `pages/aluno/Mural.tsx` |
 | `ALUNO` | Amizades | `/amizades` | `pages/aluno/Amizades.tsx` |
 | `ALUNO` | Clubes | `/clubes` | `pages/aluno/Clubes.tsx` |
 | `ALUNO` | Biblioteca de Planos | `/biblioteca-planos` | `pages/aluno/BibliotecaPlanos.tsx` |

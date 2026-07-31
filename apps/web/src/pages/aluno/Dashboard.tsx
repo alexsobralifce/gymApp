@@ -16,6 +16,7 @@ import {
   ChevronRightIcon,
 } from '../../components/icons/Icon'
 import { getInitials } from '../../lib/initials'
+import { resolveMediaUrl } from '../../lib/media'
 
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
@@ -165,9 +166,17 @@ export default function AlunoDashboard() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
           <div className="relative flex items-center gap-4">
-            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary text-lg font-bold text-primary-foreground ring-4 ring-offset-2 ring-offset-surface-card ring-white/10`}>
-              {getInitials(user.nome)}
-            </div>
+            {user.fotoUrl ? (
+              <img
+                src={resolveMediaUrl(user.fotoUrl)!}
+                alt={user.nome}
+                className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-4 ring-offset-2 ring-offset-surface-card ring-white/10"
+              />
+            ) : (
+              <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary text-lg font-bold text-primary-foreground ring-4 ring-offset-2 ring-offset-surface-card ring-white/10`}>
+                {getInitials(user.nome)}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-xs font-medium text-text-muted uppercase tracking-wider">
                 {getSaudacao()} {user?.nome?.split(' ')[0] || ''}
@@ -453,14 +462,14 @@ export default function AlunoDashboard() {
 
         <button
           type="button"
-          onClick={() => navigate('/mural')}
+          onClick={() => navigate('/feed')}
           className="w-full rounded-2xl bg-surface-card border border-surface-input p-4 hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group flex items-center gap-3"
         >
           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <MessageCircleIcon className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-text">Mural de Atividades</p>
+            <p className="text-xs font-bold text-text">Feed Social</p>
             <p className="text-xs text-text-muted truncate">Veja o que seus amigos estão fazendo</p>
           </div>
           <ChevronRightIcon className="h-4 w-4 text-text-muted shrink-0" />

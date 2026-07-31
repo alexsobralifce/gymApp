@@ -47,6 +47,7 @@ import WelcomeCards from './pages/aluno/WelcomeCards'
 import ClubeFeed from './pages/aluno/ClubeFeed'
 import AlterarSenha from './pages/auth/AlterarSenha'
 import Avaliacoes from './pages/avaliacoes/Avaliacoes'
+import Documentacao from './pages/Documentacao'
 
 import { EndorfinappIcon } from './components/branding'
 
@@ -92,9 +93,11 @@ export default function App() {
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
           <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />
           <Route path="treino/:id/conclusao" element={<AlunoTreinoConclusao />} />
+          <Route path="documentacao" element={<Documentacao />} />
           <Route path="medidas" element={<AlunoMedidas />} />
           <Route path="evolucao" element={<AlunoEvolucao />} />
-          <Route path="mural" element={<AlunoMural />} />
+          <Route path="feed" element={<AlunoMural />} />
+          <Route path="mural" element={<Navigate to="/feed" replace />} />
           <Route path="amizades" element={<AlunoAmizades />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="clubes" element={<AlunoClubes />} />
@@ -111,6 +114,7 @@ export default function App() {
           <Route index element={<ProfessorDashboard />} />
           <Route path="treinos" element={<ProfessorTreinos />} />
           <Route path="alunos/:alunoId/evolucao" element={<ProfessorAlunoCorrelacoes />} />
+          <Route path="documentacao" element={<Documentacao />} />
           <Route path="alunos/:alunoId/correlacoes" element={<ProfessorAlunoCorrelacoes />} />
           <Route path="treinos/criar" element={<ProfessorCriarTreino />} />
           <Route path="exercicios/criar" element={<ProfessorCriarExercicio />} />
@@ -129,6 +133,7 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route index element={<RootPainel />} />
           <Route path="vinculos" element={<RootVinculos />} />
+          <Route path="documentacao" element={<Documentacao />} />
           <Route path="usuarios" element={<RootUsuarios />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="social" element={<RootSocial />} />
@@ -143,6 +148,7 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route index element={<AcademiaDashboard />} />
           <Route path="treinos" element={<AcademiaTreinos />} />
+          <Route path="documentacao" element={<Documentacao />} />
           <Route path="professores" element={<AcademiaProfessores />} />
           <Route path="alunos" element={<AcademiaAlunos />} />
           <Route path="treinos/criar" element={<AcademiaCriarTreino />} />

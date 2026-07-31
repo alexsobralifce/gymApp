@@ -129,12 +129,13 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/', label: 'Dashboard', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
         { to: '/meus-treinos', label: 'Meus Treinos', icon: <ClipboardListIcon className="h-5 w-5" /> },
         { to: '/dados', label: 'Meu Perfil', icon: <UserCircleIcon className="h-5 w-5" /> },
-        { to: '/mural', label: 'Mural', icon: <MessageCircleIcon className="h-5 w-5" /> },
+        { to: '/feed', label: 'Feed Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/amizades', label: 'Amigos', icon: <UserSearchIcon className="h-5 w-5" /> },
         { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/evolucao', label: 'Evolução', icon: <ChartLineIcon className="h-5 w-5" /> },
         { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
         { to: '/parceiros', label: 'Parceiros', icon: <StarIcon className="h-5 w-5" /> },
+        { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'PROFESSOR':
       return [
@@ -153,6 +154,7 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },
         { to: '/exercicios/criar', label: 'Exercícios', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/academias', label: 'Academias', icon: <Building2Icon className="h-5 w-5" /> },
+        { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'ACADEMIA':
       return [
@@ -168,6 +170,7 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/professores', label: 'Professores', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/alunos', label: 'Alunos', icon: <UsersIcon className="h-5 w-5" /> },
+        { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'ROOT':
       return [
@@ -176,6 +179,7 @@ function getNavItems(role: string): NavEntry[] {
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
+        { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     default:
       return []
@@ -185,7 +189,7 @@ function getNavItems(role: string): NavEntry[] {
 const alunoBottomTabs = [
   { to: '/', label: 'Início', icon: HomeIcon, end: true },
   { to: '/meus-treinos', label: 'Treinos', icon: DumbbellIcon },
-  { to: '/mural', label: 'Mural', icon: MessageCircleIcon },
+  { to: '/feed', label: 'Feed Social', icon: MessageCircleIcon },
   { to: '/evolucao', label: 'Evolução', icon: ChartLineIcon },
 ]
 
@@ -362,7 +366,7 @@ export default function AppShell() {
             >
               {entry.icon}
               <span>{entry.label}</span>
-              {entry.label === 'Mural' && atividadeMural > 0 && (
+              {entry.to === '/feed' && atividadeMural > 0 && (
                 <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                   {atividadeMural}
                 </span>
@@ -413,7 +417,7 @@ export default function AppShell() {
                 <NavLink key={entry.to} to={entry.to} end={entry.end} className={linkClass}>
                   {entry.icon}
                   <span>{entry.label}</span>
-                  {entry.label === 'Mural' && atividadeMural > 0 && (
+                  {entry.to === '/feed' && atividadeMural > 0 && (
                     <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                       {atividadeMural}
                     </span>
@@ -764,7 +768,7 @@ export default function AppShell() {
                   >
                     <div className="relative">
                       <Icon className={`h-5 w-5 transition-all duration-200 ${isActive ? 'text-primary scale-110' : 'text-text-muted group-hover:text-text'}`} />
-                      {t.label === 'Mural' && atividadeMural > 0 && (
+                      {t.to === '/feed' && atividadeMural > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>

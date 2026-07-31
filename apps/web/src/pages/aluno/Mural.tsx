@@ -58,7 +58,7 @@ export default function Mural() {
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-4">
       <div className="flex items-center gap-3">
         <MessageCircleIcon className="h-6 w-6 text-primary" />
-        <h1 className="text-lg font-bold text-text">Mural</h1>
+        <h1 className="text-lg font-bold text-text">Feed Social</h1>
       </div>
 
       {loading ? (
@@ -70,7 +70,7 @@ export default function Mural() {
       ) : posts.length === 0 ? (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-10 text-center">
           <MessageCircleIcon className="h-10 w-10 text-text-muted mx-auto mb-3 opacity-30" />
-          <p className="text-sm text-text-muted mb-1">Nenhum post no mural</p>
+          <p className="text-sm text-text-muted mb-1">Nenhum post no Feed Social</p>
           <p className="text-xs text-text-muted">
             Siga amigos e treine para ver a atividade deles aqui.
           </p>

@@ -67,7 +67,7 @@ const FAQS = [
   },
   {
     q: 'Tem rede social no app?',
-    a: 'Sim. Mural com posts de treinos concluídos, amizades, curtidas, comentários e colegas da mesma academia. Você controla a visibilidade de cada post.',
+    a: 'Sim. Feed Social com posts de treinos concluídos, amizades, curtidas, comentários e colegas da mesma academia. Você controla a visibilidade de cada post.',
   },
   {
     q: 'Funciona no celular?',
@@ -407,7 +407,7 @@ export default function Landing() {
 
               <ul className="mt-6 space-y-3">
                 {[
-                  { icon: MessageCircle, text: 'Mural com posts automáticos de treino iniciado, concluído e recordes pessoais' },
+                  { icon: MessageCircle, text: 'Feed Social com posts automáticos de treino iniciado, concluído e recordes pessoais' },
                   { icon: Users, text: 'Colegas da academia: descubra e siga quem treina no mesmo lugar que você' },
                   { icon: Heart, text: 'Curtidas e comentários nos posts — interação no feed como rede social' },
                   { icon: Trophy, text: 'Clubes com ranking semanal de XP (em breve)' },
@@ -468,7 +468,7 @@ export default function Landing() {
                   'Crie treinos ou use a IA',
                   'Receba fichas do professor',
                   'Execute com GIFs e registre séries',
-                  'Poste conquistas no Mural',
+                  'Poste conquistas no Feed Social',
                   'Acompanhe medidas e evolução',
                 ],
               },

@@ -187,7 +187,7 @@ export default function RootSocial() {
   }
 
   const tabs: { key: SocialTab; label: string }[] = [
-    { key: 'mural', label: 'Mural' },
+    { key: 'mural', label: 'Feed Social' },
     { key: 'clubes', label: 'Clubes' },
     { key: 'amizades', label: 'Amizades' },
   ]
