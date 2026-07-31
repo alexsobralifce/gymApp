@@ -80,6 +80,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         'http://localhost:3000',
         'capacitor://localhost',
         'https://endorfinapp.com',
+        'https://www.endorfinapp.com.br',
+        'https://endorfinapp.com.br',
       ]
       if (env.WEB_BASE_URL) allowed.push(env.WEB_BASE_URL)
       if (allowed.includes(origin)) {
