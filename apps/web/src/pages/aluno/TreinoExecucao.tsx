@@ -7,6 +7,7 @@ import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import type { UltimaCarga } from '../../types/api'
+import { resolveMediaUrl } from '../../lib/media'
 
 const DIFICULDADE_OPCOES = [
   { value: 'FACIL', label: 'Facil', emoji: '😊', cor: 'border-green-500/30 bg-success/10 text-success' },
@@ -28,7 +29,10 @@ function ExerciseGif({
   className: string
   onClick?: () => void
 }) {
-  if (!gifSrc) {
+  const [imgFailed, setImgFailed] = useState(false)
+  const resolvedUrl = !imgFailed ? resolveMediaUrl(gifSrc) : null
+
+  if (!resolvedUrl) {
     return (
       <div
         className={`rounded-lg bg-surface-input flex items-center justify-center text-text-muted ${className}`}
@@ -38,7 +42,17 @@ function ExerciseGif({
       </div>
     )
   }
-  return <img src={gifSrc} alt={alt} onClick={onClick} className={className} />
+  return (
+    <img
+      src={resolvedUrl}
+      alt={alt}
+      onClick={onClick}
+      loading="lazy"
+      decoding="async"
+      onError={() => setImgFailed(true)}
+      className={className}
+    />
+  )
 }
 
 function CircularTimer({ seconds, maxSeconds = 3600, label }: { seconds: number; maxSeconds?: number; label?: string }) {

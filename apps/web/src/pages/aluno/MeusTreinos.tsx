@@ -10,6 +10,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import { preloadWorkoutGifs, extractWorkoutGifUrls } from '../../lib/offlineGifPreloader'
 import { formatExerciseStep } from '../../lib/exerciseFormatter'
+import { resolveMediaUrl } from '../../lib/media'
 
 function formatMes(ano: number, mes: number) {
   return `${ano}-${String(mes + 1).padStart(2, '0')}`
@@ -518,18 +519,22 @@ export default function AlunoMeusTreinos() {
 
             {/* GIF em destaque */}
             <div className="relative bg-black rounded-t-3xl sm:rounded-t-3xl overflow-hidden">
-              {selectedExercicio.gif_url ? (
+              {resolveMediaUrl(selectedExercicio.gif_url || selectedExercicio.imagem_url) ? (
                 <img
-                  src={selectedExercicio.gif_url}
+                  src={resolveMediaUrl(selectedExercicio.gif_url || selectedExercicio.imagem_url)!}
                   alt={selectedExercicio.nome}
                   loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    // Se falhar o GIF, tenta thumbnail ou remove a imagem quebrada
+                    const target = e.currentTarget
+                    if (selectedExercicio.imagem_url && target.src !== resolveMediaUrl(selectedExercicio.imagem_url)) {
+                      target.src = resolveMediaUrl(selectedExercicio.imagem_url)!
+                    } else {
+                      target.style.display = 'none'
+                    }
+                  }}
                   className="w-full h-64 sm:h-72 object-contain animate-gif-enter"
-                />
-              ) : selectedExercicio.imagem_url ? (
-                <img
-                  src={selectedExercicio.imagem_url}
-                  alt={selectedExercicio.nome}
-                  className="w-full h-64 sm:h-72 object-contain"
                 />
               ) : (
                 <div className="w-full h-64 flex items-center justify-center text-5xl">💪</div>

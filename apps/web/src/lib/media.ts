@@ -37,22 +37,60 @@ export function getApiBaseUrl(): string {
 }
 
 /**
- * Resolve URL de mídia (avatar, foto do feed).
- * - Absolute (http...) → retorna como está
+ * Resolve URL de mídia (avatar, foto do feed, GIF de exercício).
+ * - Absolute (http...) → força HTTPS (evita ATS/Mixed Content no iOS) e codifica espaços/acentos via encodeURI
  * - Relative (/uploads/...) → prefixa com VITE_API_URL
  */
 export function resolveMediaUrl(url?: string | null): string | null {
   if (url == null) return null
   const s = String(url).trim()
   if (!s || s === 'undefined' || s === 'null' || s === 'Undefined' || s === 'Null') return null
-  if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) {
-    return s
+
+  let fullUrl = s
+  if (!s.startsWith('http://') && !s.startsWith('https://') && !s.startsWith('data:')) {
+    const baseUrl = getApiBaseUrl()
+    fullUrl = s.startsWith('/') ? `${baseUrl}${s}` : `${baseUrl}/${s}`
   }
-  const baseUrl = getApiBaseUrl()
-  if (s.startsWith('/')) {
-    return `${baseUrl}${s}`
+
+  // Converte http:// para https:// para evitar bloqueio ATS / Mixed Content no iOS Safari
+  if (fullUrl.startsWith('http://')) {
+    fullUrl = fullUrl.replace('http://', 'https://')
   }
-  return `${baseUrl}/${s}`
+
+  // Se for data URI, não altera
+  if (fullUrl.startsWith('data:')) {
+    return fullUrl
+  }
+
+  // Codifica espaços (%20) e caracteres UTF-8 (ç, ã, á...) para compatibilidade estrita com WebKit/iOS Safari
+  try {
+    return encodeURI(decodeURI(fullUrl))
+  } catch {
+    return encodeURI(fullUrl)
+  }
 }
+
+/**
+ * Resolve a melhor mídia de exercício para renderizar.
+ * Em listas/buscas, utiliza o thumbnail (imagem_url) leve por padrão para alta performance.
+ * Em modo de detalhes/execução ou se preferGif=true (hover/card ativo), utiliza a url do GIF (gif_url).
+ */
+export function resolveExerciseMedia(
+  imagemUrl?: string | null,
+  gifUrl?: string | null,
+  preferGif = false,
+): string | null {
+  if (preferGif && gifUrl) {
+    return resolveMediaUrl(gifUrl)
+  }
+  if (imagemUrl) {
+    return resolveMediaUrl(imagemUrl)
+  }
+  if (gifUrl) {
+    return resolveMediaUrl(gifUrl)
+  }
+  return null
+}
+
 
 

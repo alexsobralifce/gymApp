@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
 import { GRUPOS_MUSCULARES, EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
+import { resolveExerciseMedia } from '../../lib/media'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -31,8 +32,9 @@ interface AlunoAcademia {
 
 function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void }) {
   const [hovered, setHovered] = useState(false)
+  const [imgFailed, setImgFailed] = useState(false)
 
-  const imgSrc = ex.gif_url || ex.imagem_url
+  const imgSrc = !imgFailed ? resolveExerciseMedia(ex.imagem_url, ex.gif_url, hovered) : null
 
   return (
     <div
@@ -45,10 +47,13 @@ function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void })
           <img
             src={imgSrc}
             alt={ex.nome}
+            loading="lazy"
+            decoding="async"
+            onError={() => setImgFailed(true)}
             className={`rounded-lg object-cover bg-surface-input border border-surface-input transition-all duration-300 shadow-sm ${hovered ? 'w-32 h-32' : 'w-20 h-20'}`}
           />
         ) : (
-          <div className="w-20 h-20 rounded-lg bg-surface-input border border-surface-input flex items-center justify-center text-2xl">
+          <div className="w-20 h-20 rounded-lg bg-surface-input border border-surface-input flex items-center justify-center text-2xl shrink-0">
             💪
           </div>
         )}
