@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../api/client'
 import { formatPhone } from '../../lib/phone'
+import BatchActionBar from '../../components/ui/BatchActionBar'
 
 type Tab = 'academias' | 'professores' | 'alunos'
 
@@ -125,6 +126,9 @@ export default function RootUsuarios() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [batchDeleting, setBatchDeleting] = useState(false)
+  const [batchConfirm, setBatchConfirm] = useState(false)
 
   const [editAcademia, setEditAcademia] = useState<AcademiaItem | null>(null)
   const [editProfessor, setEditProfessor] = useState<ProfessorItem | null>(null)
@@ -158,7 +162,46 @@ export default function RootUsuarios() {
 
   useEffect(() => {
     setPage(1)
+    setSelectedIds([])
   }, [tab, search])
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    )
+  }
+
+  function toggleSelectAll(currentItems: { id: string }[]) {
+    const currentItemIds = currentItems.map((item) => item.id)
+    const allSelected = currentItemIds.every((id) => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !currentItemIds.includes(id)))
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...currentItemIds])))
+    }
+  }
+
+  async function handleBatchDelete() {
+    if (selectedIds.length === 0) return
+    setBatchDeleting(true)
+    try {
+      if (tab === 'academias') {
+        await Promise.allSettled(selectedIds.map((id) => api.deleteRootAcademia(id)))
+      } else if (tab === 'professores') {
+        await Promise.allSettled(selectedIds.map((id) => api.deleteRootProfessor(id)))
+      } else {
+        await Promise.allSettled(selectedIds.map((id) => api.deleteRootAluno(id)))
+      }
+      showFeedback(`${selectedIds.length} item(s) excluído(s) em cascata!`)
+      setSelectedIds([])
+      setBatchConfirm(false)
+      await loadData()
+    } catch {
+      showFeedback('Erro ao excluir itens selecionados.')
+    } finally {
+      setBatchDeleting(false)
+    }
+  }
 
   function showFeedback(msg: string) {
     setFeedback(msg)
@@ -223,15 +266,37 @@ export default function RootUsuarios() {
         />
       </div>
 
+      <BatchActionBar
+        selectedCount={selectedIds.length}
+        onClearSelection={() => setSelectedIds([])}
+        onDeleteSelected={() => setBatchConfirm(true)}
+        loading={batchDeleting}
+      />
+
       {loading ? (
         <div className="py-12 text-center text-text-muted">Carregando...</div>
       ) : (
         <>
           {tab === 'academias' && academias && (
             <>
-              <p className="mb-3 text-xs text-text-muted">{academias.total} academias encontradas</p>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs text-text-muted">{academias.total} academias encontradas</p>
+                {academias.items.length > 0 && (
+                  <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={academias.items.every((a) => selectedIds.includes(a.id))}
+                      onChange={() => toggleSelectAll(academias.items)}
+                      className="rounded border-surface-input text-primary focus:ring-primary"
+                    />
+                    <span>Selecionar Todos nesta página</span>
+                  </label>
+                )}
+              </div>
               <AcademiasTab
                 academias={academias.items}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
                 onEdit={setEditAcademia}
                 onDelete={(a) => setDeleteConfirm({ type: 'academias', id: a.id, nome: a.nome })}
               />
@@ -241,9 +306,24 @@ export default function RootUsuarios() {
 
           {tab === 'professores' && professores && (
             <>
-              <p className="mb-3 text-xs text-text-muted">{professores.total} professores encontrados</p>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs text-text-muted">{professores.total} professores encontrados</p>
+                {professores.items.length > 0 && (
+                  <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={professores.items.every((p) => selectedIds.includes(p.id))}
+                      onChange={() => toggleSelectAll(professores.items)}
+                      className="rounded border-surface-input text-primary focus:ring-primary"
+                    />
+                    <span>Selecionar Todos nesta página</span>
+                  </label>
+                )}
+              </div>
               <ProfessoresTab
                 professores={professores.items}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
                 onEdit={setEditProfessor}
                 onDelete={(p) => setDeleteConfirm({ type: 'professores', id: p.id, nome: p.usuario.nome })}
               />
@@ -253,9 +333,24 @@ export default function RootUsuarios() {
 
           {tab === 'alunos' && alunos && (
             <>
-              <p className="mb-3 text-xs text-text-muted">{alunos.total} alunos encontrados</p>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs text-text-muted">{alunos.total} alunos encontrados</p>
+                {alunos.items.length > 0 && (
+                  <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={alunos.items.every((a) => selectedIds.includes(a.id))}
+                      onChange={() => toggleSelectAll(alunos.items)}
+                      className="rounded border-surface-input text-primary focus:ring-primary"
+                    />
+                    <span>Selecionar Todos nesta página</span>
+                  </label>
+                )}
+              </div>
               <AlunosTab
                 alunos={alunos.items}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
                 onEdit={setEditAluno}
                 onDelete={(a) => setDeleteConfirm({ type: 'alunos', id: a.id, nome: a.usuario.nome })}
               />
@@ -263,6 +358,26 @@ export default function RootUsuarios() {
             </>
           )}
         </>
+      )}
+
+      {batchConfirm && (
+        <Modal onClose={() => setBatchConfirm(false)}>
+          <h2 className="mb-2 text-lg font-bold text-text">Confirmar exclusão em lote</h2>
+          <p className="mb-6 text-sm text-text-muted">
+            Tem certeza que deseja excluir em cascata <strong className="text-primary">{selectedIds.length}</strong> item(s) selecionado(s)?
+            Esta ação removerá todos os dados vinculados e não poderá ser desfeita.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setBatchConfirm(false)} className={btnGhost}>Cancelar</button>
+            <button
+              onClick={handleBatchDelete}
+              disabled={batchDeleting}
+              className="rounded bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground disabled:opacity-50"
+            >
+              {batchDeleting ? 'Excluindo...' : 'Confirmar Exclusão em Lote'}
+            </button>
+          </div>
+        </Modal>
       )}
 
       {editAcademia && (
@@ -385,10 +500,14 @@ function AdminToggleButton({ usuarioId, isAdmin }: { usuarioId: string; isAdmin:
 
 function AcademiasTab({
   academias,
+  selectedIds,
+  onToggleSelect,
   onEdit,
   onDelete,
 }: {
   academias: AcademiaItem[]
+  selectedIds: string[]
+  onToggleSelect: (id: string) => void
   onEdit: (a: AcademiaItem) => void
   onDelete: (a: AcademiaItem) => void
 }) {
@@ -397,17 +516,25 @@ function AcademiasTab({
   return (
     <div className="space-y-2">
       {academias.map((a) => (
-        <div key={a.id} className="flex items-center justify-between rounded-lg bg-surface-card p-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-text">{a.nome}</h3>
-              {statusBadge(a.status)}
+        <div key={a.id} className={`flex items-center justify-between rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(a.id) ? 'border-primary' : 'border-transparent'}`}>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(a.id)}
+              onChange={() => onToggleSelect(a.id)}
+              className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-text">{a.nome}</h3>
+                {statusBadge(a.status)}
+              </div>
+              <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
+              <p className="text-xs text-text-muted">{a.usuario.email}</p>
+              <p className="text-xs text-text-muted">
+                Max. professores: {a.max_professores} | Professores: {a._count.professores} | Alunos: {a._count.alunos}
+              </p>
             </div>
-            <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
-            <p className="text-xs text-text-muted">{a.usuario.email}</p>
-            <p className="text-xs text-text-muted">
-              Max. professores: {a.max_professores} | Professores: {a._count.professores} | Alunos: {a._count.alunos}
-            </p>
           </div>
           <div className="flex gap-1">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
@@ -422,10 +549,14 @@ function AcademiasTab({
 
 function ProfessoresTab({
   professores,
+  selectedIds,
+  onToggleSelect,
   onEdit,
   onDelete,
 }: {
   professores: ProfessorItem[]
+  selectedIds: string[]
+  onToggleSelect: (id: string) => void
   onEdit: (p: ProfessorItem) => void
   onDelete: (p: ProfessorItem) => void
 }) {
@@ -434,14 +565,22 @@ function ProfessoresTab({
   return (
     <div className="space-y-2">
       {professores.map((p) => (
-        <div key={p.id} className="rounded-lg bg-surface-card p-4">
+        <div key={p.id} className={`rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(p.id) ? 'border-primary' : 'border-transparent'}`}>
           <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold text-text">{p.usuario.nome}</h3>
-              <p className="text-xs text-text-muted">{p.usuario.email}</p>
-              <p className="text-xs text-text-muted">
-                CREF: {p.cref || '---'} | Alunos: {p._count.alunos}
-              </p>
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(p.id)}
+                onChange={() => onToggleSelect(p.id)}
+                className="mt-1 rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
+              />
+              <div>
+                <h3 className="font-semibold text-text">{p.usuario.nome}</h3>
+                <p className="text-xs text-text-muted">{p.usuario.email}</p>
+                <p className="text-xs text-text-muted">
+                  CREF: {p.cref || '---'} | Alunos: {p._count.alunos}
+                </p>
+              </div>
             </div>
             <div className="flex gap-1">
               <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>
@@ -450,7 +589,7 @@ function ProfessoresTab({
             </div>
           </div>
           {p.academias.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="mt-2 ml-7 flex flex-wrap gap-1">
               {p.academias.map((v) => (
                 <span key={v.id} className="rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">
                   {v.academia.nome}
@@ -466,10 +605,14 @@ function ProfessoresTab({
 
 function AlunosTab({
   alunos,
+  selectedIds,
+  onToggleSelect,
   onEdit,
   onDelete,
 }: {
   alunos: AlunoItem[]
+  selectedIds: string[]
+  onToggleSelect: (id: string) => void
   onEdit: (a: AlunoItem) => void
   onDelete: (a: AlunoItem) => void
 }) {
@@ -478,19 +621,27 @@ function AlunosTab({
   return (
     <div className="space-y-2">
       {alunos.map((a) => (
-        <div key={a.id} className="flex items-center justify-between rounded-lg bg-surface-card p-4">
-          <div>
-            <h3 className="font-semibold text-text">{a.usuario.nome}</h3>
-            <p className="text-xs text-text-muted">{a.usuario.email}</p>
-            <p className="text-xs text-text-muted">
-              Academia: {a.academia?.nome || '---'} | Professor: {a.professor?.usuario.nome || 'Autogestão'}
-            </p>
-            {(a.peso_kg || a.altura_cm) && (
+        <div key={a.id} className={`flex items-center justify-between rounded-lg bg-surface-card p-4 border transition ${selectedIds.includes(a.id) ? 'border-primary' : 'border-transparent'}`}>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(a.id)}
+              onChange={() => onToggleSelect(a.id)}
+              className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
+            />
+            <div>
+              <h3 className="font-semibold text-text">{a.usuario.nome}</h3>
+              <p className="text-xs text-text-muted">{a.usuario.email}</p>
               <p className="text-xs text-text-muted">
-                Peso: {a.peso_kg ? `${a.peso_kg}kg` : '---'} | Altura: {a.altura_cm ? `${a.altura_cm}cm` : '---'}
-                {a.data_nascimento && ` | Nasc: ${new Date(a.data_nascimento).toLocaleDateString('pt-BR')}`}
+                Academia: {a.academia?.nome || '---'} | Professor: {a.professor?.usuario.nome || 'Autogestão'}
               </p>
-            )}
+              {(a.peso_kg || a.altura_cm) && (
+                <p className="text-xs text-text-muted">
+                  Peso: {a.peso_kg ? `${a.peso_kg}kg` : '---'} | Altura: {a.altura_cm ? `${a.altura_cm}cm` : '---'}
+                  {a.data_nascimento && ` | Nasc: ${new Date(a.data_nascimento).toLocaleDateString('pt-BR')}`}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex gap-1">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1 text-sm text-blue-400">Editar</button>

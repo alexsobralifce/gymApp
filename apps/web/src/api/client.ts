@@ -198,6 +198,9 @@ export const api = {
   updateMedida: (id: string, data: { pesoKg?: number; alturaCm?: number; percentualBf?: number; massaMagraKg?: number; observacao?: string }) =>
     api.patch<MedidaCorporal>(`/alunos/medidas/${id}`, data),
 
+  deleteMedida: (id: string) =>
+    api.delete<{ message: string }>(`/alunos/medidas/${id}`),
+
 
 
   // ─── Notificações ──────────────────────────────────

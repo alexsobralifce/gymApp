@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client'
+import BatchActionBar from '../../components/ui/BatchActionBar'
 import type { MedidaCorporal, PerfilAluno } from '../../types/api'
 
 interface IMCClassification {
@@ -46,6 +47,10 @@ export default function AlunoMedidas() {
   const [mostrarNovo, setMostrarNovo] = useState(false)
   const [sucesso, setSucesso] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const [search, setSearch] = useState('')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [batchDeleting, setBatchDeleting] = useState(false)
 
   const [pesoKg, setPesoKg] = useState('')
   const [alturaCm, setAlturaCm] = useState('')
@@ -271,6 +276,38 @@ export default function AlunoMedidas() {
         </form>
       )}
 
+      {/* Busca & Ações em Lote */}
+      {medidas.length > 0 && (
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Buscar por data, peso ou observação..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+          />
+        </div>
+      )}
+
+      <BatchActionBar
+        selectedCount={selectedIds.length}
+        onClearSelection={() => setSelectedIds([])}
+        onDeleteSelected={async () => {
+          if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.length} medida(s) selecionada(s)?`)) return
+          setBatchDeleting(true)
+          try {
+            await Promise.allSettled(selectedIds.map((id) => api.deleteMedida(id)))
+            setMedidas((prev) => prev.filter((m) => !selectedIds.includes(m.id)))
+            setSelectedIds([])
+          } catch (e) {
+            console.error('Erro ao excluir medidas:', e)
+          } finally {
+            setBatchDeleting(false)
+          }
+        }}
+        loading={batchDeleting}
+      />
+
       {/* Tabela / Lista de Medidas */}
       {medidas.length === 0 && !(mostrarNovo || editando) ? (
         <p className="text-sm text-text-muted bg-surface-card rounded-2xl p-6 border border-surface-input text-center">
@@ -281,6 +318,38 @@ export default function AlunoMedidas() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-surface-input bg-surface/50 text-xs font-semibold text-text-muted uppercase tracking-wider">
+                <th className="p-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={
+                      medidas.length > 0 &&
+                      medidas
+                        .filter(
+                          (m) =>
+                            formatDate(m.data).includes(search) ||
+                            (m.peso_kg && `${m.peso_kg}`.includes(search)) ||
+                            (m.observacao && m.observacao.toLowerCase().includes(search.toLowerCase()))
+                        )
+                        .every((m) => selectedIds.includes(m.id))
+                    }
+                    onChange={() => {
+                      const filtered = medidas.filter(
+                        (m) =>
+                          formatDate(m.data).includes(search) ||
+                          (m.peso_kg && `${m.peso_kg}`.includes(search)) ||
+                          (m.observacao && m.observacao.toLowerCase().includes(search.toLowerCase()))
+                      )
+                      const filteredIds = filtered.map((m) => m.id)
+                      const allSelected = filteredIds.every((id) => selectedIds.includes(id))
+                      if (allSelected) {
+                        setSelectedIds((prev) => prev.filter((id) => !filteredIds.includes(id)))
+                      } else {
+                        setSelectedIds((prev) => Array.from(new Set([...prev, ...filteredIds])))
+                      }
+                    }}
+                    className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                  />
+                </th>
                 <th className="p-3">Data</th>
                 <th className="p-3">Peso</th>
                 <th className="p-3">Altura</th>
@@ -290,32 +359,52 @@ export default function AlunoMedidas() {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-input">
-              {medidas.map((m) => {
-                const cat = m.imc ? getIMCClassificacao(m.imc) : null
-                return (
-                  <tr key={m.id} className="hover:bg-surface/30 transition-colors">
-                    <td className="p-3 text-xs text-text-muted">{formatDate(m.data)}</td>
-                    <td className="p-3 text-sm text-text">{m.peso_kg ? `${m.peso_kg} kg` : '-'}</td>
-                    <td className="p-3 text-sm text-text">{m.altura_cm ? `${m.altura_cm} cm` : '-'}</td>
-                    <td className="p-3 text-sm">
-                      {m.imc ? (
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${cat?.bgClass}`}>
-                          {m.imc.toFixed(1)}
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td className="p-3 text-sm text-text">{m.percentual_bf ? `${m.percentual_bf}%` : '-'}</td>
-                    <td className="p-3 text-right">
-                      <button
-                        onClick={() => preencherEdicao(m)}
-                        className="text-xs text-primary hover:underline cursor-pointer"
-                      >
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
+              {medidas
+                .filter(
+                  (m) =>
+                    formatDate(m.data).includes(search) ||
+                    (m.peso_kg && `${m.peso_kg}`.includes(search)) ||
+                    (m.observacao && m.observacao.toLowerCase().includes(search.toLowerCase()))
                 )
-              })}
+                .map((m) => {
+                  const cat = m.imc ? getIMCClassificacao(m.imc) : null
+                  const isSelected = selectedIds.includes(m.id)
+                  return (
+                    <tr key={m.id} className={`hover:bg-surface/30 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}>
+                      <td className="p-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() =>
+                            setSelectedIds((prev) =>
+                              prev.includes(m.id) ? prev.filter((i) => i !== m.id) : [...prev, m.id]
+                            )
+                          }
+                          className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                        />
+                      </td>
+                      <td className="p-3 text-xs text-text-muted">{formatDate(m.data)}</td>
+                      <td className="p-3 text-sm text-text">{m.peso_kg ? `${m.peso_kg} kg` : '-'}</td>
+                      <td className="p-3 text-sm text-text">{m.altura_cm ? `${m.altura_cm} cm` : '-'}</td>
+                      <td className="p-3 text-sm">
+                        {m.imc ? (
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${cat?.bgClass}`}>
+                            {m.imc.toFixed(1)}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td className="p-3 text-sm text-text">{m.percentual_bf ? `${m.percentual_bf}%` : '-'}</td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => preencherEdicao(m)}
+                          className="text-xs text-primary hover:underline cursor-pointer"
+                        >
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
             </tbody>
           </table>
         </div>

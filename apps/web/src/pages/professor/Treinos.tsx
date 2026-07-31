@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useToast } from '../../components/ui/Toast'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import BatchActionBar from '../../components/ui/BatchActionBar'
 import type { ProfessorDashboard, Treino } from '../../types/api'
 
 const DIA_LABEL: Record<number, string> = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' }
@@ -20,6 +21,9 @@ const STATUS_COR: Record<string, string> = {
 export default function ProfessorTreinos() {
   const [alunos, setAlunos] = useState<ProfessorDashboard[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [batchDeleting, setBatchDeleting] = useState(false)
   const [editingTreino, setEditingTreino] = useState<{ treino: Treino; alunoId: string } | null>(null)
   const [deletingTreino, setDeletingTreino] = useState<{ id: string; nome: string } | null>(null)
   const [viewingTreinos, setViewingTreinos] = useState<{ treinos: ProfessorDashboard['treinos']; alunoNome: string; alunoId: string } | null>(null)
@@ -38,6 +42,55 @@ export default function ProfessorTreinos() {
   useEffect(() => {
     api.getDashboard().then(setAlunos).finally(() => setLoading(false))
   }, [])
+
+  const filteredAlunos = alunos.filter(
+    (a) =>
+      a.usuario.nome.toLowerCase().includes(search.toLowerCase()) ||
+      a.usuario.email.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    )
+  }
+
+  const toggleSelectAll = () => {
+    const currentIds = filteredAlunos.map((a) => a.id)
+    const allSelected = currentIds.every((id) => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !currentIds.includes(id)))
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...currentIds])))
+    }
+  }
+
+  const handleBatchDeleteWorkoutsInModal = async () => {
+    if (!viewingTreinos || selectedIds.length === 0) return
+    if (!window.confirm(`Tem certeza que deseja excluir os ${selectedIds.length} treino(s) selecionado(s)?`)) return
+    setBatchDeleting(true)
+    try {
+      await Promise.allSettled(selectedIds.map((id) => api.deleteTreino(id)))
+      showToast(`${selectedIds.length} treino(s) removido(s) com sucesso!`)
+      setSelectedIds([])
+      const updatedDash = await api.getDashboard()
+      setAlunos(updatedDash)
+      const updatedAluno = updatedDash.find((a) => a.id === viewingTreinos.alunoId)
+      if (updatedAluno) {
+        setViewingTreinos({
+          treinos: updatedAluno.treinos,
+          alunoNome: updatedAluno.usuario.nome,
+          alunoId: updatedAluno.id,
+        })
+      } else {
+        setViewingTreinos(null)
+      }
+    } catch (e) {
+      showToast((e as Error).message, 'error')
+    } finally {
+      setBatchDeleting(false)
+    }
+  }
 
   const toggleDia = (dia: number) => {
     setForm((prev) => ({
@@ -164,8 +217,18 @@ export default function ProfessorTreinos() {
 
       <h1 className="mb-6 text-xl font-bold text-text">Listar Treinos</h1>
 
-      {alunos.length === 0 ? (
-        <p className="text-text-muted">Nenhum aluno vinculado ao seu perfil.</p>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar aluno por nome ou email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+        />
+      </div>
+
+      {filteredAlunos.length === 0 ? (
+        <p className="text-text-muted">Nenhum aluno encontrado.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg bg-surface-card border border-surface-input">
           <table className="w-full text-left border-collapse">
@@ -179,7 +242,7 @@ export default function ProfessorTreinos() {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-input">
-              {alunos.map((aluno) => (
+              {filteredAlunos.map((aluno) => (
                 <tr key={aluno.id} className="hover:bg-surface/30 transition-colors">
                   <td className="p-4 text-sm font-medium text-text">{aluno.usuario.nome}</td>
                   <td className="p-4 text-sm text-text-muted">{aluno.usuario.telefone || '-'}</td>
@@ -189,7 +252,10 @@ export default function ProfessorTreinos() {
                       <span className="text-xs text-text-muted italic">Nenhum</span>
                     ) : (
                       <button
-                        onClick={() => setViewingTreinos({ treinos: aluno.treinos, alunoNome: aluno.usuario.nome, alunoId: aluno.id })}
+                        onClick={() => {
+                          setSelectedIds([])
+                          setViewingTreinos({ treinos: aluno.treinos, alunoNome: aluno.usuario.nome, alunoId: aluno.id })
+                        }}
                         className="text-sm text-primary hover:underline cursor-pointer"
                       >
                         Ver treinos ({aluno.treinos.length})
@@ -222,9 +288,38 @@ export default function ProfessorTreinos() {
               <h3 className="text-lg font-semibold text-text">Treinos de {viewingTreinos.alunoNome}</h3>
               <button onClick={() => setViewingTreinos(null)} className="text-text-muted hover:text-text text-lg cursor-pointer">&times;</button>
             </div>
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {viewingTreinos.treinos.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-surface-input bg-surface p-3">
+
+            <BatchActionBar
+              selectedCount={selectedIds.length}
+              onClearSelection={() => setSelectedIds([])}
+              onDeleteSelected={handleBatchDeleteWorkoutsInModal}
+              loading={batchDeleting}
+            />
+
+            {viewingTreinos.treinos.length > 0 && (
+              <div className="mb-2 flex items-center justify-end">
+                <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={viewingTreinos.treinos.every((t) => selectedIds.includes(t.id))}
+                    onChange={() => toggleSelectAll()}
+                    className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
+                  />
+                  <span>Selecionar todos os treinos</span>
+                </label>
+              </div>
+            )}
+
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {viewingTreinos.treinos.map((t) => (
+                <div key={t.id} className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${selectedIds.includes(t.id) ? 'border-primary bg-primary/5' : 'border-surface-input bg-surface'}`}>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(t.id)}
+                      onChange={() => toggleSelect(t.id)}
+                      className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                    />
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-text">{t.nome}</p>
@@ -234,16 +329,17 @@ export default function ProfessorTreinos() {
                           </span>
                         )}
                       </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
-                        {t.status}
-                      </span>
-                      <span className="text-xs text-text-muted">
-                        {t.dias_semana?.map((d: number) => DIA_LABEL[d]).join(', ')}
-                      </span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
+                          {t.status}
+                        </span>
+                        <span className="text-xs text-text-muted">
+                          {t.dias_semana?.map((d: number) => DIA_LABEL[d]).join(', ')}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                    <div className="flex gap-2">
+                  <div className="flex gap-2">
                       <button
                         onClick={() => handleToggleTemplate(t.id, !t.is_template)}
                         className={`text-xs hover:underline cursor-pointer ${t.is_template ? 'text-warning' : 'text-amber-500'}`}

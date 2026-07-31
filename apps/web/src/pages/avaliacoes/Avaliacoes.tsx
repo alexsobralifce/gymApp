@@ -4,6 +4,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import Toast from '../../components/ui/Toast'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import BatchActionBar from '../../components/ui/BatchActionBar'
 import { RulerIcon, PlusIcon, UserCircleIcon, ClipboardListIcon, DumbbellIcon, ChartLineIcon, PencilIcon, TrashIcon } from '../../components/icons/Icon'
 import ReactMarkdown from 'react-markdown'
 
@@ -14,6 +15,11 @@ export default function Avaliacoes() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const [buscaAluno, setBuscaAluno] = useState('')
+  const [buscaAvaliacao, setBuscaAvaliacao] = useState('')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [batchDeleting, setBatchDeleting] = useState(false)
   
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -298,34 +304,55 @@ export default function Avaliacoes() {
         {/* Lista de Alunos */}
         <div className="bg-surface-card p-5 rounded-2xl border border-border space-y-4">
           <h2 className="font-semibold text-text text-lg">Selecione o Aluno</h2>
+          
+          <input
+            type="text"
+            placeholder="Buscar aluno por nome ou email..."
+            value={buscaAluno}
+            onChange={(e) => setBuscaAluno(e.target.value)}
+            className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+          />
+
           {loading && alunos.length === 0 ? (
             <LoadingSpinner />
           ) : alunos.length === 0 ? (
             <EmptyState icon="👥" title="Nenhum aluno encontrado" description="Você precisa ter alunos vinculados para realizar avaliações." />
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-              {alunos.map((aluno) => {
-                const isSelected = selectedAluno?.id === aluno.id
-                return (
-                  <button
-                    key={aluno.id}
-                    onClick={() => setSelectedAluno(aluno)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
-                      isSelected
-                        ? 'border-primary bg-primary/10 text-text'
-                        : 'border-border bg-surface hover:border-primary/50 text-text-muted'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <UserCircleIcon className="h-8 w-8 text-primary shrink-0" />
-                      <div>
-                        <p className="font-medium text-text">{aluno.usuario?.nome || aluno.nome || 'Aluno'}</p>
-                        <p className="text-xs text-text-muted">{aluno.usuario?.email || ''}</p>
+              {alunos
+                .filter((aluno) => {
+                  const nome = aluno.usuario?.nome || aluno.nome || ''
+                  const email = aluno.usuario?.email || ''
+                  return (
+                    nome.toLowerCase().includes(buscaAluno.toLowerCase()) ||
+                    email.toLowerCase().includes(buscaAluno.toLowerCase())
+                  )
+                })
+                .map((aluno) => {
+                  const isSelected = selectedAluno?.id === aluno.id
+                  return (
+                    <button
+                      key={aluno.id}
+                      onClick={() => {
+                        setSelectedIds([])
+                        setSelectedAluno(aluno)
+                      }}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/10 text-text'
+                          : 'border-border bg-surface hover:border-primary/50 text-text-muted'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <UserCircleIcon className="h-8 w-8 text-primary shrink-0" />
+                        <div>
+                          <p className="font-medium text-text">{aluno.usuario?.nome || aluno.nome || 'Aluno'}</p>
+                          <p className="text-xs text-text-muted">{aluno.usuario?.email || ''}</p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                )
-              })}
+                    </button>
+                  )
+                })}
             </div>
           )}
         </div>
@@ -359,17 +386,66 @@ export default function Avaliacoes() {
                 </div>
               </div>
 
+              {avaliacoes.length > 0 && (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Buscar avaliação por data ou laudo..."
+                    value={buscaAvaliacao}
+                    onChange={(e) => setBuscaAvaliacao(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+                  />
+
+                  <BatchActionBar
+                    selectedCount={selectedIds.length}
+                    onClearSelection={() => setSelectedIds([])}
+                    onDeleteSelected={async () => {
+                      if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.length} avaliação(ões) selecionada(s)?`)) return
+                      setBatchDeleting(true)
+                      try {
+                        await Promise.allSettled(selectedIds.map((id) => api.delete(`/avaliacoes/${id}`)))
+                        setAvaliacoes((prev) => prev.filter((av) => !selectedIds.includes(av.id)))
+                        setSelectedIds([])
+                        setToast({ message: `${selectedIds.length} avaliação(ões) excluída(s)!`, type: 'success' })
+                      } catch (err: any) {
+                        setToast({ message: err.message || 'Erro ao excluir avaliações', type: 'error' })
+                      } finally {
+                        setBatchDeleting(false)
+                      }
+                    }}
+                    loading={batchDeleting}
+                  />
+                </div>
+              )}
+
               {avaliacoes.length === 0 ? (
                 <EmptyState icon="📋" title="Nenhuma avaliação registrada" description="Clique em 'Nova Avaliação' para iniciar o protocolo completo." />
               ) : (
                 <div className="space-y-4">
-                  {avaliacoes.map((av) => (
-                    <div key={av.id} className="p-4 rounded-xl bg-surface border border-border space-y-3">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm">
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold text-text">
-                            Data: {new Date(av.data).toLocaleDateString('pt-BR')}
-                          </span>
+                  {avaliacoes
+                    .filter((av) => {
+                      const dateStr = new Date(av.data).toLocaleDateString('pt-BR')
+                      return dateStr.includes(buscaAvaliacao) || (av.laudo_markdown && av.laudo_markdown.toLowerCase().includes(buscaAvaliacao.toLowerCase()))
+                    })
+                    .map((av) => {
+                      const isSelected = selectedIds.includes(av.id)
+                      return (
+                        <div key={av.id} className={`p-4 rounded-xl border transition-all space-y-3 ${isSelected ? 'border-primary bg-primary/5' : 'bg-surface border-border'}`}>
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm">
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() =>
+                                  setSelectedIds((prev) =>
+                                    prev.includes(av.id) ? prev.filter((i) => i !== av.id) : [...prev, av.id]
+                                  )
+                                }
+                                className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                              />
+                              <span className="font-semibold text-text">
+                                Data: {new Date(av.data).toLocaleDateString('pt-BR')}
+                              </span>
                           <button onClick={() => handleOpenEditarAvaliacao(av)} className="text-text-muted hover:text-primary transition-colors" title="Editar">
                             <PencilIcon className="h-4 w-4" />
                           </button>
@@ -413,7 +489,8 @@ export default function Avaliacoes() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )
+                })}
                 </div>
               )}
             </>

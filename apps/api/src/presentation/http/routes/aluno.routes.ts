@@ -377,6 +377,20 @@ export async function alunoRoutes(app: FastifyInstance) {
     return reply.status(200).send(updated)
   })
 
+  /** DELETE /alunos/medidas/:id — Excluir uma medida */
+  app.delete('/medidas/:id', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string().cuid() }).parse(request.params)
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const medida = await prisma.medidaCorporal.findUnique({ where: { id } })
+    if (!medida || medida.aluno_id !== aluno.id) {
+      throw new NotFoundError('Medida não encontrada')
+    }
+
+    await prisma.medidaCorporal.delete({ where: { id } })
+    return reply.status(200).send({ message: 'Medida removida com sucesso' })
+  })
+
   /** GET /alunos/notificacoes — Lista notificações não lidas */
   app.get('/notificacoes', { preHandler }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)

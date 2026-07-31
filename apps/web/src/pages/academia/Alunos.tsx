@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
+import BatchActionBar from '../../components/ui/BatchActionBar'
 
 interface Professor {
   id: string
@@ -23,6 +24,9 @@ export default function AcademiaAlunos() {
   const [alunos, setAlunos] = useState<AlunoAcademia[]>([])
   const [professores, setProfessores] = useState<Professor[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [batchDeleting, setBatchDeleting] = useState(false)
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({})
 
   useEffect(() => {
@@ -48,6 +52,45 @@ export default function AcademiaAlunos() {
       .catch((err) => console.error('Erro ao buscar dados:', err))
       .finally(() => setLoading(false))
   }, [])
+
+  const filteredAlunos = alunos.filter(
+    (a) =>
+      a.usuario.nome.toLowerCase().includes(search.toLowerCase()) ||
+      a.usuario.email.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    )
+  }
+
+  const toggleSelectAll = () => {
+    const currentIds = filteredAlunos.map((a) => a.id)
+    const allSelected = currentIds.every((id) => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !currentIds.includes(id)))
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...currentIds])))
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!window.confirm(`Tem certeza que deseja desvincular os professores de ${selectedIds.length} aluno(s) selecionado(s)?`)) return
+    setBatchDeleting(true)
+    try {
+      await Promise.allSettled(selectedIds.map((id) => api.vincularProfessorAluno(id, null)))
+      setAlunos((prev) =>
+        prev.map((a) => (selectedIds.includes(a.id) ? { ...a, professor: null } : a))
+      )
+      setSelectedIds([])
+    } catch (err) {
+      console.error('Erro ao desvincular alunos:', err)
+    } finally {
+      setBatchDeleting(false)
+    }
+  }
 
   const handleProfessorChange = (alunoId: string, professorId: string) => {
     setRowStates((prev) => ({
@@ -95,57 +138,98 @@ export default function AcademiaAlunos() {
   return (
     <div className="p-4 md:p-6">
       <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Alunos</h1>
+
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar aluno por nome ou email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
+        />
+      </div>
+
+      <BatchActionBar
+        selectedCount={selectedIds.length}
+        onClearSelection={() => setSelectedIds([])}
+        onDeleteSelected={handleBatchDelete}
+        label="Desvincular Selecionados"
+        loading={batchDeleting}
+      />
       
-      {alunos.length === 0 ? (
-        <p className="text-text-muted">Nenhum aluno cadastrado nesta academia.</p>
+      {filteredAlunos.length === 0 ? (
+        <p className="text-text-muted">Nenhum aluno encontrado.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg bg-surface-card border border-surface-input">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-surface-input bg-surface/50 text-xs font-semibold text-text-muted uppercase tracking-wider">
+                <th className="p-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={filteredAlunos.length > 0 && filteredAlunos.every((a) => selectedIds.includes(a.id))}
+                    onChange={toggleSelectAll}
+                    className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                  />
+                </th>
                 <th className="p-4">Aluno</th>
                 <th className="p-4">Email</th>
                 <th className="p-4">Acompanhamento (Professor)</th>
                 <th className="p-4 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-input">
-              {alunos.map((a) => {
-                const row = rowStates[a.id] || { professorId: '', saving: false, success: null }
+            <tbody className="divide-y divide-surface-input text-sm text-text">
+              {filteredAlunos.map((aluno) => {
+                const state = rowStates[aluno.id] || { professorId: '', saving: false, success: null }
+                const isSelected = selectedIds.includes(aluno.id)
+
                 return (
-                  <tr key={a.id} className="hover:bg-surface/30 transition-colors">
-                    <td className="p-4 text-sm font-medium text-text">{a.usuario.nome}</td>
-                    <td className="p-4 text-sm text-text-muted">{a.usuario.email}</td>
+                  <tr key={aluno.id} className={`hover:bg-surface/30 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}>
                     <td className="p-4">
-                      <select
-                        value={row.professorId}
-                        onChange={(e) => handleProfessorChange(a.id, e.target.value)}
-                        className="rounded border border-surface-input bg-surface px-3 py-1.5 text-sm text-text focus:border-primary focus:outline-none w-full max-w-xs"
-                      >
-                        <option value="">Sem professor (Autogestão)</option>
-                        {professores.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.nome}
-                          </option>
-                        ))}
-                      </select>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(aluno.id)}
+                        className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                      />
+                    </td>
+                    <td className="p-4 font-medium text-text">
+                      {aluno.usuario.nome}
+                    </td>
+                    <td className="p-4 text-text-muted">
+                      {aluno.usuario.email}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={state.professorId}
+                          onChange={(e) => handleProfessorChange(aluno.id, e.target.value)}
+                          className="rounded border border-surface-input bg-surface px-3 py-1.5 text-sm text-text focus:border-primary focus:outline-none"
+                        >
+                          <option value="">Sem Professor (Autogestão)</option>
+                          {professores.map((prof) => (
+                            <option key={prof.id} value={prof.id}>
+                              {prof.nome}
+                            </option>
+                          ))}
+                        </select>
+                        
+                        {state.success === true && (
+                          <span className="text-xs font-semibold text-success">Salvo!</span>
+                        )}
+                        {state.success === false && (
+                          <span className="text-xs font-semibold text-destructive">Erro!</span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {row.success === true && (
-                          <span className="text-xs text-success animate-pulse">Salvo com sucesso!</span>
-                        )}
-                        {row.success === false && (
-                          <span className="text-xs text-destructive">Erro ao salvar</span>
-                        )}
-                        <button
-                          onClick={() => handleSalvar(a.id)}
-                          disabled={row.saving}
-                          className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/95 disabled:opacity-50 transition-all cursor-pointer"
-                        >
-                          {row.saving ? 'Salvando...' : 'Salvar'}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleSalvar(aluno.id)}
+                        disabled={state.saving}
+                        className="rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
+                      >
+                        {state.saving ? 'Salvando...' : 'Salvar'}
+                      </button>
                     </td>
                   </tr>
                 )
