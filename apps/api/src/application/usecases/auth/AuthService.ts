@@ -118,7 +118,8 @@ export class AuthService {
       throw new UnauthorizedError('E-mail ou senha inválidos')
     }
 
-    if (!usuario.email_verified) {
+    // ROOT users bypass email verification
+    if (!usuario.email_verified && usuario.role !== Role.ROOT) {
       throw new ForbiddenError('E-mail não verificado. Verifique sua caixa de entrada.')
     }
 
