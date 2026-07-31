@@ -423,6 +423,7 @@ export default function TreinoIA() {
 
           <div>
             <MuscleCategoryGrid
+              columns="full"
               selectedCategory={grupoFiltro !== 'TODOS' ? grupoFiltro : null}
               onSelectCategory={(catKey) => {
                 if (catKey) {
