@@ -22,6 +22,27 @@ async function main() {
     console.log('✅ Root criado: root@gymapp.com / Root@12345')
   }
 
+  const alexandreRoot = await prisma.usuario.findUnique({ where: { email: 'alexandresobral2004@gmail.com' } })
+  if (alexandreRoot) {
+    await prisma.usuario.update({
+      where: { email: 'alexandresobral2004@gmail.com' },
+      data: { role: Role.ROOT, ativo: true, email_verified: true },
+    })
+    console.log('✅ alexandresobral2004@gmail.com promovido a ROOT')
+  } else {
+    await prisma.usuario.create({
+      data: {
+        nome: 'Alexandre Sobral',
+        email: 'alexandresobral2004@gmail.com',
+        senha_hash: await bcrypt.hash('Root@12345', 12),
+        role: Role.ROOT,
+        email_verified: true,
+        ativo: true,
+      },
+    })
+    console.log('✅ Root criado: alexandresobral2004@gmail.com')
+  }
+
   // ─── Mensagens Motivacionais (UC-28) ────────────────────────────────────
   const mensagens = [
     {

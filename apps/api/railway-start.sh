@@ -38,6 +38,9 @@ else
   ' > /dev/null 2>&1 &
 fi
 
+echo "=== Setting up ROOT user ==="
+npx tsx prisma/set-root-user.ts || true
+
 echo "=== Backfill do Mural (posts de treinos concluidos hoje) ==="
 nohup bash -c '
   sleep 10
