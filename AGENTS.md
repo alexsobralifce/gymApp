@@ -66,6 +66,8 @@ apps/api/src/
 
 - **RF07 - Prescrição e Geração por IA**: Assistente de IA em 5 etapas (Objetivo → Nível & Dias → Grupos Musculares → Restrições → Resultado). Algoritmo de scoring/ranking por objetivo, nível, dias, cobertura de grupos musculares e split preferido. Suporte a múltiplos planos complementares (Push+Pull+Legs). Substituição automática de exercícios por restrições via `alternativo_id`.
 
+- **RF28 - Categorização de Grupos Musculares (12 Categorias Visual Mobile-First)**: Grade interativa em 12 categorias canônicas (ABDOMINAL, AERÓBICO, ANTEBRAÇO, BÍCEPS, COSTAS, GLÚTEO, OMBRO, PANTURRILHA, PEITORAL, PERNAS, TRAPÉZIO, TRÍCEPS) com ícones vetoriais em layout mobile-first de 3 colunas (`MuscleCategoryGrid`), organizando os +900 exercícios e GIFs.
+
 - **RF08 - Limite Rígido de Treinos IA**: Máximo **7 treinos gerados por IA por mês** por aluno. Validação em nível de banco (`criado_por_ia: true`). Reset automático dia 1 de cada mês.
 
 - **RF09 - Dashboard de Evolução Mensal**:

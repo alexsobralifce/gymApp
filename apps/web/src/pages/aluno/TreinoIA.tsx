@@ -6,6 +6,7 @@ import { sugerirNomes } from '../../lib/treinoNome'
 import { ChevronLeftIcon } from '../../components/icons/Icon'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Toast from '../../components/ui/Toast'
+import MuscleCategoryGrid from '../../components/ui/MuscleCategoryGrid'
 
 const SPLIT_ATALHOS = [
   { id: 'FULL_BODY', label: 'Corpo Inteiro', grupos: ['Peitoral', 'Costas', 'Ombro', 'Bíceps', 'Tríceps', 'Quadríceps', 'Isquiotibiais', 'Glúteos', 'Abdômen'] },
@@ -418,6 +419,20 @@ export default function TreinoIA() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <MuscleCategoryGrid
+              selectedCategory={grupoFiltro !== 'TODOS' ? grupoFiltro : null}
+              onSelectCategory={(catKey) => {
+                if (catKey) {
+                  setGrupoFiltro(catKey)
+                  toggleGrupo(catKey)
+                } else {
+                  setGrupoFiltro('TODOS')
+                }
+              }}
+            />
           </div>
 
           <div>

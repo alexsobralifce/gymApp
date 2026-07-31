@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
-import { GRUPOS_MUSCULARES, EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
+import { EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
 import { resolveExerciseMedia } from '../../lib/media'
+import MuscleCategoryGrid from '../../components/ui/MuscleCategoryGrid'
+import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -98,16 +100,18 @@ export default function AcademiaCriarTreino() {
   const [enviando, setEnviando] = useState(false)
 
   // Filtros de busca
-  const [filtroGrupo, setFiltroGrupo] = useState('')
+  const [filtroGrupo, setFiltroGrupo] = useState<MuscleCategoryKey | ''>('')
   const [filtroEquip, setFiltroEquip] = useState('')
   const [busca, setBusca] = useState('')
 
   const exercicios = useMemo(
-    () => filtrarExercicios(todosExercicios, {
-      grupo: filtroGrupo,
-      equipamento: filtroEquip,
-      busca,
-    }),
+    () => {
+      const base = filtrarExercicios(todosExercicios, {
+        equipamento: filtroEquip,
+        busca,
+      })
+      return filterByMuscleCategory(base, filtroGrupo)
+    },
     [todosExercicios, filtroGrupo, filtroEquip, busca],
   )
 
@@ -466,30 +470,22 @@ export default function AcademiaCriarTreino() {
           <div className="lg:col-span-5 bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-4">
             <div>
               <h2 className="text-base font-bold text-text">Biblioteca de Exercícios</h2>
-              <p className="text-xs text-text-muted">Adicione exercícios da base local com 1.324 opções</p>
+              <p className="text-xs text-text-muted">Mais de 900 exercícios com GIFs animados categorizados</p>
             </div>
 
-            <div className="space-y-2">
+            <MuscleCategoryGrid
+              selectedCategory={filtroGrupo}
+              onSelectCategory={(catKey) => setFiltroGrupo(catKey || '')}
+            />
+
+            <div className="space-y-2 pt-2 border-t border-surface-input">
               <input
                 type="text"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                placeholder="🔍 Pesquisar exercício..."
+                placeholder="🔍 Pesquisar por nome do exercício..."
                 className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
-
-              <div className="grid grid-cols-2 gap-2">
-                <select
-                  value={filtroGrupo}
-                  onChange={(e) => setFiltroGrupo(e.target.value)}
-                  className="rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:outline-none"
-                >
-                  <option value="">Todos Músculos</option>
-                  {GRUPOS_MUSCULARES.map((g) => (
-                    <option key={g.value} value={g.value}>{g.label}</option>
-                  ))}
-                </select>
-              </div>
 
               <select
                 value={filtroEquip}
