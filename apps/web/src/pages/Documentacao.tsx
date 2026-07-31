@@ -27,11 +27,11 @@ const CONTEUDO_ALUNO: { secao: string; itens: DocItem[] }[] = [
     ],
   },
   {
-    secao: 'Mural Social e Amigos',
+    secao: 'Feed Social e Amigos',
     itens: [
-      { titulo: 'Mural', descricao: 'Feed com treinos de amigos e de toda a rede. Curtir, comentar e ver fotos.', rota: '/mural' },
-      { titulo: 'Encontrar amigos por e-mail', descricao: 'Em "Amigos" (menu Mural), toque em "Adicionar amigo" e digite o e-mail da pessoa.', rota: '/amizades' },
-      { titulo: 'Amigos da academia', descricao: 'Colegas da mesma academia aparecem no painel lateral para você seguir direto.', rota: '/mural' },
+      { titulo: 'Feed Social', descricao: 'Feed com treinos de amigos e de toda a rede. Curtir, comentar e ver fotos.', rota: '/feed' },
+      { titulo: 'Encontrar amigos por e-mail', descricao: 'Em "Amigos" (menu Feed Social), toque em "Adicionar amigo" e digite o e-mail da pessoa.', rota: '/amizades' },
+      { titulo: 'Amigos da academia', descricao: 'Colegas da mesma academia aparecem no painel lateral para você seguir direto.', rota: '/feed' },
     ],
   },
   {
@@ -132,7 +132,7 @@ export default function Documentacao() {
   let conteudo = CONTEUDO_ALUNO
   let titulo = 'Guia do Aluno'
   let introducao =
-    'Aqui você descobre onde alterar seus dados, cadastrar e executar treinos, e encontrar amigos no mural social.'
+    'Aqui você descobre onde alterar seus dados, cadastrar e executar treinos, e encontrar amigos no feed social.'
 
   if (user?.role === 'PROFESSOR') {
     conteudo = CONTEUDO_PROFESSOR

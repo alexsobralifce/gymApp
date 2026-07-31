@@ -21,6 +21,8 @@
 
 ### 1.1 Cadastro e Onboarding Inteligente
 - Cadastro guiado em **3 passos**: dados básicos, perfil físico com validação em tempo real, e vínculo com academia ou modo autogestão
+- **Senha segura**: mínimo 8 caracteres, exigindo maiúscula, minúscula, número e caractere especial
+- **Verificação de e-mail** com código enviado no cadastro
 - Tela de boas-vindas interativa com explicações dos benefícios da plataforma
 - Coach marks na primeira execução de treino: timer, registro de séries e finalização
 - Login tradicional (e-mail/senha) ou **Google OAuth**
@@ -66,18 +68,21 @@
 - **Correlações Estatísticas de Pearson**: entenda a relação entre seu volume de treino e variações de peso, % gordura e massa magra
 - Cache inteligente de 30 dias com botão "Recalcular"
 
-### 1.6 Rede Social Fitness
-- **Mural Social**: compartilhamento automático de treinos iniciados e concluídos
+### 1.6 Feed Social
+- **Feed Social**: compartilhamento automático de treinos iniciados e concluídos
 - **Curtidas e comentários** (limite de 280 caracteres)
 - **Sistema de amizades**: encontre amigos por email e conecte-se
 - **Colegas de academia**: painel lateral com alunos da mesma academia para seguir
 - **Badge de atividade**: indicador de novidades no feed com atualização a cada 30s
-- **Upload de fotos** nos posts do feed
+- **Upload de fotos** nos posts do feed (com validação de segurança de arquivos)
 - Notificações **push** quando amigos iniciam ou concluem treinos
 - **Controle de privacidade**: posts públicos, só para amigos ou modo invisível (PRIVADO)
 
 ### 1.7 Clubes e Gamificação
-- **Clubes**: agrupa alunos por academia para competição saudável
+- **Clubes de academia**: vinculados automaticamente — entre, veja o ranking e interaja
+- **Clubes temáticos**: crie ou entre em clubes independentes com código de convite
+- **Feed do clube**: veja os treinos dos membros em uma timeline dedicada (`/clubes/:id`)
+- **Lista de membros**: veja quem participa com avatar e nome, entre ou saia de clubes
 - **Sistema de XP**: ganhe pontos por treinos concluídos (bônus por volume, duração e sequência de dias)
 - **Streak tracking**: bônus de 50% para sequências de 3+ dias consecutivos
 - **Leaderboard**: ranking top 20 do clube por XP semanal
@@ -242,12 +247,15 @@ Avaliação integrada baseada em evidências científicas com:
 
 ### 5.2 Segurança e Privacidade
 - **Isolamento multi-tenant**: professores só veem seus alunos, academias só veem seus membros
+- **Senha forte**: mínimo 8 caracteres, exige maiúscula, minúscula, número e caractere especial
+- **Verificação de e-mail**: código enviado no cadastro, obrigatório para login
 - **JWT com refresh token rotacionado** (15min + 7d)
 - **Auto-refresh** automático no frontend sem perda de sessão
 - **Redirecionamento obrigatório** ao expirar sessão
 - **Helmet** com Content Security Policy configurada
-- **CORS** com origens controladas
-- **Rate limiting** disponível para proteção de rotas
+- **CORS** com origens controladas e preflight handler explícito
+- **Rate limiting** por rota: 3-10 req/min (auth), 10 req/hora (IA)
+- **Validação de uploads**: magic bytes (JPG, PNG, GIF, WebP) previnem arquivos maliciosos
 - **LGPD**: consentimento explícito para feed social
 
 ### 5.3 Notificações Push
@@ -292,7 +300,7 @@ Avaliação integrada baseada em evidências científicas com:
 |-------------|-----------|
 | **963 exercícios com GIF** | Veja a execução correta de cada exercício antes de fazer |
 | **IA que entende restrições** | Treino adaptado a joelho, lombar, ombro, etc. |
-| **Rede social fitness** | Motivação através de amigos e clubes |
+| **Rede social fitness** | Motivação através de amigos e clubes com feed dedicado |
 | **Análise científica** | Correlações de Pearson mostram o que realmente funciona |
 | **Autogestão + Professor** | Tenha um personal trainer mas também crie seus treinos |
 | **Gamificação** | XP, badges, streak, leaderboard para manter consistência |
@@ -334,4 +342,4 @@ Avaliação integrada baseada em evidências científicas com:
 
 ---
 
-*Documento gerado em 30/07/2026. Para informações técnicas detalhadas, consulte o arquivo `AGENTS.md` na raiz do repositório.*
+*Documento gerado em 31/07/2026. Para informações técnicas detalhadas, consulte o arquivo `AGENTS.md` na raiz do repositório.*

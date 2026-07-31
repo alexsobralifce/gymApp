@@ -74,11 +74,11 @@ A tela de evolucao mostra:
 
 O aluno tem acesso a:
 
-- Mural com posts de treinos, recordes e conquistas.
+- Feed Social com posts de treinos, recordes e conquistas.
 - Curtidas e comentarios em posts.
 - Lista de amigos e solicitacoes de amizade.
 - Painel de colegas da mesma academia.
-- Clubes de membros com ranking por XP.
+- Clubes de membros com ranking por XP e feed do clube com posts dos treinos dos membros.
 - Controle de privacidade: cada post pode ser publico, so para amigos ou privado.
 
 ### 2.6 Dados pessoais

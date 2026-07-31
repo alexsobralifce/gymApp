@@ -50,7 +50,7 @@ apps/api/src/
 
 ### Requisitos Funcionais (RF)
 
-- **RF01 - Autenticação Multi-Role & OAuth**: Cadastro e login divididos em 4 níveis de acesso: `ROOT`, `ACADEMIA`, `PROFESSOR` e `ALUNO`. Suporta login tradicional (e-mail/senha) e autenticação social via Google OAuth (`google_id`). JWT access token (15min) + refresh token (7d) rotacionado.
+- **RF01 - Autenticação Multi-Role & OAuth**: Cadastro e login divididos em 4 níveis de acesso: `ROOT`, `ACADEMIA`, `PROFESSOR` e `ALUNO`. Suporta login tradicional (e-mail/senha) e autenticação social via Google OAuth (`google_id`). Senha com validação de complexidade (8+ chars, maiúscula, minúscula, número, especial). JWT access token (15min) + refresh token (7d) rotacionado.
 
 - **RF02 - Onboarding e Wizard do Aluno**: Cadastro guiado em 3 passos: Dados Básicos (nome, email, senha, WhatsApp, role), Dados Físicos (data nascimento, peso, altura, sexo) com validação inline debounce 400ms, e Vínculo (academia ativa ou autogestão). Inclui checkbox de consentimento LGPD para feed social.
 
@@ -79,11 +79,11 @@ apps/api/src/
 
 - **RF10 - Análise Científica & Mensagens Motivacionais**: Sistema de rotação circular de mensagens científicas baseadas em pesquisas (Sports Medicine, JAMA, The Lancet). Workers enviam push notifications com título, resumo e link para estudo.
 
-- **RF11 - Mural Social & Notificações**: Feed interativo com paginação por cursor composto (`data+id`). Compartilhamento automático de início/fim de treino, recordes e conquistas. Curtidas e comentários (280 chars). Badge de atividade recente via polling de 30s. Fanout de posts para amigos via worker BullMQ.
+- **RF11 - Feed Social & Notificações**: Feed interativo com paginação por cursor composto (`data+id`). Compartilhamento automático de início/fim de treino, recordes e conquistas. Curtidas e comentários (280 chars). Badge de atividade recente via polling de 30s. Fanout de posts para amigos via worker BullMQ.
 
 - **RF12 - Gestão de Colegas de Academia**: Painel lateral (`AcademySidebar`) listando alunos da mesma academia não seguidos, com botão "Seguir". Visível em telas XL+ e no drawer mobile.
 
-- **RF13 - Gestão de Clubes e Leaderboard**: Clubes vinculados a academias (1:1) ou temáticos. Membros acumulam XP semanal. Reset anual de XP. Leaderboard top 20. Worker de badges (ex: "Primeiros 10 Treinos").
+- **RF13 - Gestão de Clubes e Leaderboard**: Clubes vinculados a academias (1:1) ou temáticos. Membros acumulam XP semanal. Reset anual de XP. Leaderboard top 20. Feed do Clube (`/clubes/:id`), listagem de membros com avatar, adesão e saída de clubes, criação de clubes temáticos. Worker de badges (ex: "Primeiros 10 Treinos").
 
 - **RF14 - Aprovação de Vínculos em Duas Camadas**: Professor → Academia (aprovação Academia) → Root (aprovação final). Status: `PENDENTE_ACADEMIA → PENDENTE_ROOT → ATIVO | REJEITADO | REMOVIDO`.
 
@@ -109,7 +109,7 @@ apps/api/src/
 
 - **RF19 - Gamificação e Sistema de XP**: Cálculo de XP por treino concluído (base + volume bonus + duração bonus + streak multiplier). Streak tracking por dias consecutivos. Atualização de XP nos clubes com reset anual. Sistema de badges com worker dedicado.
 
-- **RF20 - Upload de Mídia e Fotos**: Upload de avatar (`POST /auth/avatar`) e fotos do feed (`POST /social/upload/foto`). Servidas via rotas estáticas Fastify com cache `max-age=86400`. Helper `resolveMediaUrl()` no frontend. Fotos de perfil exibidas no Header, PostCard, AcademySidebar.
+- **RF20 - Upload de Mídia e Fotos**: Upload de avatar (`POST /auth/avatar`) e fotos do feed (`POST /social/upload/foto`). Validação de magic bytes (JPG, PNG, GIF, WebP) para segurança. Servidas via rotas estáticas Fastify com cache `max-age=86400`. Helper `resolveMediaUrl()` no frontend. Fotos de perfil exibidas no Header, PostCard, AcademySidebar.
 
 - **RF21 - Workers de Segundo Plano (BullMQ + Redis)**:
   - **Inatividade (10min)**: Notifica aluno e professor quando treino fica ocioso
@@ -143,8 +143,10 @@ apps/api/src/
 - **RNF05 - SEO e Semântica**: HTML5 semântico, IDs exclusivos para testes.
 - **RNF06 - Autenticação JWT com Refresh**: Access token 15min + refresh token 7d com rotação. Auto-refresh em 401 no frontend.
 - **RNF07 - Limite de Upload**: 5MB máximo via `@fastify/multipart`.
-- **RNF08 - CORS e Segurança**: Helmet com CSP configurado, CORS com origens permitidas (Railway, localhost, Capacitor, endorfinapp.com).
-- **RNF09 - Rate Limiting**: `@fastify/rate-limit` disponível para proteção de rotas.
+- **RNF08 - CORS e Segurança**: Helmet com CSP configurado, CORS com origens permitidas (Railway, localhost, Capacitor, endorfinapp.com, endorfinapp.com.br). Preflight handler explícito para `OPTIONS /auth/*`.
+- **RNF09 - Rate Limiting**: `@fastify/rate-limit` aplicado por rota: login/reset-password 3 req/min, register/change-password 5 req/min, verify-email/resend-code/refresh 10 req/min, treinos IA 10 req/hora, root reset-password 3 req/min.
+- **RNF10 - Magic Bytes Validation**: Uploads de imagem validam magic bytes (JPG, PNG, GIF, WebP) antes de salvar, prevenindo arquivos maliciosos com MIME forjado.
+- **RNF11 - Complexidade de Senha**: Mínimo 8 caracteres, exigindo ao menos 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial. Validado no register e change-password.
 
 ---
 
@@ -364,9 +366,11 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 
 #### Clubes
 - `ACADEMIA` — vinculado 1:1 a uma academia. Membros entram automaticamente.
-- `TEMATICO` — clubes independentes (planejado).
+- `TEMATICO` — clubes independentes com código de convite.
 - Leaderboard top 20 por XP semanal.
 - XP ganho por treino concluído (base + bônus).
+- Feed do clube (`/clubes/:id`): posts dos treinos dos membros.
+- Listagem de membros com avatar, adesão e saída de clubes.
 
 ### 3.4 Avaliação Física (PAR-Q+ / Antropometria / Composição)
 
@@ -573,6 +577,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | DELETE | `/social/amizades/:id` | Desfazer amizade |
 | GET | `/social/clubes/:id` | Detalhe do clube |
 | GET | `/social/clubes/:id/leaderboard` | Top 20 XP semanal |
+| GET | `/social/clubes/:id/membros` | Listar membros do clube |
 | POST | `/social/upload/foto` | Upload de foto para o feed |
 
 ### Professor (`/professores`) — role PROFESSOR
@@ -705,6 +710,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `ALUNO` | Feed Social | `/feed` (redireciona `/mural`) | `pages/aluno/Mural.tsx` |
 | `ALUNO` | Amizades | `/amizades` | `pages/aluno/Amizades.tsx` |
 | `ALUNO` | Clubes | `/clubes` | `pages/aluno/Clubes.tsx` |
+| `ALUNO` | Feed do Clube | `/clubes/:id` | `pages/aluno/ClubeFeed.tsx` |
 | `ALUNO` | Biblioteca de Planos | `/biblioteca-planos` | `pages/aluno/BibliotecaPlanos.tsx` |
 | `ALUNO` | Parceiros | `/parceiros` | `pages/aluno/Parceiros.tsx` |
 | `ALUNO` | Estudo | `/estudo` | `pages/aluno/Estudo.tsx` |
@@ -858,6 +864,9 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 |---------|----------|
 | `docs/FUNCIONALIDADES.md` | Guia completo de funcionalidades por perfil para marketing e stakeholders |
 | `docs/user-guide.md` | Guia do usuário do sistema |
+| `docs/funcionalidades-por-role.md` | Funcionalidades detalhadas por perfil (stakeholders, sem jargão técnico) |
+| `docs/sistema-de-temas-e-modo-auto.md` | Documentação completa do design system de temas dinâmicos |
+| `docs/renomeacao-feed-social.md` | Registro da migração /mural → /feed |
 
 ---
 
@@ -880,7 +889,7 @@ npx tsx apps/api/prisma/translate-exercises.ts
 
 ---
 
-## 9. Dependências Principais
+## 10. Dependências Principais
 
 ### Backend
 `fastify`, `@fastify/cors`, `@fastify/helmet`, `@fastify/jwt`, `@fastify/multipart`, `@fastify/static`, `@fastify/swagger`, `@fastify/swagger-ui`, `@fastify/rate-limit`, `@prisma/client`, `prisma`, `bcryptjs`, `bullmq`, `ioredis`, `zod`, `nodemailer`, `web-push`, `expo-server-sdk`, `google-auth-library`, `tsx`
