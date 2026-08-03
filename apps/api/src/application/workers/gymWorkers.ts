@@ -298,6 +298,12 @@ async function handleNewsFetch(job: Job) {
 async function handleNewsPush(job: Job) {
   const now = new Date()
 
+  // Only push during business hours (08:00-18:00 BRT = 11:00-21:00 UTC)
+  const horaUTC = now.getUTCHours()
+  if (horaUTC < 11 || horaUTC >= 21) {
+    return // skip outside business hours — worker runs every 30min, will retry in window
+  }
+
   // Users with push tokens whose schedule is due
   const usuarios = await prisma.usuario.findMany({
     where: {
@@ -335,9 +341,13 @@ async function handleNewsPush(job: Job) {
       data: { usuario_id: usuario.id, noticia_id: noticia.id },
     })
 
-    // Schedule next: random 1-7 days
+    // Schedule next: in random 1-7 days, at random time between 08:00-18:00 BRT (11:00-21:00 UTC)
     const dias = 1 + Math.floor(Math.random() * 7)
-    const proxima = new Date(now.getTime() + dias * 24 * 3600 * 1000)
+    const proxima = new Date()
+    proxima.setDate(proxima.getDate() + dias)
+    proxima.setUTCHours(11, 0, 0, 0) // 08:00 BRT
+    const randomMin = Math.floor(Math.random() * 600) // 0-599 min → 08:00 to 17:59 BRT
+    proxima.setUTCMinutes(randomMin)
 
     await prisma.usuario.update({
       where: { id: usuario.id },
