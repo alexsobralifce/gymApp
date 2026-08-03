@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import type { AcademiaDashboard as AcademiaDashboardType } from '../../types/api'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
 import { Building2Icon, UsersIcon, UserPlusIcon } from '../../components/icons/Icon'
 
 function formatCNPJ(value: string) {
@@ -55,7 +57,7 @@ export default function AcademiaDashboard() {
 
   if (data) {
     return (
-      <div className="px-4 py-6 max-w-2xl mx-auto w-full space-y-6">
+      <div className="px-4 py-6 max-w-3xl mx-auto w-full space-y-6">
         {/* Header */}
         <div className="rounded-2xl gradient-card border border-surface-input p-5 shadow-lg">
           <div className="flex items-center gap-4">
@@ -139,34 +141,32 @@ export default function AcademiaDashboard() {
         </div>
       )}
 
-      <form onSubmit={handleCadastrar} className="space-y-4">
-        <div>
-          <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">Nome da academia</label>
-          <input
+      <form onSubmit={handleCadastrar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField label="Nome da academia" htmlFor="nome-academia" required>
+          <Input
+            id="nome-academia"
             type="text"
             placeholder="Ex: Academia Iron Body"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="w-full rounded-xl border border-surface-input bg-surface-card px-4 py-3 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors"
             required
           />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">CNPJ</label>
-          <input
+        </FormField>
+        <FormField label="CNPJ" htmlFor="cnpj" required>
+          <Input
+            id="cnpj"
             type="text"
             placeholder="00.000.000/0000-00"
             value={cnpj}
             onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
-            className="w-full rounded-xl border border-surface-input bg-surface-card px-4 py-3 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors"
             required
             maxLength={18}
           />
-        </div>
+        </FormField>
         <button
           type="submit"
           disabled={!nome || cnpj.replace(/\D/g, '').length !== 14}
-          className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
+          className="w-full md:col-span-2 rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
         >
           Cadastrar Academia
         </button>

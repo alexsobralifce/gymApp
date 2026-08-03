@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
+import Input from '../../components/ui/Input'
+import Textarea from '../../components/ui/Textarea'
+import FormField from '../../components/ui/FormField'
 
 export default function ProfessorCriarExercicio() {
   const [exercicios, setExercicios] = useState<Exercicio[]>([])
@@ -41,17 +44,25 @@ export default function ProfessorCriarExercicio() {
       <div className="mb-6 rounded-lg bg-surface-card p-4">
         <h2 className="mb-3 text-sm font-semibold text-text-muted">Novo Exercício</h2>
         {feedback && <p className="mb-2 text-sm text-success">{feedback}</p>}
-        <form onSubmit={handleCriar} className="space-y-3">
-          <input type="text" placeholder="Nome do exercício" value={nome} onChange={(e) => setNome(e.target.value)}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" required />
-          <input type="text" placeholder="Máquina (opcional)" value={maquina} onChange={(e) => setMaquina(e.target.value)}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
-          <textarea placeholder="Dica de execução (opcional)" value={dica} onChange={(e) => setDica(e.target.value)} rows={2}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none resize-none" />
-          <input type="url" placeholder="URL da imagem (opcional)" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
+        <form onSubmit={handleCriar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Nome do exercício" htmlFor="ex-nome">
+            <Input id="ex-nome" type="text" placeholder="Nome do exercício" value={nome} onChange={(e) => setNome(e.target.value)} required />
+          </FormField>
+          <FormField label="Máquina (opcional)" htmlFor="ex-maquina">
+            <Input id="ex-maquina" type="text" placeholder="Máquina (opcional)" value={maquina} onChange={(e) => setMaquina(e.target.value)} />
+          </FormField>
+          <div className="md:col-span-2">
+            <FormField label="Dica de execução (opcional)" htmlFor="ex-dica">
+              <Textarea id="ex-dica" placeholder="Dica de execução (opcional)" value={dica} onChange={(e) => setDica(e.target.value)} rows={2} />
+            </FormField>
+          </div>
+          <div className="md:col-span-2">
+            <FormField label="URL da imagem (opcional)" htmlFor="ex-imagem">
+              <Input id="ex-imagem" type="url" placeholder="URL da imagem (opcional)" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} />
+            </FormField>
+          </div>
           <button type="submit" disabled={!nome}
-            className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">Criar</button>
+            className="md:col-span-2 w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">Criar</button>
         </form>
       </div>
 

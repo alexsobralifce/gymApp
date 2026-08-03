@@ -102,7 +102,7 @@ export default function AlunoDashboard() {
 
   if (loading) {
     return (
-      <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-4">
+      <div className="px-4 py-6 max-w-3xl mx-auto w-full space-y-4">
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
@@ -121,7 +121,7 @@ export default function AlunoDashboard() {
   const idade = calcularIdade(perfil?.data_nascimento)
 
   return (
-    <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-5">
+    <div className="px-4 py-6 max-w-3xl mx-auto w-full space-y-5">
       {/* Modal de Notificação */}
       {modalNotificacao && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">

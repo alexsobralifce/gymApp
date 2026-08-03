@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import BatchActionBar from '../../components/ui/BatchActionBar'
+import Input from '../../components/ui/Input'
 
 interface Professor {
   id: string
@@ -140,12 +141,11 @@ export default function AcademiaAlunos() {
       <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Alunos</h1>
 
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder="Buscar aluno por nome ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
         />
       </div>
 

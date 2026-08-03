@@ -5,6 +5,9 @@ import type { Exercicio, ProfessorDashboard, Treino, Vinculo } from '../../types
 import { EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
 import { resolveExerciseMedia } from '../../lib/media'
 import MuscleCategoryGrid from '../../components/ui/MuscleCategoryGrid'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
+import FormField from '../../components/ui/FormField'
 import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -313,52 +316,55 @@ export default function CriarTreino() {
       {/* Seletor de Academia (se multi-academia) */}
       {vinculos.length > 1 && (
         <div className="max-w-md">
-          <label className="mb-1.5 block text-xs font-semibold text-text-muted uppercase tracking-wider">Academia</label>
-          <select
-            value={academiaId}
-            onChange={(e) => setAcademiaId(e.target.value)}
-            className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
-          >
-            <option value="">Todas</option>
-            {vinculos.map((v: any) => (
-              <option key={v.academia.id} value={v.academia.id}>{v.academia.nome}</option>
-            ))}
-          </select>
+          <FormField label="Academia" htmlFor="academia-filtro">
+            <Select
+              id="academia-filtro"
+              value={academiaId}
+              onChange={(e) => setAcademiaId(e.target.value)}
+            >
+              <option value="">Todas</option>
+              {vinculos.map((v: any) => (
+                <option key={v.academia.id} value={v.academia.id}>{v.academia.nome}</option>
+              ))}
+            </Select>
+          </FormField>
         </div>
       )}
 
       {/* Seletor de Aluno */}
       <div className="max-w-md bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm">
-        <label className="mb-1.5 block text-xs font-semibold text-text-muted uppercase tracking-wider">Aluno do Treino</label>
-        <select
-          value={alunoId}
-          onChange={(e) => setAlunoId(e.target.value)}
-          className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
-          required
-        >
-          <option value="">Selecionar aluno...</option>
-          {alunos.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.usuario.nome} ({a.academia?.nome || 'Sem Academia'})
-            </option>
-          ))}
-        </select>
+        <FormField label="Aluno do Treino" htmlFor="aluno-treino">
+          <Select
+            id="aluno-treino"
+            value={alunoId}
+            onChange={(e) => setAlunoId(e.target.value)}
+            required
+          >
+            <option value="">Selecionar aluno...</option>
+            {alunos.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.usuario.nome} ({a.academia?.nome || 'Sem Academia'})
+              </option>
+            ))}
+          </Select>
+        </FormField>
       </div>
 
       {/* Seletor de Template */}
       {templates.length > 0 && (
         <div className="max-w-md bg-surface-card border border-amber-400/20 rounded-2xl p-4 shadow-sm">
-          <label className="mb-1.5 block text-xs font-semibold text-warning uppercase tracking-wider">Criar a partir de Template</label>
-          <select
-            value={selectedTemplateId}
-            onChange={(e) => handleSelectTemplate(e.target.value)}
-            className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
-          >
-            <option value="">Nenhum (criar do zero)</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>{t.nome}</option>
-            ))}
-          </select>
+          <FormField label="Criar a partir de Template" htmlFor="template-treino">
+            <Select
+              id="template-treino"
+              value={selectedTemplateId}
+              onChange={(e) => handleSelectTemplate(e.target.value)}
+            >
+              <option value="">Nenhum (criar do zero)</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>{t.nome}</option>
+              ))}
+            </Select>
+          </FormField>
         </div>
       )}
 
@@ -403,16 +409,15 @@ export default function CriarTreino() {
             {/* Configurações Gerais do Treino Ativo */}
             <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">Identificação do Treino</label>
-                  <input
+                <FormField label="Identificação do Treino" htmlFor={`ficha-nome-${fichaAtiva}`}>
+                  <Input
+                    id={`ficha-nome-${fichaAtiva}`}
                     type="text"
                     value={ficha.nome}
                     onChange={(e) => atualizarFicha(fichaAtiva, { nome: e.target.value })}
-                    className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
                     placeholder="Ex: Treino A — Peito e Tríceps"
                   />
-                </div>
+                </FormField>
 
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">Dias da Semana</label>
@@ -471,27 +476,27 @@ export default function CriarTreino() {
                             <div className="flex gap-1.5 max-w-[200px]">
                               <div>
                                 <label className="block text-xs font-bold text-text-muted uppercase">Séries</label>
-                                <input
+                                <Input
                                   type="number"
                                   min={1}
                                   value={ex.series}
                                   onChange={(e) => atualizarExercicio(idx, 'series', Number(e.target.value))}
-                                  className="w-12 rounded border border-surface-input bg-surface px-1.5 py-1 text-xs text-text focus:outline-none font-semibold text-center"
+                                  className="w-12 px-1.5 py-1 text-xs font-semibold text-center"
                                 />
                               </div>
                               <div>
                                 <label className="block text-xs font-bold text-text-muted uppercase">Reps</label>
-                                <input
+                                <Input
                                   type="number"
                                   min={1}
                                   value={ex.repeticoes}
                                   onChange={(e) => atualizarExercicio(idx, 'repeticoes', Number(e.target.value))}
-                                  className="w-12 rounded border border-surface-input bg-surface px-1.5 py-1 text-xs text-text focus:outline-none font-semibold text-center"
+                                  className="w-12 px-1.5 py-1 text-xs font-semibold text-center"
                                 />
                               </div>
                               <div>
                                 <label className="block text-xs font-bold text-text-muted uppercase">Carga (kg)</label>
-                                <input
+                                <Input
                                   type="number"
                                   min={0}
                                   placeholder="Auto"
@@ -499,7 +504,7 @@ export default function CriarTreino() {
                                   onChange={(e) =>
                                     atualizarExercicio(idx, 'cargaSugeridaKg', Number(e.target.value) || 0)
                                   }
-                                  className="w-16 rounded border border-surface-input bg-surface px-1.5 py-1 text-xs text-text focus:outline-none font-semibold text-center"
+                                  className="w-16 px-1.5 py-1 text-xs font-semibold text-center"
                                 />
                               </div>
                             </div>
@@ -566,24 +571,22 @@ export default function CriarTreino() {
 
             {/* Filtros */}
             <div className="space-y-2 pt-2 border-t border-surface-input">
-              <input
+              <Input
                 type="text"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 placeholder="🔍 Pesquisar por nome do exercício..."
-                className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
 
-              <select
+              <Select
                 value={filtroEquip}
                 onChange={(e) => setFiltroEquip(e.target.value)}
-                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:outline-none"
               >
                 <option value="">Todos Equipamentos</option>
                 {EQUIPAMENTOS.map((eq) => (
                   <option key={eq.value} value={eq.value}>{eq.label}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Listagem de Exercícios Filtrados */}

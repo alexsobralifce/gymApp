@@ -5,6 +5,8 @@ import { useAuthStore } from '../../stores/auth'
 import { api } from '../../api/client'
 import { clearGoogleOverlays } from '../../lib/googleOverlay'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import Input from '../../components/ui/Input'
+import FormField from '../../components/ui/FormField'
 import { EndorfinappLogo, EndorfinappIcon } from '../../components/branding'
 import { debugLog } from '../../lib/debug'
 
@@ -161,16 +163,12 @@ export default function Login() {
           <div className="h-px flex-1 bg-surface-input" />
         </div>
 
-        <input
-          type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
-          required
-        />
-        <input
-          type="password" placeholder="Senha" value={senha} onChange={(e) => setSenha(e.target.value)}
-          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
-          required
-        />
+        <FormField label="Email" htmlFor="email">
+          <Input id="email" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </FormField>
+        <FormField label="Senha" htmlFor="senha">
+          <Input id="senha" type="password" placeholder="Senha" value={senha} onChange={(e) => setSenha(e.target.value)} required />
+        </FormField>
         <button
           type="submit" disabled={busy}
           className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 cursor-pointer"

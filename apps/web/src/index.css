@@ -553,6 +553,10 @@ html[data-theme="orange"][data-mode="day"] {
   margin-top: env(safe-area-inset-top, 0px);
 }
 
+@utility input-base {
+  @apply w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
 /* ─── Contraste em botões primary ─── */
 .bg-primary,
 .bg-primary.text-white,

@@ -7,6 +7,9 @@ import { formatPhone } from '../../lib/phone'
 import { resolveMediaUrl } from '../../lib/media'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import {
   UserCircleIcon,
   RulerIcon,
@@ -294,9 +297,9 @@ export default function DadosAluno() {
           </div>
         )}
 
-        <form onSubmit={handleSalvarPessoais} className="space-y-3">
+        <form onSubmit={handleSalvarPessoais} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Avatar */}
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center mb-2 md:col-span-2">
             <button
               type="button"
               onClick={() => avatarInputRef.current?.click()}
@@ -327,46 +330,38 @@ export default function DadosAluno() {
             />
           </div>
           {uploadingAvatar && (
-            <p className="text-xs text-text-muted text-center">Enviando foto...</p>
+            <p className="text-xs text-text-muted text-center md:col-span-2">Enviando foto...</p>
           )}
 
-          <div>
-            <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Nome Completo</label>
-            <input
+          <FormField label="Nome Completo" htmlFor="nome" required>
+            <Input
+              id="nome"
               type="text"
               required
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
               placeholder="Seu nome"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">E-mail (Cadastro)</label>
-            <input
-              type="email"
-              disabled
-              value={user?.email || ''}
-              className="w-full rounded-xl border border-surface-input bg-surface/50 px-3.5 py-2.5 text-sm text-text-muted cursor-not-allowed"
-            />
-          </div>
+          <FormField label="E-mail (Cadastro)" htmlFor="email">
+            <Input id="email" type="email" disabled value={user?.email || ''} />
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Telefone / WhatsApp</label>
-            <input
+          <FormField label="Telefone / WhatsApp" htmlFor="telefone">
+            <Input
+              id="telefone"
               type="tel"
               value={telefone}
               onChange={(e) => setTelefone(formatPhone(e.target.value))}
-              className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
               placeholder="(11) 99999-9999"
             />
-          </div>
+          </FormField>
 
           <button
             type="submit"
             disabled={salvandoPessoais}
-            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full md:col-span-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {salvandoPessoais ? 'Salvando...' : 'Salvar Informações Pessoais'}
           </button>
@@ -388,62 +383,56 @@ export default function DadosAluno() {
           </div>
         )}
 
-        <form onSubmit={handleSalvarFisicos} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Peso (kg)</label>
-              <input
-                type="number"
-                step="0.1"
-                min="20"
-                max="300"
-                value={pesoKg}
-                onChange={(e) => setPesoKg(e.target.value)}
-                className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
-                placeholder="ex: 75.5"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Altura (cm)</label>
-              <input
-                type="number"
-                min="50"
-                max="250"
-                value={alturaCm}
-                onChange={(e) => setAlturaCm(e.target.value)}
-                className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
-                placeholder="ex: 175"
-              />
-            </div>
-          </div>
+        <form onSubmit={handleSalvarFisicos} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Peso (kg)" htmlFor="peso">
+            <Input
+              id="peso"
+              type="number"
+              step="0.1"
+              min="20"
+              max="300"
+              value={pesoKg}
+              onChange={(e) => setPesoKg(e.target.value)}
+              placeholder="ex: 75.5"
+            />
+          </FormField>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Nascimento</label>
-              <input
-                type="date"
-                value={dataNascimento}
-                onChange={(e) => setDataNascimento(e.target.value)}
-                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:border-primary focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Sexo Biológico</label>
-              <select
-                value={sexo}
-                onChange={(e) => setSexo(e.target.value as any)}
-                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2.5 text-xs text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Selecione</option>
-                <option value="MASCULINO">Masculino</option>
-                <option value="FEMININO">Feminino</option>
-              </select>
-            </div>
-          </div>
+          <FormField label="Altura (cm)" htmlFor="altura">
+            <Input
+              id="altura"
+              type="number"
+              min="50"
+              max="250"
+              value={alturaCm}
+              onChange={(e) => setAlturaCm(e.target.value)}
+              placeholder="ex: 175"
+            />
+          </FormField>
+
+          <FormField label="Nascimento" htmlFor="nascimento">
+            <Input
+              id="nascimento"
+              type="date"
+              value={dataNascimento}
+              onChange={(e) => setDataNascimento(e.target.value)}
+            />
+          </FormField>
+
+          <FormField label="Sexo Biológico" htmlFor="sexo">
+            <Select
+              id="sexo"
+              value={sexo}
+              onChange={(e) => setSexo(e.target.value as any)}
+            >
+              <option value="">Selecione</option>
+              <option value="MASCULINO">Masculino</option>
+              <option value="FEMININO">Feminino</option>
+            </Select>
+          </FormField>
 
           {/* IMC Card em tempo real */}
           {imcCalculado !== null && imcBadge && (
-            <div className={`rounded-xl border p-3 flex items-center justify-between ${imcBadge.cor}`}>
+            <div className={`md:col-span-2 rounded-xl border p-3 flex items-center justify-between ${imcBadge.cor}`}>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider opacity-80">IMC Calculado</p>
                 <p className="text-xl font-black">{imcCalculado}</p>
@@ -457,7 +446,7 @@ export default function DadosAluno() {
           <button
             type="submit"
             disabled={salvandoFisicos}
-            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full md:col-span-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {salvandoFisicos ? 'Salvando...' : 'Salvar Dados Físicos'}
           </button>
@@ -479,39 +468,35 @@ export default function DadosAluno() {
           </div>
         )}
 
-        <form onSubmit={handleSalvarPreferencias} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Objetivo Principal</label>
-              <select
-                value={objetivoTreino}
-                onChange={(e) => setObjetivoTreino(e.target.value)}
-                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2.5 text-xs text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Selecione um objetivo</option>
-                <option value="HIPERTROFIA">🔥 Hipertrofia (Ganho de massa)</option>
-                <option value="FORCA">💪 Força Máxima</option>
-                <option value="EMAGRECIMENTO">⚡ Emagrecimento / Queima Fat</option>
-                <option value="SAUDE">❤️ Saúde & Condicionamento</option>
-              </select>
-            </div>
+        <form onSubmit={handleSalvarPreferencias} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Objetivo Principal" htmlFor="objetivo">
+            <Select
+              id="objetivo"
+              value={objetivoTreino}
+              onChange={(e) => setObjetivoTreino(e.target.value)}
+            >
+              <option value="">Selecione um objetivo</option>
+              <option value="HIPERTROFIA">🔥 Hipertrofia (Ganho de massa)</option>
+              <option value="FORCA">💪 Força Máxima</option>
+              <option value="EMAGRECIMENTO">⚡ Emagrecimento / Queima Fat</option>
+              <option value="SAUDE">❤️ Saúde & Condicionamento</option>
+            </Select>
+          </FormField>
 
-            <div>
-              <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Nível de Experiência</label>
-              <select
-                value={nivelTreino}
-                onChange={(e) => setNivelTreino(e.target.value)}
-                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2.5 text-xs text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Selecione seu nível</option>
-                <option value="INICIANTE">🌱 Iniciante (&lt; 6 meses)</option>
-                <option value="INTERMEDIARIO">⚡ Intermediário (6m a 2 anos)</option>
-                <option value="AVANCADO">🚀 Avançado (&gt; 2 anos)</option>
-              </select>
-            </div>
-          </div>
+          <FormField label="Nível de Experiência" htmlFor="nivel">
+            <Select
+              id="nivel"
+              value={nivelTreino}
+              onChange={(e) => setNivelTreino(e.target.value)}
+            >
+              <option value="">Selecione seu nível</option>
+              <option value="INICIANTE">🌱 Iniciante (&lt; 6 meses)</option>
+              <option value="INTERMEDIARIO">⚡ Intermediário (6m a 2 anos)</option>
+              <option value="AVANCADO">🚀 Avançado (&gt; 2 anos)</option>
+            </Select>
+          </FormField>
 
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
               Restrições ou Dores Articulares (Substituição Automática de Exercícios)
             </label>
@@ -548,7 +533,7 @@ export default function DadosAluno() {
           <button
             type="submit"
             disabled={salvandoPreferencias}
-            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full md:col-span-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {salvandoPreferencias ? 'Salvando...' : 'Salvar Preferências'}
           </button>
@@ -579,18 +564,20 @@ export default function DadosAluno() {
 
           {trocandoAcademia ? (
             <div className="pt-2 space-y-2">
-              <select
-                value={novaAcademiaId}
-                onChange={(e) => setNovaAcademiaId(e.target.value)}
-                className="w-full rounded-xl border border-surface-input bg-surface-card px-3 py-2 text-xs text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Selecione uma academia...</option>
-                {academias.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.nome}
-                  </option>
-                ))}
-              </select>
+              <FormField label="Academia" htmlFor="nova-academia">
+                <Select
+                  id="nova-academia"
+                  value={novaAcademiaId}
+                  onChange={(e) => setNovaAcademiaId(e.target.value)}
+                >
+                  <option value="">Selecione uma academia...</option>
+                  {academias.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nome}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -736,16 +723,15 @@ export default function DadosAluno() {
             <p className="text-xs text-text-muted leading-relaxed">
               Ao confirmar, seu perfil será alterado para <strong className="text-primary">Professor</strong>. Você terá acesso ao Dashboard de Personal Trainer, criação e envio de fichas de treino para alunos.
             </p>
-            <div>
-              <label className="block text-xs font-medium text-text-muted mb-1">Número do CREF (Opcional)</label>
-              <input
+            <FormField label="Número do CREF (Opcional)" htmlFor="cref">
+              <Input
+                id="cref"
                 type="text"
                 value={cref}
                 onChange={(e) => setCref(e.target.value)}
                 placeholder="Ex: 123456-G/SP"
-                className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:border-primary focus:outline-none"
               />
-            </div>
+            </FormField>
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"

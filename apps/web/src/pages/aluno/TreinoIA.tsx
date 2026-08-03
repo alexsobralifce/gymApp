@@ -309,7 +309,7 @@ export default function TreinoIA() {
               <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
                 Nível de Experiência
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
                   { id: 'INICIANTE', label: 'Iniciante', desc: '< 6 meses' },
                   { id: 'INTERMEDIARIO', label: 'Intermediário', desc: '6m a 2 anos' },
@@ -403,7 +403,7 @@ export default function TreinoIA() {
             <label className="text-xs font-bold text-text-muted uppercase tracking-wider block mb-2">
               Atalhos de divisao
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {SPLIT_ATALHOS.map((s) => (
                 <button
                   key={s.id}
@@ -490,7 +490,7 @@ export default function TreinoIA() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
               { key: 'joelho', label: 'Joelho (evita agachamentos profundos e alto impacto)' },
               { key: 'lombar', label: 'Lombar (evita levantamento terra e sobrecarga axial)' },

@@ -39,7 +39,7 @@ export default function RootPainel() {
   if (!data) return <div className="p-4 text-text-muted">Sem dados.</div>
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 max-w-3xl mx-auto">
       <h1 className="mb-6 text-xl font-bold text-text">Painel Global</h1>
 
       {feedback && <div className="mb-4 rounded bg-surface-card p-3 text-sm text-success">{feedback}</div>}

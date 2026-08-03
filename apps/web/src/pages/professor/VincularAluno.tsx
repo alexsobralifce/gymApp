@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
+import Input from '../../components/ui/Input'
+import FormField from '../../components/ui/FormField'
 
 export default function ProfessorVincularAluno() {
   const [email, setEmail] = useState('')
@@ -37,14 +39,16 @@ export default function ProfessorVincularAluno() {
       )}
 
       <form onSubmit={handleSubmit} className="max-w-md space-y-3">
-        <input
-          type="email"
-          placeholder="Email do aluno"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
-          required
-        />
+        <FormField label="Email do aluno" htmlFor="email-aluno">
+          <Input
+            id="email-aluno"
+            type="email"
+            placeholder="Email do aluno"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </FormField>
         <button
           type="submit"
           disabled={loading || !email}

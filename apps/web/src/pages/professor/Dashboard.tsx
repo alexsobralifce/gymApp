@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import type { ProfessorDashboard, Vinculo } from '../../types/api'
 import StatusBadge, { getTreinoStatusVariant, getTreinoStatusLabel } from '../../components/ui/StatusBadge'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
+import Select from '../../components/ui/Select'
 import { UsersIcon, DumbbellIcon, ActivityIcon, Building2Icon, ChartLineIcon, PlusIcon } from '../../components/icons/Icon'
 
 export default function ProfessorDashboard() {
@@ -44,16 +45,15 @@ export default function ProfessorDashboard() {
 
       {/* Filtro Academia */}
       {vinculos.length > 1 && (
-        <select
+        <Select
           value={academiaId}
           onChange={(e) => setAcademiaId(e.target.value)}
-          className="w-full rounded-xl border border-surface-input bg-surface-card px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
         >
           <option value="">Todas academias</option>
           {vinculos.map((v: any) => (
             <option key={v.academia.id} value={v.academia.id}>{v.academia.nome}</option>
           ))}
-        </select>
+        </Select>
       )}
 
       {/* Estatisticas */}

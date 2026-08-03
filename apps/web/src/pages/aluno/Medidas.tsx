@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import BatchActionBar from '../../components/ui/BatchActionBar'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
 import type { MedidaCorporal, PerfilAluno } from '../../types/api'
 
 interface IMCClassification {
@@ -243,32 +245,57 @@ export default function AlunoMedidas() {
             </h3>
             <button type="button" onClick={resetForm} className="text-text-muted hover:text-text text-sm cursor-pointer">Cancelar</button>
           </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-xs text-text-muted mb-1">Peso (kg)</label>
-              <input type="number" step="0.1" placeholder="70.5" value={pesoKg} onChange={(e) => setPesoKg(e.target.value)}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs text-text-muted mb-1">Altura (cm)</label>
-              <input type="number" step="1" placeholder="175" value={alturaCm} onChange={(e) => setAlturaCm(e.target.value)}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Peso (kg)" htmlFor="medida-peso">
+              <Input
+                id="medida-peso"
+                type="number"
+                step="0.1"
+                placeholder="70.5"
+                value={pesoKg}
+                onChange={(e) => setPesoKg(e.target.value)}
+              />
+            </FormField>
+            <FormField label="Altura (cm)" htmlFor="medida-altura">
+              <Input
+                id="medida-altura"
+                type="number"
+                step="1"
+                placeholder="175"
+                value={alturaCm}
+                onChange={(e) => setAlturaCm(e.target.value)}
+              />
+            </FormField>
+            <FormField label="% Gordura (BF)" htmlFor="medida-bf">
+              <Input
+                id="medida-bf"
+                type="number"
+                step="0.1"
+                placeholder="15.5"
+                value={percentualBf}
+                onChange={(e) => setPercentualBf(e.target.value)}
+              />
+            </FormField>
+            <FormField label="Massa Magra (kg)" htmlFor="medida-massa">
+              <Input
+                id="medida-massa"
+                type="number"
+                step="0.1"
+                placeholder="60"
+                value={massaMagraKg}
+                onChange={(e) => setMassaMagraKg(e.target.value)}
+              />
+            </FormField>
           </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-xs text-text-muted mb-1">% Gordura (BF)</label>
-              <input type="number" step="0.1" placeholder="15.5" value={percentualBf} onChange={(e) => setPercentualBf(e.target.value)}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs text-text-muted mb-1">Massa Magra (kg)</label>
-              <input type="number" step="0.1" placeholder="60" value={massaMagraKg} onChange={(e) => setMassaMagraKg(e.target.value)}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
-            </div>
-          </div>
-          <input type="text" placeholder="Observação (opcional)" value={observacao} onChange={(e) => setObservacao(e.target.value)}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none" />
+          <FormField label="Observação" htmlFor="medida-obs">
+            <Input
+              id="medida-obs"
+              type="text"
+              placeholder="Observação (opcional)"
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+            />
+          </FormField>
           <button type="submit" disabled={saving || (!pesoKg && !alturaCm && !percentualBf && !massaMagraKg)}
             className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer">
             {saving ? 'Salvando...' : editando ? 'Atualizar medida' : 'Registrar medida'}

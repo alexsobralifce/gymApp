@@ -1,4 +1,6 @@
 import type { Academia } from '../../types/api'
+import Select from '../../components/ui/Select'
+import FormField from '../../components/ui/FormField'
 
 interface Step3AcademyProps {
   modoVinculo: 'AUTOGESTAO' | 'ACADEMIA' | ''
@@ -44,20 +46,19 @@ export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, 
         </button>
       </div>
       {modoVinculo === 'ACADEMIA' && (
-        <div>
-          <label className="block text-xs text-text-muted mb-1">Selecione a academia</label>
-          <select
+        <FormField label="Selecione a academia" htmlFor="academia">
+          <Select
+            id="academia"
             value={academiaId}
             onChange={(e) => setAcademiaId(e.target.value)}
-            className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
             required
           >
             <option value="">Selecionar...</option>
             {academias.map((a) => (
               <option key={a.id} value={a.id}>{a.nome}</option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </FormField>
       )}
       {modoVinculo === 'AUTOGESTAO' && (
         <div className="rounded-xl bg-surface-card border border-surface-input p-4 text-sm text-text-muted">

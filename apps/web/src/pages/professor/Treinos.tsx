@@ -4,6 +4,9 @@ import { api } from '../../api/client'
 import { useToast } from '../../components/ui/Toast'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import BatchActionBar from '../../components/ui/BatchActionBar'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
+import FormField from '../../components/ui/FormField'
 import type { ProfessorDashboard, Treino } from '../../types/api'
 
 const DIA_LABEL: Record<number, string> = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' }
@@ -218,12 +221,11 @@ export default function ProfessorTreinos() {
       <h1 className="mb-6 text-xl font-bold text-text">Listar Treinos</h1>
 
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder="Buscar aluno por nome ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
         />
       </div>
 
@@ -404,29 +406,33 @@ export default function ProfessorTreinos() {
           <div className="relative z-10 mx-4 w-full max-w-md rounded-lg bg-surface-card p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-text">Editar Treino</h3>
             <div className="mt-4 space-y-4">
-              <input
-                type="text"
-                placeholder="Nome do treino"
-                value={form.nome}
-                onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
-              />
-              <div>
-                <p className="mb-2 text-xs text-text-muted">Dias da semana</p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(DIA_LABEL).map(([k, v]) => (
-                    <button
-                      key={k}
-                      onClick={() => toggleDia(Number(k))}
-                      className={`rounded px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                        form.diasSemana.includes(Number(k))
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-surface text-text-muted border border-surface-input hover:border-primary'
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Nome do treino" htmlFor="edit-nome">
+                  <Input
+                    id="edit-nome"
+                    type="text"
+                    placeholder="Nome do treino"
+                    value={form.nome}
+                    onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                  />
+                </FormField>
+                <div>
+                  <p className="mb-2 text-xs text-text-muted">Dias da semana</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(DIA_LABEL).map(([k, v]) => (
+                      <button
+                        key={k}
+                        onClick={() => toggleDia(Number(k))}
+                        className={`rounded px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                          form.diasSemana.includes(Number(k))
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-surface text-text-muted border border-surface-input hover:border-primary'
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -472,17 +478,18 @@ export default function ProfessorTreinos() {
               Clonando: <span className="text-text font-medium">{cloningTreino.nome}</span>
             </p>
             <div className="mt-4">
-              <label className="block text-xs text-text-muted mb-1">Aluno destino</label>
-              <select
-                value={alunoDestinoId}
-                onChange={(e) => setAlunoDestinoId(e.target.value)}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Selecione um aluno...</option>
-                {alunosDestino.map((a) => (
-                  <option key={a.id} value={a.id}>{a.usuario.nome} ({a.usuario.email})</option>
-                ))}
-              </select>
+              <FormField label="Aluno destino" htmlFor="aluno-destino">
+                <Select
+                  id="aluno-destino"
+                  value={alunoDestinoId}
+                  onChange={(e) => setAlunoDestinoId(e.target.value)}
+                >
+                  <option value="">Selecione um aluno...</option>
+                  {alunosDestino.map((a) => (
+                    <option key={a.id} value={a.id}>{a.usuario.nome} ({a.usuario.email})</option>
+                  ))}
+                </Select>
+              </FormField>
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -517,12 +524,11 @@ export default function ProfessorTreinos() {
               {selectedAlunoIds.length} aluno(s) selecionado(s)
             </div>
             <div className="mt-3">
-              <input
+              <Input
                 type="text"
                 placeholder="Buscar aluno..."
                 value={buscaAlunoLote}
                 onChange={(e) => setBuscaAlunoLote(e.target.value)}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
             </div>
             <div className="mt-3 max-h-60 overflow-y-auto space-y-1">

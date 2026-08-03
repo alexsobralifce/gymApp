@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
+import FormField from '../../components/ui/FormField'
 
 interface Step2ProfileProps {
   dataNascimento: string
@@ -59,72 +62,58 @@ export default function Step2Profile({
   const alturaValid = touched.altura && !errors.altura && altura !== ''
 
   return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-xs text-text-muted mb-1">Data de nascimento</label>
-        <input
-          type="date" value={dataNascimento}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormField label="Data de nascimento" htmlFor="dataNascimento">
+        <Input
+          id="dataNascimento" type="date" value={dataNascimento}
           onChange={(e) => setDataNascimento(e.target.value)}
-          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
         />
-      </div>
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <label className="block text-xs text-text-muted mb-1">Peso (kg)</label>
-          <input
-            type="number" step="0.1" min="20" max="500" placeholder="70.5"
-            value={peso}
-            onChange={(e) => { setPeso(e.target.value); setTouched((t) => ({ ...t, peso: true })) }}
-            onBlur={() => setTouched((t) => ({ ...t, peso: true }))}
-            className={`w-full rounded border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none transition-colors ${
-              pesoValid ? 'border-success' : errors.peso ? 'border-red-400' : 'border-surface-input focus:border-primary'
-            }`}
-            required
-          />
-          {errors.peso && (
-            <p className="text-xs text-destructive mt-1 animate-[fade-in_0.2s_ease]">{errors.peso}</p>
-          )}
-        </div>
-        <div className="flex-1">
-          <label className="block text-xs text-text-muted mb-1">Altura (cm)</label>
-          <input
-            type="number" step="1" min="50" max="250" placeholder="175"
-            value={altura}
-            onChange={(e) => { setAltura(e.target.value); setTouched((t) => ({ ...t, altura: true })) }}
-            onBlur={() => setTouched((t) => ({ ...t, altura: true }))}
-            className={`w-full rounded border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none transition-colors ${
-              alturaValid ? 'border-success' : errors.altura ? 'border-red-400' : 'border-surface-input focus:border-primary'
-            }`}
-            required
-          />
-          {errors.altura && (
-            <p className="text-xs text-destructive mt-1 animate-[fade-in_0.2s_ease]">{errors.altura}</p>
-          )}
-        </div>
-      </div>
-      <div>
-        <label className="block text-xs text-text-muted mb-1">Sexo</label>
-        <select
-          value={sexo} onChange={(e) => setSexo(e.target.value)}
-          className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+      </FormField>
+      <FormField label="Peso (kg)" htmlFor="peso" error={errors.peso}>
+        <Input
+          id="peso" type="number" step="0.1" min="20" max="500" placeholder="70.5"
+          value={peso}
+          onChange={(e) => { setPeso(e.target.value); setTouched((t) => ({ ...t, peso: true })) }}
+          onBlur={() => setTouched((t) => ({ ...t, peso: true }))}
+          className={pesoValid ? 'border-success' : undefined}
+          error={errors.peso}
+          required
+        />
+      </FormField>
+      <FormField label="Altura (cm)" htmlFor="altura" error={errors.altura}>
+        <Input
+          id="altura" type="number" step="1" min="50" max="250" placeholder="175"
+          value={altura}
+          onChange={(e) => { setAltura(e.target.value); setTouched((t) => ({ ...t, altura: true })) }}
+          onBlur={() => setTouched((t) => ({ ...t, altura: true }))}
+          className={alturaValid ? 'border-success' : undefined}
+          error={errors.altura}
+          required
+        />
+      </FormField>
+      <FormField label="Sexo" htmlFor="sexo">
+        <Select
+          id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value)}
           required
         >
           <option value="">Selecionar...</option>
           <option value="MASCULINO">Masculino</option>
           <option value="FEMININO">Feminino</option>
-        </select>
+        </Select>
+      </FormField>
+      <div className="md:col-span-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consentiuSocial}
+            onChange={(e) => setConsentiuSocial(e.target.checked)}
+            className="rounded border-surface-input"
+          />
+          <span className="text-xs text-text-muted">Desejo que meus amigos vejam quando eu treino</span>
+        </label>
       </div>
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={consentiuSocial}
-          onChange={(e) => setConsentiuSocial(e.target.checked)}
-          className="rounded border-surface-input"
-        />
-        <span className="text-xs text-text-muted">Desejo que meus amigos vejam quando eu treino</span>
-      </label>
       {hasErrors && (
-        <p className="text-xs text-destructive text-center">Corrija os campos acima para continuar</p>
+        <p className="text-xs text-destructive text-center md:col-span-2">Corrija os campos acima para continuar</p>
       )}
     </div>
   )

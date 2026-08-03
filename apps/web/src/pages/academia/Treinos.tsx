@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useToast } from '../../components/ui/Toast'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import type { AlunoAcademia, Treino } from '../../types/api'
 
 const DIA_LABEL: Record<number, string> = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' }
@@ -241,13 +244,15 @@ export default function AcademiaTreinos() {
           <div className="relative z-10 mx-4 w-full max-w-md rounded-lg bg-surface-card p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-text">Editar Treino</h3>
             <div className="mt-4 space-y-4">
-              <input
-                type="text"
-                placeholder="Nome do treino"
-                value={form.nome}
-                onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
-              />
+              <FormField label="Nome do treino" htmlFor="editar-nome-treino">
+                <Input
+                  id="editar-nome-treino"
+                  type="text"
+                  placeholder="Nome do treino"
+                  value={form.nome}
+                  onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                />
+              </FormField>
               <div>
                 <p className="mb-2 text-xs text-text-muted">Dias da semana</p>
                 <div className="flex flex-wrap gap-2">
@@ -308,17 +313,18 @@ export default function AcademiaTreinos() {
               Clonando: <span className="text-text font-medium">{cloningTreino.nome}</span>
             </p>
             <div className="mt-4">
-              <label className="block text-xs text-text-muted mb-1">Aluno destino</label>
-              <select
-                value={alunoDestinoId}
-                onChange={(e) => setAlunoDestinoId(e.target.value)}
-                className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Selecione um aluno...</option>
-                {alunosDestino.map((a) => (
-                  <option key={a.id} value={a.id}>{a.usuario.nome} ({a.usuario.email})</option>
-                ))}
-              </select>
+              <FormField label="Aluno destino" htmlFor="aluno-destino">
+                <Select
+                  id="aluno-destino"
+                  value={alunoDestinoId}
+                  onChange={(e) => setAlunoDestinoId(e.target.value)}
+                >
+                  <option value="">Selecione um aluno...</option>
+                  {alunosDestino.map((a) => (
+                    <option key={a.id} value={a.id}>{a.usuario.nome} ({a.usuario.email})</option>
+                  ))}
+                </Select>
+              </FormField>
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button

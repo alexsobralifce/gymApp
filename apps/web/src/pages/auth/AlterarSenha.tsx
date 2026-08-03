@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
+import Input from '../../components/ui/Input'
+import FormField from '../../components/ui/FormField'
 
 export default function AlterarSenha() {
   const [senhaAtual, setSenhaAtual] = useState('')
@@ -54,41 +56,38 @@ export default function AlterarSenha() {
       )}
 
       <form onSubmit={handleSubmit} className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-text-muted uppercase tracking-wider">Senha Atual</label>
-          <input
+        <FormField label="Senha Atual" htmlFor="senhaAtual">
+          <Input
+            id="senhaAtual"
             type="password"
             value={senhaAtual}
             onChange={(e) => setSenhaAtual(e.target.value)}
-            className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
             placeholder="Digite sua senha atual"
             required
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-text-muted uppercase tracking-wider">Nova Senha</label>
-          <input
+        <FormField label="Nova Senha" htmlFor="novaSenha">
+          <Input
+            id="novaSenha"
             type="password"
             value={novaSenha}
             onChange={(e) => setNovaSenha(e.target.value)}
-            className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
             placeholder="Nova senha (mínimo 8 caracteres)"
             required
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-text-muted uppercase tracking-wider">Confirmar Nova Senha</label>
-          <input
+        <FormField label="Confirmar Nova Senha" htmlFor="confirmarSenha">
+          <Input
+            id="confirmarSenha"
             type="password"
             value={confirmarSenha}
             onChange={(e) => setConfirmarSenha(e.target.value)}
-            className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
             placeholder="Confirme a nova senha"
             required
           />
-        </div>
+        </FormField>
 
         <div className="flex gap-2 pt-2">
           <button

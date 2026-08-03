@@ -7,6 +7,9 @@ import { EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
 import { sugerirNomes } from '../../lib/treinoNome'
 import { resolveExerciseMedia } from '../../lib/media'
 import MuscleCategoryGrid from '../../components/ui/MuscleCategoryGrid'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -286,15 +289,16 @@ export default function AlunoCriarTreino() {
           <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">Nome do Treino</label>
-                <input
-                  type="text"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
-                  placeholder="Ex: Treino A — Peito e Tríceps"
-                  maxLength={60}
-                />
+                <FormField label="Nome do Treino" htmlFor="nome-treino">
+                  <Input
+                    id="nome-treino"
+                    type="text"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    placeholder="Ex: Treino A — Peito e Tríceps"
+                    maxLength={60}
+                  />
+                </FormField>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {sugerirNomes({ origem: 'criar' }).map((s) => (
                     <button
@@ -362,33 +366,33 @@ export default function AlunoCriarTreino() {
                         <div className="flex gap-1.5 max-w-[200px]">
                           <div>
                             <label className="block text-xs font-bold text-text-muted uppercase">Séries</label>
-                            <input
+                            <Input
                               type="number"
                               min={1}
                               value={ex.series}
                               onChange={(e) => atualizarExercicio(idx, 'series', Number(e.target.value))}
-                              className="w-12 rounded border border-surface-input bg-surface px-1.5 py-1 text-xs text-text focus:outline-none font-semibold text-center"
+                              className="w-12 px-1.5 py-1 text-xs text-center font-semibold"
                             />
                           </div>
                           <div>
                             <label className="block text-xs font-bold text-text-muted uppercase">Reps</label>
-                            <input
+                            <Input
                               type="number"
                               min={1}
                               value={ex.repeticoes}
                               onChange={(e) => atualizarExercicio(idx, 'repeticoes', Number(e.target.value))}
-                              className="w-12 rounded border border-surface-input bg-surface px-1.5 py-1 text-xs text-text focus:outline-none font-semibold text-center"
+                              className="w-12 px-1.5 py-1 text-xs text-center font-semibold"
                             />
                           </div>
                           <div>
                             <label className="block text-xs font-bold text-text-muted uppercase">Carga (kg)</label>
-                            <input
+                            <Input
                               type="number"
                               min={0}
                               placeholder="Auto"
                               value={ex.cargaSugeridaKg ?? ''}
                               onChange={(e) => atualizarExercicio(idx, 'cargaSugeridaKg', Number(e.target.value) || 0)}
-                              className="w-16 rounded border border-surface-input bg-surface px-1.5 py-1 text-xs text-text focus:outline-none font-semibold text-center"
+                              className="w-16 px-1.5 py-1 text-xs text-center font-semibold"
                             />
                           </div>
                         </div>
@@ -451,24 +455,28 @@ export default function AlunoCriarTreino() {
           />
 
           <div className="space-y-2 pt-2 border-t border-surface-input">
-            <input
-              type="text"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="🔍 Pesquisar por nome do exercício..."
-              className="w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
-            />
+            <FormField label="Buscar Exercício" htmlFor="busca-exercicio">
+              <Input
+                id="busca-exercicio"
+                type="text"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="🔍 Pesquisar por nome do exercício..."
+              />
+            </FormField>
 
-            <select
-              value={filtroEquip}
-              onChange={(e) => setFiltroEquip(e.target.value)}
-              className="w-full rounded-xl border border-surface-input bg-surface px-3 py-2 text-xs text-text focus:outline-none"
-            >
-              <option value="">Todos Equipamentos</option>
-              {EQUIPAMENTOS.map((eq) => (
-                <option key={eq.value} value={eq.value}>{eq.label}</option>
-              ))}
-            </select>
+            <FormField label="Equipamento" htmlFor="filtro-equip">
+              <Select
+                id="filtro-equip"
+                value={filtroEquip}
+                onChange={(e) => setFiltroEquip(e.target.value)}
+              >
+                <option value="">Todos Equipamentos</option>
+                {EQUIPAMENTOS.map((eq) => (
+                  <option key={eq.value} value={eq.value}>{eq.label}</option>
+                ))}
+              </Select>
+            </FormField>
           </div>
 
           <div className="max-h-[500px] overflow-y-auto divide-y divide-surface-input pr-1 space-y-1.5">
