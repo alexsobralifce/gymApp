@@ -847,6 +847,17 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 ### Seed de Planos (`seed-planos.ts`)
 - Popula `planos_biblioteca` com planos modelos científicos
 
+### Geração de Ícones do App (`generate-icons.mjs`)
+- **Fonte de verdade**: `apps/web/public/app-icon.svg` — SVG 512×512, símbolo ECG+raio verde `#76FF03` sobre fundo preto `#0A0A0A`, mark dentro da zona segura maskable (66%)
+- **Script**: `apps/web/scripts/generate-icons.mjs` — usa `sharp` (devDependency) para rasterizar o SVG de origem e gerar:
+  - **PWA**: `icon-180.png`, `icon-192.png`, `icon-512.png` (full-bleed) e `icon-maskable-512.png` (símbolo dentro da zona segura 60%)
+  - **Android**: mipmaps (`mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi`) em `capacitor-assets/android/` + adaptive icon (`ic_launcher_foreground.png` + `ic_launcher_background.png`)
+  - **iOS**: `AppIcon.appiconset/` completo (15 tamanhos + `Contents.json`) em `capacitor-assets/ios/`
+- **Execução**: `node apps/web/scripts/generate-icons.mjs` a partir de `apps/web/`
+- **Git**: `capacitor-assets/` está no `.gitignore` (assets gerados); apenas o SVG fonte e o script são versionados
+- **Manifest PWA**: `manifest.json` → background/theme `#0A0A0A`, ícones separados por propósito (`any` vs `maskable`)
+- **iOS**: `apple-touch-icon` → `icon-180.png` (180×180)
+
 ### Deploy (Railway)
 - Push para `origin/main` aciona deploy automático
 - `railway-start.sh`: mkdir uploads → build → migrate → sync + translate + seed (background) → start
