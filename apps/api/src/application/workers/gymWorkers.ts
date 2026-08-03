@@ -260,23 +260,45 @@ async function handleCorrelacaoDesempenho(job: Job<{ alunoId: string }>) {
 // ─── News engine (RSS fetch + push rotativo) ─────────────────────────────────
 
 async function handleNewsFetch(job: Job) {
-  const RSS_URL = `https://news.google.com/rss/search?q=${NEWS_FETCH_QUERY}&hl=pt-BR&gl=BR&ceid=BR:pt-419`
+  const RSS_URL = `https://news.google.com/rss/search?q=${NEWS_FETCH_QUERY}&hl=pt-BR&gl=BR&ceid=BR:pt-419&when=30d`
 
   try {
     const response = await fetch(RSS_URL, { signal: AbortSignal.timeout(30000) })
     const xml = await response.text()
 
+    const agora = Date.now()
+    const MAX_IDADE_MS = 30 * 24 * 60 * 60 * 1000 // 30 dias
+    const PRUNE_IDADE_MS = 60 * 24 * 60 * 60 * 1000 // 60 dias (remoção de notícias muito antigas)
+
     // Parse RSS items with regex (no external deps)
     const itemRegex = /<item>([\s\S]*?)<\/item>/g
     let match
+    let inseridas = 0
+    let puladasData = 0
     while ((match = itemRegex.exec(xml)) !== null) {
       const item = match[1]
       const titulo = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1]?.trim()
       const link = (item.match(/<link>(.*?)<\/link>/))?.[1]?.trim()
       const desc = (item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || item.match(/<description>(.*?)<\/description>/))?.[1]?.trim()
       const fonte = (item.match(/<source.*?>(.*?)<\/source>/))?.[1]?.trim()
+      const pubDateRaw = (item.match(/<pubDate>(.*?)<\/pubDate>/))?.[1]?.trim()
 
       if (!titulo || !link) continue
+
+      // Filtrar por data de publicação: só notícias recentes (últimos 30 dias)
+      let dataPublicacao: Date | null = null
+      if (pubDateRaw) {
+        const parsed = new Date(pubDateRaw)
+        if (!isNaN(parsed.getTime())) {
+          dataPublicacao = parsed
+        }
+      }
+
+      if (dataPublicacao && agora - dataPublicacao.getTime() > MAX_IDADE_MS) {
+        puladasData++
+        continue // muito antiga, não insere
+      }
+      // Se não tem pubDate válida, insere assim mesmo (pode ser conteúdo evergreen do Google News)
 
       await prisma.noticia.upsert({
         where: { url: link },
@@ -285,11 +307,27 @@ async function handleNewsFetch(job: Job) {
           resumo: (desc || titulo).replace(/<[^>]*>/g, '').slice(0, 300),
           url: link,
           fonte: fonte || 'Google News',
+          data_publicacao: dataPublicacao,
         },
-        update: {},
+        update: {
+          data_publicacao: dataPublicacao,
+        },
       })
+      inseridas++
     }
-    job.log(`Fetched RSS, processed items`)
+
+    // Podar notícias muito antigas (60+ dias) para manter a lista enxuta
+    const cortePrune = new Date(agora - PRUNE_IDADE_MS)
+    const { count } = await prisma.noticia.deleteMany({
+      where: {
+        OR: [
+          { data_publicacao: { lt: cortePrune } },
+        ],
+      },
+    })
+    if (count > 0) console.log(`[News Fetch] Removidas ${count} notícias antigas (anteriores a ${cortePrune.toISOString().slice(0, 10)})`)
+
+    job.log(`Fetched RSS: ${inseridas} inserted/updated, ${puladasData} skipped (old)`)
   } catch (err) {
     job.log(`RSS fetch error: ${(err as Error).message}`)
   }
@@ -317,25 +355,44 @@ async function handleNewsPush(job: Job) {
   })
 
   for (const usuario of usuarios) {
-    // Rotation: find news not yet sent to this user
+    // Só envia notícias frescas (últimos 30 dias), não reenvia antigas
+    const corteFrescor = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+    // Find fresh news not yet sent to this user
     const enviadas = await prisma.noticiaEnviada.findMany({
       where: { usuario_id: usuario.id },
       select: { noticia_id: true },
     })
     const idsEnviados = enviadas.map((e) => e.noticia_id)
 
-    let noticia = await prisma.noticia.findFirst({
-      where: idsEnviados.length > 0 ? { id: { notIn: idsEnviados } } : {},
-      orderBy: { criado_em: 'desc' },
+    const noticia = await prisma.noticia.findFirst({
+      where: {
+        ...(idsEnviados.length > 0 ? { id: { notIn: idsEnviados } } : {}),
+        // só notícias recentes (últimos 30 dias ou sem data — recém-inseridas)
+        OR: [
+          { data_publicacao: { gte: corteFrescor } },
+          { data_publicacao: null }, // fallback para notícias sem pubDate (inseridas recentemente)
+        ],
+      },
+      orderBy: { data_publicacao: 'desc' },
     })
 
-    // If all news sent, reset (circular rotation)
+    // Se não há notícia fresca não enviada, pula este usuário (sem reenvio de antigas)
     if (!noticia) {
-      await prisma.noticiaEnviada.deleteMany({ where: { usuario_id: usuario.id } })
-      noticia = await prisma.noticia.findFirst({ orderBy: { criado_em: 'desc' } })
-    }
+      // Agenda próximo check em 1-7 dias mesmo sem push
+      const dias = 1 + Math.floor(Math.random() * 7)
+      const proxima = new Date()
+      proxima.setDate(proxima.getDate() + dias)
+      proxima.setUTCHours(11, 0, 0, 0)
+      const randomMin = Math.floor(Math.random() * 600)
+      proxima.setUTCMinutes(randomMin)
 
-    if (!noticia) continue
+      await prisma.usuario.update({
+        where: { id: usuario.id },
+        data: { proxima_noticia_em: proxima },
+      })
+      continue
+    }
 
     await prisma.noticiaEnviada.create({
       data: { usuario_id: usuario.id, noticia_id: noticia.id },

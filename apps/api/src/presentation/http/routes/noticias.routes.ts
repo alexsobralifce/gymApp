@@ -5,7 +5,7 @@ export async function noticiasRoutes(app: FastifyInstance) {
   /** GET /noticias — Lista notícias (todos os usuários autenticados) */
   app.get('/', { preHandler: [app.authenticate] }, async (request, reply) => {
     const noticias = await prisma.noticia.findMany({
-      orderBy: { criado_em: 'desc' },
+      orderBy: { data_publicacao: 'desc' },
       take: 30,
       select: {
         id: true,
@@ -15,6 +15,7 @@ export async function noticiasRoutes(app: FastifyInstance) {
         fonte: true,
         imagem_url: true,
         criado_em: true,
+        data_publicacao: true,
       },
     })
     return reply.status(200).send(noticias)

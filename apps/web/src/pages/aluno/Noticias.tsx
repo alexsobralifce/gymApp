@@ -8,6 +8,7 @@ interface NoticiaItem {
   url: string
   fonte?: string
   criado_em: string
+  data_publicacao?: string | null
 }
 
 export default function Noticias() {
@@ -32,7 +33,7 @@ export default function Noticias() {
             <p className="text-xs text-text-muted mt-1 line-clamp-2">{n.resumo}</p>
             <div className="flex items-center justify-between mt-2">
               <span className="text-xs text-text-muted">{n.fonte || 'Google News'}</span>
-              <span className="text-xs text-text-muted">{new Date(n.criado_em).toLocaleDateString('pt-BR')}</span>
+              <span className="text-xs text-text-muted">{new Date(n.data_publicacao || n.criado_em).toLocaleDateString('pt-BR')}</span>
             </div>
           </a>
         ))}

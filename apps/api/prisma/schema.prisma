@@ -325,14 +325,15 @@ model MensagemMotivacionalEnviada {
 
 /// Notícias de bem-estar / atividade física sincronizadas via RSS do Google News
 model Noticia {
-  id         String            @id @default(cuid())
-  titulo     String
-  resumo     String
-  url        String            @unique
-  fonte      String?
-  imagem_url String?
-  criado_em  DateTime          @default(now())
-  enviadas   NoticiaEnviada[]
+  id              String            @id @default(cuid())
+  titulo          String
+  resumo          String
+  url             String            @unique
+  fonte           String?
+  imagem_url      String?
+  data_publicacao DateTime?
+  criado_em       DateTime          @default(now())
+  enviadas        NoticiaEnviada[]
 
   @@map("noticias")
 }
