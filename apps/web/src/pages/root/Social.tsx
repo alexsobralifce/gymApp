@@ -1,5 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../api/client'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 
 type SocialTab = 'mural' | 'clubes' | 'amizades'
 
@@ -40,9 +43,6 @@ interface PaginatedData<T> {
   limit: number
   totalPages: number
 }
-
-const inputClass =
-  'w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none'
 
 function Pagination({
   page,
@@ -218,12 +218,11 @@ export default function RootSocial() {
 
       {tab !== 'amizades' && (
         <div className="mb-4">
-          <input
+          <Input
             type="text"
             placeholder={tab === 'mural' ? 'Buscar por autor ou texto...' : 'Buscar...'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={inputClass}
           />
         </div>
       )}
@@ -289,26 +288,30 @@ export default function RootSocial() {
               </div>
 
               {showCreateClub && (
-                <form onSubmit={handleCreateClub} className="mb-4 rounded-lg bg-surface-card p-4 space-y-3">
-                  <h3 className="font-semibold text-text">Novo Clube</h3>
-                  <input
-                    type="text"
-                    placeholder="Nome do clube"
-                    value={clubNome}
-                    onChange={(e) => setClubNome(e.target.value)}
-                    className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text"
-                    required
-                    minLength={3}
-                  />
-                  <select
-                    value={clubTipo}
-                    onChange={(e) => setClubTipo(e.target.value as 'ACADEMIA' | 'TEMATICO')}
-                    className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text"
-                  >
-                    <option value="TEMATICO">Temático</option>
-                    <option value="ACADEMIA">Academia</option>
-                  </select>
-                  <div className="flex gap-2">
+                <form onSubmit={handleCreateClub} className="mb-4 rounded-lg bg-surface-card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="font-semibold text-text md:col-span-2">Novo Clube</h3>
+                  <FormField label="Nome do Clube" htmlFor="clube-nome" required>
+                    <Input
+                      id="clube-nome"
+                      type="text"
+                      placeholder="Nome do clube"
+                      value={clubNome}
+                      onChange={(e) => setClubNome(e.target.value)}
+                      required
+                      minLength={3}
+                    />
+                  </FormField>
+                  <FormField label="Tipo" htmlFor="clube-tipo">
+                    <Select
+                      id="clube-tipo"
+                      value={clubTipo}
+                      onChange={(e) => setClubTipo(e.target.value as 'ACADEMIA' | 'TEMATICO')}
+                    >
+                      <option value="TEMATICO">Temático</option>
+                      <option value="ACADEMIA">Academia</option>
+                    </Select>
+                  </FormField>
+                  <div className="flex gap-2 md:col-span-2">
                     <button
                       type="submit"
                       disabled={creating || !clubNome}

@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../api/client'
 import { formatPhone } from '../../lib/phone'
 import BatchActionBar from '../../components/ui/BatchActionBar'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 
 type Tab = 'academias' | 'professores' | 'alunos'
 
@@ -45,9 +48,6 @@ interface PaginatedData<T> {
   limit: number
   totalPages: number
 }
-
-const inputClass =
-  'w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none'
 
 const btnPrimary =
   'rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 min-h-[36px] inline-flex items-center'
@@ -257,12 +257,11 @@ export default function RootUsuarios() {
       </div>
 
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder="Buscar por nome ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className={inputClass}
         />
       </div>
 
@@ -699,32 +698,27 @@ function EditAcademiaModal({
   return (
     <Modal onClose={onClose}>
       <h2 className="mb-4 text-lg font-bold text-text">Editar Academia</h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Nome</label>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">CNPJ</label>
-          <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">E-mail</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Max. Professores</label>
-          <input type="number" min={1} max={500} value={maxProfessores} onChange={(e) => setMaxProfessores(Number(e.target.value))} className={inputClass} />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Status</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField label="Nome" htmlFor="academia-nome" required>
+          <Input id="academia-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+        </FormField>
+        <FormField label="CNPJ" htmlFor="academia-cnpj" required>
+          <Input id="academia-cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} required />
+        </FormField>
+        <FormField label="E-mail" htmlFor="academia-email" required>
+          <Input id="academia-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </FormField>
+        <FormField label="Max. Professores" htmlFor="academia-max">
+          <Input id="academia-max" type="number" min={1} max={500} value={maxProfessores} onChange={(e) => setMaxProfessores(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Status" htmlFor="academia-status">
+          <Select id="academia-status" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="PENDENTE">Pendente</option>
             <option value="ATIVO">Ativo</option>
             <option value="REJEITADO">Rejeitado</option>
-          </select>
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
+          </Select>
+        </FormField>
+        <div className="flex items-end justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className={btnGhost}>Cancelar</button>
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
@@ -732,12 +726,12 @@ function EditAcademiaModal({
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
         <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
         <div className="flex flex-wrap gap-2">
-          <input
+          <Input
             type="password"
             placeholder="Nova senha (min. 8 caracteres)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className={inputClass}
+            className="flex-1 min-w-[200px]"
           />
           <button
             type="button"
@@ -811,21 +805,18 @@ function EditProfessorModal({
   return (
     <Modal onClose={onClose}>
       <h2 className="mb-4 text-lg font-bold text-text">Editar Professor</h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Nome</label>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">E-mail</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">CREF</label>
-          <input value={cref} onChange={(e) => setCref(e.target.value)} className={inputClass} placeholder="Opcional" />
-        </div>
-        <div>
-          <label className="mb-2 block text-xs text-text-muted">Academias vinculadas</label>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField label="Nome" htmlFor="professor-nome" required>
+          <Input id="professor-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+        </FormField>
+        <FormField label="E-mail" htmlFor="professor-email" required>
+          <Input id="professor-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </FormField>
+        <FormField label="CREF" htmlFor="professor-cref">
+          <Input id="professor-cref" value={cref} onChange={(e) => setCref(e.target.value)} placeholder="Opcional" />
+        </FormField>
+        <div className="md:col-span-2">
+          <p className="mb-2 text-sm font-medium text-text">Academias vinculadas</p>
           <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-surface-input p-2">
             {academias.length === 0 && <p className="text-xs text-text-muted">Nenhuma academia disponível.</p>}
             {academias.map((a) => (
@@ -841,7 +832,7 @@ function EditProfessorModal({
             ))}
           </div>
         </div>
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex items-end justify-end gap-2 pt-2 md:col-span-2">
           <button type="button" onClick={onClose} className={btnGhost}>Cancelar</button>
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
@@ -849,12 +840,12 @@ function EditProfessorModal({
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
         <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
         <div className="flex flex-wrap gap-2">
-          <input
+          <Input
             type="password"
             placeholder="Nova senha (min. 8 caracteres)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className={inputClass}
+            className="flex-1 min-w-[200px]"
           />
           <button
             type="button"
@@ -927,52 +918,42 @@ function EditAlunoModal({
   return (
     <Modal onClose={onClose}>
       <h2 className="mb-4 text-lg font-bold text-text">Editar Aluno</h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Nome</label>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">E-mail</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Telefone</label>
-          <input value={telefone} onChange={(e) => setTelefone(formatPhone(e.target.value))} className={inputClass} placeholder="(99) 99999-9999" type="tel" />
-        </div>
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="mb-1 block text-xs text-text-muted">Peso (kg)</label>
-            <input type="number" step="0.1" min="0" value={pesoKg} onChange={(e) => setPesoKg(e.target.value)} className={inputClass} placeholder="70.5" />
-          </div>
-          <div className="flex-1">
-            <label className="mb-1 block text-xs text-text-muted">Altura (cm)</label>
-            <input type="number" step="1" min="0" value={alturaCm} onChange={(e) => setAlturaCm(e.target.value)} className={inputClass} placeholder="175" />
-          </div>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Data de nascimento</label>
-          <input type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} className={inputClass} />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Academia</label>
-          <select value={academiaId} onChange={(e) => setAcademiaId(e.target.value)} className={inputClass}>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField label="Nome" htmlFor="aluno-nome" required>
+          <Input id="aluno-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+        </FormField>
+        <FormField label="E-mail" htmlFor="aluno-email" required>
+          <Input id="aluno-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </FormField>
+        <FormField label="Telefone" htmlFor="aluno-telefone">
+          <Input id="aluno-telefone" value={telefone} onChange={(e) => setTelefone(formatPhone(e.target.value))} placeholder="(99) 99999-9999" type="tel" />
+        </FormField>
+        <FormField label="Data de nascimento" htmlFor="aluno-nascimento">
+          <Input id="aluno-nascimento" type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} />
+        </FormField>
+        <FormField label="Peso (kg)" htmlFor="aluno-peso">
+          <Input id="aluno-peso" type="number" step="0.1" min="0" value={pesoKg} onChange={(e) => setPesoKg(e.target.value)} placeholder="70.5" />
+        </FormField>
+        <FormField label="Altura (cm)" htmlFor="aluno-altura">
+          <Input id="aluno-altura" type="number" step="1" min="0" value={alturaCm} onChange={(e) => setAlturaCm(e.target.value)} placeholder="175" />
+        </FormField>
+        <FormField label="Academia" htmlFor="aluno-academia">
+          <Select id="aluno-academia" value={academiaId} onChange={(e) => setAcademiaId(e.target.value)}>
             <option value="">Sem academia</option>
             {academias.map((a) => (
               <option key={a.id} value={a.id}>{a.nome}</option>
             ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">Professor</label>
-          <select value={professorId} onChange={(e) => setProfessorId(e.target.value)} className={inputClass}>
+          </Select>
+        </FormField>
+        <FormField label="Professor" htmlFor="aluno-professor">
+          <Select id="aluno-professor" value={professorId} onChange={(e) => setProfessorId(e.target.value)}>
             <option value="">Autogestão</option>
             {professores.map((p) => (
               <option key={p.id} value={p.id}>{p.usuario.nome}</option>
             ))}
-          </select>
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
+          </Select>
+        </FormField>
+        <div className="flex items-end justify-end gap-2 pt-2 md:col-span-2">
           <button type="button" onClick={onClose} className={btnGhost}>Cancelar</button>
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
@@ -980,12 +961,12 @@ function EditAlunoModal({
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
         <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
         <div className="flex flex-wrap gap-2">
-          <input
+          <Input
             type="password"
             placeholder="Nova senha (min. 8 caracteres)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className={inputClass}
+            className="flex-1 min-w-[200px]"
           />
           <button
             type="button"

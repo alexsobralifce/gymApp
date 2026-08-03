@@ -5,6 +5,9 @@ import EmptyState from '../../components/ui/EmptyState'
 import Toast from '../../components/ui/Toast'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import BatchActionBar from '../../components/ui/BatchActionBar'
+import FormField from '../../components/ui/FormField'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import { RulerIcon, PlusIcon, UserCircleIcon, ClipboardListIcon, DumbbellIcon, ChartLineIcon, PencilIcon, TrashIcon } from '../../components/icons/Icon'
 import ReactMarkdown from 'react-markdown'
 
@@ -305,12 +308,11 @@ export default function Avaliacoes() {
         <div className="bg-surface-card p-5 rounded-2xl border border-border space-y-4">
           <h2 className="font-semibold text-text text-lg">Selecione o Aluno</h2>
           
-          <input
+          <Input
             type="text"
             placeholder="Buscar aluno por nome ou email..."
             value={buscaAluno}
             onChange={(e) => setBuscaAluno(e.target.value)}
-            className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
           />
 
           {loading && alunos.length === 0 ? (
@@ -388,12 +390,11 @@ export default function Avaliacoes() {
 
               {avaliacoes.length > 0 && (
                 <div className="space-y-3">
-                  <input
+                  <Input
                     type="text"
                     placeholder="Buscar avaliação por data ou laudo..."
                     value={buscaAvaliacao}
                     onChange={(e) => setBuscaAvaliacao(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
                   />
 
                   <BatchActionBar
@@ -603,162 +604,122 @@ export default function Avaliacoes() {
               {modalMode === 'edit' ? 'Editar Avaliação Física' : 'Nova Avaliação Física'} — {selectedAluno?.usuario?.nome}
             </h3>
             
-            <form onSubmit={handleCriarAvaliacao} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">Peso (kg)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={pesoKg}
-                    onChange={(e) => setPesoKg(e.target.value)}
-                    placeholder="Ex: 75.5"
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">Estatura (m)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={estaturaM}
-                    onChange={(e) => setEstaruraM(e.target.value)}
-                    placeholder="Ex: 1.78"
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                    required
-                  />
-                </div>
-              </div>
+            <form onSubmit={handleCriarAvaliacao} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField label="Peso (kg)" htmlFor="peso-kg" required>
+                <Input
+                  id="peso-kg"
+                  type="number"
+                  step="0.1"
+                  value={pesoKg}
+                  onChange={(e) => setPesoKg(e.target.value)}
+                  placeholder="Ex: 75.5"
+                  required
+                />
+              </FormField>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">Cintura (cm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={cinturaCm}
-                    onChange={(e) => setCinturaCm(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">Quadril (cm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={quadrilCm}
-                    onChange={(e) => setQuadrilCm(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">Protocolo Dobras</label>
-                  <select
-                    value={protocoloDobras}
-                    onChange={(e: any) => setProtocoloDobras(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                  >
-                    <option value="JP7">Jackson & Pollock 7</option>
-                    <option value="JP3">Jackson & Pollock 3</option>
-                    <option value="GUEDES">Guedes</option>
-                  </select>
-                </div>
-              </div>
+              <FormField label="Estatura (m)" htmlFor="estatura-m" required>
+                <Input
+                  id="estatura-m"
+                  type="number"
+                  step="0.01"
+                  value={estaturaM}
+                  onChange={(e) => setEstaruraM(e.target.value)}
+                  placeholder="Ex: 1.78"
+                  required
+                />
+              </FormField>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">PA Sistólica</label>
-                  <input
-                    type="number"
-                    value={pas}
-                    onChange={(e) => setPas(e.target.value)}
-                    placeholder="120"
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">PA Diastólica</label>
-                  <input
-                    type="number"
-                    value={pad}
-                    onChange={(e) => setPad(e.target.value)}
-                    placeholder="80"
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">FC Repouso (bpm)</label>
-                  <input
-                    type="number"
-                    value={fcRepouso}
-                    onChange={(e) => setFcRepouso(e.target.value)}
-                    placeholder="70"
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text"
-                  />
-                </div>
-              </div>
+              <FormField label="Cintura (cm)" htmlFor="cintura-cm">
+                <Input
+                  id="cintura-cm"
+                  type="number"
+                  step="0.1"
+                  value={cinturaCm}
+                  onChange={(e) => setCinturaCm(e.target.value)}
+                />
+              </FormField>
 
-              <div className="border-t border-border pt-3">
+              <FormField label="Quadril (cm)" htmlFor="quadril-cm">
+                <Input
+                  id="quadril-cm"
+                  type="number"
+                  step="0.1"
+                  value={quadrilCm}
+                  onChange={(e) => setQuadrilCm(e.target.value)}
+                />
+              </FormField>
+
+              <FormField label="Protocolo Dobras" htmlFor="protocolo-dobras">
+                <Select
+                  id="protocolo-dobras"
+                  value={protocoloDobras}
+                  onChange={(e: any) => setProtocoloDobras(e.target.value)}
+                >
+                  <option value="JP7">Jackson & Pollock 7</option>
+                  <option value="JP3">Jackson & Pollock 3</option>
+                  <option value="GUEDES">Guedes</option>
+                </Select>
+              </FormField>
+
+              <FormField label="PA Sistólica" htmlFor="pas">
+                <Input id="pas" type="number" value={pas} onChange={(e) => setPas(e.target.value)} placeholder="120" />
+              </FormField>
+
+              <FormField label="PA Diastólica" htmlFor="pad">
+                <Input id="pad" type="number" value={pad} onChange={(e) => setPad(e.target.value)} placeholder="80" />
+              </FormField>
+
+              <FormField label="FC Repouso (bpm)" htmlFor="fc-repouso">
+                <Input id="fc-repouso" type="number" value={fcRepouso} onChange={(e) => setFcRepouso(e.target.value)} placeholder="70" />
+              </FormField>
+
+              <div className="md:col-span-2 border-t border-border pt-3">
                 <p className="text-sm font-semibold text-text mb-2">Dobras Cutâneas (mm)</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Tríceps</label>
-                    <input type="number" step="0.1" value={triceps} onChange={(e) => setTriceps(e.target.value)} className="w-full px-2 py-1.5 bg-surface border border-border rounded-lg text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Subescapular</label>
-                    <input type="number" step="0.1" value={subescapular} onChange={(e) => setSubescapular(e.target.value)} className="w-full px-2 py-1.5 bg-surface border border-border rounded-lg text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Peitoral</label>
-                    <input type="number" step="0.1" value={peitoral} onChange={(e) => setPeitoral(e.target.value)} className="w-full px-2 py-1.5 bg-surface border border-border rounded-lg text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Axilar Média</label>
-                    <input type="number" step="0.1" value={axilarMedia} onChange={(e) => setAxilarMedia(e.target.value)} className="w-full px-2 py-1.5 bg-surface border border-border rounded-lg text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Suprailíaca</label>
-                    <input type="number" step="0.1" value={suprailiaca} onChange={(e) => setSuprailiaca(e.target.value)} className="w-full px-2 py-1.5 bg-surface border border-border rounded-lg text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Abdominal</label>
-                    <input type="number" step="0.1" value={abdominal} onChange={(e) => setAbdominal(e.target.value)} className="w-full px-2 py-1.5 bg-surface border border-border rounded-lg text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Coxa</label>
-                    <input type="number" step="0.1" value={coxa} onChange={(e) => setCoxa(e.target.value)} className="w-full px-2 py-1.5 bg-surface border border-border rounded-lg text-text" />
-                  </div>
+                  <FormField label="Tríceps" htmlFor="dobra-triceps">
+                    <Input id="dobra-triceps" type="number" step="0.1" value={triceps} onChange={(e) => setTriceps(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
+                  </FormField>
+                  <FormField label="Subescapular" htmlFor="dobra-subescapular">
+                    <Input id="dobra-subescapular" type="number" step="0.1" value={subescapular} onChange={(e) => setSubescapular(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
+                  </FormField>
+                  <FormField label="Peitoral" htmlFor="dobra-peitoral">
+                    <Input id="dobra-peitoral" type="number" step="0.1" value={peitoral} onChange={(e) => setPeitoral(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
+                  </FormField>
+                  <FormField label="Axilar Média" htmlFor="dobra-axilar">
+                    <Input id="dobra-axilar" type="number" step="0.1" value={axilarMedia} onChange={(e) => setAxilarMedia(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
+                  </FormField>
+                  <FormField label="Suprailíaca" htmlFor="dobra-suprailiaca">
+                    <Input id="dobra-suprailiaca" type="number" step="0.1" value={suprailiaca} onChange={(e) => setSuprailiaca(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
+                  </FormField>
+                  <FormField label="Abdominal" htmlFor="dobra-abdominal">
+                    <Input id="dobra-abdominal" type="number" step="0.1" value={abdominal} onChange={(e) => setAbdominal(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
+                  </FormField>
+                  <FormField label="Coxa" htmlFor="dobra-coxa">
+                    <Input id="dobra-coxa" type="number" step="0.1" value={coxa} onChange={(e) => setCoxa(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
+                  </FormField>
                 </div>
               </div>
 
               {/* Fase 2: Testes Funcionais */}
-              <div className="border-t border-border pt-3 space-y-3">
-                <p className="text-sm font-semibold text-text">Testes Funcionais (Opcional)</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Flexibilidade (Banco de Wells - cm)</label>
-                    <input type="number" step="0.5" value={wellsCm} onChange={(e) => setWellsCm(e.target.value)} placeholder="Ex: 24.5" className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Cardio (Teste de Cooper - Metros)</label>
-                    <input type="number" step="10" value={cooperMetros} onChange={(e) => setCooperMetros(e.target.value)} placeholder="Ex: 2400" className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Força (Carga 1RM Estimada - kg)</label>
-                    <input type="number" step="0.5" value={carga1Rm} onChange={(e) => setCarga1Rm(e.target.value)} placeholder="Ex: 80" className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Repetições Executadas</label>
-                    <input type="number" value={reps1Rm} onChange={(e) => setReps1Rm(e.target.value)} placeholder="Ex: 8" className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-text" />
-                  </div>
+              <div className="md:col-span-2 border-t border-border pt-3">
+                <p className="text-sm font-semibold text-text mb-3">Testes Funcionais (Opcional)</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField label="Flexibilidade (Banco de Wells - cm)" htmlFor="wells-cm">
+                    <Input id="wells-cm" type="number" step="0.5" value={wellsCm} onChange={(e) => setWellsCm(e.target.value)} placeholder="Ex: 24.5" />
+                  </FormField>
+                  <FormField label="Cardio (Teste de Cooper - Metros)" htmlFor="cooper-metros">
+                    <Input id="cooper-metros" type="number" step="10" value={cooperMetros} onChange={(e) => setCooperMetros(e.target.value)} placeholder="Ex: 2400" />
+                  </FormField>
+                  <FormField label="Força (Carga 1RM Estimada - kg)" htmlFor="carga-1rm">
+                    <Input id="carga-1rm" type="number" step="0.5" value={carga1Rm} onChange={(e) => setCarga1Rm(e.target.value)} placeholder="Ex: 80" />
+                  </FormField>
+                  <FormField label="Repetições Executadas" htmlFor="reps-1rm">
+                    <Input id="reps-1rm" type="number" value={reps1Rm} onChange={(e) => setReps1Rm(e.target.value)} placeholder="Ex: 8" />
+                  </FormField>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-2 pt-2 md:col-span-2">
                 <input
                   type="checkbox"
                   id="parq"
@@ -769,7 +730,7 @@ export default function Avaliacoes() {
                 <label htmlFor="parq" className="text-xs text-text-muted">PAR-Q+ Positivo (indica necessidade de atenção ou liberação médica)</label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border md:col-span-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}

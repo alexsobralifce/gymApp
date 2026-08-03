@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import type { RootPainel } from '../../types/api'
+import Select from '../../components/ui/Select'
 
 export default function RootPainel() {
   const [data, setData] = useState<RootPainel | null>(null)
@@ -92,15 +93,15 @@ export default function RootPainel() {
                 {a.status === 'ATIVO' && (
                   <>
                     <button onClick={() => handleStatus(a.id, 'REJEITADO')} className="rounded bg-primary/10 px-2 py-1 text-xs text-primary-light">Desabilitar</button>
-                    <select
+                    <Select
                       value={a.max_professores}
                       onChange={(e) => handleLimite(a.id, Number(e.target.value))}
-                      className="rounded border border-surface-input bg-surface px-2 py-1 text-xs text-text"
+                      className="!px-2 !py-1 !text-xs !rounded-md w-auto"
                     >
                       {[5, 10, 20, 30, 50, 100].map((v) => (
                         <option key={v} value={v}>{v} profs</option>
                       ))}
-                    </select>
+                    </Select>
                   </>
                 )}
                 {a.status === 'REJEITADO' && (
