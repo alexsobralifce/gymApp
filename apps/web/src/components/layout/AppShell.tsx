@@ -37,6 +37,7 @@ import {
   StarIcon,
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
+import { PWASidebarButton } from '../ui/PWASidebarButton'
 import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
 import { EndorfinappLogo } from '../branding'
@@ -651,8 +652,13 @@ export default function AppShell() {
           </main>
           {/* Academy sidebar — right panel desktop (oculta em execução) */}
           {!hideNav && (
-            <aside className="hidden xl:block w-56 shrink-0 border-l border-surface-input bg-surface/50">
-              <AcademySidebar />
+            <aside className="hidden xl:flex xl:flex-col w-56 shrink-0 border-l border-surface-input bg-surface/50">
+              <div className="flex-1 overflow-hidden">
+                <AcademySidebar />
+              </div>
+              <div className="border-t border-surface-input">
+                <PWASidebarButton />
+              </div>
             </aside>
           )}
         </div>

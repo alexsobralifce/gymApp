@@ -13,6 +13,7 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isIOS, setIsIOS] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
+  const [isInstallable, setIsInstallable] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
 
   useEffect(() => {
@@ -56,6 +57,12 @@ export function usePWAInstall() {
     }
   }, [])
 
+  // isInstallable — true when deferredPrompt is available (Android/Chrome) OR iOS,
+  // without the mobile viewport gate (for components like desktop sidebar)
+  useEffect(() => {
+    setIsInstallable(deferredPrompt !== null || isIOS)
+  }, [deferredPrompt, isIOS])
+
   const promptInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt()
@@ -83,6 +90,8 @@ export function usePWAInstall() {
   return {
     shouldShowPrompt,
     isIOS,
+    isStandalone,
+    isInstallable,
     promptInstall,
     dismissPrompt
   }
