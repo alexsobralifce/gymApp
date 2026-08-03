@@ -1,9 +1,11 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { Role, TreinoAtor, TreinoStatus } from '@prisma/client'
+import { Role, TreinoAtor, TreinoStatus, PostTipo, Visibilidade } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError, ValidationError } from '../../../domain/errors/AppError.js'
 import { eventBus } from '../../../shared/events/event-bus.js'
+import { env } from '../../../shared/env.js'
+import { socialNotifyQueue } from '../../../jobs/social/queues.js'
 import {
   criarTreino,
   criarTreinoAutogestao,
@@ -48,6 +50,52 @@ export async function treinoRoutes(app: FastifyInstance) {
       create: { usuario_id: usuarioId },
       update: {},
     })
+  }
+
+  function absolutizeMedia(url: string | null | undefined): string | null {
+    if (!url) return null
+    if (url.startsWith('http://') || url.startsWith('https://')) return url
+    const base = env.API_BASE_URL
+    if (url.startsWith('/')) return `${base}${url}`
+    return `${base}/${url}`
+  }
+
+  /** Cria post social diretamente no banco (não depende do worker BullMQ) */
+  async function criarPostTreino(treinoId: string, alunoId: string, tipo: PostTipo) {
+    const aluno = await prisma.aluno.findUnique({
+      where: { id: alunoId },
+      include: {
+        usuario: { select: { nome: true, foto_url: true } },
+        academia: { select: { nome: true } },
+      },
+    })
+    if (!aluno || aluno.visibilidade_padrao === 'PRIVADO') return null
+
+    const post = await prisma.socialPost.create({
+      data: {
+        aluno_id: alunoId,
+        treino_id: treinoId,
+        autor_nome: aluno.usuario.nome,
+        autor_foto_url: absolutizeMedia(aluno.usuario.foto_url),
+        academia_nome: aluno.academia?.nome ?? null,
+        tipo,
+        visibilidade: aluno.visibilidade_padrao,
+      },
+    })
+
+    // Fanout para clubes do aluno
+    const clubes = await prisma.socialClubMember.findMany({
+      where: { aluno_id: alunoId },
+      select: { clube_id: true },
+    })
+    if (clubes.length > 0) {
+      await prisma.socialPostClub.createMany({
+        data: clubes.map((c) => ({ post_id: post.id, clube_id: c.clube_id })),
+        skipDuplicates: true,
+      })
+    }
+
+    return post
   }
 
   /** POST /treinos — UC-11 */
@@ -170,6 +218,11 @@ export async function treinoRoutes(app: FastifyInstance) {
     const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
     const treino = await iniciarTreino(id, aluno.id)
+
+    // Criar post social TREINO_INICIADO diretamente (síncrono, sem depender do BullMQ)
+    criarPostTreino(id, aluno.id, 'TREINO_INICIADO').catch(() => {})
+
+    // Emitir evento para badges / leaderboard / fanout adicional
     try {
       eventBus.emit({ type: 'treino.iniciado', payload: { treinoId: id, alunoId: aluno.id, gruposMusculares: [], timestamp: new Date().toISOString() } })
     } catch (err) {
@@ -203,6 +256,11 @@ export async function treinoRoutes(app: FastifyInstance) {
     const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
     const treino = await finalizarTreino(id, aluno.id, avaliacao)
+
+    // Criar post social TREINO_CONCLUIDO diretamente (síncrono, sem depender do BullMQ)
+    criarPostTreino(id, aluno.id, 'TREINO_CONCLUIDO').catch(() => {})
+
+    // Emitir evento para badges / leaderboard / fanout adicional
     try {
       eventBus.emit({ type: 'treino.concluido', payload: { treinoId: id, alunoId: aluno.id, timestamp: new Date().toISOString() } })
     } catch (err) {

@@ -27,9 +27,10 @@ interface FanoutPayload {
  * 2ª conclusão do mesmo treino apenas ATUALIZAR o post antigo (criado_em velho),
  * então o mural nunca refletia treinos concluídos no mesmo dia.
  *
- * Deduplicação: o listener enfileira com jobId único por sessão
- * (`fanout:{treinoId}:{timestamp}:{tipo}`), então retries do BullMQ reexecutam o
- * MESMO job (mesmo jobId) sem criar post duplicado.
+ * Deduplicação via jobId (`fanout:{treinoId}:{timestamp}:{tipo}`) + check de
+ * post existente (a rota agora cria o post diretamente antes de emitir o evento).
+ * Se o post já foi criado pela rota, o worker apenas faz fanout para clubes e
+ * notifica amigos usando o post existente.
  */
 export async function handleFanoutPost(job: Job<FanoutPayload>) {
   const { treinoId, alunoId, gruposMusculares, eventType } = job.data
@@ -50,20 +51,35 @@ export async function handleFanoutPost(job: Job<FanoutPayload>) {
 
   const tipo: PostTipo = eventType === 'treino.iniciado' ? 'TREINO_INICIADO' : 'TREINO_CONCLUIDO'
   const resumo = gruposMusculares.length > 0 ? gruposMusculares.join(', ') : null
-  const effectiveTreinoId = treinoId || null
 
-  const post = await prisma.socialPost.create({
-    data: {
+  // Verifica se o post já foi criado diretamente pela rota (dedup)
+  const janelaMinutos = 5
+  const corteDedup = new Date(Date.now() - janelaMinutos * 60 * 1000)
+  let post = await prisma.socialPost.findFirst({
+    where: {
       aluno_id: alunoId,
-      treino_id: effectiveTreinoId,
-      autor_nome: aluno.usuario.nome,
-      autor_foto_url: absolutizeMedia(aluno.usuario.foto_url),
-      academia_nome: aluno.academia?.nome ?? null,
-      grupo_muscular_resumo: resumo,
+      treino_id: treinoId || null,
       tipo,
-      visibilidade: aluno.visibilidade_padrao,
+      criado_em: { gte: corteDedup },
     },
+    orderBy: { criado_em: 'desc' },
   })
+
+  if (!post) {
+    // Não existe — criar agora
+    post = await prisma.socialPost.create({
+      data: {
+        aluno_id: alunoId,
+        treino_id: treinoId || null,
+        autor_nome: aluno.usuario.nome,
+        autor_foto_url: absolutizeMedia(aluno.usuario.foto_url),
+        academia_nome: aluno.academia?.nome ?? null,
+        grupo_muscular_resumo: resumo,
+        tipo,
+        visibilidade: aluno.visibilidade_padrao,
+      },
+    })
+  }
 
   // ─── Fanout para clubes do aluno ──────────────────────────────
   const clubes = await prisma.socialClubMember.findMany({
