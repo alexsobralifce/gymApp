@@ -30,6 +30,9 @@ model Usuario {
   avaliacoesAvalidadas     AvaliacaoFisica[]
   professor                Professor?
   refreshTokens            RefreshToken[]
+  ultima_atividade_em      DateTime?
+  proxima_noticia_em       DateTime?
+  noticiasEnviadas         NoticiaEnviada[]
 
   @@map("usuarios")
 }
@@ -137,6 +140,8 @@ model Treino {
   notificado_inatividade_em DateTime?
   /// Push único quando sessão passa de 60 min
   notificado_longo_em       DateTime?
+  /// Push único de lembrete quando sessão fica parada 30 min
+  notificado_concluir_em    DateTime?
   /// Última interação na sessão (início ou série registrada)
   ultima_atividade_em       DateTime?
   execucoes                 ExecucaoExercicio[]
@@ -316,6 +321,33 @@ model MensagemMotivacionalEnviada {
   mensagem    MensagemMotivacional @relation(fields: [mensagem_id], references: [id])
 
   @@map("mensagens_motivacionais_enviadas")
+}
+
+/// Notícias de bem-estar / atividade física sincronizadas via RSS do Google News
+model Noticia {
+  id         String            @id @default(cuid())
+  titulo     String
+  resumo     String
+  url        String            @unique
+  fonte      String?
+  imagem_url String?
+  criado_em  DateTime          @default(now())
+  enviadas   NoticiaEnviada[]
+
+  @@map("noticias")
+}
+
+/// Controle de rotação circular por usuário — evita reenviar a mesma notícia
+model NoticiaEnviada {
+  id         String   @id @default(cuid())
+  usuario_id String
+  noticia_id String
+  enviada_em DateTime @default(now())
+  usuario    Usuario  @relation(fields: [usuario_id], references: [id])
+  noticia    Noticia  @relation(fields: [noticia_id], references: [id])
+
+  @@unique([usuario_id, noticia_id])
+  @@map("noticias_enviadas")
 }
 
 /// Cache de correlações (UC-32) — worker recalcula, endpoint lê

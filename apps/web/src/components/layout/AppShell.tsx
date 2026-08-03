@@ -6,6 +6,7 @@ import { api } from '../../api/client'
 import { useThemeStore, THEME_BRANDS } from '../../stores/theme'
 import type { ThemeBrand } from '../../stores/theme'
 import OnboardingPopup from '../ui/OnboardingPopup'
+import { useIdleLogout } from '../../hooks/useIdleLogout'
 import {
   HomeIcon,
   DumbbellIcon,
@@ -138,6 +139,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/evolucao', label: 'Evolução', icon: <ChartLineIcon className="h-5 w-5" /> },
         { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
         { to: '/parceiros', label: 'Parceiros', icon: <StarIcon className="h-5 w-5" /> },
+        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'PROFESSOR':
@@ -165,6 +167,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },
         { to: '/exercicios/criar', label: 'Exercícios', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/academias', label: 'Academias', icon: <Building2Icon className="h-5 w-5" /> },
+        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'ACADEMIA':
@@ -181,6 +184,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/professores', label: 'Professores', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/alunos', label: 'Alunos', icon: <UsersIcon className="h-5 w-5" /> },
+        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'ROOT':
@@ -190,6 +194,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
+        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     default:
@@ -340,6 +345,8 @@ export default function AppShell() {
   const navItems = getNavItems(role, user?.admin ?? false)
   const pageTitle = getPageTitle(location.pathname, role, user?.admin ?? false)
   const effectiveRole = user?.admin ? 'ROOT' : role
+  useIdleLogout(logout)
+
   const ringColor = getRoleRingColor(effectiveRole)
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>

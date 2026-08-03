@@ -44,6 +44,7 @@ import AlunoPrivacidade from './pages/aluno/Privacidade'
 import AlunoClubes from './pages/aluno/Clubes'
 import Parceiros from './pages/aluno/Parceiros'
 import WelcomeCards from './pages/aluno/WelcomeCards'
+import Noticias from './pages/aluno/Noticias'
 import ClubeFeed from './pages/aluno/ClubeFeed'
 import AlterarSenha from './pages/auth/AlterarSenha'
 import Avaliacoes from './pages/avaliacoes/Avaliacoes'
@@ -103,6 +104,7 @@ export default function App() {
           <Route path="clubes" element={<AlunoClubes />} />
           <Route path="clubes/:id" element={<ClubeFeed />} />
           <Route path="parceiros" element={<Parceiros />} />
+          <Route path="noticias" element={<Noticias />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
@@ -131,6 +133,7 @@ export default function App() {
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
           <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />
           <Route path="treino/:id/conclusao" element={<AlunoTreinoConclusao />} />
+          <Route path="noticias" element={<Noticias />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}
@@ -146,6 +149,7 @@ export default function App() {
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
+          <Route path="noticias" element={<Noticias />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}
@@ -162,6 +166,7 @@ export default function App() {
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
+          <Route path="noticias" element={<Noticias />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}

@@ -274,4 +274,18 @@ export async function authRoutes(app: FastifyInstance) {
     )
     return reply.status(200).send(result)
   })
+
+  /**
+   * POST /auth/heartbeat — Atualiza a última atividade do usuário (anti logout por inatividade)
+   */
+  app.post('/heartbeat', {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    await prisma.usuario.update({
+      where: { id: request.currentUser.sub },
+      data: { ultima_atividade_em: new Date() },
+    })
+    return reply.status(200).send({ ok: true })
+  })
 }

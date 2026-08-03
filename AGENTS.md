@@ -172,8 +172,8 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 ```
 
 ### Usuario (`usuarios`)
-`id (cuid), email (unique), senha_hash?, nome, role, telefone?, foto_url?, ativo, google_id? (unique), email_verified, email_verify_code?, email_verify_code_expira?, expo_push_token?, web_push_subscription? (Json), criado_em, atualizado_em`
-- Relacionamentos: academia (1:1), aluno (1:1), professor (1:1), refreshTokens[], avaliacoesAvalidadas[]
+`id (cuid), email (unique), senha_hash?, nome, role, telefone?, foto_url?, ativo, google_id? (unique), email_verified, email_verify_code?, email_verify_code_expira?, expo_push_token?, web_push_subscription? (Json), ultima_atividade_em?, proxima_noticia_em?, criado_em, atualizado_em`
+- Relacionamentos: academia (1:1), aluno (1:1), professor (1:1), refreshTokens[], avaliacoesAvalidadas[], noticiasEnviadas[]
 
 ### RefreshToken (`refresh_tokens`)
 `id, token (unique), usuario_id, expira_em, criado_em`
@@ -198,7 +198,7 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 - Relacionamentos: usuario, professor?, academia?, treinos[], medidas[], notificacoes[], correlacao?, avaliacoes[], mensagensEnviadas[]
 
 ### Treino (`treinos`)
-`id (cuid), aluno_id, nome, dias_semana (Int[]), status (TreinoStatus), is_template (Boolean, default false), criado_por_ia (Boolean, default false), avaliacao_dificuldade?, iniciado_em?, finalizado_em?, notificado_inatividade_em?, notificado_longo_em?, ultima_atividade_em?, criado_em, atualizado_em`
+`id (cuid), aluno_id, nome, dias_semana (Int[]), status (TreinoStatus), is_template (Boolean, default false), criado_por_ia (Boolean, default false), avaliacao_dificuldade?, iniciado_em?, finalizado_em?, notificado_inatividade_em?, notificado_longo_em?, notificado_concluir_em?, ultima_atividade_em?, criado_em, atualizado_em`
 - Máquina de estados: CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CONCLUIDO
 - Relacionamentos: aluno, exercicios[] (TreinoExercicio), historico[], execucoes[]
 
@@ -227,6 +227,14 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 
 ### MensagemMotivacionalEnviada (`mensagens_motivacionais_enviadas`) — Controle de rotação circular
 `id (cuid), aluno_id, mensagem_id, enviada_em`
+
+### Noticia (`noticias`) — Engine de notícias (RSS Google News)
+`id (cuid), titulo, resumo, url (unique), fonte?, imagem_url?, criado_em`
+- Sincronizadas pelo worker `news-fetch` (a cada 6h) via RSS do Google News em PT-BR
+
+### NoticiaEnviada (`noticias_enviadas`) — Controle de rotação circular por usuário
+`id (cuid), usuario_id, noticia_id, enviada_em` — `@@unique([usuario_id, noticia_id])`
+- `proxima_noticia_em` no Usuario agenda o próximo envio (aleatório 1–7 dias)
 
 ### CorrelacaoDesempenho (`correlacoes_desempenho`) — Cache de correlações
 `id (cuid), aluno_id (unique FK), peso_volume_r?, bf_volume_r?, massa_magra_volume_r?, volume_semanal (Json), pontos (Json), calculado_em`
@@ -810,10 +818,12 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 ### Gym Workers (gymWorkers.ts)
 | Fila | Worker | Agendamento | Descrição |
 |------|--------|-------------|-----------|
-| `inatividade-30min` | `handleInatividade30min` | A cada 2min | Notifica treinos ociosos (10min) e longos (60min). Push dual (Expo + Web) para aluno e professor. |
+| `inatividade-30min` | `handleInatividade30min` | A cada 2min | Notifica treinos ociosos (10min), longos (60min) e parados há 30min (lembrete "conclua", 1 push via `notificado_concluir_em`). Push dual (Expo + Web) para aluno e professor. |
 | `treino-em-aberto` | `handleTreinoEmAberto` | Diário 23:30 | Marca treinos ACEITO do dia como EM_ABERTO. Notifica professor. |
 | `mensagem-motivacional` | `handleMensagemMotivacional` | Sob demanda | Envia mensagem científica com rotação circular (reenvia tudo se esgotar). |
 | `correlacao-desempenho` | `handleCorrelacaoDesempenho` | Sob demanda | Calcula correlações de Pearson assincronamente. |
+| `news-fetch` | `handleNewsFetch` | A cada 6h | Busca RSS do Google News (exercício físico/endorfina/bem-estar), faz upsert em `noticias`. |
+| `news-push` | `handleNewsPush` | A cada 30min | Lote de 20 usuários com push e `proxima_noticia_em <= now`; rotação circular de notícias não enviadas; agenda próximo envio em 1–7 dias. |
 
 ### Social Workers (jobs/social/)
 | Fila | Worker | Descrição |

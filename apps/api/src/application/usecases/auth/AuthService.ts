@@ -123,6 +123,12 @@ export class AuthService {
       throw new ForbiddenError('E-mail não verificado. Verifique sua caixa de entrada.')
     }
 
+    // Usuário está ativo no momento do login — zera o contador de inatividade
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { ultima_atividade_em: new Date() },
+    })
+
     // Montar payload com tenantId dependendo do role
     let tenantId: string | undefined
     if (usuario.role === Role.ACADEMIA) {
@@ -190,6 +196,15 @@ export class AuthService {
       throw new NotFoundError('Usuário')
     }
 
+    // Enforce 2h inactivity timeout — sessão expira se o usuário não interagir
+    if (usuario.ultima_atividade_em) {
+      const TWO_HOURS_MS = 2 * 60 * 60 * 1000
+      const inativo = (Date.now() - new Date(usuario.ultima_atividade_em).getTime()) > TWO_HOURS_MS
+      if (inativo) {
+        throw new UnauthorizedError('Sessão expirada por inatividade. Faça login novamente.')
+      }
+    }
+
     // Rotacionar: deletar token antigo e gerar novo par
     await prisma.refreshToken.delete({ where: { token: refreshToken } })
 
@@ -203,6 +218,12 @@ export class AuthService {
         usuario_id: usuario.id,
         expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
+    })
+
+    // Refresh bem-sucedido prova atividade — renova o contador de inatividade
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { ultima_atividade_em: new Date() },
     })
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken }
@@ -361,6 +382,12 @@ export class AuthService {
         usuario_id: usuario.id,
         expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
+    })
+
+    // Usuário está ativo no momento do login Google — zera o contador de inatividade
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { ultima_atividade_em: new Date() },
     })
 
     return { accessToken, refreshToken, isNew, nome: usuario.nome }

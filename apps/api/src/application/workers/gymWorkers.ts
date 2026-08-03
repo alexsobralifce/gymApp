@@ -1,12 +1,10 @@
 import { Queue, Worker, Job } from 'bullmq'
-import { TreinoStatus, TreinoAtor } from '@prisma/client'
+import { Prisma, TreinoStatus, TreinoAtor } from '@prisma/client'
 import { prisma } from '../../infrastructure/database/prisma.js'
 import { assertTransicaoValida } from '../../domain/entities/TreinoStateMachine.js'
-import { sendPushNotification } from '../../infrastructure/push/expoPush.js'
-import { sendWebPush } from '../../infrastructure/push/webPush.js'
+import { sendDualPush } from '../../infrastructure/push/sendDualPush.js'
 import { calcularEAtualizar } from '../../application/usecases/correlacao/CorrelacaoService.js'
 import { env } from '../../shared/env.js'
-import type { PushSubscription } from 'web-push'
 import { connection as socialConnection } from '../../jobs/social/queues.js'
 import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
 import { handleNotifyFriends } from '../../jobs/social/notify-friends.worker.js'
@@ -19,11 +17,15 @@ let inatividade30minQueue: Queue | null = null
 let treinoEmAbertoQueue: Queue | null = null
 let mensagemMotivaicionalQueue: Queue | null = null
 let correlacaoQueue: Queue | null = null
+let newsFetchQueue: Queue | null = null
+let newsPushQueue: Queue | null = null
 
 let inatividade30minWorker: Worker | null = null
 let treinoEmAbertoWorker: Worker | null = null
 let mensagemMotivacionalWorker: Worker | null = null
 let correlacaoWorker: Worker | null = null
+let newsFetchWorker: Worker | null = null
+let newsPushWorker: Worker | null = null
 
 let socialFanoutWorker: Worker | null = null
 let socialNotifyWorker: Worker | null = null
@@ -34,21 +36,9 @@ let started = false
 
 const IDLE_MS = 10 * 60 * 1000
 const LONGO_MS = 60 * 60 * 1000
+const LEMBRETE_MS = 30 * 60 * 1000
 
-// ─── Push dual-channel helper ──────────────────────────────────────────────────
-
-async function sendDualPush(
-  expoToken: string | null | undefined,
-  webSubscription: PushSubscription | null,
-  title: string,
-  body: string,
-  data?: Record<string, unknown>,
-) {
-  const promises: Promise<void>[] = []
-  if (expoToken) promises.push(sendPushNotification(expoToken, title, body, data))
-  if (webSubscription) promises.push(sendWebPush(webSubscription, title, body, data))
-  await Promise.allSettled(promises)
-}
+const NEWS_FETCH_QUERY = 'exercício físico%20endorfina%20bem estar%20felicidade%20atividade física'
 
 function execUrl(treinoId: string) {
   return `/treino/${treinoId}/execucao`
@@ -84,8 +74,6 @@ async function handleInatividade30min(_job: Job) {
     if (!ultima || !treino.iniciado_em) continue
 
     const url = execUrl(treino.id)
-    const expo = treino.aluno.usuario.expo_push_token
-    const web = treino.aluno.usuario.web_push_subscription as PushSubscription | null
 
     // 1) Away: sem atividade há >= 10 min (1 push até registrar nova série)
     const ocioso = ultima <= limiteIdle
@@ -96,19 +84,16 @@ async function handleInatividade30min(_job: Job) {
     if (ocioso && !jaNotificouIdle) {
       console.log(`[Worker] Ociosidade treino ${treino.id} — aluno: ${nomeAluno}`)
       await sendDualPush(
-        expo,
-        web,
+        treino.aluno.usuario,
         'Treino te esperando 💪',
         'Você saiu no meio do treino. Volte e continue de onde parou!',
         { url, url_estudo: url },
       )
 
-      const professorToken = treino.aluno.professor?.usuario.expo_push_token
-      const professorWeb = treino.aluno.professor?.usuario.web_push_subscription as PushSubscription | null
-      if (professorToken || professorWeb) {
+      const professor = treino.aluno.professor
+      if (professor) {
         await sendDualPush(
-          professorToken,
-          professorWeb,
+          professor.usuario,
           'Aluno ocioso no treino',
           `${nomeAluno} está há mais de 10 min sem registrar séries.`,
           { url: '/' },
@@ -126,8 +111,7 @@ async function handleInatividade30min(_job: Job) {
     if (longo && !treino.notificado_longo_em) {
       console.log(`[Worker] Treino longo 60min ${treino.id} — aluno: ${nomeAluno}`)
       await sendDualPush(
-        expo,
-        web,
+        treino.aluno.usuario,
         'Treino longo demais ⏱️',
         'Já se passou mais de 1 hora. Finalize o treino ou continue focado!',
         { url, url_estudo: url },
@@ -135,6 +119,32 @@ async function handleInatividade30min(_job: Job) {
       await prisma.treino.update({
         where: { id: treino.id },
         data: { notificado_longo_em: new Date() },
+      })
+    }
+
+    // 3) Lembrete 30 min: treino parado pede conclusão (1 push até finalizar)
+    const limiteConcluir = new Date(agora - LEMBRETE_MS)
+    if (!treino.notificado_concluir_em && ultima <= limiteConcluir) {
+      console.log(`[Worker] Lembrete 30min treino ${treino.id} — aluno: ${nomeAluno}`)
+      const urlConcluir = `${env.WEB_BASE_URL ?? ''}${url}`
+      await sendDualPush(
+        treino.aluno.usuario,
+        'Treino em andamento',
+        'Seu treino está parado há 30 minutos. Volte e conclua! 💪',
+        { url: urlConcluir },
+      )
+      const professor = treino.aluno.professor
+      if (professor) {
+        await sendDualPush(
+          professor.usuario,
+          'Treino do aluno parado',
+          `${nomeAluno} está com treino parado há 30 min`,
+          { url: urlConcluir },
+        )
+      }
+      await prisma.treino.update({
+        where: { id: treino.id },
+        data: { notificado_concluir_em: new Date() },
       })
     }
   }
@@ -183,8 +193,7 @@ async function handleTreinoEmAberto(_job: Job) {
     const p = treino.aluno.professor
     if (p) {
       await sendDualPush(
-        p.usuario.expo_push_token,
-        p.usuario.web_push_subscription as PushSubscription | null,
+        p.usuario,
         'Treino em aberto',
         `${nomeAluno} não iniciou o treino programado para hoje.`,
       )
@@ -228,8 +237,7 @@ async function handleMensagemMotivacional(job: Job<{ alunoId: string }>) {
 
   if (aluno) {
     await sendDualPush(
-      aluno.usuario.expo_push_token,
-      aluno.usuario.web_push_subscription as PushSubscription | null,
+      aluno.usuario,
       mensagem.titulo,
       mensagem.resumo,
       { url: mensagem.url_estudo, url_estudo: mensagem.url_estudo },
@@ -249,10 +257,103 @@ async function handleCorrelacaoDesempenho(job: Job<{ alunoId: string }>) {
   }
 }
 
+// ─── News engine (RSS fetch + push rotativo) ─────────────────────────────────
+
+async function handleNewsFetch(job: Job) {
+  const RSS_URL = `https://news.google.com/rss/search?q=${NEWS_FETCH_QUERY}&hl=pt-BR&gl=BR&ceid=BR:pt-419`
+
+  try {
+    const response = await fetch(RSS_URL, { signal: AbortSignal.timeout(30000) })
+    const xml = await response.text()
+
+    // Parse RSS items with regex (no external deps)
+    const itemRegex = /<item>([\s\S]*?)<\/item>/g
+    let match
+    while ((match = itemRegex.exec(xml)) !== null) {
+      const item = match[1]
+      const titulo = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1]?.trim()
+      const link = (item.match(/<link>(.*?)<\/link>/))?.[1]?.trim()
+      const desc = (item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || item.match(/<description>(.*?)<\/description>/))?.[1]?.trim()
+      const fonte = (item.match(/<source.*?>(.*?)<\/source>/))?.[1]?.trim()
+
+      if (!titulo || !link) continue
+
+      await prisma.noticia.upsert({
+        where: { url: link },
+        create: {
+          titulo: titulo.slice(0, 200),
+          resumo: (desc || titulo).replace(/<[^>]*>/g, '').slice(0, 300),
+          url: link,
+          fonte: fonte || 'Google News',
+        },
+        update: {},
+      })
+    }
+    job.log(`Fetched RSS, processed items`)
+  } catch (err) {
+    job.log(`RSS fetch error: ${(err as Error).message}`)
+  }
+}
+
+async function handleNewsPush(job: Job) {
+  const now = new Date()
+
+  // Users with push tokens whose schedule is due
+  const usuarios = await prisma.usuario.findMany({
+    where: {
+      OR: [
+        { expo_push_token: { not: null } },
+        { web_push_subscription: { not: Prisma.DbNull } },
+      ],
+      proxima_noticia_em: { lte: now },
+    },
+    take: 20, // batch processing
+  })
+
+  for (const usuario of usuarios) {
+    // Rotation: find news not yet sent to this user
+    const enviadas = await prisma.noticiaEnviada.findMany({
+      where: { usuario_id: usuario.id },
+      select: { noticia_id: true },
+    })
+    const idsEnviados = enviadas.map((e) => e.noticia_id)
+
+    let noticia = await prisma.noticia.findFirst({
+      where: idsEnviados.length > 0 ? { id: { notIn: idsEnviados } } : {},
+      orderBy: { criado_em: 'desc' },
+    })
+
+    // If all news sent, reset (circular rotation)
+    if (!noticia) {
+      await prisma.noticiaEnviada.deleteMany({ where: { usuario_id: usuario.id } })
+      noticia = await prisma.noticia.findFirst({ orderBy: { criado_em: 'desc' } })
+    }
+
+    if (!noticia) continue
+
+    await prisma.noticiaEnviada.create({
+      data: { usuario_id: usuario.id, noticia_id: noticia.id },
+    })
+
+    // Schedule next: random 1-7 days
+    const dias = 1 + Math.floor(Math.random() * 7)
+    const proxima = new Date(now.getTime() + dias * 24 * 3600 * 1000)
+
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { proxima_noticia_em: proxima },
+    })
+
+    await sendDualPush(usuario, noticia.titulo, noticia.resumo, { url: noticia.url }).catch(() => {})
+  }
+
+  job.log(`News push: processed ${usuarios.length} users`)
+}
+
 // ─── Agendamento de jobs recorrentes ─────────────────────────────────────────
 
 async function scheduleRecurringJobs() {
-  if (!inatividade30minQueue || !treinoEmAbertoQueue) return
+  if (!inatividade30minQueue || !treinoEmAbertoQueue || !newsFetchQueue || !newsPushQueue) return
 
   await inatividade30minQueue.add('check-inatividade', {}, {
     repeat: { every: 2 * 60 * 1000 },
@@ -261,6 +362,16 @@ async function scheduleRecurringJobs() {
 
   await treinoEmAbertoQueue.add('mark-em-aberto', {}, {
     repeat: { pattern: '30 23 * * *' },
+    removeOnComplete: true,
+  })
+
+  await newsFetchQueue.add('fetch-rss', {}, {
+    repeat: { every: 6 * 3600 * 1000 },
+    removeOnComplete: true,
+  })
+
+  await newsPushQueue.add('push-news', {}, {
+    repeat: { every: 30 * 60 * 1000 },
     removeOnComplete: true,
   })
 
@@ -279,11 +390,15 @@ export async function startWorkers() {
   treinoEmAbertoQueue = new Queue('treino-em-aberto', { connection })
   mensagemMotivaicionalQueue = new Queue('mensagem-motivacional', { connection })
   correlacaoQueue = new Queue('correlacao-desempenho', { connection })
+  newsFetchQueue = new Queue('news-fetch', { connection })
+  newsPushQueue = new Queue('news-push', { connection })
 
   inatividade30minWorker = new Worker('inatividade-30min', handleInatividade30min, { connection })
   treinoEmAbertoWorker = new Worker('treino-em-aberto', handleTreinoEmAberto, { connection })
   mensagemMotivacionalWorker = new Worker('mensagem-motivacional', handleMensagemMotivacional, { connection })
   correlacaoWorker = new Worker('correlacao-desempenho', handleCorrelacaoDesempenho, { connection })
+  newsFetchWorker = new Worker('news-fetch', handleNewsFetch, { connection })
+  newsPushWorker = new Worker('news-push', handleNewsPush, { connection })
 
   socialFanoutWorker = new Worker('social-fanout', handleFanoutPost, { connection: socialConnection })
   socialNotifyWorker = new Worker('social-notify', handleNotifyFriends, { connection: socialConnection })
@@ -296,6 +411,9 @@ export async function startWorkers() {
   socialBadgeWorker.on('failed', (job, err) => console.error('[Social Badge] Job failed after retries:', job?.id, err.message))
   socialLeaderboardWorker.on('failed', (job, err) => console.error('[Social Leaderboard] Job failed after retries:', job?.id, err.message))
 
+  newsFetchWorker.on('failed', (job, err) => console.error('[News Fetch] Job failed after retries:', job?.id, err.message))
+  newsPushWorker.on('failed', (job, err) => console.error('[News Push] Job failed after retries:', job?.id, err.message))
+
   await scheduleRecurringJobs()
 }
 
@@ -304,8 +422,10 @@ export async function stopWorkers() {
   started = false
 
   const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker,
+    newsFetchWorker, newsPushWorker,
     socialFanoutWorker, socialNotifyWorker, socialBadgeWorker, socialLeaderboardWorker]
-  const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue]
+  const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue,
+    newsFetchQueue, newsPushQueue]
 
   await Promise.all([
     ...workers.map((w) => w?.close()),

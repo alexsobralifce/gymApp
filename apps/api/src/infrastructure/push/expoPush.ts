@@ -20,6 +20,7 @@ export async function sendPushNotification(
       title,
       body,
       data: data ?? {},
+      vibrate: [100, 100, 200, 100, 400], // Android vibration pattern — iOS ignores
     },
   ]
 

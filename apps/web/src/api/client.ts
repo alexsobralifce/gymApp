@@ -148,6 +148,8 @@ export const api = {
   mudarParaProfessor: (cref?: string) =>
     api.post<AuthTokens & { usuario: User }>('/auth/mudar-para-professor', { cref }),
 
+  sendHeartbeat: () => api.post('/auth/heartbeat', {}),
+
   // ─── Aluno ─────────────────────────────────────────
   criarPerfilAluno: (data?: { dataNascimento?: string; pesoKg?: number; alturaCm?: number; sexo?: 'MASCULINO' | 'FEMININO'; objetivoTreino?: string; nivelTreino?: string; restricoes?: string[]; consentiuFeedSocial?: boolean }) =>
     api.post('/alunos/perfil', data),
@@ -553,6 +555,9 @@ export const api = {
     gruposMusculares?: string[]
     splitPreferido?: string
   }) => api.post<Record<string, unknown>>('/treinos/ia/gerar', data),
+
+  // ─── Notícias ──────────────────────────────────────
+  getNoticias: () => api.get('/noticias'),
 
   gerarESalvarTreinoIA: (data: {
     planoId?: string
