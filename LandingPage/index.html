@@ -2,7 +2,9 @@
   <!DOCTYPE html>
   <html lang="en">
     <head>
-      
+      <script>
+        (function(){var h=new Date().getHours();var t=h>=6&&h<18?'day':'night';document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t==='day'?'light':'dark';})()
+      </script>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -21,4 +23,3 @@
       
     </body>
   </html>
-  

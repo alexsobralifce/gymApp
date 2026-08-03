@@ -58,7 +58,7 @@ export function EndorfinappLogo({ size = 40, showSlogan = true, className, style
             fontFamily: "'Inter', system-ui, sans-serif",
             fontSize: size * 0.22,
             fontWeight: 400,
-            color: 'rgba(255,255,255,0.7)',
+            color: 'var(--muted-foreground)',
             marginTop: size * 0.08,
             letterSpacing: '0.01em',
           }}

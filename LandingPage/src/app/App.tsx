@@ -191,7 +191,7 @@ export default function App() {
               </a>
               <a
                 href="#planos"
-                className="px-4 py-2 text-sm font-semibold rounded bg-primary text-white hover:bg-[#F23D3D] transition-colors duration-200"
+                className="px-4 py-2 text-sm font-semibold rounded bg-primary text-white hover:bg-primary-hover transition-colors duration-200"
               >
                 Teste Grátis
               </a>
@@ -280,7 +280,7 @@ export default function App() {
             <div className="flex flex-wrap gap-3">
               <a
                 href="#planos"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded font-semibold text-white bg-primary hover:bg-[#F23D3D] active:bg-[#F21B1B] transition-colors duration-200 shadow-lg shadow-primary/25"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded font-semibold text-white bg-primary hover:bg-primary-hover active:bg-primary-active transition-colors duration-200 shadow-lg shadow-primary/25"
               >
                 Comece Grátis por 14 Dias
                 <ArrowRight className="w-4 h-4" />
@@ -422,7 +422,7 @@ export default function App() {
               </ul>
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <a href="#planos" className="inline-flex items-center gap-2 px-5 py-2.5 rounded font-semibold text-sm text-white bg-primary hover:bg-[#F23D3D] transition-colors">
+                <a href="#planos" className="inline-flex items-center gap-2 px-5 py-2.5 rounded font-semibold text-sm text-white bg-primary hover:bg-primary-hover transition-colors">
                   Disponível na App Store
                 </a>
                 <a href="#planos" className="inline-flex items-center gap-2 px-5 py-2.5 rounded font-semibold text-sm text-foreground border border-border hover:border-foreground/30 transition-colors">
@@ -586,7 +586,7 @@ export default function App() {
                   href="#"
                   className={`block text-center py-3 rounded font-semibold text-sm transition-colors duration-200 ${
                     plan.highlight
-                      ? "bg-primary text-white hover:bg-[#F23D3D] shadow-lg shadow-primary/30"
+                      ? "bg-primary text-white hover:bg-primary-hover shadow-lg shadow-primary/30"
                       : "border border-border text-foreground hover:border-foreground/40"
                   }`}
                 >
@@ -719,7 +719,7 @@ export default function App() {
           <div className="flex flex-wrap justify-center gap-3">
             <a
               href="#planos"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold text-white bg-primary hover:bg-[#F23D3D] transition-colors shadow-xl shadow-primary/30 text-base"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold text-white bg-primary hover:bg-primary-hover transition-colors shadow-xl shadow-primary/30 text-base"
             >
               Começar Grátis Agora
               <ArrowRight className="w-5 h-5" />

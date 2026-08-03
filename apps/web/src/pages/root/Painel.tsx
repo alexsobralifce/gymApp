@@ -7,6 +7,7 @@ export default function RootPainel() {
   const [data, setData] = useState<RootPainel | null>(null)
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const mostrarLimiteProfessores = false
 
   useEffect(() => {
     api.getPainel().then(setData).finally(() => setLoading(false))
@@ -80,7 +81,9 @@ export default function RootPainel() {
                   </span>
                   <span className="text-text-muted">{a._count.professores} profs</span>
                   <span className="text-text-muted">{a._count.alunos} alunos</span>
-                  <span className="text-text-muted">Limite: {a.max_professores}</span>
+                  {mostrarLimiteProfessores && (
+                    <span className="text-text-muted">Limite: {a.max_professores}</span>
+                  )}
                 </div>
               </div>
               <div className="flex gap-1 items-center">
@@ -93,15 +96,17 @@ export default function RootPainel() {
                 {a.status === 'ATIVO' && (
                   <>
                     <button onClick={() => handleStatus(a.id, 'REJEITADO')} className="rounded bg-primary/10 px-2 py-1 text-xs text-primary-light">Desabilitar</button>
-                    <Select
-                      value={a.max_professores}
-                      onChange={(e) => handleLimite(a.id, Number(e.target.value))}
-                      className="!px-2 !py-1 !text-xs !rounded-md w-auto"
-                    >
-                      {[5, 10, 20, 30, 50, 100].map((v) => (
-                        <option key={v} value={v}>{v} profs</option>
-                      ))}
-                    </Select>
+                    {mostrarLimiteProfessores && (
+                      <Select
+                        value={a.max_professores}
+                        onChange={(e) => handleLimite(a.id, Number(e.target.value))}
+                        className="!px-2 !py-1 !text-xs !rounded-md w-auto"
+                      >
+                        {[5, 10, 20, 30, 50, 100].map((v) => (
+                          <option key={v} value={v}>{v} profs</option>
+                        ))}
+                      </Select>
+                    )}
                   </>
                 )}
                 {a.status === 'REJEITADO' && (

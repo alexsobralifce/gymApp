@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/auth'
 import type { PerfilAluno, Academia } from '../../types/api'
 import { formatPhone } from '../../lib/phone'
 import { resolveMediaUrl } from '../../lib/media'
+import { calcularIMC, classificarIMC, calcularIdade } from '../../lib/health'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import FormField from '../../components/ui/FormField'
@@ -17,19 +18,6 @@ import {
   KeyIcon,
   ShieldIcon,
 } from '../../components/icons/Icon'
-
-function calcularIMC(pesoKg: number | null | undefined, alturaCm: number | null | undefined): number | null {
-  if (!pesoKg || !alturaCm || alturaCm <= 0) return null
-  return parseFloat((pesoKg / ((alturaCm / 100) ** 2)).toFixed(1))
-}
-
-function classificarIMC(imc: number): { label: string; cor: string } {
-  if (imc < 18.5) return { label: 'Abaixo do peso', cor: 'text-blue-400 border-blue-500/30 bg-blue-500/10' }
-  if (imc < 25) return { label: 'Peso ideal', cor: 'text-success border-green-500/30 bg-success/10' }
-  if (imc < 30) return { label: 'Sobrepeso', cor: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' }
-  if (imc < 35) return { label: 'Obesidade grau I', cor: 'text-orange-400 border-orange-500/30 bg-orange-500/10' }
-  return { label: 'Obesidade grau II/III', cor: 'text-destructive border-red-500/30 bg-destructive/10' }
-}
 
 export default function DadosAluno() {
   const navigate = useNavigate()
@@ -118,6 +106,7 @@ export default function DadosAluno() {
   const aNum = parseFloat(alturaCm)
   const imcCalculado = calcularIMC(isNaN(pNum) ? null : pNum, isNaN(aNum) ? null : aNum)
   const imcBadge = imcCalculado ? classificarIMC(imcCalculado) : null
+  const idadeCalculada = calcularIdade(dataNascimento)
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -436,6 +425,9 @@ export default function DadosAluno() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider opacity-80">IMC Calculado</p>
                 <p className="text-xl font-black">{imcCalculado}</p>
+                <p className="text-xs opacity-80 mt-0.5">
+                  {pNum}kg · {aNum}cm{idadeCalculada ? ` · ${idadeCalculada} anos` : ''}
+                </p>
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-black/20">
                 {imcBadge.label}

@@ -9,6 +9,7 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import FormField from '../../components/ui/FormField'
 import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
+import WorkoutLoading from '../../components/ui/WorkoutLoading'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -294,7 +295,7 @@ export default function CriarTreino() {
     }
   }
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  if (loading) return <WorkoutLoading />
 
   const ficha = fichas[fichaAtiva]
 

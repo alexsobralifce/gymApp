@@ -55,6 +55,8 @@ const btnPrimary =
 const btnGhost =
   'rounded border border-surface-input px-4 py-2 text-sm text-text-muted min-h-[36px] inline-flex items-center'
 
+const mostrarLimiteProfessores = false
+
 function statusBadge(status: string) {
   const map: Record<string, string> = {
     ATIVO: 'bg-success/10 text-success',
@@ -531,7 +533,7 @@ function AcademiasTab({
               <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
               <p className="text-xs text-text-muted">{a.usuario.email}</p>
               <p className="text-xs text-text-muted">
-                Max. professores: {a.max_professores} | Professores: {a._count.professores} | Alunos: {a._count.alunos}
+                {mostrarLimiteProfessores && `Max. professores: ${a.max_professores} | `}Professores: {a._count.professores} | Alunos: {a._count.alunos}
               </p>
             </div>
           </div>
@@ -708,9 +710,11 @@ function EditAcademiaModal({
         <FormField label="E-mail" htmlFor="academia-email" required>
           <Input id="academia-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </FormField>
-        <FormField label="Max. Professores" htmlFor="academia-max">
-          <Input id="academia-max" type="number" min={1} max={500} value={maxProfessores} onChange={(e) => setMaxProfessores(Number(e.target.value))} />
-        </FormField>
+        {mostrarLimiteProfessores && (
+          <FormField label="Max. Professores" htmlFor="academia-max">
+            <Input id="academia-max" type="number" min={1} max={500} value={maxProfessores} onChange={(e) => setMaxProfessores(Number(e.target.value))} />
+          </FormField>
+        )}
         <FormField label="Status" htmlFor="academia-status">
           <Select id="academia-status" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="PENDENTE">Pendente</option>

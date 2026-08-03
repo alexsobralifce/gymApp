@@ -488,8 +488,8 @@ export default function AppShell() {
                   className="flex items-center gap-2.5 rounded-xl p-1.5 pr-2.5 hover:bg-surface-input transition-all cursor-pointer active:scale-95 min-w-0"
                 >
                   <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="sm" ringClass={ringColor} />
-                  <span className="text-sm font-semibold text-text truncate max-w-28">
-                    {user?.nome || 'Usuário'}
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-text shrink-0">
+                    {user?.admin ? 'Admin' : getRoleLabel(role)}
                   </span>
                 </button>
 
@@ -502,7 +502,7 @@ export default function AppShell() {
                       </span>
                     </div>
 
-                    <div className="px-4 py-3 border-b border-border space-y-3">
+                    <div className="px-4 py-3 border-b border-border space-y-2">
                       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                         <PaletteIcon className="h-3.5 w-3.5 text-primary" />
                         Tema
@@ -516,7 +516,7 @@ export default function AppShell() {
                               type="button"
                               title={b.label}
                               onClick={() => setTheme(b.id as ThemeBrand)}
-                              className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold transition-all cursor-pointer border ${
+                              className={`flex flex-1 items-center justify-center rounded-xl px-2 py-2 text-xs font-semibold transition-all cursor-pointer border ${
                                 active
                                   ? 'border-primary bg-primary/15 text-text ring-1 ring-primary/40'
                                   : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
@@ -526,7 +526,6 @@ export default function AppShell() {
                                 className={`h-5 w-5 rounded-full border-2 ${active ? 'border-text scale-110' : 'border-transparent'}`}
                                 style={{ backgroundColor: b.swatch }}
                               />
-                              {b.label}
                             </button>
                           )
                         })}
@@ -535,7 +534,7 @@ export default function AppShell() {
                         <button
                           type="button"
                           onClick={() => setMode('auto')}
-                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border min-h-11 ${
+                          className={`rounded-xl px-2 py-1.5 text-xs font-bold transition-all cursor-pointer border ${
                             mode === 'auto'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
@@ -547,7 +546,7 @@ export default function AppShell() {
                         <button
                           type="button"
                           onClick={() => setMode('day')}
-                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border min-h-11 ${
+                          className={`rounded-xl px-2 py-1.5 text-xs font-bold transition-all cursor-pointer border ${
                             mode === 'day'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
@@ -559,7 +558,7 @@ export default function AppShell() {
                         <button
                           type="button"
                           onClick={() => setMode('night')}
-                          className={`rounded-xl px-2 py-2 text-xs font-bold transition-all cursor-pointer border min-h-11 ${
+                          className={`rounded-xl px-2 py-1.5 text-xs font-bold transition-all cursor-pointer border ${
                             mode === 'night'
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
@@ -569,13 +568,6 @@ export default function AppShell() {
                           Noite
                         </button>
                       </div>
-                      <p className="text-[10px] text-text-muted leading-snug">
-                        {mode === 'auto'
-                          ? 'Auto: claro das 06h às 18h (horário do aparelho). Para claro sempre, use Dia.'
-                          : mode === 'day'
-                            ? 'Modo Dia: fundo claro forçado.'
-                            : 'Modo Noite: fundo escuro forçado.'}
-                      </p>
                     </div>
 
                     <div className="py-1.5">

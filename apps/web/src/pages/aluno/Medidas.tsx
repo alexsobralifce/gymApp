@@ -3,6 +3,7 @@ import { api } from '../../api/client'
 import BatchActionBar from '../../components/ui/BatchActionBar'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
+import { calcularIdade } from '../../lib/health'
 import type { MedidaCorporal, PerfilAluno } from '../../types/api'
 
 interface IMCClassification {
@@ -95,6 +96,7 @@ export default function AlunoMedidas() {
   const ultimaMedida = medidas.length > 0 ? medidas[medidas.length - 1] : null
   const classificacao = ultimaMedida?.imc ? getIMCClassificacao(ultimaMedida.imc) : null
   const posicaoBarra = ultimaMedida?.imc ? imcBarPosition(ultimaMedida.imc) : 0
+  const idade = perfil?.data_nascimento ? calcularIdade(perfil.data_nascimento) : null
 
   function resetForm() {
     setPesoKg('')
@@ -200,7 +202,7 @@ export default function AlunoMedidas() {
                 {ultimaMedida.imc?.toFixed(1)}
               </p>
               <p className="text-xs text-text-muted mt-0.5">
-                {ultimaMedida.peso_kg} kg &middot; {ultimaMedida.altura_cm} cm
+                {ultimaMedida.peso_kg} kg &middot; {ultimaMedida.altura_cm} cm{idade ? ` &middot; ${idade} anos` : ''}
               </p>
             </div>
             <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${classificacao.bgClass}`}>

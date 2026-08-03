@@ -11,6 +11,7 @@ import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
+import WorkoutLoading from '../../components/ui/WorkoutLoading'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -242,7 +243,7 @@ export default function AlunoCriarTreino() {
     }
   }
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  if (loading) return <WorkoutLoading />
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">

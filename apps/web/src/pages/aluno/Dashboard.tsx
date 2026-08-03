@@ -17,33 +17,10 @@ import {
 } from '../../components/icons/Icon'
 import { getInitials } from '../../lib/initials'
 import { resolveMediaUrl } from '../../lib/media'
+import { calcularIMC, classificarIMC, calcularIdade } from '../../lib/health'
 
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
-
-function calcularIMC(pesoKg: number | null | undefined, alturaCm: number | null | undefined): number | null {
-  if (!pesoKg || !alturaCm || alturaCm <= 0) return null
-  return parseFloat((pesoKg / ((alturaCm / 100) ** 2)).toFixed(1))
-}
-
-function classificarIMC(imc: number): { label: string; cor: string } {
-  if (imc < 18.5) return { label: 'Abaixo do peso', cor: 'text-blue-400' }
-  if (imc < 25) return { label: 'Peso normal', cor: 'text-success' }
-  if (imc < 30) return { label: 'Sobrepeso', cor: 'text-accent' }
-  if (imc < 35) return { label: 'Obesidade grau I', cor: 'text-primary-light' }
-  if (imc < 40) return { label: 'Obesidade grau II', cor: 'text-primary' }
-  return { label: 'Obesidade grau III', cor: 'text-primary' }
-}
-
-function calcularIdade(dataNascimento: string | null | undefined): number | null {
-  if (!dataNascimento) return null
-  const nasc = new Date(dataNascimento)
-  const hoje = new Date()
-  let idade = hoje.getFullYear() - nasc.getFullYear()
-  const mes = hoje.getMonth() - nasc.getMonth()
-  if (mes < 0 || (mes === 0 && hoje.getDate() < nasc.getDate())) idade--
-  return idade
-}
 
 export default function AlunoDashboard() {
   const [treinos, setTreinos] = useState<Treino[]>([])
@@ -217,7 +194,7 @@ export default function AlunoDashboard() {
                 <div className="flex items-baseline gap-2 mt-0.5">
                   <span className="text-xl font-bold text-text">{imc}</span>
                   <span className="text-xs text-text-muted">
-                    {perfil?.peso_kg}kg / {perfil?.altura_cm}cm
+                    {perfil?.peso_kg}kg · {perfil?.altura_cm}cm{idade ? ` · ${idade} anos` : ''}
                   </span>
                 </div>
               </div>
