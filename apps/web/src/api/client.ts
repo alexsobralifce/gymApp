@@ -63,6 +63,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     // Refresh definitively failed (expired token)
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
+    localStorage.removeItem('gymapp_user')
     const pathName = window.location.pathname
     const isAuthPage = pathName === '/login' || pathName === '/register' || pathName === '/'
     if (!isAuthPage) {
@@ -81,26 +82,40 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json()
 }
 
+// Single-flight: enquanto um refresh está em andamento, chamadas concorrentes
+// compartilham o mesmo promise. Sem isso, várias chamadas 401 simultâneas
+// rotacionam o mesmo refresh token → a 1ª rotaciona (deleta o antigo) e as
+// demais enviam o token já deletado → 401 → logout forçado.
+let refreshPromise: Promise<boolean> | null = null
+
 async function refreshTokens(): Promise<boolean> {
-  const refreshToken = localStorage.getItem('refreshToken')
-  if (!refreshToken) return false
+  if (refreshPromise) return refreshPromise
 
-  try {
-    const res = await fetch(`${API_BASE}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    })
+  refreshPromise = (async () => {
+    const refreshToken = localStorage.getItem('refreshToken')
+    if (!refreshToken) return false
 
-    if (!res.ok) return false
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      })
 
-    const tokens: AuthTokens = await res.json()
-    localStorage.setItem('accessToken', tokens.accessToken)
-    localStorage.setItem('refreshToken', tokens.refreshToken)
-    return true
-  } catch {
-    throw new ApiError(0, 'Sem conexão com o servidor')
-  }
+      if (!res.ok) return false
+
+      const tokens: AuthTokens = await res.json()
+      localStorage.setItem('accessToken', tokens.accessToken)
+      localStorage.setItem('refreshToken', tokens.refreshToken)
+      return true
+    } catch {
+      throw new ApiError(0, 'Sem conexão com o servidor')
+    } finally {
+      refreshPromise = null
+    }
+  })()
+
+  return refreshPromise
 }
 
 export class ApiError extends Error {

@@ -3,6 +3,33 @@ import { api, ApiError } from '../api/client'
 import type { User } from '../types/api'
 import { debugLog } from '../lib/debug'
 
+// Persistência da sessão: além dos tokens (accessToken/refreshToken), guarda o
+// objeto user para restaurar a UI instantaneamente ao reabrir o app e sobreviver
+// a falhas de rede no boot (fetchUser revalida em background).
+const USER_STORAGE_KEY = 'gymapp_user'
+
+function loadStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem(USER_STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as User
+  } catch {
+    return null
+  }
+}
+
+function saveStoredUser(user: User | null) {
+  try {
+    if (user) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+    } else {
+      localStorage.removeItem(USER_STORAGE_KEY)
+    }
+  } catch {
+    // localStorage indisponível — sessão só em memória
+  }
+}
+
 export interface AuthState {
   user: User | null
   loading: boolean
@@ -18,7 +45,7 @@ export interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
+  user: loadStoredUser(),
   loading: false,
   error: null,
 
@@ -29,6 +56,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('accessToken', tokens.accessToken)
       localStorage.setItem('refreshToken', tokens.refreshToken)
       const user = await api.getMe()
+      saveStoredUser(user)
       set({ user, loading: false })
     } catch (err) {
       const msg = (err as Error).message
@@ -51,6 +79,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('refreshToken', result.refreshToken)
       const user = await api.getMe()
       debugLog('AuthStore', 'api.getMe OK!', { userId: user.id, email: user.email })
+      saveStoredUser(user)
       set({ user, loading: false })
       return result.isNew
     } catch (err) {
@@ -76,6 +105,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
+    saveStoredUser(null)
     set({ user: null })
   },
 
@@ -85,11 +115,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       const user = await api.getMe()
+      saveStoredUser(user)
       set({ user })
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
+        saveStoredUser(null)
       }
       // On network error, keep tokens — session survives offline opens
     }
@@ -110,6 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('accessToken', res.accessToken)
       localStorage.setItem('refreshToken', res.refreshToken)
       const user = await api.getMe()
+      saveStoredUser(user)
       set({ user, loading: false })
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
