@@ -10,6 +10,9 @@ npx prisma generate
 echo "=== Applying database migrations ==="
 npx prisma migrate deploy
 
+echo "=== Extending existing refresh tokens to 30 days ==="
+npx tsx prisma/extend-refresh-tokens.ts || true
+
 echo "=== Checking if exercise sync is needed ==="
 EXERCISE_COUNT=$(node -e "
 const { PrismaClient } = require('@prisma/client');

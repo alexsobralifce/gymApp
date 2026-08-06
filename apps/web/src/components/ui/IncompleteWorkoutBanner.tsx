@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
+import { useAuthStore } from '../../stores/auth'
 import type { Treino } from '../../types/api'
 import { DumbbellIcon } from '../icons/Icon'
 
 export default function IncompleteWorkoutBanner() {
   const [treino, setTreino] = useState<Treino | null>(null)
   const [dismissed, setDismissed] = useState(false)
+  const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
   const checkIncompleteWorkout = useCallback(async () => {
+    if (!user) return // não faz chamada autenticada sem sessão
     try {
       const treinos = await api.getAlunoTreinos()
       const emExecucao = treinos.find((t: Treino) => t.status === 'EM_EXECUCAO')
@@ -24,7 +27,7 @@ export default function IncompleteWorkoutBanner() {
     } catch {
       // silent — não interrompe a experiência se a API falhar
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
     checkIncompleteWorkout()

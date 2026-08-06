@@ -3,8 +3,6 @@ import { CheckIcon } from '../icons/Icon'
 import { useState, useEffect } from 'react'
 import { activatePush } from '../../hooks/useNotifications'
 
-const STORAGE_KEY = 'gymapp_notification_prompt'
-
 export default function NotificationPrompt() {
   const [visible, setVisible] = useState(false)
 
@@ -12,9 +10,10 @@ export default function NotificationPrompt() {
     if (typeof window === 'undefined' || !('Notification' in window)) return
 
     const current = Notification.permission
-    const dismissed = localStorage.getItem(STORAGE_KEY)
 
-    if (current === 'default' && !dismissed) {
+    // Mostra em toda sessão enquanto o usuário não decidir (default).
+    // "Agora não" esconde só na sessão atual; se nunca decidir, volta a aparecer.
+    if (current === 'default') {
       const timer = setTimeout(() => setVisible(true), 3000)
       return () => clearTimeout(timer)
     }
@@ -26,7 +25,6 @@ export default function NotificationPrompt() {
   }
 
   function handleDismiss() {
-    localStorage.setItem(STORAGE_KEY, 'true')
     setVisible(false)
   }
 
