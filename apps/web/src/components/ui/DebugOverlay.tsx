@@ -5,8 +5,11 @@ import {
   copyDebugLogs,
   diagnoseTheme,
   collectThemeSnapshot,
+  collectPushSnapshot,
+  diagnosePush,
   type LogEntry,
   type ThemeSnapshot,
+  type PushSnapshot,
 } from '../../lib/debug'
 import { BugIcon } from '../icons/Icon'
 
@@ -100,9 +103,76 @@ function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
   )
 }
 
+function PushSummary({ snap }: { snap: PushSnapshot | null }) {
+  if (!snap) return null
+  const ok = snap.permission === 'granted' && snap.subscriptionEndpoint != null
+  const rows: Array<[string, string]> = [
+    ['Notification API', snap.notificationApi ? 'sim' : 'não'],
+    ['Permission', snap.permission ?? '—'],
+    ['VAPID no build', snap.vapidConfigured ? 'sim' : 'não'],
+    ['Service Worker', snap.swRegistered ? 'registrado' : 'não'],
+    ['Subscription', snap.subscriptionEndpoint ? 'ativa' : 'nenhuma'],
+    ['SW scope', snap.swScope ?? '—'],
+  ]
+  return (
+    <div
+      className={`mx-3 mt-3 rounded-xl border p-3 text-xs space-y-2 ${
+        ok
+          ? 'border-success/30 bg-success/5'
+          : 'border-destructive/40 bg-destructive/10'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-bold text-text">Push / Notificações</span>
+        <span className={`font-bold ${ok ? 'text-success' : 'text-destructive'}`}>
+          {ok ? 'OK' : 'FALHA'}
+        </span>
+      </div>
+      {!snap.notificationApi && (
+        <p className="text-destructive font-medium leading-snug">
+          API Notification indisponível neste navegador — push não funciona.
+        </p>
+      )}
+      {snap.permission === 'denied' && (
+        <p className="text-destructive font-medium leading-snug">
+          Permissão BLOQUEADA no navegador. Reative em: menu ⋮ / cadeado → Configurações do
+          site → Notificações → Permitir.
+        </p>
+      )}
+      {snap.permission === 'default' && (
+        <p className="text-warning font-medium leading-snug">
+          Permissão nunca decidida — toque em &quot;Ativar&quot; no card de notificações.
+        </p>
+      )}
+      {snap.permission === 'granted' && !snap.subscriptionEndpoint && (
+        <p className="text-warning font-medium leading-snug">
+          Permissão concedida mas sem subscription — verifique se VAPID está configurado no build.
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px] text-text-muted">
+        {rows.map(([k, v]) => (
+          <span key={k} className="contents">
+            <span>{k}</span>
+            <span className="text-text font-semibold truncate">{v}</span>
+          </span>
+        ))}
+      </div>
+      {snap.subscriptionEndpoint && (
+        <p className="font-mono text-[10px] text-text-muted break-all leading-snug">
+          endpoint: {snap.subscriptionEndpoint}
+        </p>
+      )}
+      {snap.error && (
+        <p className="text-destructive font-medium leading-snug">erro: {snap.error}</p>
+      )}
+    </div>
+  )
+}
+
 export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [snap, setSnap] = useState<ThemeSnapshot | null>(null)
+  const [pushSnap, setPushSnap] = useState<PushSnapshot | null>(null)
   const [copyState, setCopyState] = useState<'idle' | 'ok' | 'fail'>('idle')
 
   useEffect(() => {
@@ -111,6 +181,7 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
       setLogs(updatedLogs)
     })
     setSnap(collectThemeSnapshot())
+    collectPushSnapshot().then(setPushSnap)
     return () => unsubscribe()
   }, [open])
 
@@ -119,16 +190,22 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
     setSnap(s)
   }, [])
 
+  const handlePushDiagnose = useCallback(() => {
+    diagnosePush().then(setPushSnap)
+  }, [])
+
   const handleCopy = useCallback(async () => {
     // inclui snapshot atual no texto copiado
     const live = collectThemeSnapshot()
     setSnap(live)
+    const livePush = await collectPushSnapshot()
+    setPushSnap(livePush)
     const ok = await copyDebugLogs()
     // se o buffer não tiver o snapshot, ainda assim o diagnose já pode ter sido rodado;
     // reforça copiando com snapshot embutido no final
     if (ok) {
       try {
-        const extra = `\n\n=== THEME SNAPSHOT ===\n${JSON.stringify(live, null, 2)}\n`
+        const extra = `\n\n=== THEME SNAPSHOT ===\n${JSON.stringify(live, null, 2)}\n\n=== PUSH SNAPSHOT ===\n${JSON.stringify(livePush, null, 2)}\n`
         const base = logs
           .map((l) => {
             const lines = [`[${l.timestamp}] ${l.type.toUpperCase()} [${l.tag}] ${l.message}`]
@@ -180,6 +257,13 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
             </button>
             <button
               type="button"
+              onClick={handlePushDiagnose}
+              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 cursor-pointer min-h-9"
+            >
+              Diagnóstico Push
+            </button>
+            <button
+              type="button"
               onClick={handleCopy}
               className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer min-h-9 ${
                 copyState === 'ok'
@@ -210,6 +294,7 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
         </div>
 
         <ThemeSummary snap={snap} />
+        <PushSummary snap={pushSnap} />
 
         <div className="flex-1 overflow-y-auto p-3 space-y-2 font-mono text-xs">
           {logs.length === 0 ? (

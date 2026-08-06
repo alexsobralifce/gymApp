@@ -297,3 +297,68 @@ export function diagnoseTheme(): ThemeSnapshot {
   )
   return snap
 }
+
+// ─── Push Notification diagnostic ────────────────────────────────────────────
+
+export interface PushSnapshot {
+  notificationApi: boolean
+  permission: string | null
+  vapidConfigured: boolean
+  serviceWorkerApi: boolean
+  swRegistered: boolean
+  swScope: string | null
+  subscriptionEndpoint: string | null
+  subscriptionKeys: boolean
+  error: string | null
+}
+
+/** Coleta o estado real do push (permissão, VAPID, SW, subscription). */
+export async function collectPushSnapshot(): Promise<PushSnapshot> {
+  const snap: PushSnapshot = {
+    notificationApi: typeof window !== 'undefined' && 'Notification' in window,
+    permission: null,
+    vapidConfigured: false,
+    serviceWorkerApi: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
+    swRegistered: false,
+    swScope: null,
+    subscriptionEndpoint: null,
+    subscriptionKeys: false,
+    error: null,
+  }
+  try {
+    if (snap.notificationApi) snap.permission = Notification.permission
+    const vapid = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY
+    snap.vapidConfigured = !!vapid
+    if (snap.serviceWorkerApi) {
+      const reg = await navigator.serviceWorker.ready
+      snap.swRegistered = true
+      snap.swScope = reg.scope
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        snap.subscriptionEndpoint = sub.endpoint
+        snap.subscriptionKeys = !!(sub as any).getKey?.('p256dh')
+      }
+    }
+  } catch (err) {
+    snap.error = String((err as Error)?.message ?? err)
+  }
+  return snap
+}
+
+/** Roda diagnóstico de push e grava no buffer de logs. */
+export async function diagnosePush(): Promise<PushSnapshot> {
+  const snap = await collectPushSnapshot()
+  const ok = snap.permission === 'granted' && snap.subscriptionEndpoint != null
+  debugLog(
+    'PUSH-DIAG',
+    ok
+      ? 'OK: permissão concedida + subscription ativa'
+      : `FALHA: permission=${snap.permission} sub=${snap.subscriptionEndpoint ? 'sim' : 'não'} vapid=${snap.vapidConfigured ? 'sim' : 'não'}`,
+    {
+      ...snap,
+      subscriptionEndpoint: snap.subscriptionEndpoint?.slice(0, 60) ?? null,
+    },
+    ok ? 'info' : 'error',
+  )
+  return snap
+}
