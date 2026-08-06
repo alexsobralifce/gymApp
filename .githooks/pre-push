@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pre-push hook — roda `npm run verify` antes de empurrar para o remoto.
+# Falha bloqueia o push (defeito não chega ao Railway).
+set -e
+
+echo "=== [pre-push] npm run verify ==="
+npm run verify
+echo "=== [pre-push] Verify OK — push liberado ==="
