@@ -560,6 +560,11 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | GET | `/uploads/avatars/:filename` | Servir avatar |
 | GET | `/uploads/feed/:year/:month/:filename` | Servir foto do feed |
 
+### Health Check (`/health`) — público (sem autenticação)
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/health` | Diagnóstico completo: `status` (ok/degraded/error), `timestamp`, `uptime`, `version` (package.json), `checks` (vapid, database via `SELECT 1`, redis via ping descartável, workers social com nomes das filas e gym com `available` `boolean`/`'unknown'` — `redisDisponivel` não é exportado de `gymWorkers.ts`). Nunca retorna 500 — cada check é isolado em try/catch. `error` se DB falhou; `degraded` se VAPID/Redis/workers falharam |
+
 ### Aluno (`/alunos`) — role ALUNO
 | Método | Rota | Descrição |
 |--------|------|-----------|
