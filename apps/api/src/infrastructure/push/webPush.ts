@@ -9,6 +9,9 @@ const VAPID_KEYS: webpush.VapidKeys = {
 if (VAPID_KEYS.publicKey && VAPID_KEYS.privateKey) {
   webpush.setVapidDetails(env.VAPID_SUBJECT || 'mailto:admin@endorfinapp.com', VAPID_KEYS.publicKey, VAPID_KEYS.privateKey)
 }
+console.log('[WebPush] VAPID PUBLIC_KEY:', VAPID_KEYS.publicKey ? `presente (${VAPID_KEYS.publicKey.length} chars, prefixo: ${VAPID_KEYS.publicKey.slice(0, 8)}...)` : 'AUSENTE')
+console.log('[WebPush] VAPID PRIVATE_KEY:', VAPID_KEYS.privateKey ? `presente (${VAPID_KEYS.privateKey.length} chars, prefixo: ${VAPID_KEYS.privateKey.slice(0, 8)}...)` : 'AUSENTE')
+console.log('[WebPush] VAPID SUBJECT:', env.VAPID_SUBJECT || 'AUSENTE')
 console.log('[WebPush] VAPID configurado:', !!(VAPID_KEYS.publicKey && VAPID_KEYS.privateKey))
 
 export async function sendWebPush(
