@@ -346,7 +346,7 @@ export default function AppShell() {
   const navItems = getNavItems(role, user?.admin ?? false)
   const pageTitle = getPageTitle(location.pathname, role, user?.admin ?? false)
   const effectiveRole = user?.admin ? 'ROOT' : role
-  useIdleLogout(logout)
+  useIdleLogout()
 
   const ringColor = getRoleRingColor(effectiveRole)
 

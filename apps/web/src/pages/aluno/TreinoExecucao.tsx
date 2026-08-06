@@ -6,6 +6,7 @@ import { DumbbellIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
+import { useIncompleteWorkoutReminder } from '../../hooks/useIncompleteWorkoutReminder'
 import type { UltimaCarga } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
 
@@ -145,6 +146,7 @@ export default function AlunoTreinoExecucao() {
   const [showSairModal, setShowSairModal] = useState(false)
   const [resuming, setResuming] = useState(false)
   const coach = useCoachMark(!!treinoAtual)
+  useIncompleteWorkoutReminder(treinoAtual, avaliando || showAvaliacao)
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -229,17 +231,6 @@ export default function AlunoTreinoExecucao() {
       KeepAwake.allowSleep().catch(() => {})
     }
   }, [])
-
-  useEffect(() => {
-    function onBeforeUnload(e: BeforeUnloadEvent) {
-      if (treinoAtual?.status === 'EM_EXECUCAO' && !allowLeaveRef.current) {
-        e.preventDefault()
-        e.returnValue = ''
-      }
-    }
-    window.addEventListener('beforeunload', onBeforeUnload)
-    return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [treinoAtual?.status])
 
   useEffect(() => {
     if (!treinoAtual?.exercicios) return

@@ -23,6 +23,7 @@ export default function Avaliacoes() {
   const [buscaAvaliacao, setBuscaAvaliacao] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [batchDeleting, setBatchDeleting] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -241,6 +242,20 @@ export default function Avaliacoes() {
     }
   }
 
+  async function executeBatchDeleteAvaliacoes() {
+    setBatchDeleting(true)
+    try {
+      await Promise.allSettled(selectedIds.map((id) => api.delete(`/avaliacoes/${id}`)))
+      setAvaliacoes((prev) => prev.filter((av) => !selectedIds.includes(av.id)))
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} avaliação(ões) excluída(s)!`, type: 'success' })
+    } catch (err: any) {
+      setToast({ message: err.message || 'Erro ao excluir avaliações', type: 'error' })
+    } finally {
+      setBatchDeleting(false)
+    }
+  }
+
   async function handleGerarLaudo(id: string) {
     try {
       setLoading(true)
@@ -400,20 +415,7 @@ export default function Avaliacoes() {
                   <BatchActionBar
                     selectedCount={selectedIds.length}
                     onClearSelection={() => setSelectedIds([])}
-                    onDeleteSelected={async () => {
-                      if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.length} avaliação(ões) selecionada(s)?`)) return
-                      setBatchDeleting(true)
-                      try {
-                        await Promise.allSettled(selectedIds.map((id) => api.delete(`/avaliacoes/${id}`)))
-                        setAvaliacoes((prev) => prev.filter((av) => !selectedIds.includes(av.id)))
-                        setSelectedIds([])
-                        setToast({ message: `${selectedIds.length} avaliação(ões) excluída(s)!`, type: 'success' })
-                      } catch (err: any) {
-                        setToast({ message: err.message || 'Erro ao excluir avaliações', type: 'error' })
-                      } finally {
-                        setBatchDeleting(false)
-                      }
-                    }}
+                    onDeleteSelected={() => setConfirmDeleteOpen(true)}
                     loading={batchDeleting}
                   />
                 </div>
@@ -757,6 +759,18 @@ export default function Avaliacoes() {
         message="Tem certeza que deseja excluir esta avaliação física? Esta ação não pode ser desfeita e os dados evolutivos e de comparativos serão removidos do gráfico do aluno."
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowConfirmDelete(null)}
+      />
+      {/* Confirm Delete Batch Modal */}
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Excluir avaliações"
+        message={`Tem certeza que deseja excluir ${selectedIds.length} avaliação(ões) selecionada(s)?`}
+        onConfirm={() => {
+          setConfirmDeleteOpen(false)
+          executeBatchDeleteAvaliacoes()
+        }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        loading={batchDeleting}
       />
     </div>
   )

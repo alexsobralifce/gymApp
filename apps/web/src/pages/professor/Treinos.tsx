@@ -27,6 +27,7 @@ export default function ProfessorTreinos() {
   const [search, setSearch] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [batchDeleting, setBatchDeleting] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const [editingTreino, setEditingTreino] = useState<{ treino: Treino; alunoId: string } | null>(null)
   const [deletingTreino, setDeletingTreino] = useState<{ id: string; nome: string } | null>(null)
   const [viewingTreinos, setViewingTreinos] = useState<{ treinos: ProfessorDashboard['treinos']; alunoNome: string; alunoId: string } | null>(null)
@@ -68,9 +69,8 @@ export default function ProfessorTreinos() {
     }
   }
 
-  const handleBatchDeleteWorkoutsInModal = async () => {
+  const executeBatchDelete = async () => {
     if (!viewingTreinos || selectedIds.length === 0) return
-    if (!window.confirm(`Tem certeza que deseja excluir os ${selectedIds.length} treino(s) selecionado(s)?`)) return
     setBatchDeleting(true)
     try {
       await Promise.allSettled(selectedIds.map((id) => api.deleteTreino(id)))
@@ -93,6 +93,11 @@ export default function ProfessorTreinos() {
     } finally {
       setBatchDeleting(false)
     }
+  }
+
+  const handleBatchDeleteWorkoutsInModal = () => {
+    if (!viewingTreinos || selectedIds.length === 0) return
+    setConfirmDeleteOpen(true)
   }
 
   const toggleDia = (dia: number) => {
@@ -584,6 +589,19 @@ export default function ProfessorTreinos() {
           </div>
         </div>
       )}
+
+      {/* Modal: Confirmar Exclusão em Lote */}
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Excluir treinos"
+        message={`Tem certeza que deseja excluir os ${selectedIds.length} treino(s) selecionado(s)?`}
+        onConfirm={() => {
+          setConfirmDeleteOpen(false)
+          executeBatchDelete()
+        }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        loading={batchDeleting}
+      />
     </div>
   )
 }

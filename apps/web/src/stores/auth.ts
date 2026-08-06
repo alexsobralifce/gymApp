@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api } from '../api/client'
+import { api, ApiError } from '../api/client'
 import type { User } from '../types/api'
 import { debugLog } from '../lib/debug'
 
@@ -86,9 +86,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const user = await api.getMe()
       set({ user })
-    } catch {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+      }
+      // On network error, keep tokens — session survives offline opens
     }
   },
 

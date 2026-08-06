@@ -19,7 +19,7 @@ O **GymApp (ENDORFINAPP)** é uma plataforma multi-tenant completa de gerenciame
 - **Estrutura**: Monorepo NPM (`workspaces: ["apps/*", "packages/*"]`)
 - **Backend (`apps/api`)**: Fastify (TypeScript) + Prisma ORM + PostgreSQL + Redis & BullMQ (Workers de segundo plano)
 - **Frontend (`apps/web`)**: React 19 (TypeScript) + Vite 8 + Tailwind CSS v4 + Zustand 5 + React Router 7 + Recharts + Lucide Icons
-- **Mobile**: Estrutura preparada para Capacitor (Android/iOS) dentro de `apps/web`
+- **Mobile**: PWA como app instalável com comportamento nativo (sem pull-to-refresh, sem zoom, sem menus de navegador). Código preparado para Capacitor como opção futura dentro de `apps/web`
 - **Landing Page**: Projeto separado em `LandingPage/` (Vite + React + Tailwind)
 - **Marca**: **ENDORFINAPP** — slogan "A Química do Crescimento" — logotipo ECG + Raio em verde neon
 
@@ -62,7 +62,7 @@ apps/api/src/
 
 - **RF05 - Máquina de Estados de Execução**: Transição rígida `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CONCLUIDO`. Toda transição inválida → `InvalidStateTransitionError`. Reciclagem automática `CONCLUIDO → ACEITO` pós-finalização. Log imutável append-only em `treino_historico`.
 
-- **RF06 - Execução e Monitoramento de Treino**: Cronômetro com tempo decorrido, campos de carga/repetição por série, coach marks direcionais na primeira execução (`gymapp_first_workout_done`), modal de confirmação ao sair, conclusão em lote por exercício ("✓ Concluir Exercício"), modal de avaliação de dificuldade (Fácil/Moderado/Intenso/Muito Intenso), tela de conclusão com troféu e mensagem motivacional.
+- **RF06 - Execução e Monitoramento de Treino**: Cronômetro com tempo decorrido, campos de carga/repetição por série, coach marks direcionais na primeira execução (`gymapp_first_workout_done`), modal de confirmação ao sair, conclusão em lote por exercício ("✓ Concluir Exercício"), modal de avaliação de dificuldade (Fácil/Moderado/Intenso/Muito Intenso), tela de conclusão com troféu e mensagem motivacional. Vibração + notificação local ao fechar/minimizar o app com treino em andamento (`EM_EXECUCAO`), com debounce de 8s (não vibra em bloqueios breves de tela) — hook `useIncompleteWorkoutReminder`.
 
 - **RF07 - Prescrição e Geração por IA**: Assistente de IA em 5 etapas (Objetivo → Nível & Dias → Grupos Musculares → Restrições → Resultado). Algoritmo de scoring/ranking por objetivo, nível, dias, cobertura de grupos musculares e split preferido. Suporte a múltiplos planos complementares (Push+Pull+Legs). Substituição automática de exercícios por restrições via `alternativo_id`.
 
@@ -130,7 +130,7 @@ apps/api/src/
 
 - **RF24 - Health Connect / Integração com Dispositivos**: Componentes `HealthConnectCard`, `HuaweiBridgeGuide`, `WatchSyncButton` para integração com Google Health Connect, Huawei e smartwatches.
 
-- **RF25 - PWA (Progressive Web App)**: Componente `PWAInstallPrompt` para instalação como aplicativo. Compatibilidade com Capacitor para lojas Android/iOS. `@capgo/capacitor-keep-awake` para manter tela ligada durante treino.
+- **RF25 - PWA (Progressive Web App)**: PWA como via principal de instalação a partir do site, com `PWAInstallPrompt` (Android/Chrome) e guia iOS via Safari. Código preparado para Capacitor como opção futura (ícones, detecção `isNativePlatform()`, CapacitorHttp). Polimento de app nativo: `overscroll-behavior: none` (sem pull-to-refresh/glow), `user-select: none` (sem menu de copiar), `touch-action: manipulation` (sem zoom por duplo-toque), `beforeunload` removido (substituído por `useBlocker` + `ConfirmModal`), `window.confirm` substituído por `ConfirmModal` em 4 páginas. `@capgo/capacitor-keep-awake` para manter tela ligada durante treino.
 
 - **RF26 - Root Admin & Moderação Social**: Painel Root com visão global (academias ativas/pendentes, professores, alunos). CRUD de usuários com busca, filtro, ativação/desativação e reset de senha. Moderação de feed social (excluir posts, gerenciar clubes e amizades). Aprovação/rejeição de academias e vínculos.
 
@@ -143,12 +143,14 @@ apps/api/src/
 - **RNF03 - Responsividade & Customização Estética**: TailwindCSS v4 com 3 temas × 2 modos (6 combinações). Drawer mobile, sidebar desktop, AcademySidebar XL+.
 - **RNF04 - Otimização de Imagens e Headers**: URLs absolutas, rotas dedicadas para uploads, cache `max-age=86400`.
 - **RNF05 - SEO e Semântica**: HTML5 semântico, IDs exclusivos para testes.
-- **RNF06 - Autenticação JWT com Refresh**: Access token 15min + refresh token 7d com rotação. Auto-refresh em 401 no frontend.
+- **RNF06 - Autenticação JWT com Refresh**: Access token 15min + refresh token **30d** com rotação. Auto-refresh em 401 no frontend. Sem limite de inatividade no servidor — sessão sobrevive a longos períodos em background. Tokens **não** são removidos em falhas de rede (offline) — apenas em expiração definitiva. Logout só via botão "Sair" explícito.
 - **RNF07 - Limite de Upload**: 5MB máximo via `@fastify/multipart`.
 - **RNF08 - CORS e Segurança**: Helmet com CSP configurado, CORS com origens permitidas (Railway, localhost, Capacitor, endorfinapp.com, endorfinapp.com.br). Preflight handler explícito para `OPTIONS /auth/*`.
 - **RNF09 - Rate Limiting**: `@fastify/rate-limit` aplicado por rota: login/reset-password 3 req/min, register/change-password 5 req/min, verify-email/resend-code/refresh 10 req/min, treinos IA 10 req/hora, root reset-password 3 req/min.
 - **RNF10 - Magic Bytes Validation**: Uploads de imagem validam magic bytes (JPG, PNG, GIF, WebP) antes de salvar, prevenindo arquivos maliciosos com MIME forjado.
 - **RNF11 - Complexidade de Senha**: Mínimo 8 caracteres, exigindo ao menos 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial. Validado no register e change-password.
+- **RNF12 - Polimento PWA (Comportamento de App Nativo)**: CSS global (`overscroll-behavior-y: none`, `user-select: none`, `-webkit-touch-callout: none`, `touch-action: manipulation`) elimina gestos de navegador no PWA instalado. `beforeunload` nativo removido da tela de execução. Diálogos `window.confirm` substituídos por `ConfirmModal` estilizado.
+- **RNF13 - Resiliência de Sessão Offline**: `refreshTokens()` distingue falha de rede de expiração real — tokens preservados offline. `fetchUser()` só limpa tokens em erro 401 real. `useIdleLogout` não redireciona mais — apenas heartbeat.
 
 ---
 
@@ -286,6 +288,12 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 - **10min ocioso**: Push para aluno + professor com URL de retomada.
 - **60min longo**: Push "Treino longo demais" (1 vez por sessão).
 - **23:30 diário**: Treinos `ACEITO` do dia viram `EM_ABERTO`, professor é notificado.
+
+#### Lembrete por Vibração ao Fechar App (Treino em Andamento)
+- Hook `useIncompleteWorkoutReminder` no `TreinoExecucao` escuta `visibilitychange → hidden` com debounce de 8s (cancelado ao voltar visível — bloqueio breve de tela não dispara) e `pagehide` (fechamento imediato).
+- Quando dispara: `navigator.vibrate` (Android) + `registration.showNotification` com `vibrate` e link direto para `/treino/:id/execucao` (retomada).
+- Suprimido durante finalização (`avaliando` ou `showAvaliacao`). Uma vez por ocultação.
+- Rede de segurança: worker `inatividade-30min` já envia push com vibração para treino ocioso há 10min.
 
 #### Clonar Treino
 - `POST /treinos/:id/clonar` — clone para 1 aluno. Copia nome, dias_semana, exercícios. Status `CADASTRADO`.
@@ -787,6 +795,9 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 |------|---------|-----------------|
 | `useNotifications` | `hooks/useNotifications` | Notificações push |
 | `useCapacitorTheme` | `hooks/useCapacitorTheme` | Tema nativo Capacitor |
+| `useIncompleteWorkoutReminder` | `hooks/useIncompleteWorkoutReminder` | Vibração + notificação ao fechar app com treino ativo |
+| `usePWAInstall` | `hooks/usePWAInstall` | Lógica de instalação PWA (beforeinstallprompt, iOS detect) |
+| `useIdleLogout` | `hooks/useIdleLogout` | Heartbeat de atividade (anti-inatividade, sem redirecionar) |
 
 ### Helpers & Utilities (`apps/web/src/lib`)
 - `media.ts`: `resolveMediaUrl()` para URLs absolutas de uploads
@@ -794,7 +805,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 - `debug.ts`: `debugLog()` para logging de desenvolvimento
 
 ### API Client (`src/api/client.ts`)
-- Client centralizado com auto-refresh em 401
+- Client centralizado com auto-refresh em 401, resiliente a offline (tokens preservados em falha de rede, removidos apenas em expiração real)
 - Métodos: `get`, `post`, `patch`, `put`, `delete`
 - Upload de FormData (avatar, fotos do feed)
 - Suporte a CapacitorHttp (Android native HTTP)

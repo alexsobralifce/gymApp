@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import BatchActionBar from '../../components/ui/BatchActionBar'
+import ConfirmModal from '../../components/ui/ConfirmModal'
 import Input from '../../components/ui/Input'
 
 interface Professor {
@@ -28,6 +29,7 @@ export default function AcademiaAlunos() {
   const [search, setSearch] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [batchDeleting, setBatchDeleting] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({})
 
   useEffect(() => {
@@ -76,9 +78,8 @@ export default function AcademiaAlunos() {
     }
   }
 
-  const handleBatchDelete = async () => {
+  const executeBatchDesvincular = async () => {
     if (selectedIds.length === 0) return
-    if (!window.confirm(`Tem certeza que deseja desvincular os professores de ${selectedIds.length} aluno(s) selecionado(s)?`)) return
     setBatchDeleting(true)
     try {
       await Promise.allSettled(selectedIds.map((id) => api.vincularProfessorAluno(id, null)))
@@ -91,6 +92,11 @@ export default function AcademiaAlunos() {
     } finally {
       setBatchDeleting(false)
     }
+  }
+
+  const handleBatchDelete = () => {
+    if (selectedIds.length === 0) return
+    setConfirmOpen(true)
   }
 
   const handleProfessorChange = (alunoId: string, professorId: string) => {
@@ -238,6 +244,18 @@ export default function AcademiaAlunos() {
           </table>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Desvincular professores"
+        message={`Tem certeza que deseja desvincular os professores de ${selectedIds.length} aluno(s) selecionado(s)?`}
+        onConfirm={() => {
+          setConfirmOpen(false)
+          executeBatchDesvincular()
+        }}
+        onCancel={() => setConfirmOpen(false)}
+        loading={batchDeleting}
+      />
     </div>
   )
 }

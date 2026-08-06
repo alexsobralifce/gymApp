@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import BatchActionBar from '../../components/ui/BatchActionBar'
+import ConfirmModal from '../../components/ui/ConfirmModal'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import { calcularIdade } from '../../lib/health'
@@ -54,6 +55,7 @@ export default function AlunoMedidas() {
   const [search, setSearch] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [batchDeleting, setBatchDeleting] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const [pesoKg, setPesoKg] = useState('')
   const [alturaCm, setAlturaCm] = useState('')
@@ -166,6 +168,19 @@ export default function AlunoMedidas() {
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('pt-BR')
+  }
+
+  async function executeBatchDelete() {
+    setBatchDeleting(true)
+    try {
+      await Promise.allSettled(selectedIds.map((id) => api.deleteMedida(id)))
+      setMedidas((prev) => prev.filter((m) => !selectedIds.includes(m.id)))
+      setSelectedIds([])
+    } catch (e) {
+      console.error('Erro ao excluir medidas:', e)
+    } finally {
+      setBatchDeleting(false)
+    }
   }
 
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
@@ -321,19 +336,7 @@ export default function AlunoMedidas() {
       <BatchActionBar
         selectedCount={selectedIds.length}
         onClearSelection={() => setSelectedIds([])}
-        onDeleteSelected={async () => {
-          if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.length} medida(s) selecionada(s)?`)) return
-          setBatchDeleting(true)
-          try {
-            await Promise.allSettled(selectedIds.map((id) => api.deleteMedida(id)))
-            setMedidas((prev) => prev.filter((m) => !selectedIds.includes(m.id)))
-            setSelectedIds([])
-          } catch (e) {
-            console.error('Erro ao excluir medidas:', e)
-          } finally {
-            setBatchDeleting(false)
-          }
-        }}
+        onDeleteSelected={() => setConfirmDeleteOpen(true)}
         loading={batchDeleting}
       />
 
@@ -474,6 +477,18 @@ export default function AlunoMedidas() {
           })}
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Excluir medidas"
+        message={`Tem certeza que deseja excluir ${selectedIds.length} medida(s) selecionada(s)?`}
+        onConfirm={() => {
+          setConfirmDeleteOpen(false)
+          executeBatchDelete()
+        }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        loading={batchDeleting}
+      />
     </div>
   )
 }

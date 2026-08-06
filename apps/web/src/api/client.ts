@@ -43,7 +43,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const isAuthEndpoint = path.startsWith('/auth/login') || path.startsWith('/auth/register') || path.startsWith('/auth/refresh') || path.startsWith('/auth/google')
 
   if (res.status === 401 && !isAuthEndpoint) {
-    const refreshed = await refreshTokens()
+    let refreshed = false
+    try {
+      refreshed = await refreshTokens()
+    } catch {
+      // Network error during refresh — keep tokens, throw network error
+      throw new ApiError(0, 'Sem conexão com o servidor')
+    }
     if (refreshed) {
       headers['Authorization'] = `Bearer ${localStorage.getItem('accessToken')}`
       const retry = await fetch(fullUrl, { ...options, headers })
@@ -54,6 +60,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       }
       return retry.json()
     }
+    // Refresh definitively failed (expired token)
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     const pathName = window.location.pathname
@@ -92,7 +99,7 @@ async function refreshTokens(): Promise<boolean> {
     localStorage.setItem('refreshToken', tokens.refreshToken)
     return true
   } catch {
-    return false
+    throw new ApiError(0, 'Sem conexão com o servidor')
   }
 }
 

@@ -153,7 +153,7 @@ export class AuthService {
     await AuthService.enforceRefreshTokenLimit(usuario.id)
 
     // Persistir refresh token
-    const expiresIn = 7 * 24 * 60 * 60 * 1000 // 7 dias em ms
+    const expiresIn = 30 * 24 * 60 * 60 * 1000 // 30 dias em ms
     await prisma.refreshToken.create({
       data: {
         token: refreshToken,
@@ -196,15 +196,6 @@ export class AuthService {
       throw new NotFoundError('Usuário')
     }
 
-    // Enforce 2h inactivity timeout — sessão expira se o usuário não interagir
-    if (usuario.ultima_atividade_em) {
-      const TWO_HOURS_MS = 2 * 60 * 60 * 1000
-      const inativo = (Date.now() - new Date(usuario.ultima_atividade_em).getTime()) > TWO_HOURS_MS
-      if (inativo) {
-        throw new UnauthorizedError('Sessão expirada por inatividade. Faça login novamente.')
-      }
-    }
-
     // Rotacionar: deletar token antigo e gerar novo par
     await prisma.refreshToken.delete({ where: { token: refreshToken } })
 
@@ -216,7 +207,7 @@ export class AuthService {
       data: {
         token: newRefreshToken,
         usuario_id: usuario.id,
-        expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expira_em: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     })
 
@@ -380,7 +371,7 @@ export class AuthService {
       data: {
         token: refreshToken,
         usuario_id: usuario.id,
-        expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expira_em: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     })
 
@@ -444,7 +435,7 @@ export class AuthService {
       data: {
         token: refreshToken,
         usuario_id: usuario.id,
-        expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expira_em: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     })
 

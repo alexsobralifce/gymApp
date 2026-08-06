@@ -27,11 +27,19 @@ const STEPS: CoachMarkStep[] = [
 ]
 
 export function hasSeenCoach(): boolean {
-  return localStorage.getItem(COACH_KEY) === 'true'
+  try {
+    return localStorage.getItem(COACH_KEY) === 'true'
+  } catch {
+    return true // se localStorage falhar, assume visto (não mostra coach)
+  }
 }
 
 export function markCoachSeen() {
-  localStorage.setItem(COACH_KEY, 'true')
+  try {
+    localStorage.setItem(COACH_KEY, 'true')
+  } catch {
+    // localStorage indisponível (modo privado) — ignora silenciosamente
+  }
 }
 
 export function useCoachMark(active: boolean) {
@@ -44,6 +52,10 @@ export function useCoachMark(active: boolean) {
     if (!active || hasSeenCoach()) return
 
     const checkAndShow = () => {
+      if (hasSeenCoach()) {
+        observerRef.current?.disconnect()
+        return
+      }
       const el = document.querySelector(STEPS[step].selector)
       if (el) {
         setTargetRect(el.getBoundingClientRect())
@@ -74,12 +86,14 @@ export function useCoachMark(active: boolean) {
     } else {
       setVisible(false)
       markCoachSeen()
+      observerRef.current?.disconnect()
     }
   }
 
   function dismiss() {
     setVisible(false)
     markCoachSeen()
+    observerRef.current?.disconnect()
   }
 
   return {
@@ -125,22 +139,22 @@ export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNex
     : rect.bottom + 6
 
   return (
-    <div className="fixed inset-0 z-50" onClick={onDismiss}>
-      <div className="absolute inset-0 bg-black/50" />
+    <div className="fixed inset-0 z-50 pointer-events-none">
       <div
-        className="absolute z-10 w-[280px] rounded-2xl bg-surface-card border border-primary/30 p-4 shadow-2xl animate-[fade-in_0.3s_ease]"
+        className="absolute z-10 w-[280px] rounded-2xl bg-surface-card border border-primary/30 p-4 shadow-2xl animate-[fade-in_0.3s_ease] pointer-events-auto"
         style={{ top: tooltipTop, left: tooltipLeft }}
-        onClick={(e) => e.stopPropagation()}
       >
-        <div className="text-xs text-primary font-semibold mb-1">
-          Dica {step + 1} de {totalSteps}
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-xs text-primary font-semibold">
+            Dica {step + 1} de {totalSteps}
+          </div>
+          <button onClick={onDismiss} className="text-xs text-text-muted hover:text-text cursor-pointer ml-2" title="Pular dicas">
+            ✕
+          </button>
         </div>
         <h4 className="text-sm font-bold text-text">{title}</h4>
         <p className="text-xs text-text-muted mt-1 leading-relaxed">{message}</p>
-        <div className="flex justify-between items-center mt-3">
-          <button onClick={onDismiss} className="text-xs text-text-muted hover:text-text cursor-pointer">
-            Pular
-          </button>
+        <div className="flex justify-end mt-3">
           <button
             onClick={onNext}
             className="rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 cursor-pointer"
@@ -150,7 +164,7 @@ export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNex
         </div>
       </div>
       <div
-        className="absolute z-10 w-4 h-4 bg-surface-card border-l border-t border-primary/30 rotate-45"
+        className="absolute z-10 w-4 h-4 bg-surface-card border-l border-t border-primary/30 rotate-45 pointer-events-none"
         style={{ top: arrowTop, left: rect.left + rect.width / 2 - 8 }}
       />
     </div>
