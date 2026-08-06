@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
 import { BellIcon, XIcon } from 'lucide-react'
 import { CheckIcon } from '../icons/Icon'
+import { useState, useEffect } from 'react'
+import { activatePush } from '../../hooks/useNotifications'
 
 const STORAGE_KEY = 'gymapp_notification_prompt'
 
@@ -20,11 +21,7 @@ export default function NotificationPrompt() {
   }, [])
 
   async function handleAllow() {
-    try {
-      await Notification.requestPermission()
-    } catch {
-      // Silencioso
-    }
+    await activatePush()
     setVisible(false)
   }
 

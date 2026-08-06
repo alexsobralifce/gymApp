@@ -6,6 +6,7 @@ import { api } from '../../api/client'
 import { useThemeStore, THEME_BRANDS } from '../../stores/theme'
 import type { ThemeBrand } from '../../stores/theme'
 import OnboardingPopup from '../ui/OnboardingPopup'
+import IncompleteWorkoutBanner from '../ui/IncompleteWorkoutBanner'
 import { useIdleLogout } from '../../hooks/useIdleLogout'
 import {
   HomeIcon,
@@ -648,6 +649,7 @@ export default function AppShell() {
 
         <div className="flex flex-1 min-h-0">
           <main className={`flex-1 min-w-0 ${hideNav ? '' : 'pb-20 md:pb-0'}`}>
+            {user?.role === 'ALUNO' && !hideNav && <IncompleteWorkoutBanner />}
             <Outlet />
           </main>
           {/* Academy sidebar — right panel desktop (oculta em execução) */}

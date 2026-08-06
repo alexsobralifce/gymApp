@@ -165,7 +165,14 @@ export async function authRoutes(app: FastifyInstance) {
 
     const data: Record<string, unknown> = {}
     if (body.expoPushToken !== undefined) data.expo_push_token = body.expoPushToken
-    if (body.webPushSubscription !== undefined) data.web_push_subscription = body.webPushSubscription
+    if (body.webPushSubscription !== undefined) {
+      data.web_push_subscription = body.webPushSubscription
+      if (body.webPushSubscription === null) {
+        console.log(`[Auth] Removendo subscription web para usuario ${request.currentUser.sub}`)
+      } else {
+        console.log(`[Auth] Salvando subscription web para usuario ${request.currentUser.sub}`)
+      }
+    }
     if (body.nome !== undefined) data.nome = body.nome
     if (body.telefone !== undefined) data.telefone = body.telefone || null
     if (body.fotoUrl !== undefined) data.foto_url = body.fotoUrl || null

@@ -61,12 +61,14 @@ async function handleInatividade30min(_job: Job) {
     include: {
       aluno: {
         include: {
-          usuario: { select: { expo_push_token: true, web_push_subscription: true, nome: true } },
-          professor: { include: { usuario: { select: { expo_push_token: true, web_push_subscription: true } } } },
+          usuario: { select: { id: true, expo_push_token: true, web_push_subscription: true, nome: true } },
+          professor: { include: { usuario: { select: { id: true, expo_push_token: true, web_push_subscription: true } } } },
         },
       },
     },
   })
+
+  console.log(`[Worker] Scan: ${treinosAtivos.length} treinos EM_EXECUCAO`)
 
   for (const treino of treinosAtivos) {
     const nomeAluno = treino.aluno.usuario.nome
@@ -82,6 +84,8 @@ async function handleInatividade30min(_job: Job) {
       treino.notificado_inatividade_em >= ultima
 
     if (ocioso && !jaNotificouIdle) {
+      const temWebSub = !!treino.aluno.usuario.web_push_subscription
+      console.log(`[Worker] Ocioso treino ${treino.id} (aluno: ${nomeAluno}) — web_sub=${temWebSub}`)
       console.log(`[Worker] Ociosidade treino ${treino.id} — aluno: ${nomeAluno}`)
       await sendDualPush(
         treino.aluno.usuario,
