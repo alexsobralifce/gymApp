@@ -10,6 +10,7 @@ import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
 import { handleNotifyFriends } from '../../jobs/social/notify-friends.worker.js'
 import { handleAwardBadges } from '../../jobs/social/award-badges.worker.js'
 import { handleUpdateXp } from '../../jobs/social/update-xp.worker.js'
+import Redis from 'ioredis'
 
 let connection: { url: string } | null = null
 
@@ -451,9 +452,36 @@ async function scheduleRecurringJobs() {
 
 // ─── Start / Stop ─────────────────────────────────────────────────────────────
 
+/** Verifica se o Redis responde antes de subir os workers. */
+async function redisDisponivel(url: string): Promise<boolean> {
+  const redis = new Redis(url, {
+    lazyConnect: true,
+    connectTimeout: 2000,
+    maxRetriesPerRequest: 1,
+    retryStrategy: () => null as any,
+  })
+  try {
+    await redis.connect()
+    const pong = await redis.ping()
+    return pong === 'PONG'
+  } catch {
+    return false
+  } finally {
+    redis.disconnect()
+  }
+}
+
 export async function startWorkers() {
   if (started) return
   started = true
+
+  // Gate de resiliência: sem Redis, o app sobe em modo degradado (sem jobs de
+  // segundo plano) em vez de falhar no boot. Necessário para testes de
+  // integração sem Redis e para tolerar queda momentânea do Redis.
+  if (!(await redisDisponivel(env.REDIS_URL))) {
+    console.warn(`[Workers] Redis indisponível (${env.REDIS_URL}) — workers NÃO iniciados (modo degradado)`)
+    return
+  }
 
   connection = { url: env.REDIS_URL }
 

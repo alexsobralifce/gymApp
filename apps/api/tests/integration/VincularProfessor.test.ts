@@ -1,7 +1,21 @@
 import 'dotenv/config'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { buildApp } from '../../src/app.js'
+import { prisma } from '../../src/infrastructure/database/prisma.js'
 import type { FastifyInstance } from 'fastify'
+
+// ─── F3: suíte determinística ────────────────────────────────────────────────
+// Teste de integração real (HTTP + Postgres). Sem banco acessível, pula
+// explicitamente (sem timeout/falha vermelha) em vez de quebrar o `npm test`.
+// Para rodar completo: `docker compose up -d` (Postgres + Redis).
+let dbOk = false
+try {
+  await prisma.$connect()
+  await prisma.$queryRaw`SELECT 1`
+  dbOk = true
+} catch {
+  dbOk = false
+}
 
 let app: FastifyInstance
 let professorToken: string
@@ -29,7 +43,7 @@ beforeAll(async () => {
   })
   rootToken = JSON.parse(rootLogin.body).accessToken
 
-  academiaToken = await registerAndLogin('Academia TopUp', `acad-v-${ts}@t.com`, '12345678', 'ACADEMIA')
+  academiaToken = await registerAndLogin('Academia TopUp', `acad-v-${ts}@t.com`, 'Abc12345', 'ACADEMIA')
 
   const cnpj = `${ts}${String(Math.random()).slice(2, 6)}`.slice(0, 14)
   const resCreate = await app.inject({
@@ -48,10 +62,10 @@ beforeAll(async () => {
     throw new Error(`Root approval failed: ${approvalRes.statusCode} ${approvalRes.body}`)
   }
 
-  professorToken = await registerAndLogin('Prof Test', `prof-v-${ts}@t.com`, '12345678', 'PROFESSOR')
+  professorToken = await registerAndLogin('Prof Test', `prof-v-${ts}@t.com`, 'Abc12345', 'PROFESSOR')
 })
 
-describe('UC-09 — Professor vincular a academia', () => {
+describe.skipIf(!dbOk)('UC-09 — Professor vincular a academia', () => {
   it('lista academias ativas', async () => {
     const res = await app.inject({
       method: 'GET', url: '/academias',

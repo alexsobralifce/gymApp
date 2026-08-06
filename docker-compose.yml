@@ -1,37 +1,38 @@
+# Infra local para testes de integração da API (F3)
+#
+# Uso:
+#   docker compose up -d        # sobe Postgres (gymapp_dev) + Redis
+#   npm run test --workspace=apps/api
+#
+# As credenciais abaixo devem casar com apps/api/.env (DATABASE_URL).
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: gymapp_postgres
-    restart: unless-stopped
+    container_name: gymapp-postgres
     environment:
       POSTGRES_USER: gymapp
-      POSTGRES_PASSWORD: gymapp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gymapp_dev_password}
       POSTGRES_DB: gymapp_dev
     ports:
       - "5432:5432"
     volumes:
-      - gymapp_postgres_data:/var/lib/postgresql/data
+      - gymapp_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gymapp -d gymapp_dev"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: gymapp_redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
+    container_name: gymapp-redis
     ports:
       - "6379:6379"
-    volumes:
-      - gymapp_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
 volumes:
-  gymapp_postgres_data:
-  gymapp_redis_data:
+  gymapp_pgdata:
