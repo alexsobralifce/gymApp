@@ -226,7 +226,13 @@ export const api = {
     api.delete<{ message: string }>(`/alunos/medidas/${id}`),
 
   // ─── Wearables & Smartwatches ───────────────────────
-  getWearables: () => api.get<Array<{ id: string; provedor: string; user_id_ext: string; ativo: boolean; criado_em: string }>>('/integrations/wearables'),
+  getWearables: () => api.get<{
+    integracoes: Array<{ id: string; provedor: string; user_id_ext: string; ativo: boolean; criado_em: string }>;
+    ultimosEventos: Array<{ id: string; provedor: string; tipo: string; payload_raw: any; recebido_em: string; processado: boolean }>;
+  }>('/integrations/wearables'),
+
+  testSyncWearable: (provedor: string = 'huawei', heartRateAvg: number = 74, activeCalories: number = 380) =>
+    api.post<{ success: boolean; message: string; evento: any }>('/integrations/wearables/test-sync', { provedor, heartRateAvg, activeCalories }),
 
   connectWearable: (provedor: string, userIdExt?: string) =>
     api.post<{ integracao: any; connectUrl: string; message: string }>('/integrations/wearables/connect', { provedor, userIdExt }),

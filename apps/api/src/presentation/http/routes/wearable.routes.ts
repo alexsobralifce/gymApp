@@ -156,7 +156,7 @@ export async function wearableRoutes(app: FastifyInstance) {
         // Atualiza a medida do dia com as informações de frequência cardíaca e calorias
         const dataBusca = new Date(dataEvento)
         dataBusca.setUTCHours(0, 0, 0, 0)
-        const fimBusca = new Date(dataBusca)
+        const fimBusca = new Date(dataEvento)
         fimBusca.setUTCHours(23, 59, 59, 999)
 
         const obsSync = `Smartwatch ${provider.toUpperCase()}: FC Média ${data.heartRateAvg || '--'} bpm, ${data.activeCalories || 0} kcal`
@@ -194,7 +194,7 @@ export async function wearableRoutes(app: FastifyInstance) {
 
   /**
    * GET /integrations/wearables
-   * Lista os dispositivos/provedores conectados do aluno autenticado.
+   * Lista os dispositivos conectados do aluno e os últimos 10 eventos capturados.
    */
   app.get('/wearables', { preHandler: preHandlerAluno }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
@@ -204,7 +204,86 @@ export async function wearableRoutes(app: FastifyInstance) {
       orderBy: { criado_em: 'desc' }
     })
 
-    return reply.status(200).send(integracoes)
+    const ultimosEventos = await prisma.wearableEvento.findMany({
+      where: { aluno_id: aluno.id },
+      orderBy: { recebido_em: 'desc' },
+      take: 10
+    })
+
+    return reply.status(200).send({
+      integracoes,
+      ultimosEventos,
+    })
+  })
+
+  /**
+   * POST /integrations/wearables/test-sync
+   * Simula a captura de dados do relógio (Huawei GT 5 Pro) em tempo real para testes do usuário.
+   */
+  app.post('/wearables/test-sync', { preHandler: preHandlerAluno }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const body = z.object({
+      provedor: z.string().default('huawei'),
+      heartRateAvg: z.number().default(74),
+      activeCalories: z.number().default(380),
+      pesoKg: z.number().optional(),
+    }).parse(request.body)
+
+    const now = new Date()
+
+    const evento = await prisma.wearableEvento.create({
+      data: {
+        aluno_id: aluno.id,
+        provedor: body.provedor.toLowerCase(),
+        tipo: 'heart_rate',
+        payload_raw: {
+          simulado: true,
+          heartRateAvg: body.heartRateAvg,
+          activeCalories: body.activeCalories,
+          pesoKg: body.pesoKg || aluno.peso_kg,
+          timestamp: now.toISOString(),
+        },
+        processado: true,
+      }
+    })
+
+    const obsSync = `Smartwatch ${body.provedor.toUpperCase()}: FC Média ${body.heartRateAvg} bpm, ${body.activeCalories} kcal`
+
+    const dataBusca = new Date(now)
+    dataBusca.setUTCHours(0, 0, 0, 0)
+    const fimBusca = new Date(now)
+    fimBusca.setUTCHours(23, 59, 59, 999)
+
+    const existente = await prisma.medidaCorporal.findFirst({
+      where: { aluno_id: aluno.id, data: { gte: dataBusca, lte: fimBusca } }
+    })
+
+    if (existente) {
+      await prisma.medidaCorporal.update({
+        where: { id: existente.id },
+        data: {
+          peso_kg: body.pesoKg || existente.peso_kg,
+          observacao: existente.observacao ? `${existente.observacao} | ${obsSync}` : obsSync
+        }
+      })
+    } else {
+      await prisma.medidaCorporal.create({
+        data: {
+          aluno_id: aluno.id,
+          peso_kg: body.pesoKg || aluno.peso_kg,
+          altura_cm: aluno.altura_cm,
+          data: now,
+          observacao: obsSync,
+        }
+      })
+    }
+
+    return reply.status(200).send({
+      success: true,
+      message: `Dados do ${body.provedor.toUpperCase()} capturados com sucesso!`,
+      evento
+    })
   })
 
   /**

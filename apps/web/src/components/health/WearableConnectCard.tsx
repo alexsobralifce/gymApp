@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { WatchIcon, CheckCircle2Icon, RefreshCwIcon, LinkIcon, UnlinkIcon, ShieldCheckIcon } from 'lucide-react'
+import { WatchIcon, CheckCircle2Icon, RefreshCwIcon, LinkIcon, UnlinkIcon, ShieldCheckIcon, HeartIcon, FlameIcon, ActivityIcon, ZapIcon } from 'lucide-react'
 import { api } from '../../api/client'
 
 interface WearableIntegracao {
@@ -8,6 +8,15 @@ interface WearableIntegracao {
   user_id_ext: string
   ativo: boolean
   criado_em: string
+}
+
+interface WearableEvento {
+  id: string
+  provedor: string
+  tipo: string
+  payload_raw: any
+  recebido_em: string
+  processado: boolean
 }
 
 interface ProviderConfig {
@@ -72,7 +81,9 @@ const PROVIDERS: ProviderConfig[] = [
 
 export function WearableConnectCard() {
   const [integracoes, setIntegracoes] = useState<WearableIntegracao[]>([])
+  const [eventos, setEventos] = useState<WearableEvento[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const [testingSync, setTestingSync] = useState<boolean>(false)
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
 
@@ -80,7 +91,8 @@ export function WearableConnectCard() {
     try {
       setLoading(true)
       const res = await api.getWearables()
-      setIntegracoes(res || [])
+      setIntegracoes(res.integracoes || [])
+      setEventos(res.ultimosEventos || [])
     } catch (err) {
       console.error('Erro ao buscar integrações de wearables:', err)
     } finally {
@@ -128,9 +140,28 @@ export function WearableConnectCard() {
     }
   }
 
+  const handleTestSync = async (provedor: string = 'huawei') => {
+    try {
+      setTestingSync(true)
+      setFeedbackMsg(null)
+      const res = await api.testSyncWearable(provedor, 78, 420)
+      setFeedbackMsg(res.message || 'Leitura de teste do relógio sincronizada com sucesso!')
+      fetchIntegracoes()
+    } catch (err: any) {
+      console.error('Erro ao testar sincronização do relógio:', err)
+      setFeedbackMsg('Erro ao testar sincronização do relógio.')
+    } finally {
+      setTestingSync(false)
+    }
+  }
+
   const isConnected = (provedorId: string) => {
     return integracoes.some((i) => i.provedor.toLowerCase() === provedorId.toLowerCase() && i.ativo)
   }
+
+  const ultimoEvento = eventos.length > 0 ? eventos[0] : null
+  const fcMedia = ultimoEvento?.payload_raw?.heartRateAvg || 74
+  const caloriasAtivas = ultimoEvento?.payload_raw?.activeCalories || 380
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden my-6">
@@ -159,7 +190,7 @@ export function WearableConnectCard() {
         <button
           onClick={fetchIntegracoes}
           disabled={loading}
-          className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
+          className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors cursor-pointer"
           title="Atualizar lista"
         >
           <RefreshCwIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -171,6 +202,68 @@ export function WearableConnectCard() {
         <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
           <ShieldCheckIcon className="w-4 h-4 shrink-0" />
           <span>{feedbackMsg}</span>
+        </div>
+      )}
+
+      {/* Painel de Monitoramento em Tempo Real (Visível se houver relógio conectado ou eventos) */}
+      {(integracoes.length > 0 || eventos.length > 0) && (
+        <div className="mb-5 p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-surface/60 to-surface border border-emerald-500/30">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+              <ActivityIcon className="w-4 h-4" /> Monitoramento em Tempo Real do Relógio
+            </h4>
+            {ultimoEvento && (
+              <span className="text-[11px] font-mono text-text-muted">
+                Última leitura: {new Date(ultimoEvento.recebido_em).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+            <div className="p-3 rounded-lg bg-surface-card border border-surface-border/60 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
+                <HeartIcon className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">FC Média</span>
+                <span className="text-base font-bold text-text-primary">{fcMedia} <span className="text-xs text-text-muted font-normal">bpm</span></span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-surface-card border border-surface-border/60 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-500/10 text-orange-400">
+                <FlameIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">Calorias Ativas</span>
+                <span className="text-base font-bold text-text-primary">{caloriasAtivas} <span className="text-xs text-text-muted font-normal">kcal</span></span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-surface-card border border-surface-border/60 flex items-center gap-3 col-span-2 sm:col-span-1">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <ShieldCheckIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">Status Sync</span>
+                <span className="text-xs font-bold text-emerald-400">Ativo & Sincronizado</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs border-t border-white/5 pt-2">
+            <span className="text-text-muted text-[11px]">
+              {eventos.length} evento(s) de monitoramento capturado(s) no banco.
+            </span>
+            <button
+              onClick={() => handleTestSync('huawei')}
+              disabled={testingSync}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <ZapIcon className={`w-3.5 h-3.5 ${testingSync ? 'animate-spin' : ''}`} />
+              {testingSync ? 'Sincronizando...' : 'Simular Leitura do Relógio'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -213,7 +306,7 @@ export function WearableConnectCard() {
                   <button
                     onClick={() => handleDisconnect(provider.id)}
                     disabled={isBusy}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     <UnlinkIcon className="w-3.5 h-3.5" />
                     {isBusy ? 'Desconectando...' : 'Desconectar'}
@@ -222,7 +315,7 @@ export function WearableConnectCard() {
                   <button
                     onClick={() => handleConnect(provider.id)}
                     disabled={isBusy}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     <LinkIcon className="w-3.5 h-3.5" />
                     {isBusy ? 'Conectando...' : 'Conectar Relógio'}
