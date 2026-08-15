@@ -535,7 +535,17 @@ export async function finalizarTreino(
     // Fallback gracioso para os valores passados pelo frontend
   }
 
-  return prisma.$transaction(async (tx) => {
+  // Detecção de "primeiro treino": conta conclusões anteriores (via treino_historico,
+  // pois treinos.status recicla CONCLUIDO → ACEITO) ANTES da atualização.
+  const conclusoesAnteriores = await prisma.treinoHistorico.count({
+    where: {
+      treino: { aluno_id: alunoId },
+      status_novo: TreinoStatus.CONCLUIDO,
+    },
+  })
+  const primeiroTreino = conclusoesAnteriores === 0
+
+  const treinoAtualizado = await prisma.$transaction(async (tx) => {
     await tx.treino.update({
       where: { id: treinoId },
       data: {
@@ -585,6 +595,8 @@ export async function finalizarTreino(
       include: { exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } } },
     })
   })
+
+  return { ...treinoAtualizado, primeiroTreino }
 }
 
 // ─── Clonar Treino ─────────────────────────────────────────────────────────────

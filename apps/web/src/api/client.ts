@@ -213,7 +213,7 @@ export const api = {
       frequenciaCardiacaMedia?: number
       frequenciaCardiacaMaxima?: number
     }
-  ) => api.post<Treino>(`/treinos/${id}/finalizar`, data || {}),
+  ) => api.post<Treino & { primeiroTreino?: boolean }>(`/treinos/${id}/finalizar`, data || {}),
 
   criarTreinoAutogestao: (data: { nome: string; diasSemana: number[]; exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }> }) =>
     api.post<Treino>('/treinos/autogestao', data),
@@ -606,6 +606,13 @@ export const api = {
     gruposMusculares?: string[]
     splitPreferido?: string
   }) => api.post<Record<string, unknown>>('/treinos/ia/gerar', data),
+
+  // ─── Avaliação do Sistema ──────────────────────────
+  enviarAvaliacaoSistema: (data: { nota: number; respostas: Record<string, number>; mensagem?: string }) =>
+    api.post<{ id: string }>('/avaliacoes/sistema', data),
+
+  listarAvaliacoesSistema: () =>
+    api.get<{ avaliacoes: Array<{ id: string; nota: number; respostas: Record<string, number>; mensagem: string | null; criado_em: string; aluno: { nome: string; email: string } }> }>('/root/avaliacoes-sistema'),
 
   // ─── Notícias ──────────────────────────────────────
   getNoticias: () => api.get('/noticias'),

@@ -262,6 +262,9 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 ### Modelos de Avaliação Física (`avaliacao_fisicas`)
 - **AvaliacaoFisica (`avaliacoes_fisicas`)**: `id (cuid), aluno_id, avaliador_id, data, status (AvaliacaoStatus), parq_positivo, risco_cardiaco (RiscoCardiaco), liberado_teste_max, anamnese_json? (Json), pas?, pad?, fc_repouso?, peso_kg?, estatura_m?, imc?, rcq?, perimetros_cm? (Json), protocolo_dobras?, soma_dobras_mm?, densidade_corporal?, percentual_gordura?, massa_gorda_kg?, massa_magra_kg?, classificacao_gc?, postural_json? (Json), flexibilidade_json? (Json), cardio_json? (Json), neuro_json? (Json), laudo_markdown?, prescricao_json? (Json), criado_em, atualizado_em` — índices `[aluno_id]`, `[avaliador_id]`
 
+### Modelo de Avaliação do Sistema (`avaliacoes_sistema`)
+- **AvaliacaoSistema (`avaliacoes_sistema`)**: `id (cuid), aluno_id, nota (Int 1-5), respostas (Json), mensagem?, criado_em` — `@@index([aluno_id])`, Cascade delete. Avaliação pós-treino do sistema (NPS/nota + questionário `criar_treino`/`navegacao`/`execucao`/`recomendacao`). Sem constraint de unicidade — múltiplos envios permitidos via menu.
+
 ---
 
 ## 3. Regras de Negócio Detalhadas
@@ -288,6 +291,7 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 - Filtro de biblioteca com mapeamento de aliases para equipamentos (`exerciseFilters.ts`).
 - Conclusão em lote por exercício: botão "✓ Concluir Exercício" registra todas as séries pendentes de uma vez.
 - Reciclagem automática ao finalizar: `CONCLUIDO → ACEITO`, limpando `iniciado_em`/`finalizado_em`.
+- Detecção de **primeiro treino** (`POST /treinos/:id/finalizar` → `primeiroTreino: boolean`): conta registros em `treino_historico` com `status_novo = CONCLUIDO` vinculados a treinos do aluno ANTES da conclusão atual. Se 0 conclusões anteriores → `true`. Não usa `treinos.status` (recicla `CONCLUIDO → ACEITO`).
 
 #### Notificações de Sessão (Workers)
 - **10min ocioso**: Push para aluno + professor com URL de retomada.
@@ -674,6 +678,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | POST | `/avaliacoes` | Criar avaliação completa (PAR-Q+, antropometria, composição, cardio, neuro) |
+| POST | `/avaliacoes/sistema` | Criar avaliação pós-treino do sistema (role ALUNO): `nota` 1-5, `respostas` (criar_treino/navegacao/execucao/recomendacao 1-5), `mensagem?` → `{ id }` |
 | GET | `/avaliacoes/aluno/:alunoId` | Listar avaliações do aluno |
 | GET | `/avaliacoes/:id` | Obter avaliação por ID |
 | PATCH | `/avaliacoes/:id` | Editar avaliação |
@@ -710,6 +715,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | POST | `/root/social/clubes` | Criar clube |
 | DELETE | `/root/social/clubes/:id` | Excluir clube |
 | GET | `/root/social/amizades` | Amizades (moderação) |
+| GET | `/root/avaliacoes-sistema` | Lista avaliações pós-treino do sistema com dados do aluno (ordenado por `criado_em` desc) |
 
 ---
 
@@ -764,6 +770,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `ROOT` | Usuários | `/usuarios` | `pages/root/Usuarios.tsx` |
 | `ROOT` | Moderação Social | `/social` | `pages/root/Social.tsx` |
 | `ROOT` | Avaliações | `/avaliacoes` | `pages/avaliacoes/Avaliacoes.tsx` |
+| `ROOT` | Avaliações do App | `/avaliacoes-sistema` | `pages/root/AvaliacoesSistema.tsx` |
 
 ### Componentes Compartilhados
 | Componente | Arquivo | Responsabilidade |
@@ -777,6 +784,8 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `CoachMark` | `components/ui/CoachMark.tsx` | Tooltips de onboarding (hook + overlay) |
 | `ConfirmModal` | `components/ui/ConfirmModal.tsx` | Modal de confirmação (z-40) |
 | `OnboardingPopup` | `components/ui/OnboardingPopup.tsx` | Popup de onboarding pós-login para ALUNO e PROFESSOR |
+| `StarRating` | `components/ui/StarRating.tsx` | Estrelas de avaliação 1-5 (acessível, fill condicional) |
+| `SistemaAvaliacaoModal` | `components/avaliacao/SistemaAvaliacaoModal.tsx` | Modal de avaliação do sistema (nota 1-5 + perguntas 1-5 + texto livre) |
 | `EmptyState` | `components/ui/EmptyState.tsx` | Estado vazio: ícone, título, descrição, CTA |
 | `Toast` | `components/ui/Toast.tsx` | Feedback de sucesso/erro |
 | `StatusBadge` | `components/ui/StatusBadge.tsx` | Badge com 7 variantes + helpers |
@@ -827,6 +836,7 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `gymapp_welcome_seen` | Boas-vindas já exibida |
 | `gymapp_onboarding_seen` | Popup de onboarding pós-login já exibido |
 | `gymapp_first_workout_done` | Coach marks já exibidas |
+| `gymapp_system_evaluation_done` | Avaliação do sistema já exibida/enviada |
 | `gymapp_theme` | Tema (red/lime/violet) |
 | `gymapp_mode` | Modo (day/night) |
 | `accessToken` | JWT access token |

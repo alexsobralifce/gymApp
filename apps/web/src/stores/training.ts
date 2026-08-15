@@ -22,6 +22,7 @@ interface TrainingState {
   restActive: boolean
   loading: boolean
   error: string | null
+  primeiroTreino: boolean
 
   iniciarTreino: (id: string) => Promise<void>
   retomarTreino: (id: string) => Promise<void>
@@ -72,6 +73,7 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
   restActive: false,
   loading: false,
   error: null,
+  primeiroTreino: false,
 
   iniciarTreino: async (id) => {
     set({ loading: true, error: null })
@@ -160,12 +162,13 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
 
     set({ loading: true, timerFinalizado: timer, restActive: false, restSeconds: 0 })
     try {
-      await api.finalizarTreino(treinoAtual.id, {
+      const res = await api.finalizarTreino(treinoAtual.id, {
         avaliacao,
         caloriasQueimadas: metrics?.caloriasQueimadas,
         frequenciaCardiacaMedia: metrics?.frequenciaCardiacaMedia,
         frequenciaCardiacaMaxima: metrics?.frequenciaCardiacaMaxima,
       })
+      set({ primeiroTreino: res.primeiroTreino ?? false })
       get().reset()
     } catch (err) {
       set({ error: (err as Error).message, loading: false })

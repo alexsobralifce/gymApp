@@ -902,4 +902,25 @@ export async function rootRoutes(app: FastifyInstance) {
 
     return reply.status(200).send({ items: amizadesComNomes, total, page, limit, totalPages: Math.ceil(total / limit) })
   })
+
+  /** GET /root/avaliacoes-sistema — lista avaliações pós-treino do sistema */
+  app.get('/avaliacoes-sistema', { preHandler }, async (_request, reply) => {
+    const registros = await prisma.avaliacaoSistema.findMany({
+      include: {
+        aluno: { include: { usuario: { select: { nome: true, email: true } } } },
+      },
+      orderBy: { criado_em: 'desc' },
+    })
+
+    return reply.status(200).send({
+      avaliacoes: registros.map((a) => ({
+        id: a.id,
+        nota: a.nota,
+        respostas: a.respostas as Record<string, number>,
+        mensagem: a.mensagem,
+        criado_em: a.criado_em.toISOString(),
+        aluno: { nome: a.aluno.usuario.nome, email: a.aluno.usuario.email },
+      })),
+    })
+  })
 }

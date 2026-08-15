@@ -114,6 +114,7 @@ model Aluno {
   professor                Professor?                    @relation(fields: [professor_id], references: [id])
   usuario                  Usuario                       @relation(fields: [usuario_id], references: [id])
   avaliacoes               AvaliacaoFisica[]
+  avaliacoesSistema        AvaliacaoSistema[]
   correlacao               CorrelacaoDesempenho?
   medidas                  MedidaCorporal[]
   mensagensEnviadas        MensagemMotivacionalEnviada[]
@@ -508,6 +509,20 @@ model AvaliacaoFisica {
   @@index([aluno_id])
   @@index([avaliador_id])
   @@map("avaliacoes_fisicas")
+}
+
+/// Avaliação pós-treino do sistema — nota + respostas do questionário
+model AvaliacaoSistema {
+  id        String   @id @default(cuid())
+  aluno_id  String
+  nota      Int
+  respostas Json
+  mensagem  String?
+  criado_em DateTime @default(now())
+  aluno     Aluno    @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+
+  @@index([aluno_id])
+  @@map("avaliacoes_sistema")
 }
 
 enum Role {

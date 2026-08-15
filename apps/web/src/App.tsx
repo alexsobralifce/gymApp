@@ -28,6 +28,7 @@ import RootPainel from './pages/root/Painel'
 import RootVinculos from './pages/root/Vinculos'
 import RootUsuarios from './pages/root/Usuarios'
 import RootSocial from './pages/root/Social'
+import RootAvaliacoesSistema from './pages/root/AvaliacoesSistema'
 import AcademiaDashboard from './pages/academia/Dashboard'
 import AcademiaProfessores from './pages/academia/Professores'
 import AcademiaAlunos from './pages/academia/Alunos'
@@ -145,6 +146,7 @@ export default function App() {
           <Route path="documentacao" element={<Documentacao />} />
           <Route path="usuarios" element={<RootUsuarios />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
+          <Route path="avaliacoes-sistema" element={<RootAvaliacoesSistema />} />
           <Route path="social" element={<RootSocial />} />
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />

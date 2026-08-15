@@ -7,6 +7,7 @@ import { useThemeStore, THEME_BRANDS } from '../../stores/theme'
 import type { ThemeBrand } from '../../stores/theme'
 import OnboardingPopup from '../ui/OnboardingPopup'
 import IncompleteWorkoutBanner from '../ui/IncompleteWorkoutBanner'
+import SistemaAvaliacaoModal from '../avaliacao/SistemaAvaliacaoModal'
 import { useIdleLogout } from '../../hooks/useIdleLogout'
 import {
   HomeIcon,
@@ -68,6 +69,18 @@ type NavEntry = NavItem | NavSection
 
 function isSection(entry: NavEntry): entry is NavSection {
   return 'children' in entry
+}
+
+function AvaliarAppNavButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-muted hover:bg-[var(--color-menu-hover)] hover:text-text transition-all duration-200 cursor-pointer"
+    >
+      <StarIcon className="h-5 w-5 shrink-0" />
+      <span>Avaliar o App</span>
+    </button>
+  )
 }
 
 
@@ -195,6 +208,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/vinculos', label: 'Vínculos Pendentes', icon: <LinkIcon className="h-5 w-5" /> },
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
+        { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: <StarIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
@@ -293,6 +307,7 @@ export default function AppShell() {
   const [atividadeMural, setAtividadeMural] = useState(0)
   const [debugOpen, setDebugOpen] = useState(false)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const [avaliacaoOpen, setAvaliacaoOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -375,6 +390,12 @@ export default function AppShell() {
     navigate('/alterar-senha')
   }
 
+  function handleAvaliarApp() {
+    setMenuOpen(false)
+    setDrawerOpen(false)
+    setAvaliacaoOpen(true)
+  }
+
   const renderDrawerContent = () => (
     <div className="flex h-full flex-col safe-top safe-bottom">
       <div className="flex items-center justify-between p-4 border-b border-surface-input">
@@ -411,6 +432,7 @@ export default function AppShell() {
             </NavLink>
           )
         )}
+        {role === 'ALUNO' && <AvaliarAppNavButton onClick={handleAvaliarApp} />}
       </nav>
 
       <div className="border-t border-border p-3 space-y-1">
@@ -462,6 +484,7 @@ export default function AppShell() {
                 </NavLink>
               )
             )}
+            {role === 'ALUNO' && <AvaliarAppNavButton onClick={handleAvaliarApp} />}
           </nav>
         </aside>
       )}
@@ -849,6 +872,7 @@ export default function AppShell() {
         role={role as 'ALUNO' | 'PROFESSOR'}
         onDismiss={dismissOnboarding}
       />
+      <SistemaAvaliacaoModal open={avaliacaoOpen} onClose={() => setAvaliacaoOpen(false)} />
     </div>
   )
 }

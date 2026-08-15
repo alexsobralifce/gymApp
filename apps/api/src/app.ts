@@ -21,6 +21,7 @@ import { treinoIARoutes } from './presentation/http/routes/treino-ia.routes.js'
 import { planosRoutes } from './presentation/http/routes/planos.routes.js'
 import { rootRoutes } from './presentation/http/routes/root.routes.js'
 import { avaliacaoRoutes } from './presentation/http/routes/avaliacao.routes.js'
+import { avaliacaoSistemaRoutes } from './presentation/http/routes/avaliacao-sistema.routes.js'
 import { friendshipRoutes } from './modules/social/friendships/friendship.routes.js'
 import { feedRoutes } from './modules/social/feed/feed.routes.js'
 import { privacyRoutes } from './modules/social/privacy/privacy.routes.js'
@@ -150,6 +151,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(treinoIARoutes, { prefix: '/treinos/ia' })
   await app.register(planosRoutes, { prefix: '/planos' })
   await app.register(avaliacaoRoutes)
+  await app.register(avaliacaoSistemaRoutes)
   await app.register(friendshipRoutes)
   await app.register(feedRoutes)
   await app.register(privacyRoutes)

@@ -4,6 +4,7 @@ import { TrophyIcon, TimerIcon } from '../../components/icons/Icon'
 import { api } from '../../api/client'
 import { useEffect, useState } from 'react'
 import PostPhotoUpload from '../../components/social/PostPhotoUpload'
+import SistemaAvaliacaoModal from '../../components/avaliacao/SistemaAvaliacaoModal'
 
 const CONQUISTAS = [
   { msg: 'Cada repetição conta! Continue assim e os resultados virão.', emoji: '🏆' },
@@ -15,14 +16,21 @@ const CONQUISTAS = [
 
 export default function AlunoTreinoConclusao() {
   const navigate = useNavigate()
-  const { timerFinalizado } = useTrainingStore()
+  const { timerFinalizado, primeiroTreino } = useTrainingStore()
   const [postId, setPostId] = useState<string | null>(null)
+  const [avaliacaoOpen, setAvaliacaoOpen] = useState(false)
 
   useEffect(() => {
     api.getMeuUltimoPostTreino()
       .then((res) => setPostId(res.postId))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (primeiroTreino === true && localStorage.getItem('gymapp_system_evaluation_done') !== 'true') {
+      setAvaliacaoOpen(true)
+    }
+  }, [primeiroTreino])
 
   const min = Math.floor(timerFinalizado / 60)
   const sec = timerFinalizado % 60
@@ -72,6 +80,8 @@ export default function AlunoTreinoConclusao() {
           </div>
         )}
       </div>
+
+      <SistemaAvaliacaoModal open={avaliacaoOpen} onClose={() => setAvaliacaoOpen(false)} />
     </div>
   )
 }
