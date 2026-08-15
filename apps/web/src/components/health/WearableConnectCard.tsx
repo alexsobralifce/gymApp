@@ -150,8 +150,11 @@ function WearableConnectCardInner() {
     }
   }
 
+  // Carrega na montagem e atualiza a cada 30 s para refletir novas leituras do relógio
   useEffect(() => {
     fetchIntegracoes()
+    const interval = setInterval(fetchIntegracoes, 30_000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleConnect = async (provedorId: string) => {
@@ -231,8 +234,9 @@ function WearableConnectCardInner() {
   const safeEventos = Array.isArray(eventos) ? eventos : []
   const safeIntegracoes = Array.isArray(integracoes) ? integracoes : []
   const ultimoEvento = safeEventos.length > 0 ? safeEventos[0] : null
-  const fcMedia = ultimoEvento?.payload_raw?.heartRateAvg || 74
-  const caloriasAtivas = ultimoEvento?.payload_raw?.activeCalories || 380
+  // Usa null quando não há dado real — evita exibir fallback numérico enganoso
+  const fcMedia: number | null = ultimoEvento?.payload_raw?.heartRateAvg ?? null
+  const caloriasAtivas: number | null = ultimoEvento?.payload_raw?.activeCalories ?? null
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden my-6">
@@ -297,7 +301,13 @@ function WearableConnectCardInner() {
               </div>
               <div>
                 <span className="text-[10px] text-text-muted uppercase font-mono block">FC Média</span>
-                <span className="text-base font-bold text-text-primary">{fcMedia} <span className="text-xs text-text-muted font-normal">bpm</span></span>
+                <span className="text-base font-bold text-text-primary">
+                  {fcMedia !== null ? (
+                    <>{fcMedia} <span className="text-xs text-text-muted font-normal">bpm</span></>
+                  ) : (
+                    <span className="text-text-muted text-sm">—</span>
+                  )}
+                </span>
               </div>
             </div>
 
@@ -307,7 +317,13 @@ function WearableConnectCardInner() {
               </div>
               <div>
                 <span className="text-[10px] text-text-muted uppercase font-mono block">Calorias Ativas</span>
-                <span className="text-base font-bold text-text-primary">{caloriasAtivas} <span className="text-xs text-text-muted font-normal">kcal</span></span>
+                <span className="text-base font-bold text-text-primary">
+                  {caloriasAtivas !== null ? (
+                    <>{caloriasAtivas} <span className="text-xs text-text-muted font-normal">kcal</span></>
+                  ) : (
+                    <span className="text-text-muted text-sm">—</span>
+                  )}
+                </span>
               </div>
             </div>
 
