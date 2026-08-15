@@ -106,6 +106,25 @@ export async function wearableRoutes(app: FastifyInstance) {
       }
     })
 
+    // Garante que o vínculo de integração do provedor permaneça ativo no cadastro do aluno
+    await prisma.wearableIntegracao.upsert({
+      where: {
+        aluno_id_provedor: {
+          aluno_id: aluno.id,
+          provedor: provider.toLowerCase()
+        }
+      },
+      create: {
+        aluno_id: aluno.id,
+        provedor: provider.toLowerCase(),
+        user_id_ext: userId,
+        ativo: true,
+      },
+      update: {
+        ativo: true,
+      }
+    }).catch(() => {})
+
     try {
       // 5. Processamento dos Dados do Relógio/Balança
       if (type.toLowerCase() === 'weight' || type.toLowerCase() === 'body_fat') {
@@ -277,6 +296,25 @@ export async function wearableRoutes(app: FastifyInstance) {
         processado: true,
       }
     })
+
+    // Garante que o vínculo de integração do provedor permaneça ativo no cadastro do aluno
+    await prisma.wearableIntegracao.upsert({
+      where: {
+        aluno_id_provedor: {
+          aluno_id: aluno.id,
+          provedor: body.provedor.toLowerCase()
+        }
+      },
+      create: {
+        aluno_id: aluno.id,
+        provedor: body.provedor.toLowerCase(),
+        user_id_ext: aluno.id,
+        ativo: true,
+      },
+      update: {
+        ativo: true,
+      }
+    }).catch(() => {})
 
     const obsSync = `Smartwatch ${body.provedor.toUpperCase()}: FC Média ${body.heartRateAvg} bpm, ${body.activeCalories} kcal`
 

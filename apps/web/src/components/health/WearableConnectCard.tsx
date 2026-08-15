@@ -220,8 +220,9 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
   }
 
   const isConnected = (provedorId: string) => {
-    if (!Array.isArray(integracoes)) return false
-    return integracoes.some((i) => i && i.provedor && i.provedor.toLowerCase() === provedorId.toLowerCase() && i.ativo)
+    const fromIntegracoes = Array.isArray(integracoes) && integracoes.some((i) => i && i.provedor && i.provedor.toLowerCase() === provedorId.toLowerCase() && i.ativo)
+    const fromEventos = Array.isArray(eventos) && eventos.some((e) => e && e.provedor && e.provedor.toLowerCase() === provedorId.toLowerCase())
+    return Boolean(fromIntegracoes || fromEventos)
   }
 
   if (hasError) {
