@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { WatchIcon, CheckCircle2Icon, RefreshCwIcon, LinkIcon, UnlinkIcon, ShieldCheckIcon, HeartIcon, FlameIcon, ActivityIcon, ZapIcon } from 'lucide-react'
+import { WatchIcon, CheckCircle2Icon, RefreshCwIcon, LinkIcon, UnlinkIcon, ShieldCheckIcon, HeartIcon, FlameIcon, ActivityIcon, ZapIcon, AlertCircleIcon } from 'lucide-react'
 import { api } from '../../api/client'
 
 interface WearableIntegracao {
@@ -86,15 +86,26 @@ export function WearableConnectCard() {
   const [testingSync, setTestingSync] = useState<boolean>(false)
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
+  const [hasError, setHasError] = useState<boolean>(false)
 
   const fetchIntegracoes = async () => {
     try {
       setLoading(true)
+      setHasError(false)
       const res = await api.getWearables()
-      setIntegracoes(res.integracoes || [])
-      setEventos(res.ultimosEventos || [])
+      if (Array.isArray(res)) {
+        setIntegracoes(res)
+        setEventos([])
+      } else if (res && typeof res === 'object') {
+        setIntegracoes(Array.isArray(res.integracoes) ? res.integracoes : [])
+        setEventos(Array.isArray(res.ultimosEventos) ? res.ultimosEventos : [])
+      } else {
+        setIntegracoes([])
+        setEventos([])
+      }
     } catch (err) {
       console.error('Erro ao buscar integrações de wearables:', err)
+      setHasError(true)
     } finally {
       setLoading(false)
     }
@@ -110,7 +121,7 @@ export function WearableConnectCard() {
       setFeedbackMsg(null)
       const res = await api.connectWearable(provedorId)
 
-      if (res.connectUrl) {
+      if (res && res.connectUrl) {
         setFeedbackMsg(`Conexão iniciada com ${provedorId.toUpperCase()}. Redirecionando...`)
         window.location.href = res.connectUrl
       } else {
@@ -145,7 +156,7 @@ export function WearableConnectCard() {
       setTestingSync(true)
       setFeedbackMsg(null)
       const res = await api.testSyncWearable(provedor, 78, 420)
-      setFeedbackMsg(res.message || 'Leitura de teste do relógio sincronizada com sucesso!')
+      setFeedbackMsg(res?.message || 'Leitura de teste do relógio sincronizada com sucesso!')
       fetchIntegracoes()
     } catch (err: any) {
       console.error('Erro ao testar sincronização do relógio:', err)
@@ -156,10 +167,28 @@ export function WearableConnectCard() {
   }
 
   const isConnected = (provedorId: string) => {
-    return integracoes.some((i) => i.provedor.toLowerCase() === provedorId.toLowerCase() && i.ativo)
+    return Array.isArray(integracoes) && integracoes.some((i) => i?.provedor?.toLowerCase() === provedorId.toLowerCase() && i.ativo)
   }
 
-  const ultimoEvento = eventos.length > 0 ? eventos[0] : null
+  if (hasError) {
+    return (
+      <div className="bg-surface-card border border-surface-border rounded-2xl p-5 shadow-xl my-6 flex flex-col items-center text-center gap-3">
+        <AlertCircleIcon className="w-8 h-8 text-amber-400" />
+        <div>
+          <h3 className="text-sm font-semibold text-text-primary">Dispositivos & Smartwatches</h3>
+          <p className="text-xs text-text-muted mt-1">O serviço de wearables está sendo inicializado no servidor. Tente novamente em alguns segundos.</p>
+        </div>
+        <button
+          onClick={fetchIntegracoes}
+          className="px-4 py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-semibold hover:bg-emerald-500/30 transition-all cursor-pointer flex items-center gap-2"
+        >
+          <RefreshCwIcon className="w-3.5 h-3.5" /> Tentar novamente
+        </button>
+      </div>
+    )
+  }
+
+  const ultimoEvento = Array.isArray(eventos) && eventos.length > 0 ? eventos[0] : null
   const fcMedia = ultimoEvento?.payload_raw?.heartRateAvg || 74
   const caloriasAtivas = ultimoEvento?.payload_raw?.activeCalories || 380
 
@@ -205,8 +234,8 @@ export function WearableConnectCard() {
         </div>
       )}
 
-      {/* Painel de Monitoramento em Tempo Real (Visível se houver relógio conectado ou eventos) */}
-      {(integracoes.length > 0 || eventos.length > 0) && (
+      {/* Painel de Monitoramento em Tempo Real */}
+      {((Array.isArray(integracoes) && integracoes.length > 0) || (Array.isArray(eventos) && eventos.length > 0)) && (
         <div className="mb-5 p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-surface/60 to-surface border border-emerald-500/30">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
@@ -253,7 +282,7 @@ export function WearableConnectCard() {
 
           <div className="flex items-center justify-between text-xs border-t border-white/5 pt-2">
             <span className="text-text-muted text-[11px]">
-              {eventos.length} evento(s) de monitoramento capturado(s) no banco.
+              {Array.isArray(eventos) ? eventos.length : 0} evento(s) de monitoramento capturado(s).
             </span>
             <button
               onClick={() => handleTestSync('huawei')}
