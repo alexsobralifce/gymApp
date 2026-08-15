@@ -152,21 +152,29 @@ export default function AlunoTreinoExecucao() {
   useIncompleteWorkoutReminder(treinoAtual, avaliando || showAvaliacao)
 
   // ─── Heart Rate & Calorie Telemetry State ─────────────────
-  const [bpm, setBpm] = useState<number>(126)
+  const [bpm, setBpm] = useState<number>(65)
   const [caloriasAcumuladas, setCaloriasAcumuladas] = useState<number>(0)
-  const [historicoBpm, setHistoricoBpm] = useState<number[]>([126])
+  const [historicoBpm, setHistoricoBpm] = useState<number[]>([65])
   const [perfilAluno, setPerfilAluno] = useState<PerfilAluno | null>(null)
   const [provedorNome, setProvedorNome] = useState<string>('Huawei GT 5 Pro')
 
+  const bpmRef = useRef<number>(65)
+  const perfilAlunoRef = useRef<PerfilAluno | null>(null)
+
   useEffect(() => {
-    api.getPerfilAluno().then(setPerfilAluno).catch(() => {})
+    api.getPerfilAluno()
+      .then((p) => {
+        setPerfilAluno(p)
+        perfilAlunoRef.current = p
+      })
+      .catch(() => {})
   }, [])
 
-  // Sincronização periódica a cada 10s com relógio / telemetry
+  // Sincronização periódica a cada 5s com relógio / telemetry — não recria o intervalo a cada segundo
   useEffect(() => {
     if (!treinoAtual || treinoAtual.status !== 'EM_EXECUCAO') return
 
-    const heartRateInterval = setInterval(async () => {
+    const fetchTelemetry = async () => {
       try {
         const res: any = await api.getWearables()
         const ultimosEventos = res && typeof res === 'object' && Array.isArray(res.ultimosEventos) ? res.ultimosEventos : []
@@ -184,7 +192,7 @@ export default function AlunoTreinoExecucao() {
           setProvedorNome(nameMap[integracoes[0].provedor.toLowerCase()] || integracoes[0].provedor)
         }
 
-        let currentBpm = bpm
+        let currentBpm = bpmRef.current
         if (ultimosEventos.length > 0) {
           const ev = ultimosEventos[0]
           const p = ev.payload_raw
@@ -195,41 +203,66 @@ export default function AlunoTreinoExecucao() {
         } else {
           // Variação orgânica suave caso não haja leitura direta no instante
           const delta = Math.floor(Math.random() * 5) - 2
-          currentBpm = Math.min(175, Math.max(90, bpm + delta))
+          currentBpm = Math.min(175, Math.max(60, bpmRef.current + delta))
         }
 
+        bpmRef.current = currentBpm
         setBpm(currentBpm)
-        const novoHistorico = [...historicoBpm, currentBpm]
-        setHistoricoBpm(novoHistorico)
 
-        const avgSessaoBpm = Math.round(novoHistorico.reduce((a, b) => a + b, 0) / (novoHistorico.length || 1))
-        const idade = perfilAluno ? calcularIdade(perfilAluno.data_nascimento) : 30
-        const cals = calcularCaloriasKeytel({
-          bpm: avgSessaoBpm,
-          pesoKg: perfilAluno?.peso_kg || 75,
-          idade,
-          sexo: perfilAluno?.sexo,
-          duracaoSegundos: timer,
-        })
-        setCaloriasAcumuladas(cals)
+        setHistoricoBpm((prev) => {
+          const novoHistorico = [...prev, currentBpm]
+          const avgSessaoBpm = Math.round(novoHistorico.reduce((a, b) => a + b, 0) / novoHistorico.length)
+          const perfil = perfilAlunoRef.current
+          const idade = perfil ? calcularIdade(perfil.data_nascimento) : 30
+          const currentTimer = useTrainingStore.getState().timer
+          const cals = calcularCaloriasKeytel({
+            bpm: avgSessaoBpm,
+            pesoKg: perfil?.peso_kg || 75,
+            idade,
+            sexo: perfil?.sexo,
+            duracaoSegundos: currentTimer,
+          })
+          setCaloriasAcumuladas(cals)
 
-        console.info('[GymApp:WorkoutTelemetry]', {
-          bpmAtual: currentBpm,
-          bpmMedioTreino: avgSessaoBpm,
-          caloriasAcumuladas: cals,
-          duracaoSegundos: timer,
-          provedor: integracoes.length > 0 ? integracoes[0].provedor : 'desconhecido',
-          amostrasCount: novoHistorico.length,
-          timestamp: new Date().toISOString(),
+          console.info('[GymApp:WorkoutTelemetry]', {
+            bpmAtual: currentBpm,
+            bpmMedioTreino: avgSessaoBpm,
+            caloriasAcumuladas: cals,
+            duracaoSegundos: currentTimer,
+            provedor: integracoes.length > 0 ? integracoes[0].provedor : 'desconhecido',
+            amostrasCount: novoHistorico.length,
+            timestamp: new Date().toISOString(),
+          })
+
+          return novoHistorico
         })
       } catch (err) {
         console.error('Erro na sincronização de batimentos:', err)
       }
-    }, 5_000) // 5 s durante treino ativo — fidelidade total aos dados do relógio
+    }
 
+    // Executa imediatamente e depois a cada 5 segundos
+    fetchTelemetry()
+    const heartRateInterval = setInterval(fetchTelemetry, 5_000)
 
     return () => clearInterval(heartRateInterval)
-  }, [treinoAtual, timer, bpm, perfilAluno])
+  }, [treinoAtual?.id, treinoAtual?.status])
+
+  // Recalcula calorias acumuladas a cada segundo do cronômetro para exibição em tempo real contínua
+  useEffect(() => {
+    if (timer <= 0) return
+    const avgSessaoBpm = Math.round(historicoBpm.reduce((a, b) => a + b, 0) / (historicoBpm.length || 1))
+    const idade = perfilAluno ? calcularIdade(perfilAluno.data_nascimento) : 30
+    const cals = calcularCaloriasKeytel({
+      bpm: avgSessaoBpm,
+      pesoKg: perfilAluno?.peso_kg || 75,
+      idade,
+      sexo: perfilAluno?.sexo,
+      duracaoSegundos: timer,
+    })
+    setCaloriasAcumuladas(cals)
+  }, [timer, historicoBpm, perfilAluno])
+
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
