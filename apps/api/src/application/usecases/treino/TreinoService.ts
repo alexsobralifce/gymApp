@@ -355,6 +355,48 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
   return execucao
 }
 
+function calcularIdadeAnos(dataNascimento?: Date | string | null): number {
+  if (!dataNascimento) return 30
+  const today = new Date()
+  const birth = new Date(dataNascimento)
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  return age > 0 ? age : 30
+}
+
+/**
+ * Fórmula fisiológica de Keytel et al. para cálculo de gasto calórico baseado em FC média.
+ */
+function calcularCaloriasKeytelBackend({
+  bpm,
+  pesoKg,
+  idade,
+  sexo,
+  duracaoSegundos,
+}: {
+  bpm: number
+  pesoKg?: number | null
+  idade?: number | null
+  sexo?: string | null
+  duracaoSegundos: number
+}): number {
+  const p = pesoKg && pesoKg > 0 ? pesoKg : 75
+  const i = idade && idade > 0 ? idade : 30
+  const minutos = duracaoSegundos / 60
+  if (minutos <= 0) return 0
+
+  let calPerMin = 0
+  if (sexo === 'FEMININO') {
+    calPerMin = (-20.4022 + 0.4472 * bpm - 0.1263 * p + 0.074 * i) / 4.184
+  } else {
+    calPerMin = (-55.0969 + 0.6309 * bpm + 0.1988 * p + 0.2017 * i) / 4.184
+  }
+
+  const result = Math.max(0, calPerMin * minutos)
+  return parseFloat(result.toFixed(1))
+}
+
 // ─── UC-23: Finalizar treino ──────────────────────────────────────────────────
 
 export async function finalizarTreino(
@@ -376,6 +418,68 @@ export async function finalizarTreino(
     ? Math.max(0, Math.round((finalizadoEm.getTime() - treino.iniciado_em.getTime()) / 1000))
     : null
 
+  // ─── Busca eventos de telemetria / batimentos do relógio durante a sessão ─────
+  let calcCalorias = caloriasQueimadas ?? null
+  let calcFcMedia = frequenciaCardiacaMedia ?? null
+  let calcFcMax = frequenciaCardiacaMaxima ?? null
+
+  try {
+    if (treino.iniciado_em && duracaoSegundos && duracaoSegundos > 0) {
+      const eventos = await prisma.wearableEvento.findMany({
+        where: {
+          aluno_id: alunoId,
+          recebido_em: {
+            gte: treino.iniciado_em,
+            lte: finalizadoEm,
+          },
+        },
+        orderBy: { recebido_em: 'asc' },
+      })
+
+      const bpms: number[] = []
+      let maxCaloriasEvento = 0
+      let encontrouCaloriasEvento = false
+
+      for (const ev of eventos) {
+        const payload: any = ev.payload_raw
+        const hr = payload?.heartRateAvg || payload?.data?.heartRateAvg || payload?.data?.value
+        if (typeof hr === 'number' && hr > 30 && hr < 240) {
+          bpms.push(hr)
+        }
+        const cals = payload?.activeCalories || payload?.data?.activeCalories
+        if (typeof cals === 'number' && cals > 0) {
+          maxCaloriasEvento = Math.max(maxCaloriasEvento, cals)
+          encontrouCaloriasEvento = true
+        }
+      }
+
+      const aluno = await prisma.aluno.findUnique({
+        where: { id: alunoId },
+        select: { data_nascimento: true, peso_kg: true, sexo: true },
+      })
+
+      if (bpms.length > 0) {
+        const avgBpm = Math.round(bpms.reduce((a, b) => a + b, 0) / bpms.length)
+        const maxBpm = Math.max(...bpms)
+        calcFcMedia = avgBpm
+        calcFcMax = maxBpm
+
+        const idade = calcularIdadeAnos(aluno?.data_nascimento)
+        const keytelCal = calcularCaloriasKeytelBackend({
+          bpm: avgBpm,
+          pesoKg: aluno?.peso_kg,
+          idade,
+          sexo: aluno?.sexo,
+          duracaoSegundos,
+        })
+
+        calcCalorias = encontrouCaloriasEvento ? maxCaloriasEvento : keytelCal
+      }
+    }
+  } catch (err) {
+    // Fallback gracioso para os valores passados pelo frontend
+  }
+
   return prisma.$transaction(async (tx) => {
     await tx.treino.update({
       where: { id: treinoId },
@@ -393,9 +497,9 @@ export async function finalizarTreino(
         ator_id: alunoId,
         ator_tipo: TreinoAtor.ALUNO,
         duracao_segundos: duracaoSegundos,
-        calorias_queimadas: caloriasQueimadas ?? null,
-        frequencia_cardiaca_media: frequenciaCardiacaMedia ?? null,
-        frequencia_cardiaca_maxima: frequenciaCardiacaMaxima ?? null,
+        calorias_queimadas: calcCalorias,
+        frequencia_cardiaca_media: calcFcMedia,
+        frequencia_cardiaca_maxima: calcFcMax,
       },
     })
 
