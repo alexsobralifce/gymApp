@@ -184,8 +184,6 @@ export default function AlunoMedidas() {
     }
   }
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
-
   const handleWearableSync = useCallback((syncData?: { bpm?: number; calorias?: number }) => {
     carregarDados().then(() => {
       if (syncData?.bpm && syncData?.calorias) {
@@ -204,6 +202,8 @@ export default function AlunoMedidas() {
     if (perfil?.peso_kg && !pesoKg) setPesoKg(perfil.peso_kg.toString())
     if (perfil?.altura_cm && !alturaCm) setAlturaCm(perfil.altura_cm.toString())
   }
+
+  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6">
