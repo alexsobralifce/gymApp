@@ -220,7 +220,7 @@ export default function AlunoTreinoExecucao() {
       } catch (err) {
         console.error('Erro na sincronização de batimentos:', err)
       }
-    }, 10000)
+    }, 5_000) // 5 s durante treino ativo — captura queima de calorias em tempo real
 
     return () => clearInterval(heartRateInterval)
   }, [treinoAtual, timer, bpm, perfilAluno])
