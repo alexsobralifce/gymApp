@@ -236,9 +236,13 @@ function WearableConnectCardInner({ onSync }: { onSync?: () => void }) {
   const safeEventos = Array.isArray(eventos) ? eventos : []
   const safeIntegracoes = Array.isArray(integracoes) ? integracoes : []
   const ultimoEvento = safeEventos.length > 0 ? safeEventos[0] : null
-  // Usa null quando não há dado real — evita exibir fallback numérico enganoso
-  const fcMedia: number | null = ultimoEvento?.payload_raw?.heartRateAvg ?? null
-  const caloriasAtivas: number | null = ultimoEvento?.payload_raw?.activeCalories ?? null
+
+  // Extrai FC e calorias suportando ambas as estruturas de payload:
+  //   - Test-sync: payload_raw.heartRateAvg (top-level)
+  //   - Webhook real (Huawei/Garmin): payload_raw.data.heartRateAvg (aninhado)
+  const p = ultimoEvento?.payload_raw as any
+  const fcMedia: number | null = p?.heartRateAvg ?? p?.data?.heartRateAvg ?? null
+  const caloriasAtivas: number | null = p?.activeCalories ?? p?.data?.activeCalories ?? null
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden my-6">

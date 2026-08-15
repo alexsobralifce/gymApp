@@ -263,9 +263,15 @@ export async function wearableRoutes(app: FastifyInstance) {
         tipo: 'heart_rate',
         payload_raw: {
           simulado: true,
+          // Estrutura normalizada compatível com webhook real:
+          // Frontend lê tanto payload_raw.heartRateAvg (legado) quanto payload_raw.data.heartRateAvg
           heartRateAvg: body.heartRateAvg,
           activeCalories: body.activeCalories,
-          pesoKg: body.pesoKg || aluno.peso_kg,
+          data: {
+            heartRateAvg: body.heartRateAvg,
+            activeCalories: body.activeCalories,
+            pesoKg: body.pesoKg || aluno.peso_kg,
+          },
           timestamp: now.toISOString(),
         },
         processado: true,
