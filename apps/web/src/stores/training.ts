@@ -25,7 +25,9 @@ interface TrainingState {
 
   iniciarTreino: (id: string) => Promise<void>
   retomarTreino: (id: string) => Promise<void>
+  cancelarTreino: (id: string) => Promise<void>
   setExercicioAtual: (exercicio: TreinoExercicio | null) => void
+
   registrarExecucao: (exercicioId: string, serieNumero: number, repeticoes: number, cargaKg: number) => Promise<void>
   finalizarTreino: (
     avaliacao?: string,
@@ -103,7 +105,19 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     }
   },
 
+  cancelarTreino: async (id) => {
+    set({ loading: true })
+    try {
+      await api.cancelarTreino(id)
+      get().reset()
+    } catch (err) {
+      get().reset()
+      set({ error: (err as Error).message, loading: false })
+    }
+  },
+
   setExercicioAtual: (exercicio) => set({ exercicioAtual: exercicio }),
+
 
   registrarExecucao: async (exercicioId, serieNumero, repeticoes, cargaKg) => {
     const { treinoAtual, execucoes } = get()

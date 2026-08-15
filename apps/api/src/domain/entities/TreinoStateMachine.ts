@@ -43,6 +43,13 @@ const TRANSICOES: TransicaoConfig[] = [
     atoresPermitidos: [TreinoAtor.ALUNO],
   },
   {
+    de: TreinoStatus.EM_EXECUCAO,
+    para: [TreinoStatus.ACEITO],
+    atoresPermitidos: [TreinoAtor.ALUNO],
+  },
+
+
+  {
     de: TreinoStatus.CONCLUIDO,
     para: [TreinoStatus.ACEITO],
     atoresPermitidos: [TreinoAtor.SISTEMA],

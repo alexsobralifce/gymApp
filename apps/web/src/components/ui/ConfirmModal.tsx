@@ -5,9 +5,20 @@ interface ConfirmModalProps {
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  confirmText?: string
+  cancelText?: string
 }
 
-export default function ConfirmModal({ open, title, message, onConfirm, onCancel, loading }: ConfirmModalProps) {
+export default function ConfirmModal({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  loading,
+  confirmText = 'Confirmar',
+  cancelText = 'Cancelar',
+}: ConfirmModalProps) {
   if (!open) return null
 
   return (
@@ -23,14 +34,14 @@ export default function ConfirmModal({ open, title, message, onConfirm, onCancel
               disabled={loading}
               className="min-h-11 rounded-xl border border-surface-input bg-surface px-5 py-3 text-sm font-semibold text-text-muted hover:text-text disabled:opacity-50 cursor-pointer"
             >
-              Cancelar
+              {cancelText}
             </button>
             <button
               onClick={onConfirm}
               disabled={loading}
               className="min-h-11 rounded-xl bg-destructive px-5 py-3 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
             >
-              {loading ? 'Removendo...' : 'Confirmar'}
+              {loading ? 'Aguarde...' : confirmText}
             </button>
           </div>
         </div>
@@ -38,3 +49,4 @@ export default function ConfirmModal({ open, title, message, onConfirm, onCancel
     </div>
   )
 }
+

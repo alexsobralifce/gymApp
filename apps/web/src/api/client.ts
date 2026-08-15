@@ -201,6 +201,10 @@ export const api = {
   registrarExecucao: (treinoId: string, data: { exercicioId: string; serieNumero: number; repeticoes: number; cargaKg: number }) =>
     api.post<ExecucaoExercicio>(`/treinos/${treinoId}/execucoes`, data),
 
+  cancelarTreino: (id: string) =>
+    api.post<Treino>(`/treinos/${id}/cancelar`),
+
+
   finalizarTreino: (
     id: string,
     data?: {

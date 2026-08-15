@@ -287,7 +287,62 @@ export async function iniciarTreino(treinoId: string, alunoId: string) {
   return carregarTreinoComSessao(treinoId, iniciadoEm)
 }
 
+// ─── UC-Cancel: Cancelar/Abandonar treino em execução (reset de timer e status) ─
+
+export async function cancelarTreino(treinoId: string, alunoId: string) {
+  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  if (!treino) throw new NotFoundError('Treino')
+  if (treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  if (treino.status !== TreinoStatus.EM_EXECUCAO) {
+    return carregarTreinoComSessao(treinoId)
+  }
+
+  assertTransicaoValida(treino.status, TreinoStatus.ACEITO, TreinoAtor.ALUNO)
+
+  const iniciadoEm = treino.iniciado_em
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Limpa execuções registradas durante essa sessão cancelada
+    if (iniciadoEm) {
+      await tx.execucaoExercicio.deleteMany({
+        where: {
+          treino_id: treinoId,
+          registrado_em: { gte: iniciadoEm },
+        },
+      })
+    }
+
+    // 2. Retorna status para ACEITO e limpa timestamps de sessão
+    await tx.treino.update({
+      where: { id: treinoId },
+      data: {
+        status: TreinoStatus.ACEITO,
+        iniciado_em: null,
+        finalizado_em: null,
+        ultima_atividade_em: null,
+        notificado_inatividade_em: null,
+        notificado_longo_em: null,
+      },
+    })
+
+    // 3. Registra log em treinoHistorico
+    await tx.treinoHistorico.create({
+      data: {
+        treino_id: treinoId,
+        status_anterior: TreinoStatus.EM_EXECUCAO,
+        status_novo: TreinoStatus.ACEITO,
+        ator_id: alunoId,
+        ator_tipo: TreinoAtor.ALUNO,
+      },
+    })
+  })
+
+  return carregarTreinoComSessao(treinoId)
+}
+
 // ─── UC-22: Registrar carga/repetições ───────────────────────────────────────
+
 
 export async function registrarExecucao(treinoId: string, alunoId: string, input: {
   exercicioId: string

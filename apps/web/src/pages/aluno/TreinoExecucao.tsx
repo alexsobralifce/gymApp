@@ -121,7 +121,9 @@ export default function AlunoTreinoExecucao() {
     treinoAtual,
     registrarExecucao,
     finalizarTreino,
+    cancelarTreino,
     retomarTreino,
+
     timer,
     tick,
     syncTimer,
@@ -367,16 +369,24 @@ export default function AlunoTreinoExecucao() {
     setInputs(initialInputs)
   }, [treinoAtual, ultimasCargas])
 
-  const confirmLeave = useCallback(() => {
+  const confirmLeave = useCallback(async () => {
     setShowSairModal(false)
     allowLeaveRef.current = true
+    try {
+      if (treinoAtual?.id) {
+        await cancelarTreino(treinoAtual.id)
+      }
+    } catch (err) {
+      console.error('Erro ao cancelar treino:', err)
+    }
     if (blocker.state === 'blocked') {
       blocker.proceed()
     } else {
-      navigate('/', { state: { refreshKey: Date.now() } })
+      navigate('/', { replace: true, state: { refreshKey: Date.now() } })
     }
     setTimeout(() => { allowLeaveRef.current = false }, 500)
-  }, [blocker, navigate])
+  }, [blocker, navigate, treinoAtual?.id, cancelarTreino])
+
 
   const cancelLeave = useCallback(() => {
     setShowSairModal(false)
@@ -808,10 +818,13 @@ export default function AlunoTreinoExecucao() {
       <ConfirmModal
         open={showSairModal}
         title="Sair do treino"
-        message="As séries já confirmadas ficam salvas e o timer continua. Você pode retomar depois. Deseja sair?"
+        message="Deseja realmente sair? O cronômetro será zerado e o treino voltará ao estado anterior, como se não tivesse sido iniciado."
+        confirmText="Sim, sair e zerar"
+        cancelText="Continuar treinando"
         onConfirm={confirmLeave}
         onCancel={cancelLeave}
       />
+
 
       {coach.visible && (
         <CoachMarkOverlay

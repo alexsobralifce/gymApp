@@ -12,8 +12,10 @@ import {
   enviarTreinoParaAceite,
   responderTreino,
   iniciarTreino,
+  cancelarTreino,
   registrarExecucao,
   finalizarTreino,
+
   clonarTreino,
   clonarTreinoEmLote,
   buscarUltimasCargas,
@@ -231,7 +233,18 @@ export async function treinoRoutes(app: FastifyInstance) {
     return reply.status(200).send(treino)
   })
 
+  /** POST /treinos/:id/cancelar — Cancela/abandona treino em andamento e reseta para ACEITO */
+  app.post('/:id/cancelar', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { role } = request.currentUser
+    const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
+
+    const treino = await cancelarTreino(id, aluno.id)
+    return reply.status(200).send(treino)
+  })
+
   /** POST /treinos/:id/execucoes — UC-22 */
+
   app.post('/:id/execucoes', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
     const { role } = request.currentUser
