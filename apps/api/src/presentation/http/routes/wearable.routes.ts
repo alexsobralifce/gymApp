@@ -86,6 +86,15 @@ export async function wearableRoutes(app: FastifyInstance) {
 
     const dataEvento = timestamp ? new Date(timestamp) : new Date()
 
+    request.log.info({
+      tag: '[GymApp:WearableWebhook]',
+      provider: provider.toLowerCase(),
+      type: type.toLowerCase(),
+      alunoId: aluno.id,
+      data,
+      timestamp: dataEvento.toISOString(),
+    }, `📥 Webhook capturado do relógio ${provider.toUpperCase()} (${type}) para o Aluno ${aluno.id}`)
+
     // 4. Registra o evento imutável na tabela WearableEvento
     const evento = await prisma.wearableEvento.create({
       data: {
@@ -210,6 +219,13 @@ export async function wearableRoutes(app: FastifyInstance) {
       take: 10
     })
 
+    request.log.info({
+      tag: '[GymApp:WearableQuery]',
+      alunoId: aluno.id,
+      integracoesCount: integracoes.length,
+      ultimosEventosCount: ultimosEventos.length,
+    }, `🔍 Consulta de leituras do relógio: ${integracoes.length} integracao(ões), ${ultimosEventos.length} evento(s)`)
+
     return reply.status(200).send({
       integracoes,
       ultimosEventos,
@@ -229,6 +245,14 @@ export async function wearableRoutes(app: FastifyInstance) {
       activeCalories: z.number().default(380),
       pesoKg: z.number().optional(),
     }).parse(request.body)
+
+    request.log.info({
+      tag: '[GymApp:WearableTestSync]',
+      alunoId: aluno.id,
+      provedor: body.provedor,
+      heartRateAvg: body.heartRateAvg,
+      activeCalories: body.activeCalories,
+    }, `⚡ Leitura do relógio ${body.provedor.toUpperCase()} capturada: ${body.heartRateAvg} BPM / ${body.activeCalories} kcal`)
 
     const now = new Date()
 

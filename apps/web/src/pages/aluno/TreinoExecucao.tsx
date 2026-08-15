@@ -208,6 +208,15 @@ export default function AlunoTreinoExecucao() {
           duracaoSegundos: timer,
         })
         setCaloriasAcumuladas(cals)
+
+        console.info('[GymApp:WorkoutTelemetry]', {
+          bpm: currentBpm,
+          caloriasAcumuladas: cals,
+          duracaoSegundos: timer,
+          provedor: integracoes.length > 0 ? integracoes[0].provedor : 'desconhecido',
+          origemLeitura: ultimosEventos.length > 0 ? 'Smartwatch Event' : 'Fisiologia Keytel',
+          timestamp: new Date().toISOString(),
+        })
       } catch (err) {
         console.error('Erro na sincronização de batimentos:', err)
       }
