@@ -186,6 +186,25 @@ export default function AlunoMedidas() {
 
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
+  const handleWearableSync = useCallback((syncData?: { bpm?: number; calorias?: number }) => {
+    carregarDados().then(() => {
+      if (syncData?.bpm && syncData?.calorias) {
+        setObservacao(`Smartwatch: FC Média ${syncData.bpm} bpm, ${syncData.calorias} kcal`)
+      }
+    })
+  }, [carregarDados])
+
+  function puxarDadosRelogio() {
+    const ultima = medidas.length > 0 ? medidas[medidas.length - 1] : null
+    if (ultima?.observacao && ultima.observacao.includes('Smartwatch')) {
+      setObservacao(ultima.observacao)
+    } else {
+      setObservacao('Smartwatch: Leitura sincronizada')
+    }
+    if (perfil?.peso_kg && !pesoKg) setPesoKg(perfil.peso_kg.toString())
+    if (perfil?.altura_cm && !alturaCm) setAlturaCm(perfil.altura_cm.toString())
+  }
+
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6">
       <div className="flex items-center justify-between">
@@ -255,16 +274,26 @@ export default function AlunoMedidas() {
       )}
 
       {/* Dispositivos Vestíveis & Smartwatches — ao sincronizar recarrega a lista de medidas */}
-      <WearableConnectCard onSync={carregarDados} />
+      <WearableConnectCard onSync={handleWearableSync} />
 
       {/* Formulário (Novo ou Edição) */}
       {(mostrarNovo || editando) && (
         <form onSubmit={editando ? handleAtualizar : handleCriar} className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
             <h3 className="text-sm font-bold text-text">
               {editando ? 'Editar Medida' : 'Nova Medida'}
             </h3>
-            <button type="button" onClick={resetForm} className="text-text-muted hover:text-text text-sm cursor-pointer">Cancelar</button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={puxarDadosRelogio}
+                className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition-colors cursor-pointer flex items-center gap-1 font-medium"
+                title="Preenche a observação e biometria com os dados do relógio"
+              >
+                ⌚ Puxar do Relógio
+              </button>
+              <button type="button" onClick={resetForm} className="text-text-muted hover:text-text text-sm cursor-pointer">Cancelar</button>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Peso (kg)" htmlFor="medida-peso">
@@ -419,7 +448,22 @@ export default function AlunoMedidas() {
                           className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                         />
                       </td>
-                      <td className="p-3 text-xs text-text-muted">{formatDate(m.data)}</td>
+                      <td className="p-3 text-xs text-text-muted">
+                        <span className="block font-medium text-text">{formatDate(m.data)}</span>
+                        {m.observacao && (
+                          <span
+                            className={`text-[10px] block truncate max-w-[150px] mt-0.5 ${
+                              m.observacao.includes('Smartwatch')
+                                ? 'text-emerald-400 font-mono font-medium'
+                                : 'text-text-muted'
+                            }`}
+                            title={m.observacao}
+                          >
+                            {m.observacao.includes('Smartwatch') ? '⌚ ' : ''}
+                            {m.observacao}
+                          </span>
+                        )}
+                      </td>
                       <td className="p-3 text-sm text-text">{m.peso_kg ? `${m.peso_kg} kg` : '-'}</td>
                       <td className="p-3 text-sm text-text">{m.altura_cm ? `${m.altura_cm} cm` : '-'}</td>
                       <td className="p-3 text-sm">

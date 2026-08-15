@@ -116,7 +116,13 @@ class WearableErrorBoundary extends Component<{ children: ReactNode }, { hasErro
   }
 }
 
-function WearableConnectCardInner({ onSync }: { onSync?: () => void }) {
+export interface WearableSyncData {
+  bpm?: number
+  calorias?: number
+  pesoKg?: number
+}
+
+function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncData) => void }) {
   const [integracoes, setIntegracoes] = useState<WearableIntegracao[]>([])
   const [eventos, setEventos] = useState<WearableEvento[]>([])
   const [loading, setLoading] = useState<boolean>(true)
@@ -197,11 +203,14 @@ function WearableConnectCardInner({ onSync }: { onSync?: () => void }) {
     try {
       setTestingSync(true)
       setFeedbackMsg(null)
-      const res = await api.testSyncWearable(provedor, 78, 420)
-      setFeedbackMsg(res?.message || 'Leitura de teste do relógio sincronizada com sucesso!')
+      // Variação dinâmica e realista para testes do usuário
+      const dynamicBpm = Math.floor(Math.random() * 21) + 72 // 72 a 92 BPM
+      const dynamicCal = Math.floor(Math.random() * 90) + 380 // 380 a 470 kcal
+      const res = await api.testSyncWearable(provedor, dynamicBpm, dynamicCal)
+      setFeedbackMsg(res?.message || `Leitura do relógio (${dynamicBpm} bpm, ${dynamicCal} kcal) sincronizada com sucesso!`)
       // Recarrega eventos do painel e notifica o pai (Medidas.tsx) para atualizar a lista de medidas
       await fetchIntegracoes()
-      onSync?.()
+      onSync?.({ bpm: dynamicBpm, calorias: dynamicCal })
     } catch (err: any) {
       console.error('Erro ao testar sincronização do relógio:', err)
       setFeedbackMsg('Erro ao testar sincronização do relógio.')
@@ -295,7 +304,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: () => void }) {
             </h4>
             {ultimoEvento && ultimoEvento.recebido_em && (
               <span className="text-[11px] font-mono text-text-muted">
-                Última leitura: {new Date(ultimoEvento.recebido_em).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                Última leitura: {new Date(ultimoEvento.recebido_em).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             )}
           </div>
@@ -431,7 +440,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: () => void }) {
   )
 }
 
-export function WearableConnectCard({ onSync }: { onSync?: () => void } = {}) {
+export function WearableConnectCard({ onSync }: { onSync?: (data?: WearableSyncData) => void } = {}) {
   return (
     <WearableErrorBoundary>
       <WearableConnectCardInner onSync={onSync} />

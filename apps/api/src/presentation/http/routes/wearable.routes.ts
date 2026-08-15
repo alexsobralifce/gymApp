@@ -289,20 +289,25 @@ export async function wearableRoutes(app: FastifyInstance) {
       where: { aluno_id: aluno.id, data: { gte: dataBusca, lte: fimBusca } }
     })
 
+    const pesoFinal = body.pesoKg || aluno.peso_kg
+    const imcCalculado = pesoFinal && aluno.altura_cm ? calcularIMC(pesoFinal, aluno.altura_cm) : null
+
     if (existente) {
       await prisma.medidaCorporal.update({
         where: { id: existente.id },
         data: {
-          peso_kg: body.pesoKg || existente.peso_kg,
-          observacao: existente.observacao ? `${existente.observacao} | ${obsSync}` : obsSync
+          peso_kg: pesoFinal,
+          imc: imcCalculado,
+          observacao: obsSync,
         }
       })
     } else {
       await prisma.medidaCorporal.create({
         data: {
           aluno_id: aluno.id,
-          peso_kg: body.pesoKg || aluno.peso_kg,
+          peso_kg: pesoFinal,
           altura_cm: aluno.altura_cm,
+          imc: imcCalculado,
           data: now,
           observacao: obsSync,
         }
@@ -311,7 +316,7 @@ export async function wearableRoutes(app: FastifyInstance) {
 
     return reply.status(200).send({
       success: true,
-      message: `Dados do ${body.provedor.toUpperCase()} capturados com sucesso!`,
+      message: `Dados do ${body.provedor.toUpperCase()} capturados com sucesso! (${body.heartRateAvg} bpm, ${body.activeCalories} kcal)`,
       evento
     })
   })
