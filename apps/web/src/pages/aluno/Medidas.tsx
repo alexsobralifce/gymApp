@@ -254,8 +254,8 @@ export default function AlunoMedidas() {
         </div>
       )}
 
-      {/* Dispositivos Vestíveis & Smartwatches */}
-      <WearableConnectCard />
+      {/* Dispositivos Vestíveis & Smartwatches — ao sincronizar recarrega a lista de medidas */}
+      <WearableConnectCard onSync={carregarDados} />
 
       {/* Formulário (Novo ou Edição) */}
       {(mostrarNovo || editando) && (

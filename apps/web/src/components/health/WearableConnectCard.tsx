@@ -116,7 +116,7 @@ class WearableErrorBoundary extends Component<{ children: ReactNode }, { hasErro
   }
 }
 
-function WearableConnectCardInner() {
+function WearableConnectCardInner({ onSync }: { onSync?: () => void }) {
   const [integracoes, setIntegracoes] = useState<WearableIntegracao[]>([])
   const [eventos, setEventos] = useState<WearableEvento[]>([])
   const [loading, setLoading] = useState<boolean>(true)
@@ -199,7 +199,9 @@ function WearableConnectCardInner() {
       setFeedbackMsg(null)
       const res = await api.testSyncWearable(provedor, 78, 420)
       setFeedbackMsg(res?.message || 'Leitura de teste do relógio sincronizada com sucesso!')
-      fetchIntegracoes()
+      // Recarrega eventos do painel e notifica o pai (Medidas.tsx) para atualizar a lista de medidas
+      await fetchIntegracoes()
+      onSync?.()
     } catch (err: any) {
       console.error('Erro ao testar sincronização do relógio:', err)
       setFeedbackMsg('Erro ao testar sincronização do relógio.')
@@ -280,8 +282,8 @@ function WearableConnectCardInner() {
         </div>
       )}
 
-      {/* Painel de Monitoramento em Tempo Real */}
-      {(safeIntegracoes.length > 0 || safeEventos.length > 0) && (
+      {/* Painel de Monitoramento em Tempo Real — exibe sempre que houver evento ou integração registrada */}
+      {(safeEventos.length > 0 || safeIntegracoes.length > 0) && (
         <div className="mb-5 p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-surface/60 to-surface border border-emerald-500/30">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
@@ -425,10 +427,10 @@ function WearableConnectCardInner() {
   )
 }
 
-export function WearableConnectCard() {
+export function WearableConnectCard({ onSync }: { onSync?: () => void } = {}) {
   return (
     <WearableErrorBoundary>
-      <WearableConnectCardInner />
+      <WearableConnectCardInner onSync={onSync} />
     </WearableErrorBoundary>
   )
 }
