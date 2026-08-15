@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Component, type ReactNode } from 'react'
 import { WatchIcon, CheckCircle2Icon, RefreshCwIcon, LinkIcon, UnlinkIcon, ShieldCheckIcon, HeartIcon, FlameIcon, ActivityIcon, ZapIcon, AlertCircleIcon } from 'lucide-react'
 import { api } from '../../api/client'
 
@@ -79,7 +79,44 @@ const PROVIDERS: ProviderConfig[] = [
   },
 ]
 
-export function WearableConnectCard() {
+class WearableErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('WearableConnectCard ErrorBoundary caught error:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-surface-card border border-surface-border rounded-2xl p-5 shadow-xl my-6 flex flex-col items-center text-center gap-3">
+          <AlertCircleIcon className="w-8 h-8 text-amber-400" />
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary">Dispositivos & Smartwatches</h3>
+            <p className="text-xs text-text-muted mt-1">Carregando nova versão do painel de dispositivos.</p>
+          </div>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="px-4 py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-semibold hover:bg-emerald-500/30 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <RefreshCwIcon className="w-3.5 h-3.5" /> Recarregar Painel
+          </button>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+function WearableConnectCardInner() {
   const [integracoes, setIntegracoes] = useState<WearableIntegracao[]>([])
   const [eventos, setEventos] = useState<WearableEvento[]>([])
   const [loading, setLoading] = useState<boolean>(true)
@@ -92,7 +129,7 @@ export function WearableConnectCard() {
     try {
       setLoading(true)
       setHasError(false)
-      const res = await api.getWearables()
+      const res: any = await api.getWearables()
       if (Array.isArray(res)) {
         setIntegracoes(res)
         setEventos([])
@@ -105,6 +142,8 @@ export function WearableConnectCard() {
       }
     } catch (err) {
       console.error('Erro ao buscar integrações de wearables:', err)
+      setIntegracoes([])
+      setEventos([])
       setHasError(true)
     } finally {
       setLoading(false)
@@ -167,7 +206,8 @@ export function WearableConnectCard() {
   }
 
   const isConnected = (provedorId: string) => {
-    return Array.isArray(integracoes) && integracoes.some((i) => i?.provedor?.toLowerCase() === provedorId.toLowerCase() && i.ativo)
+    if (!Array.isArray(integracoes)) return false
+    return integracoes.some((i) => i && i.provedor && i.provedor.toLowerCase() === provedorId.toLowerCase() && i.ativo)
   }
 
   if (hasError) {
@@ -188,7 +228,9 @@ export function WearableConnectCard() {
     )
   }
 
-  const ultimoEvento = Array.isArray(eventos) && eventos.length > 0 ? eventos[0] : null
+  const safeEventos = Array.isArray(eventos) ? eventos : []
+  const safeIntegracoes = Array.isArray(integracoes) ? integracoes : []
+  const ultimoEvento = safeEventos.length > 0 ? safeEventos[0] : null
   const fcMedia = ultimoEvento?.payload_raw?.heartRateAvg || 74
   const caloriasAtivas = ultimoEvento?.payload_raw?.activeCalories || 380
 
@@ -235,13 +277,13 @@ export function WearableConnectCard() {
       )}
 
       {/* Painel de Monitoramento em Tempo Real */}
-      {((Array.isArray(integracoes) && integracoes.length > 0) || (Array.isArray(eventos) && eventos.length > 0)) && (
+      {(safeIntegracoes.length > 0 || safeEventos.length > 0) && (
         <div className="mb-5 p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-surface/60 to-surface border border-emerald-500/30">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
               <ActivityIcon className="w-4 h-4" /> Monitoramento em Tempo Real do Relógio
             </h4>
-            {ultimoEvento && (
+            {ultimoEvento && ultimoEvento.recebido_em && (
               <span className="text-[11px] font-mono text-text-muted">
                 Última leitura: {new Date(ultimoEvento.recebido_em).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
@@ -282,7 +324,7 @@ export function WearableConnectCard() {
 
           <div className="flex items-center justify-between text-xs border-t border-white/5 pt-2">
             <span className="text-text-muted text-[11px]">
-              {Array.isArray(eventos) ? eventos.length : 0} evento(s) de monitoramento capturado(s).
+              {safeEventos.length} evento(s) de monitoramento capturado(s).
             </span>
             <button
               onClick={() => handleTestSync('huawei')}
@@ -364,5 +406,13 @@ export function WearableConnectCard() {
         </span>
       </div>
     </div>
+  )
+}
+
+export function WearableConnectCard() {
+  return (
+    <WearableErrorBoundary>
+      <WearableConnectCardInner />
+    </WearableErrorBoundary>
   )
 }
