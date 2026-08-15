@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import crypto from 'node:crypto'
-import { Role } from '@prisma/client'
+import { Role, TreinoStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { env } from '../../../shared/env.js'
 import { resolveAluno } from './aluno.routes.js'
@@ -222,7 +222,7 @@ export async function wearableRoutes(app: FastifyInstance) {
 
   /**
    * GET /integrations/wearables
-   * Lista os dispositivos conectados do aluno e os últimos 10 eventos capturados.
+   * Lista os dispositivos conectados do aluno, os últimos 20 eventos e estatísticas agregadas do dia.
    */
   app.get('/wearables', { preHandler: preHandlerAluno }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
@@ -235,32 +235,84 @@ export async function wearableRoutes(app: FastifyInstance) {
     const ultimosEventos = await prisma.wearableEvento.findMany({
       where: { aluno_id: aluno.id },
       orderBy: { recebido_em: 'desc' },
-      take: 10
+      take: 20
     })
+
+    // Calcula métricas diárias acumuladas (00:00 às 23:59 de hoje)
+    const agora = new Date()
+    const inicioHoje = new Date(agora)
+    inicioHoje.setUTCHours(0, 0, 0, 0)
+    const fimHoje = new Date(agora)
+    fimHoje.setUTCHours(23, 59, 59, 999)
+
+    const eventosHoje = await prisma.wearableEvento.findMany({
+      where: {
+        aluno_id: aluno.id,
+        recebido_em: { gte: inicioHoje, lte: fimHoje }
+      },
+      orderBy: { recebido_em: 'asc' }
+    })
+
+    const bpmsHoje: number[] = []
+    let caloriasAtivasRelogioMax = 0
+
+    for (const ev of eventosHoje) {
+      const p: any = ev.payload_raw
+      const hr = p?.heartRateAvg ?? p?.data?.heartRateAvg ?? p?.data?.value ?? p?.bpm
+      if (typeof hr === 'number' && hr > 30 && hr < 240) {
+        bpmsHoje.push(hr)
+      }
+      const cal = p?.activeCalories ?? p?.data?.activeCalories ?? p?.calories
+      if (typeof cal === 'number' && cal > 0) {
+        caloriasAtivasRelogioMax = Math.max(caloriasAtivasRelogioMax, cal)
+      }
+    }
+
+    const fcMediaDia = bpmsHoje.length > 0
+      ? Math.round(bpmsHoje.reduce((a, b) => a + b, 0) / bpmsHoje.length)
+      : null
+
+    // Busca calorias dos treinos concluídos no dia de hoje
+    const treinosHoje = await prisma.treinoHistorico.findMany({
+      where: {
+        ator_id: aluno.id,
+        status_novo: TreinoStatus.CONCLUIDO,
+        timestamp: { gte: inicioHoje, lte: fimHoje },
+      }
+    })
+
+    const caloriasTreinosHoje = treinosHoje.reduce((acc, t) => acc + (t.calorias_queimadas || 0), 0)
+    const caloriasAtivasTotalDia = Math.max(caloriasAtivasRelogioMax, Math.round(caloriasTreinosHoje))
 
     request.log.info({
       tag: '[GymApp:WearableQuery]',
       alunoId: aluno.id,
       integracoesCount: integracoes.length,
       ultimosEventosCount: ultimosEventos.length,
-    }, `🔍 Consulta de leituras do relógio: ${integracoes.length} integracao(ões), ${ultimosEventos.length} evento(s)`)
+      fcMediaDia,
+      amostrasDiaCount: bpmsHoje.length,
+      caloriasAtivasTotalDia,
+    }, `🔍 Consulta de leituras do relógio: ${integracoes.length} integracao(ões), FC Média Dia: ${fcMediaDia || '--'} bpm (${bpmsHoje.length} amostras), Calorias Ativas: ${caloriasAtivasTotalDia} kcal`)
 
     return reply.status(200).send({
       integracoes,
       ultimosEventos,
+      fcMediaDia,
+      amostrasDiaCount: bpmsHoje.length,
+      caloriasAtivasDia: caloriasAtivasTotalDia,
     })
   })
 
   /**
    * POST /integrations/wearables/test-sync
-   * Simula a captura de dados do relógio (Huawei GT 5 Pro) em tempo real para testes do usuário.
+   * Sincroniza leitura do relógio (Huawei / Smartwatch) em tempo real com fidelidade aos dados.
    */
   app.post('/wearables/test-sync', { preHandler: preHandlerAluno }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
 
     const body = z.object({
       provedor: z.string().default('huawei'),
-      heartRateAvg: z.number().default(74),
+      heartRateAvg: z.number().default(65),
       activeCalories: z.number().default(380),
       pesoKg: z.number().optional(),
     }).parse(request.body)

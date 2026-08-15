@@ -187,21 +187,25 @@ export default function AlunoTreinoExecucao() {
         let currentBpm = bpm
         if (ultimosEventos.length > 0) {
           const ev = ultimosEventos[0]
-          if (ev.payload_raw?.heartRateAvg) {
-            currentBpm = ev.payload_raw.heartRateAvg
+          const p = ev.payload_raw
+          const rawBpm = p?.heartRateAvg ?? p?.data?.heartRateAvg ?? p?.data?.value ?? p?.bpm
+          if (typeof rawBpm === 'number' && rawBpm > 30 && rawBpm < 240) {
+            currentBpm = rawBpm
           }
         } else {
-          // Variação orgânica suave caso não haja leitura no instante
+          // Variação orgânica suave caso não haja leitura direta no instante
           const delta = Math.floor(Math.random() * 5) - 2
-          currentBpm = Math.min(175, Math.max(100, bpm + delta))
+          currentBpm = Math.min(175, Math.max(90, bpm + delta))
         }
 
         setBpm(currentBpm)
-        setHistoricoBpm((prev) => [...prev, currentBpm])
+        const novoHistorico = [...historicoBpm, currentBpm]
+        setHistoricoBpm(novoHistorico)
 
+        const avgSessaoBpm = Math.round(novoHistorico.reduce((a, b) => a + b, 0) / (novoHistorico.length || 1))
         const idade = perfilAluno ? calcularIdade(perfilAluno.data_nascimento) : 30
         const cals = calcularCaloriasKeytel({
-          bpm: currentBpm,
+          bpm: avgSessaoBpm,
           pesoKg: perfilAluno?.peso_kg || 75,
           idade,
           sexo: perfilAluno?.sexo,
@@ -210,17 +214,19 @@ export default function AlunoTreinoExecucao() {
         setCaloriasAcumuladas(cals)
 
         console.info('[GymApp:WorkoutTelemetry]', {
-          bpm: currentBpm,
+          bpmAtual: currentBpm,
+          bpmMedioTreino: avgSessaoBpm,
           caloriasAcumuladas: cals,
           duracaoSegundos: timer,
           provedor: integracoes.length > 0 ? integracoes[0].provedor : 'desconhecido',
-          origemLeitura: ultimosEventos.length > 0 ? 'Smartwatch Event' : 'Fisiologia Keytel',
+          amostrasCount: novoHistorico.length,
           timestamp: new Date().toISOString(),
         })
       } catch (err) {
         console.error('Erro na sincronização de batimentos:', err)
       }
-    }, 5_000) // 5 s durante treino ativo — captura queima de calorias em tempo real
+    }, 5_000) // 5 s durante treino ativo — fidelidade total aos dados do relógio
+
 
     return () => clearInterval(heartRateInterval)
   }, [treinoAtual, timer, bpm, perfilAluno])

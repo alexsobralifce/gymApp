@@ -236,9 +236,12 @@ export const api = {
   getWearables: () => api.get<{
     integracoes: Array<{ id: string; provedor: string; user_id_ext: string; ativo: boolean; criado_em: string }>;
     ultimosEventos: Array<{ id: string; provedor: string; tipo: string; payload_raw: any; recebido_em: string; processado: boolean }>;
+    fcMediaDia?: number | null;
+    amostrasDiaCount?: number;
+    caloriasAtivasDia?: number;
   }>('/integrations/wearables'),
 
-  testSyncWearable: (provedor: string = 'huawei', heartRateAvg: number = 74, activeCalories: number = 380) =>
+  testSyncWearable: (provedor: string = 'huawei', heartRateAvg: number = 65, activeCalories: number = 380) =>
     api.post<{ success: boolean; message: string; evento: any }>('/integrations/wearables/test-sync', { provedor, heartRateAvg, activeCalories }),
 
   connectWearable: (provedor: string, userIdExt?: string) =>

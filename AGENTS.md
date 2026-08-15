@@ -128,7 +128,7 @@ apps/api/src/
 
 - **RF23 - Clube de Parceiros/Vantagens**: Vitrine de parceiros do ecossistema com descontos exclusivos em suplementação, vestuário, nutrição. Promoções destacadas com links externos.
 
-- **RF24 - Health Connect / Integração com Dispositivos**: Componentes `HealthConnectCard`, `HuaweiBridgeGuide`, `WatchSyncButton` para integração com Google Health Connect, Huawei e smartwatches.
+- **RF24 - Smartwatches & Integração com Dispositivos (Open Wearables)**: Sincronização contínua a cada 30 segundos ao longo do dia para consolidação da FC Média diária (fidelidade aos dados reais recebidos do relógio) e acúmulo incremental das calorias ativas do dia (`00:00:00` a `23:59:59`) com base nas medidas vitais cadastradas (peso, altura, idade/nascimento, sexo) e treinos executados. Telemetria de alta frequência a cada 5 segundos durante treinos ativos (`EM_EXECUCAO`) com cálculo contínuo de FC Média da sessão, FC Máxima e gasto calórico em tempo real (Keytel et al.). Painel `WearableConnectCard`, guias `HuaweiBridgeGuide` e diagnóstico em `DebugOverlay`.
 
 - **RF25 - PWA (Progressive Web App)**: PWA como via principal de instalação a partir do site, com `PWAInstallPrompt` (Android/Chrome) e guia iOS via Safari. Código preparado para Capacitor como opção futura (ícones, detecção `isNativePlatform()`, CapacitorHttp). Polimento de app nativo: `overscroll-behavior: none` (sem pull-to-refresh/glow), `user-select: none` (sem menu de copiar), `touch-action: manipulation` (sem zoom por duplo-toque), `beforeunload` removido (substituído por `useBlocker` + `ConfirmModal`), `window.confirm` substituído por `ConfirmModal` em 4 páginas. `@capgo/capacitor-keep-awake` para manter tela ligada durante treino.
 

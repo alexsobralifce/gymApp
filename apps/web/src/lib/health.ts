@@ -128,3 +128,45 @@ export function obterZonaCardiaca(bpm: number, idade?: number | null): ZonaCardi
     percentualFcMax: pct,
   }
 }
+
+/**
+ * Calcula a média de batimentos cardíacos a partir de um array de leituras
+ */
+export function calcularMediaFC(leituras: number[]): number | null {
+  const validas = leituras.filter((b) => typeof b === 'number' && b > 30 && b < 240)
+  if (validas.length === 0) return null
+  const soma = validas.reduce((acc, cur) => acc + cur, 0)
+  return Math.round(soma / validas.length)
+}
+
+/**
+ * Calcula a Taxa Metabólica Basal (TMB / BMR) baseada nas medidas vitais:
+ * - Se massa magra disponível: Katch-McArdle
+ * - Caso contrário: Mifflin-St Jeor
+ */
+export function calcularTMB({
+  pesoKg,
+  alturaCm,
+  idade,
+  sexo = 'MASCULINO',
+  massaMagraKg,
+}: {
+  pesoKg?: number | null
+  alturaCm?: number | null
+  idade?: number | null
+  sexo?: 'MASCULINO' | 'FEMININO' | null
+  massaMagraKg?: number | null
+}): number {
+  if (massaMagraKg && massaMagraKg > 0) {
+    return Math.round(370 + 21.6 * massaMagraKg)
+  }
+  const p = pesoKg && pesoKg > 0 ? pesoKg : 75
+  const a = alturaCm && alturaCm > 0 ? alturaCm : 175
+  const i = idade && idade > 0 ? idade : 30
+
+  if (sexo === 'FEMININO') {
+    return Math.round(10 * p + 6.25 * a - 5 * i - 161)
+  }
+  return Math.round(10 * p + 6.25 * a - 5 * i + 5)
+}
+

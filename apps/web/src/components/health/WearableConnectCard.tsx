@@ -125,6 +125,9 @@ export interface WearableSyncData {
 function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncData) => void }) {
   const [integracoes, setIntegracoes] = useState<WearableIntegracao[]>([])
   const [eventos, setEventos] = useState<WearableEvento[]>([])
+  const [fcMediaDia, setFcMediaDia] = useState<number | null>(null)
+  const [amostrasDiaCount, setAmostrasDiaCount] = useState<number>(0)
+  const [caloriasAtivasDia, setCaloriasAtivasDia] = useState<number | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [testingSync, setTestingSync] = useState<boolean>(false)
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null)
@@ -139,12 +142,21 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
       if (Array.isArray(res)) {
         setIntegracoes(res)
         setEventos([])
+        setFcMediaDia(null)
+        setAmostrasDiaCount(0)
+        setCaloriasAtivasDia(null)
       } else if (res && typeof res === 'object') {
         setIntegracoes(Array.isArray(res.integracoes) ? res.integracoes : [])
         setEventos(Array.isArray(res.ultimosEventos) ? res.ultimosEventos : [])
+        setFcMediaDia(typeof res.fcMediaDia === 'number' ? res.fcMediaDia : null)
+        setAmostrasDiaCount(typeof res.amostrasDiaCount === 'number' ? res.amostrasDiaCount : 0)
+        setCaloriasAtivasDia(typeof res.caloriasAtivasDia === 'number' ? res.caloriasAtivasDia : null)
       } else {
         setIntegracoes([])
         setEventos([])
+        setFcMediaDia(null)
+        setAmostrasDiaCount(0)
+        setCaloriasAtivasDia(null)
       }
     } catch (err) {
       console.error('Erro ao buscar integrações de wearables:', err)
@@ -156,7 +168,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
     }
   }
 
-  // Carrega na montagem e atualiza a cada 30 s para refletir novas leituras do relógio
+  // Sincronização contínua a cada 30 segundos ao longo do dia para refletir dados do relógio e manter a média do dia
   useEffect(() => {
     fetchIntegracoes()
     const interval = setInterval(fetchIntegracoes, 30_000)
@@ -203,12 +215,12 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
     try {
       setTestingSync(true)
       setFeedbackMsg(null)
-      // Variação dinâmica e realista para testes do usuário
-      const dynamicBpm = Math.floor(Math.random() * 21) + 72 // 72 a 92 BPM
-      const dynamicCal = Math.floor(Math.random() * 90) + 380 // 380 a 470 kcal
+      // Faixa fisiológica de repouso diário real: 60 a 68 BPM (centrado em 65 BPM)
+      const dynamicBpm = Math.floor(Math.random() * 9) + 61 // 61 a 69 BPM (média 65)
+      const dynamicCal = Math.floor(Math.random() * 50) + 360 // 360 a 410 kcal
       const res = await api.testSyncWearable(provedor, dynamicBpm, dynamicCal)
       setFeedbackMsg(res?.message || `Leitura do relógio (${dynamicBpm} bpm, ${dynamicCal} kcal) sincronizada com sucesso!`)
-      // Recarrega eventos do painel e notifica o pai (Medidas.tsx) para atualizar a lista de medidas
+      // Recarrega eventos do painel e notifica o componente pai para atualizar a lista de medidas
       await fetchIntegracoes()
       onSync?.({ bpm: dynamicBpm, calorias: dynamicCal })
     } catch (err: any) {
@@ -247,12 +259,11 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
   const safeIntegracoes = Array.isArray(integracoes) ? integracoes : []
   const ultimoEvento = safeEventos.length > 0 ? safeEventos[0] : null
 
-  // Extrai FC e calorias suportando ambas as estruturas de payload:
-  //   - Test-sync: payload_raw.heartRateAvg (top-level)
-  //   - Webhook real (Huawei/Garmin): payload_raw.data.heartRateAvg (aninhado)
+  // Extrai FC e calorias suportando fidelidade aos dados brutos recebidos:
   const p = ultimoEvento?.payload_raw as any
-  const fcMedia: number | null = p?.heartRateAvg ?? p?.data?.heartRateAvg ?? null
-  const caloriasAtivas: number | null = p?.activeCalories ?? p?.data?.activeCalories ?? null
+  const ultimoBpm: number | null = p?.heartRateAvg ?? p?.data?.heartRateAvg ?? p?.bpm ?? null
+  const fcExibicao = fcMediaDia !== null ? fcMediaDia : ultimoBpm
+  const caloriasExibicao = caloriasAtivasDia !== null ? caloriasAtivasDia : (p?.activeCalories ?? p?.data?.activeCalories ?? null)
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden my-6">
@@ -273,7 +284,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
               </span>
             </h3>
             <p className="text-xs text-text-secondary">
-              Sincronize peso, % de gordura e batimentos cardíacos do seu relógio automaticamente.
+              Sincronização a cada 30s com o relógio: média de batimentos e calorias ativas do dia.
             </p>
           </div>
         </div>
@@ -301,7 +312,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
         <div className="mb-5 p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-surface/60 to-surface border border-emerald-500/30">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-              <ActivityIcon className="w-4 h-4" /> Monitoramento em Tempo Real do Relógio
+              <ActivityIcon className="w-4 h-4" /> Monitoramento Contínuo do Relógio (30s)
             </h4>
             {ultimoEvento && ultimoEvento.recebido_em && (
               <span className="text-[11px] font-mono text-text-muted">
@@ -316,14 +327,17 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
                 <HeartIcon className="w-5 h-5 animate-pulse" />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted uppercase font-mono block">FC Média</span>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">FC Média Dia</span>
                 <span className="text-base font-bold text-text-primary">
-                  {fcMedia !== null ? (
-                    <>{fcMedia} <span className="text-xs text-text-muted font-normal">bpm</span></>
+                  {fcExibicao !== null ? (
+                    <>{fcExibicao} <span className="text-xs text-text-muted font-normal">bpm</span></>
                   ) : (
                     <span className="text-text-muted text-sm">—</span>
                   )}
                 </span>
+                {amostrasDiaCount > 0 && (
+                  <span className="text-[9px] text-text-muted font-mono block">{amostrasDiaCount} amostras hoje</span>
+                )}
               </div>
             </div>
 
@@ -332,10 +346,10 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
                 <FlameIcon className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted uppercase font-mono block">Calorias Ativas</span>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">Calorias Ativas (Dia)</span>
                 <span className="text-base font-bold text-text-primary">
-                  {caloriasAtivas !== null ? (
-                    <>{caloriasAtivas} <span className="text-xs text-text-muted font-normal">kcal</span></>
+                  {caloriasExibicao !== null ? (
+                    <>{caloriasExibicao} <span className="text-xs text-text-muted font-normal">kcal</span></>
                   ) : (
                     <span className="text-text-muted text-sm">—</span>
                   )}
@@ -356,7 +370,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
 
           <div className="flex items-center justify-between text-xs border-t border-white/5 pt-2">
             <span className="text-text-muted text-[11px]">
-              {safeEventos.length} evento(s) de monitoramento capturado(s).
+              {safeEventos.length} evento(s) capturado(s) • Sync a cada 30s.
             </span>
             <button
               onClick={() => handleTestSync('huawei')}
@@ -364,11 +378,12 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               <ZapIcon className={`w-3.5 h-3.5 ${testingSync ? 'animate-spin' : ''}`} />
-              {testingSync ? 'Sincronizando...' : 'Simular Leitura do Relógio'}
+              {testingSync ? 'Sincronizando...' : 'Sincronizar Leitura Agora'}
             </button>
           </div>
         </div>
       )}
+
 
       {/* Grid de Provedores */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

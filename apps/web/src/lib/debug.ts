@@ -3,6 +3,9 @@ export interface WearableSnapshot {
   integracoes: Array<{ id: string; provedor: string; ativo: boolean }>
   ultimosEventosCount: number
   ultimoEvento: { id: string; provedor: string; tipo: string; bpm?: number; calories?: number; recebido_em: string } | null
+  fcMediaDia?: number | null
+  amostrasDiaCount?: number
+  caloriasAtivasDia?: number | null
   status: 'OK' | 'SEM_DISPOSITIVOS' | 'ERRO'
   error?: string
 }
@@ -380,6 +383,7 @@ export async function collectWearableSnapshot(): Promise<WearableSnapshot> {
     const ultimosEventos = res && typeof res === 'object' && Array.isArray(res.ultimosEventos) ? res.ultimosEventos : []
 
     const ultimo = ultimosEventos.length > 0 ? ultimosEventos[0] : null
+    const p: any = ultimo?.payload_raw
     const snap: WearableSnapshot = {
       integracoesCount: integracoes.length,
       integracoes: integracoes.map((i: any) => ({ id: i.id, provedor: i.provedor, ativo: i.ativo })),
@@ -389,11 +393,14 @@ export async function collectWearableSnapshot(): Promise<WearableSnapshot> {
             id: ultimo.id,
             provedor: ultimo.provedor,
             tipo: ultimo.tipo,
-            bpm: ultimo.payload_raw?.heartRateAvg,
-            calories: ultimo.payload_raw?.activeCalories,
+            bpm: p?.heartRateAvg ?? p?.data?.heartRateAvg ?? p?.data?.value ?? p?.bpm,
+            calories: p?.activeCalories ?? p?.data?.activeCalories ?? p?.calories,
             recebido_em: ultimo.recebido_em,
           }
         : null,
+      fcMediaDia: typeof res?.fcMediaDia === 'number' ? res.fcMediaDia : null,
+      amostrasDiaCount: typeof res?.amostrasDiaCount === 'number' ? res.amostrasDiaCount : 0,
+      caloriasAtivasDia: typeof res?.caloriasAtivasDia === 'number' ? res.caloriasAtivasDia : null,
       status: integracoes.length > 0 || ultimosEventos.length > 0 ? 'OK' : 'SEM_DISPOSITIVOS',
     }
 
@@ -409,6 +416,7 @@ export async function collectWearableSnapshot(): Promise<WearableSnapshot> {
     }
   }
 }
+
 
 export async function diagnoseWearable(): Promise<WearableSnapshot> {
   const snap = await collectWearableSnapshot()

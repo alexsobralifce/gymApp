@@ -199,6 +199,18 @@ function WearableSummary({ snap }: { snap: WearableSnapshot | null }) {
         <span className="text-text font-semibold">{snap.integracoesCount} ativo(s)</span>
         <span>Eventos Lidos</span>
         <span className="text-text font-semibold">{snap.ultimosEventosCount} recente(s)</span>
+        {typeof snap.fcMediaDia === 'number' && (
+          <>
+            <span>FC Média (Hoje)</span>
+            <span className="text-emerald-400 font-semibold">{snap.fcMediaDia} bpm ({snap.amostrasDiaCount || 0} amostras)</span>
+          </>
+        )}
+        {typeof snap.caloriasAtivasDia === 'number' && (
+          <>
+            <span>Calorias Ativas (Dia)</span>
+            <span className="text-orange-400 font-semibold">{snap.caloriasAtivasDia} kcal</span>
+          </>
+        )}
       </div>
 
       {snap.ultimoEvento && (
@@ -210,6 +222,7 @@ function WearableSummary({ snap }: { snap: WearableSnapshot | null }) {
           <div className="text-text-muted opacity-80">{new Date(snap.ultimoEvento.recebido_em).toLocaleString()}</div>
         </div>
       )}
+
 
       {snap.error && (
         <p className="text-destructive font-medium leading-snug">erro: {snap.error}</p>
