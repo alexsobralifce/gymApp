@@ -1,5 +1,3 @@
-import { api } from '../api/client'
-
 export interface WearableSnapshot {
   integracoesCount: number
   integracoes: Array<{ id: string; provedor: string; ativo: boolean }>
@@ -376,6 +374,7 @@ export async function diagnosePush(): Promise<PushSnapshot> {
 
 export async function collectWearableSnapshot(): Promise<WearableSnapshot> {
   try {
+    const { api } = await import('../api/client')
     const res: any = await api.getWearables()
     const integracoes = res && typeof res === 'object' && Array.isArray(res.integracoes) ? res.integracoes : []
     const ultimosEventos = res && typeof res === 'object' && Array.isArray(res.ultimosEventos) ? res.ultimosEventos : []
