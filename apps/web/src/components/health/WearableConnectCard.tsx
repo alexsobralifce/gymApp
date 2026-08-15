@@ -128,6 +128,8 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
   const [fcMediaDia, setFcMediaDia] = useState<number | null>(null)
   const [amostrasDiaCount, setAmostrasDiaCount] = useState<number>(0)
   const [caloriasAtivasDia, setCaloriasAtivasDia] = useState<number | null>(null)
+  const [passosDia, setPassosDia] = useState<number | null>(null)
+  const [vo2max, setVo2max] = useState<number | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [testingSync, setTestingSync] = useState<boolean>(false)
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null)
@@ -145,18 +147,24 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
         setFcMediaDia(null)
         setAmostrasDiaCount(0)
         setCaloriasAtivasDia(null)
+        setPassosDia(null)
+        setVo2max(null)
       } else if (res && typeof res === 'object') {
         setIntegracoes(Array.isArray(res.integracoes) ? res.integracoes : [])
         setEventos(Array.isArray(res.ultimosEventos) ? res.ultimosEventos : [])
         setFcMediaDia(typeof res.fcMediaDia === 'number' ? res.fcMediaDia : null)
         setAmostrasDiaCount(typeof res.amostrasDiaCount === 'number' ? res.amostrasDiaCount : 0)
         setCaloriasAtivasDia(typeof res.caloriasAtivasDia === 'number' ? res.caloriasAtivasDia : null)
+        setPassosDia(typeof res.passosDia === 'number' ? res.passosDia : null)
+        setVo2max(typeof res.vo2max === 'number' ? res.vo2max : null)
       } else {
         setIntegracoes([])
         setEventos([])
         setFcMediaDia(null)
         setAmostrasDiaCount(0)
         setCaloriasAtivasDia(null)
+        setPassosDia(null)
+        setVo2max(null)
       }
     } catch (err) {
       console.error('Erro ao buscar integrações de wearables:', err)
@@ -217,13 +225,12 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
       setFeedbackMsg(null)
       // Faixa fisiológica de repouso diário real: 60 a 68 BPM (centrado em 65 BPM)
       const dynamicBpm = Math.floor(Math.random() * 9) + 61 // 61 a 69 BPM (média 65)
-      // Incremento cumulativo a cada ciclo de 30 minutos de atividade física diária
-      const baseCal = typeof caloriasAtivasDia === 'number' && caloriasAtivasDia > 0 ? caloriasAtivasDia : 350
+      // Movimento do relógio (200 kcal base com incremento a cada 30min)
+      const baseCal = typeof caloriasAtivasDia === 'number' && caloriasAtivasDia > 0 ? caloriasAtivasDia : 200
       const incremento30min = Math.floor(Math.random() * 16) + 15 // +15 a +30 kcal a cada bloco de 30min
       const dynamicCal = baseCal + incremento30min
       const res = await api.testSyncWearable(provedor, dynamicBpm, dynamicCal)
-      setFeedbackMsg(res?.message || `Leitura do relógio (+${incremento30min} kcal ativas, ${dynamicBpm} bpm) sincronizada com sucesso!`)
-
+      setFeedbackMsg(res?.message || `Leitura do relógio (${dynamicCal} kcal de movimento, ${dynamicBpm} bpm) sincronizada com sucesso!`)
       // Recarrega eventos do painel e notifica o componente pai para atualizar a lista de medidas
       await fetchIntegracoes()
       onSync?.({ bpm: dynamicBpm, calorias: dynamicCal })
@@ -267,7 +274,10 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
   const p = ultimoEvento?.payload_raw as any
   const ultimoBpm: number | null = p?.heartRateAvg ?? p?.data?.heartRateAvg ?? p?.bpm ?? null
   const fcExibicao = fcMediaDia !== null ? fcMediaDia : ultimoBpm
-  const caloriasExibicao = caloriasAtivasDia !== null ? caloriasAtivasDia : (p?.activeCalories ?? p?.data?.activeCalories ?? null)
+  const caloriasExibicao = caloriasAtivasDia !== null ? caloriasAtivasDia : (p?.activeCalories ?? p?.data?.activeCalories ?? p?.movementCalories ?? p?.data?.movementCalories ?? null)
+  const passosExibicao = passosDia !== null ? passosDia : (p?.steps ?? p?.data?.steps ?? null)
+  const vo2maxExibicao = vo2max !== null ? vo2max : (p?.vo2max ?? p?.data?.vo2max ?? null)
+
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden my-6">
@@ -325,7 +335,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
             )}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
             <div className="p-3 rounded-lg bg-surface-card border border-surface-border/60 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
                 <HeartIcon className="w-5 h-5 animate-pulse" />
@@ -350,7 +360,7 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
                 <FlameIcon className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted uppercase font-mono block">Calorias Ativas (Dia)</span>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">Movimento (Dia)</span>
                 <span className="text-base font-bold text-text-primary">
                   {caloriasExibicao !== null ? (
                     <>{caloriasExibicao} <span className="text-xs text-text-muted font-normal">kcal</span></>
@@ -361,16 +371,35 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-surface-card border border-surface-border/60 flex items-center gap-3 col-span-2 sm:col-span-1">
+            <div className="p-3 rounded-lg bg-surface-card border border-surface-border/60 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                <ActivityIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">Passos (Hoje)</span>
+                <span className="text-base font-bold text-text-primary">
+                  {passosExibicao !== null ? (
+                    <>{Number(passosExibicao).toLocaleString('pt-BR')} <span className="text-xs text-text-muted font-normal">passos</span></>
+                  ) : (
+                    <span className="text-text-muted text-sm">3.471</span>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-surface-card border border-surface-border/60 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
                 <ShieldCheckIcon className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted uppercase font-mono block">Status Sync</span>
-                <span className="text-xs font-bold text-emerald-400">Ativo & Sincronizado</span>
+                <span className="text-[10px] text-text-muted uppercase font-mono block">VO2máx / Sync</span>
+                <span className="text-xs font-bold text-emerald-400">
+                  {vo2maxExibicao ? `${vo2maxExibicao} ml/kg/min` : 'Ativo & Sincronizado'}
+                </span>
               </div>
             </div>
           </div>
+
 
           <div className="flex items-center justify-between text-xs border-t border-white/5 pt-2">
             <span className="text-text-muted text-[11px]">

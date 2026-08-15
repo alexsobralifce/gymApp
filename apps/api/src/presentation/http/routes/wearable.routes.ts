@@ -255,6 +255,8 @@ export async function wearableRoutes(app: FastifyInstance) {
 
     const bpmsHoje: number[] = []
     let caloriasAtivasRelogioMax = 0
+    let passosHojeMax = 0
+    let vo2maxHoje: number | null = null
 
     for (const ev of eventosHoje) {
       const p: any = ev.payload_raw
@@ -262,9 +264,28 @@ export async function wearableRoutes(app: FastifyInstance) {
       if (typeof hr === 'number' && hr > 30 && hr < 240) {
         bpmsHoje.push(hr)
       }
-      const cal = p?.activeCalories ?? p?.data?.activeCalories ?? p?.calories
+      const cal = p?.activeCalories ?? 
+                  p?.data?.activeCalories ?? 
+                  p?.data?.movementCalories ?? 
+                  p?.data?.movement_calories ?? 
+                  p?.data?.movement ?? 
+                  p?.data?.active_calories ?? 
+                  p?.movementCalories ?? 
+                  p?.movement_calories ?? 
+                  p?.movement ?? 
+                  p?.calories ?? 
+                  p?.data?.calories ?? 
+                  p?.data?.calorie
       if (typeof cal === 'number' && cal > 0) {
         caloriasAtivasRelogioMax = Math.max(caloriasAtivasRelogioMax, cal)
+      }
+      const steps = p?.steps ?? p?.data?.steps ?? p?.data?.passos ?? p?.passos
+      if (typeof steps === 'number' && steps > 0) {
+        passosHojeMax = Math.max(passosHojeMax, steps)
+      }
+      const vo2 = p?.vo2max ?? p?.data?.vo2max ?? p?.data?.vo2Max
+      if (typeof vo2 === 'number' && vo2 > 0) {
+        vo2maxHoje = vo2
       }
     }
 
@@ -292,7 +313,8 @@ export async function wearableRoutes(app: FastifyInstance) {
       fcMediaDia,
       amostrasDiaCount: bpmsHoje.length,
       caloriasAtivasTotalDia,
-    }, `🔍 Consulta de leituras do relógio: ${integracoes.length} integracao(ões), FC Média Dia: ${fcMediaDia || '--'} bpm (${bpmsHoje.length} amostras), Calorias Ativas: ${caloriasAtivasTotalDia} kcal`)
+      passosHojeMax,
+    }, `🔍 Consulta de leituras do relógio: ${integracoes.length} integracao(ões), FC Média Dia: ${fcMediaDia || '--'} bpm (${bpmsHoje.length} amostras), Movimento: ${caloriasAtivasTotalDia} kcal, Passos: ${passosHojeMax}`)
 
     return reply.status(200).send({
       integracoes,
@@ -300,6 +322,8 @@ export async function wearableRoutes(app: FastifyInstance) {
       fcMediaDia,
       amostrasDiaCount: bpmsHoje.length,
       caloriasAtivasDia: caloriasAtivasTotalDia,
+      passosDia: passosHojeMax > 0 ? passosHojeMax : null,
+      vo2max: vo2maxHoje,
     })
   })
 
@@ -313,7 +337,9 @@ export async function wearableRoutes(app: FastifyInstance) {
     const body = z.object({
       provedor: z.string().default('huawei'),
       heartRateAvg: z.number().default(65),
-      activeCalories: z.number().default(380),
+      activeCalories: z.number().default(200), // Calibrado com o valor de Movimento real (200 kcal)
+      steps: z.number().default(3471), // 3.471 passos
+      vo2max: z.number().default(41), // 41 ml/kg/min
       pesoKg: z.number().optional(),
     }).parse(request.body)
 
@@ -323,7 +349,8 @@ export async function wearableRoutes(app: FastifyInstance) {
       provedor: body.provedor,
       heartRateAvg: body.heartRateAvg,
       activeCalories: body.activeCalories,
-    }, `⚡ Leitura do relógio ${body.provedor.toUpperCase()} capturada: ${body.heartRateAvg} BPM / ${body.activeCalories} kcal`)
+      steps: body.steps,
+    }, `⚡ Leitura do relógio ${body.provedor.toUpperCase()} capturada: ${body.heartRateAvg} BPM / ${body.activeCalories} kcal (${body.steps} passos)`)
 
     const now = new Date()
 
@@ -334,13 +361,17 @@ export async function wearableRoutes(app: FastifyInstance) {
         tipo: 'heart_rate',
         payload_raw: {
           simulado: true,
-          // Estrutura normalizada compatível com webhook real:
-          // Frontend lê tanto payload_raw.heartRateAvg (legado) quanto payload_raw.data.heartRateAvg
           heartRateAvg: body.heartRateAvg,
           activeCalories: body.activeCalories,
+          movementCalories: body.activeCalories,
+          steps: body.steps,
+          vo2max: body.vo2max,
           data: {
             heartRateAvg: body.heartRateAvg,
             activeCalories: body.activeCalories,
+            movementCalories: body.activeCalories,
+            steps: body.steps,
+            vo2max: body.vo2max,
             pesoKg: body.pesoKg || aluno.peso_kg,
           },
           timestamp: now.toISOString(),
@@ -348,6 +379,7 @@ export async function wearableRoutes(app: FastifyInstance) {
         processado: true,
       }
     })
+
 
     // Garante que o vínculo de integração do provedor permaneça ativo no cadastro do aluno
     await prisma.wearableIntegracao.upsert({
