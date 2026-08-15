@@ -14,7 +14,7 @@ import {
   type PushSnapshot,
   type WearableSnapshot,
 } from '../../lib/debug'
-import { BugIcon } from '../icons/Icon'
+import { BugIcon, XIcon } from '../icons/Icon'
 
 interface DebugOverlayProps {
   open: boolean
@@ -294,65 +294,70 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-2 sm:p-4 backdrop-blur-xs">
       <div className="flex h-[85vh] w-full max-w-2xl flex-col rounded-xl bg-surface-card border border-surface-input text-text shadow-2xl overflow-hidden animate-modal-pop">
-        <div className="flex items-center justify-between border-b border-surface-input px-4 py-3 bg-surface gap-2">
+        {/* Header Fixo com Título e Botão Fechar em Destaque */}
+        <div className="flex items-center justify-between border-b border-surface-input px-4 py-3 bg-surface shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-base shrink-0">🐛</span>
+            <span className="text-lg shrink-0">🐛</span>
             <h3 className="text-sm font-bold truncate">Logs de Diagnóstico</h3>
-            <span className="rounded bg-surface-input px-2 py-0.5 text-xs text-text-muted shrink-0">
+            <span className="rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted shrink-0 font-mono font-bold">
               {logs.length}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-            <button
-              type="button"
-              onClick={handleDiagnose}
-              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 cursor-pointer min-h-9"
-            >
-              Diagnóstico Tema
-            </button>
-            <button
-              type="button"
-              onClick={handlePushDiagnose}
-              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 cursor-pointer min-h-9"
-            >
-              Diagnóstico Push
-            </button>
-            <button
-              type="button"
-              onClick={handleWearableDiagnose}
-              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 cursor-pointer min-h-9"
-            >
-              Diagnóstico Relógio
-            </button>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer min-h-9 ${
-                copyState === 'ok'
-                  ? 'bg-success/20 text-success'
-                  : copyState === 'fail'
-                    ? 'bg-destructive/20 text-destructive'
-                    : 'bg-surface-input text-text hover:bg-secondary'
-              }`}
-            >
-              {copyState === 'ok' ? 'Copiado!' : copyState === 'fail' ? 'Falhou' : 'Copiar Logs'}
-            </button>
-            <button
-              type="button"
-              onClick={clearDebugLogs}
-              className="rounded-lg px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-input hover:text-text cursor-pointer min-h-9"
-            >
-              Limpar
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-1.5 text-text-muted hover:bg-surface-input hover:text-text cursor-pointer min-h-9 min-w-9"
-              aria-label="Fechar"
-            >
-              ✕
-            </button>
-          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-input/80 text-text hover:bg-secondary active:scale-95 transition-all cursor-pointer border border-surface-border"
+            aria-label="Fechar modal"
+            title="Fechar"
+          >
+            <XIcon className="h-5 w-5 text-text" />
+          </button>
+        </div>
+
+        {/* Barra de Ações com Scroll Horizontal para Mobile */}
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-surface-input p-2.5 bg-surface-card shrink-0 no-scrollbar">
+          <button
+            type="button"
+            onClick={handleWearableDiagnose}
+            className="shrink-0 rounded-xl px-3 py-2 text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors cursor-pointer"
+          >
+            ⌚ Diagnóstico Relógio
+          </button>
+          <button
+            type="button"
+            onClick={handleDiagnose}
+            className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-colors cursor-pointer"
+          >
+            🎨 Diagnóstico Tema
+          </button>
+          <button
+            type="button"
+            onClick={handlePushDiagnose}
+            className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-colors cursor-pointer"
+          >
+            🔔 Diagnóstico Push
+          </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className={`shrink-0 rounded-xl px-3 py-2 text-xs font-bold border transition-colors cursor-pointer ${
+              copyState === 'ok'
+                ? 'bg-success/20 text-success border-success/40'
+                : copyState === 'fail'
+                  ? 'bg-destructive/20 text-destructive border-destructive/40'
+                  : 'bg-surface-input text-text border-surface-border hover:bg-secondary'
+            }`}
+          >
+            {copyState === 'ok' ? '✓ Copiado!' : copyState === 'fail' ? '✕ Falhou' : '📋 Copiar Logs'}
+          </button>
+          <button
+            type="button"
+            onClick={clearDebugLogs}
+            className="shrink-0 rounded-xl px-3 py-2 text-xs text-text-muted border border-surface-border hover:bg-surface-input hover:text-text transition-colors cursor-pointer"
+          >
+            🗑️ Limpar
+          </button>
         </div>
 
         <ThemeSummary snap={snap} />
