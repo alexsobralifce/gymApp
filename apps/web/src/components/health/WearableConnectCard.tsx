@@ -217,9 +217,13 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
       setFeedbackMsg(null)
       // Faixa fisiológica de repouso diário real: 60 a 68 BPM (centrado em 65 BPM)
       const dynamicBpm = Math.floor(Math.random() * 9) + 61 // 61 a 69 BPM (média 65)
-      const dynamicCal = Math.floor(Math.random() * 50) + 360 // 360 a 410 kcal
+      // Incremento cumulativo a cada ciclo de 30 minutos de atividade física diária
+      const baseCal = typeof caloriasAtivasDia === 'number' && caloriasAtivasDia > 0 ? caloriasAtivasDia : 350
+      const incremento30min = Math.floor(Math.random() * 16) + 15 // +15 a +30 kcal a cada bloco de 30min
+      const dynamicCal = baseCal + incremento30min
       const res = await api.testSyncWearable(provedor, dynamicBpm, dynamicCal)
-      setFeedbackMsg(res?.message || `Leitura do relógio (${dynamicBpm} bpm, ${dynamicCal} kcal) sincronizada com sucesso!`)
+      setFeedbackMsg(res?.message || `Leitura do relógio (+${incremento30min} kcal ativas, ${dynamicBpm} bpm) sincronizada com sucesso!`)
+
       // Recarrega eventos do painel e notifica o componente pai para atualizar a lista de medidas
       await fetchIntegracoes()
       onSync?.({ bpm: dynamicBpm, calorias: dynamicCal })
