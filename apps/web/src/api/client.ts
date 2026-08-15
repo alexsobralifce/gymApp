@@ -201,8 +201,15 @@ export const api = {
   registrarExecucao: (treinoId: string, data: { exercicioId: string; serieNumero: number; repeticoes: number; cargaKg: number }) =>
     api.post<ExecucaoExercicio>(`/treinos/${treinoId}/execucoes`, data),
 
-  finalizarTreino: (id: string, avaliacao?: string) =>
-    api.post<Treino>(`/treinos/${id}/finalizar`, avaliacao ? { avaliacao } : undefined),
+  finalizarTreino: (
+    id: string,
+    data?: {
+      avaliacao?: string
+      caloriasQueimadas?: number
+      frequenciaCardiacaMedia?: number
+      frequenciaCardiacaMaxima?: number
+    }
+  ) => api.post<Treino>(`/treinos/${id}/finalizar`, data || {}),
 
   criarTreinoAutogestao: (data: { nome: string; diasSemana: number[]; exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }> }) =>
     api.post<Treino>('/treinos/autogestao', data),

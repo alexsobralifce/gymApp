@@ -162,9 +162,12 @@ model TreinoHistorico {
   status_novo      TreinoStatus
   ator_id          String
   ator_tipo        TreinoAtor
-  timestamp        DateTime     @default(now())
-  duracao_segundos Int?
-  treino           Treino       @relation(fields: [treino_id], references: [id])
+  timestamp                  DateTime     @default(now())
+  duracao_segundos           Int?
+  calorias_queimadas          Float?
+  frequencia_cardiaca_media  Int?
+  frequencia_cardiaca_maxima Int?
+  treino                     Treino       @relation(fields: [treino_id], references: [id])
 
   @@map("treino_historico")
 }

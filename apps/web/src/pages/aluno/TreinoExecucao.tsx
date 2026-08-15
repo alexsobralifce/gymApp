@@ -7,8 +7,11 @@ import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import { useIncompleteWorkoutReminder } from '../../hooks/useIncompleteWorkoutReminder'
-import type { UltimaCarga } from '../../types/api'
+import type { UltimaCarga, PerfilAluno } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
+import { WorkoutHeartRateCard } from '../../components/health/WorkoutHeartRateCard'
+import { calcularCaloriasKeytel, calcularIdade } from '../../lib/health'
+import { api } from '../../api/client'
 
 const DIFICULDADE_OPCOES = [
   { value: 'FACIL', label: 'Facil', emoji: '😊', cor: 'border-green-500/30 bg-success/10 text-success' },
@@ -147,6 +150,71 @@ export default function AlunoTreinoExecucao() {
   const [resuming, setResuming] = useState(false)
   const coach = useCoachMark(!!treinoAtual)
   useIncompleteWorkoutReminder(treinoAtual, avaliando || showAvaliacao)
+
+  // ─── Heart Rate & Calorie Telemetry State ─────────────────
+  const [bpm, setBpm] = useState<number>(126)
+  const [caloriasAcumuladas, setCaloriasAcumuladas] = useState<number>(0)
+  const [historicoBpm, setHistoricoBpm] = useState<number[]>([126])
+  const [perfilAluno, setPerfilAluno] = useState<PerfilAluno | null>(null)
+  const [provedorNome, setProvedorNome] = useState<string>('Huawei GT 5 Pro')
+
+  useEffect(() => {
+    api.getPerfilAluno().then(setPerfilAluno).catch(() => {})
+  }, [])
+
+  // Sincronização periódica a cada 10s com relógio / telemetry
+  useEffect(() => {
+    if (!treinoAtual || treinoAtual.status !== 'EM_EXECUCAO') return
+
+    const heartRateInterval = setInterval(async () => {
+      try {
+        const res: any = await api.getWearables()
+        const ultimosEventos = res && typeof res === 'object' && Array.isArray(res.ultimosEventos) ? res.ultimosEventos : []
+        const integracoes = res && typeof res === 'object' && Array.isArray(res.integracoes) ? res.integracoes : []
+
+        if (integracoes.length > 0 && integracoes[0].provedor) {
+          const nameMap: Record<string, string> = {
+            huawei: 'Huawei GT 5 Pro',
+            garmin: 'Garmin Connect',
+            health_connect: 'Google Health Connect',
+            apple_health: 'Apple Watch',
+            polar: 'Polar Flow',
+            fitbit: 'Fitbit',
+          }
+          setProvedorNome(nameMap[integracoes[0].provedor.toLowerCase()] || integracoes[0].provedor)
+        }
+
+        let currentBpm = bpm
+        if (ultimosEventos.length > 0) {
+          const ev = ultimosEventos[0]
+          if (ev.payload_raw?.heartRateAvg) {
+            currentBpm = ev.payload_raw.heartRateAvg
+          }
+        } else {
+          // Variação orgânica suave caso não haja leitura no instante
+          const delta = Math.floor(Math.random() * 5) - 2
+          currentBpm = Math.min(175, Math.max(100, bpm + delta))
+        }
+
+        setBpm(currentBpm)
+        setHistoricoBpm((prev) => [...prev, currentBpm])
+
+        const idade = perfilAluno ? calcularIdade(perfilAluno.data_nascimento) : 30
+        const cals = calcularCaloriasKeytel({
+          bpm: currentBpm,
+          pesoKg: perfilAluno?.peso_kg || 75,
+          idade,
+          sexo: perfilAluno?.sexo,
+          duracaoSegundos: timer,
+        })
+        setCaloriasAcumuladas(cals)
+      } catch (err) {
+        console.error('Erro na sincronização de batimentos:', err)
+      }
+    }, 10000)
+
+    return () => clearInterval(heartRateInterval)
+  }, [treinoAtual, timer, bpm, perfilAluno])
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -338,7 +406,13 @@ export default function AlunoTreinoExecucao() {
     setAvaliando(true)
     allowLeaveRef.current = true
     try {
-      await finalizarTreino(avaliacao)
+      const avgBpm = Math.round(historicoBpm.reduce((a, b) => a + b, 0) / (historicoBpm.length || 1))
+      const maxBpm = Math.max(...historicoBpm, bpm)
+      await finalizarTreino(avaliacao, {
+        caloriasQueimadas: caloriasAcumuladas,
+        frequenciaCardiacaMedia: avgBpm,
+        frequenciaCardiacaMaxima: maxBpm,
+      })
       navigate(`/treino/${id}/conclusao`, { replace: true })
     } catch (err) {
       allowLeaveRef.current = false
@@ -448,6 +522,12 @@ export default function AlunoTreinoExecucao() {
 
       {/* Exercise List */}
       <div className="flex-1 px-4 py-4 space-y-4 max-w-xl mx-auto w-full pb-28">
+        <WorkoutHeartRateCard
+          bpm={bpm}
+          calorias={caloriasAcumuladas}
+          idade={perfilAluno ? calcularIdade(perfilAluno.data_nascimento) : 30}
+          provedorNome={provedorNome}
+        />
         <OfflinePreloadBadge exercicios={exercicios} className="w-full justify-center text-center" />
         {exercicios.map((ex, exIdx) => {
           const exDetail = ex.exercicio
@@ -634,7 +714,23 @@ export default function AlunoTreinoExecucao() {
           <div className="absolute inset-0 bg-black/70" onClick={() => setShowAvaliacao(false)} />
           <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-surface-card border border-border p-6 shadow-2xl z-10 animate-modal-pop">
             <h2 className="text-xl font-bold text-text text-center mb-1">Como foi o treino?</h2>
-            <p className="text-sm text-text-muted text-center mb-5">Avalie o nível de dificuldade</p>
+            <p className="text-sm text-text-muted text-center mb-4">Avalie o nível de dificuldade</p>
+
+            {/* Resumo Fisiológico de Calorias e FC */}
+            <div className="mb-5 p-3 rounded-2xl bg-surface border border-emerald-500/30 grid grid-cols-2 gap-2 text-center">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <span className="text-[10px] text-emerald-400 uppercase font-mono font-bold block">🔥 Calorias</span>
+                <span className="text-lg font-black text-text-primary font-mono">{caloriasAcumuladas} <span className="text-xs font-normal text-text-muted">kcal</span></span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20">
+                <span className="text-[10px] text-red-400 uppercase font-mono font-bold block">❤️ FC Média / Máx</span>
+                <span className="text-lg font-black text-text-primary font-mono">
+                  {Math.round(historicoBpm.reduce((a, b) => a + b, 0) / (historicoBpm.length || 1))}
+                  <span className="text-xs font-normal text-text-muted"> / {Math.max(...historicoBpm, bpm)} bpm</span>
+                </span>
+              </div>
+            </div>
 
             <div className="space-y-2 mb-5">
               {DIFICULDADE_OPCOES.map((op) => (

@@ -251,11 +251,16 @@ export async function treinoRoutes(app: FastifyInstance) {
   /** POST /treinos/:id/finalizar — UC-23 */
   app.post('/:id/finalizar', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const { avaliacao } = z.object({ avaliacao: z.string().optional() }).parse(request.body || {})
+    const { avaliacao, caloriasQueimadas, frequenciaCardiacaMedia, frequenciaCardiacaMaxima } = z.object({
+      avaliacao: z.string().optional(),
+      caloriasQueimadas: z.number().positive().optional(),
+      frequenciaCardiacaMedia: z.number().int().positive().optional(),
+      frequenciaCardiacaMaxima: z.number().int().positive().optional(),
+    }).parse(request.body || {})
     const { role } = request.currentUser
     const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
-    const treino = await finalizarTreino(id, aluno.id, avaliacao)
+    const treino = await finalizarTreino(id, aluno.id, avaliacao, caloriasQueimadas, frequenciaCardiacaMedia, frequenciaCardiacaMaxima)
 
     // Criar post social TREINO_CONCLUIDO diretamente (síncrono, sem depender do BullMQ)
     criarPostTreino(id, aluno.id, 'TREINO_CONCLUIDO').catch(() => {})

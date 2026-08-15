@@ -27,7 +27,14 @@ interface TrainingState {
   retomarTreino: (id: string) => Promise<void>
   setExercicioAtual: (exercicio: TreinoExercicio | null) => void
   registrarExecucao: (exercicioId: string, serieNumero: number, repeticoes: number, cargaKg: number) => Promise<void>
-  finalizarTreino: (avaliacao?: string) => Promise<void>
+  finalizarTreino: (
+    avaliacao?: string,
+    metrics?: {
+      caloriasQueimadas?: number
+      frequenciaCardiacaMedia?: number
+      frequenciaCardiacaMaxima?: number
+    }
+  ) => Promise<void>
   tick: () => void
   syncTimer: () => void
   startRest: (seconds?: number) => void
@@ -126,13 +133,25 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     get().startRest(REST_DEFAULT_SEC)
   },
 
-  finalizarTreino: async (avaliacao?: string) => {
+  finalizarTreino: async (
+    avaliacao?: string,
+    metrics?: {
+      caloriasQueimadas?: number
+      frequenciaCardiacaMedia?: number
+      frequenciaCardiacaMaxima?: number
+    }
+  ) => {
     const { treinoAtual, timer } = get()
     if (!treinoAtual) return
 
     set({ loading: true, timerFinalizado: timer, restActive: false, restSeconds: 0 })
     try {
-      await api.finalizarTreino(treinoAtual.id, avaliacao)
+      await api.finalizarTreino(treinoAtual.id, {
+        avaliacao,
+        caloriasQueimadas: metrics?.caloriasQueimadas,
+        frequenciaCardiacaMedia: metrics?.frequenciaCardiacaMedia,
+        frequenciaCardiacaMaxima: metrics?.frequenciaCardiacaMaxima,
+      })
       get().reset()
     } catch (err) {
       set({ error: (err as Error).message, loading: false })

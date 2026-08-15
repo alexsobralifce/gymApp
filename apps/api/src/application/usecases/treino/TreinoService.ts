@@ -357,7 +357,14 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
 
 // ─── UC-23: Finalizar treino ──────────────────────────────────────────────────
 
-export async function finalizarTreino(treinoId: string, alunoId: string, avaliacao?: string) {
+export async function finalizarTreino(
+  treinoId: string,
+  alunoId: string,
+  avaliacao?: string,
+  caloriasQueimadas?: number,
+  frequenciaCardiacaMedia?: number,
+  frequenciaCardiacaMaxima?: number,
+) {
   const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
   if (!treino) throw new NotFoundError('Treino')
   if (treino.aluno_id !== alunoId) throw new TenantAccessError()
@@ -386,6 +393,9 @@ export async function finalizarTreino(treinoId: string, alunoId: string, avaliac
         ator_id: alunoId,
         ator_tipo: TreinoAtor.ALUNO,
         duracao_segundos: duracaoSegundos,
+        calorias_queimadas: caloriasQueimadas ?? null,
+        frequencia_cardiaca_media: frequenciaCardiacaMedia ?? null,
+        frequencia_cardiaca_maxima: frequenciaCardiacaMaxima ?? null,
       },
     })
 
