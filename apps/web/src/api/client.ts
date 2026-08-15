@@ -225,6 +225,15 @@ export const api = {
   deleteMedida: (id: string) =>
     api.delete<{ message: string }>(`/alunos/medidas/${id}`),
 
+  // ─── Wearables & Smartwatches ───────────────────────
+  getWearables: () => api.get<Array<{ id: string; provedor: string; user_id_ext: string; ativo: boolean; criado_em: string }>>('/integrations/wearables'),
+
+  connectWearable: (provedor: string, userIdExt?: string) =>
+    api.post<{ integracao: any; connectUrl: string; message: string }>('/integrations/wearables/connect', { provedor, userIdExt }),
+
+  disconnectWearable: (provedor: string) =>
+    api.delete<{ message: string }>(`/integrations/wearables/${provedor}`),
+
 
 
   // ─── Notificações ──────────────────────────────────

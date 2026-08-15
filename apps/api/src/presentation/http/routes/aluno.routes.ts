@@ -21,7 +21,7 @@ function calcularIMC(pesoKg: number, alturaCm: number): number | null {
   return parseFloat((pesoKg / ((alturaCm / 100) ** 2)).toFixed(2))
 }
 
-async function resolveAluno(usuarioId: string) {
+export async function resolveAluno(usuarioId: string) {
   return prisma.aluno.upsert({
     where: { usuario_id: usuarioId },
     create: { usuario_id: usuarioId },

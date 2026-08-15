@@ -241,6 +241,10 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 ### CorrelacaoDesempenho (`correlacoes_desempenho`) — Cache de correlações
 `id (cuid), aluno_id (unique FK), peso_volume_r?, bf_volume_r?, massa_magra_volume_r?, volume_semanal (Json), pontos (Json), calculado_em`
 
+### Modelos de Wearables & Smartwatches (`wearable_*`)
+- **WearableIntegracao (`wearable_integracoes`)**: `id (cuid), aluno_id, provedor, user_id_ext, access_token_enc?, refresh_token_enc?, token_expira_em?, ativo (default true), criado_em, atualizado_em` — `@@unique([aluno_id, provedor])`
+- **WearableEvento (`wearable_eventos`)**: `id (cuid), aluno_id, provedor, tipo, payload_raw (Json), processado (default false), erro_msg?, recebido_em` — índice `[aluno_id, recebido_em]`
+
 ### Modelos Sociais (`social_*`)
 - **SocialFriendship (`social_friendships`)**: `id, aluno_id, amigo_id, status (FriendshipStatus), criado_em` — `@@unique([aluno_id, amigo_id])`, índice `[amigo_id, status]`
 - **SocialPost (`social_posts`)**: `id, aluno_id, treino_id?, clube_id?, autor_nome, autor_foto_url?, grupo_muscular_resumo?, academia_nome?, tipo (PostTipo), visibilidade (Visibilidade), midia_url?, curtidas_count, comentarios_count, criado_em` — índices `[aluno_id, criado_em]`, `[clube_id, criado_em]`, `[visibilidade, criado_em]`, unique `[treino_id, aluno_id, tipo]`

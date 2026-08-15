@@ -28,6 +28,7 @@ import { clubRoutes } from './modules/social/clubs/club.routes.js'
 import { uploadRoutes } from './modules/social/upload/upload.routes.js'
 import { noticiasRoutes } from './presentation/http/routes/noticias.routes.js'
 import { healthRoutes } from './presentation/http/routes/health.routes.js'
+import { wearableRoutes } from './presentation/http/routes/wearable.routes.js'
 
 // Plugins / Middlewares
 import { jwtAuthPlugin } from './presentation/middlewares/jwtAuth.js'
@@ -155,6 +156,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(clubRoutes)
   await app.register(uploadRoutes)
   await app.register(noticiasRoutes, { prefix: '/noticias' })
+  await app.register(wearableRoutes, { prefix: '/integrations' })
 
   // ─── Health check ────────────────────────────────────────────────────────
   await app.register(healthRoutes)

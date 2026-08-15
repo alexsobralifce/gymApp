@@ -6,6 +6,7 @@ import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import { calcularIdade } from '../../lib/health'
 import type { MedidaCorporal, PerfilAluno } from '../../types/api'
+import { WearableConnectCard } from '../../components/health/WearableConnectCard'
 
 interface IMCClassification {
   label: string
@@ -252,6 +253,9 @@ export default function AlunoMedidas() {
           </div>
         </div>
       )}
+
+      {/* Dispositivos Vestíveis & Smartwatches */}
+      <WearableConnectCard />
 
       {/* Formulário (Novo ou Edição) */}
       {(mostrarNovo || editando) && (

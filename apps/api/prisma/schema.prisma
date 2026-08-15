@@ -119,6 +119,8 @@ model Aluno {
   mensagensEnviadas        MensagemMotivacionalEnviada[]
   notificacoes             Notificacao[]
   treinos                  Treino[]
+  wearableIntegracoes      WearableIntegracao[]
+  wearableEventos          WearableEvento[]
 
   @@map("alunos")
 }
@@ -547,6 +549,38 @@ enum TreinoAtor {
   PROFESSOR
   SISTEMA
   ACADEMIA
+}
+
+model WearableIntegracao {
+  id                String    @id @default(cuid())
+  aluno_id          String
+  provedor          String    // "huawei" | "garmin" | "polar" | "fitbit" | "oura" | "health_connect"
+  user_id_ext       String    // ID do usuário no sistema do provedor / Open Wearables
+  access_token_enc  String?   // Token criptografado
+  refresh_token_enc String?   // Refresh token criptografado
+  token_expira_em   DateTime?
+  ativo             Boolean   @default(true)
+  criado_em         DateTime  @default(now())
+  atualizado_em     DateTime  @updatedAt
+  aluno             Aluno     @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+
+  @@unique([aluno_id, provedor])
+  @@map("wearable_integracoes")
+}
+
+model WearableEvento {
+  id          String   @id @default(cuid())
+  aluno_id    String
+  provedor    String
+  tipo        String   // "weight" | "workout" | "heart_rate" | "body_fat" | "sleep" | "vo2max"
+  payload_raw Json
+  processado  Boolean  @default(false)
+  erro_msg    String?
+  recebido_em DateTime @default(now())
+  aluno       Aluno    @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+
+  @@index([aluno_id, recebido_em])
+  @@map("wearable_eventos")
 }
 
 enum NotificacaoTipo {

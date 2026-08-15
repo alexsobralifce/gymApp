@@ -1,4 +1,5 @@
-// DESATIVADO — integração Health Connect removida (modo PWA)
+import { WearableConnectCard } from './WearableConnectCard'
+
 export function HealthConnectCard() {
-  return null
+  return <WearableConnectCard />
 }
