@@ -10,6 +10,7 @@ import Input from '../../components/ui/Input'
 import WorkoutLoading from '../../components/ui/WorkoutLoading'
 import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
 import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
+import WorkoutHelpWizard from '../../components/ui/WorkoutHelpWizard'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -39,9 +40,19 @@ export default function AlunoCriarTreino() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  // Drawer and Preview State
+  // Drawer, Preview and Help Wizard State
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
   const [previewExercicio, setPreviewExercicio] = useState<Exercicio | null>(null)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
+
+  // Mostra o prompt de ajuda automaticamente ao criar (não ao editar)
+  useEffect(() => {
+    if (!isEdit) {
+      const timer = setTimeout(() => setIsWelcomeOpen(true), 600)
+      return () => clearTimeout(timer)
+    }
+  }, [isEdit])
 
   useEffect(() => {
     let cancelled = false
@@ -228,15 +239,28 @@ export default function AlunoCriarTreino() {
           </div>
         </div>
 
-        {!isEdit && (
+        <div className="flex items-center gap-2">
+          {!isEdit && (
+            <button
+              type="button"
+              onClick={() => navigate('/treino/ia')}
+              className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            >
+              ✨ Gerar com IA
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => navigate('/treino/ia')}
-            className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            id="btn-ajuda-treino-aluno"
+            onClick={() => setIsHelpOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 border border-surface-input bg-surface text-text-muted hover:text-text hover:bg-surface-input text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95"
+            title="Como montar um treino?"
+            aria-label="Abrir guia de ajuda"
           >
-            ✨ Gerar com IA
+            <span className="text-base leading-none">❓</span>
+            <span className="hidden sm:inline">Como montar?</span>
           </button>
-        )}
+        </div>
       </div>
 
       {feedback && (
@@ -543,6 +567,74 @@ export default function AlunoCriarTreino() {
             adicionarExercicio(ex)
           }
         }}
+      />
+
+      {/* Welcome Help Prompt */}
+      {isWelcomeOpen && !isEdit && (
+        <div
+          className="fixed inset-0 z-[190] flex items-end sm:items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Quer ajuda para montar seu treino?"
+        >
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsWelcomeOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="relative z-10 w-full max-w-sm bg-surface-card border border-surface-input rounded-3xl shadow-2xl p-6 flex flex-col gap-4"
+            style={{ animation: 'modal-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+          >
+            <style>{`
+              @keyframes modal-pop-in {
+                0% { transform: scale(0.88) translateY(16px); opacity: 0; }
+                100% { transform: scale(1) translateY(0); opacity: 1; }
+              }
+            `}</style>
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl shrink-0">
+                🤔
+              </div>
+              <div>
+                <h2 className="text-base font-black text-text leading-snug">
+                  Primeira vez por aqui?
+                </h2>
+                <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                  Posso te mostrar como montar seu treino em 5 passos rápidos — leva menos de 1 minuto!
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                id="btn-ajuda-welcome-sim"
+                type="button"
+                onClick={() => {
+                  setIsWelcomeOpen(false)
+                  setIsHelpOpen(true)
+                }}
+                className="w-full py-3 rounded-2xl bg-primary text-primary-foreground text-sm font-black shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              >
+                Sim, me mostra! 🚀
+              </button>
+              <button
+                id="btn-ajuda-welcome-nao"
+                type="button"
+                onClick={() => setIsWelcomeOpen(false)}
+                className="w-full py-2.5 rounded-2xl border border-surface-input bg-surface text-text-muted hover:text-text hover:bg-surface-input text-sm font-semibold transition-all cursor-pointer"
+              >
+                Já sei, pode ir 😎
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Help Wizard Modal */}
+      <WorkoutHelpWizard
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        mode="aluno"
       />
     </div>
   )

@@ -10,6 +10,7 @@ import WorkoutLoading from '../../components/ui/WorkoutLoading'
 import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
 import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
 import { PlusIcon, DumbbellIcon, ChevronLeftIcon } from '../../components/icons/Icon'
+import WorkoutHelpWizard from '../../components/ui/WorkoutHelpWizard'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -51,9 +52,17 @@ export default function CriarTreino() {
   const [templates, setTemplates] = useState<Treino[]>([])
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
 
-  // Library Drawer & Preview Modal state
+  // Library Drawer, Preview Modal & Help Wizard state
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
   const [previewExercicio, setPreviewExercicio] = useState<Exercicio | null>(null)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
+
+  // Mostra o prompt de ajuda automaticamente ao entrar na página
+  useEffect(() => {
+    const timer = setTimeout(() => setIsWelcomeOpen(true), 600)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Carregar vínculos
   useEffect(() => {
@@ -264,12 +273,23 @@ export default function CriarTreino() {
         >
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl sm:text-2xl font-black text-text">Montagem de Treinos</h1>
           <p className="text-xs sm:text-sm text-text-muted">
             Prescreva fichas (A, B, C...) com demonstração em GIF em português
           </p>
         </div>
+        <button
+          type="button"
+          id="btn-ajuda-treino-professor"
+          onClick={() => setIsHelpOpen(true)}
+          className="flex items-center gap-1.5 px-3.5 py-2.5 border border-surface-input bg-surface text-text-muted hover:text-text hover:bg-surface-input text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 shrink-0"
+          title="Como montar um treino?"
+          aria-label="Abrir guia de ajuda"
+        >
+          <span className="text-base leading-none">❓</span>
+          <span className="hidden sm:inline">Como montar?</span>
+        </button>
       </div>
 
       {feedback && (
@@ -651,6 +671,74 @@ export default function CriarTreino() {
             adicionarExercicio(ex)
           }
         }}
+      />
+
+      {/* Welcome Help Prompt */}
+      {isWelcomeOpen && (
+        <div
+          className="fixed inset-0 z-[190] flex items-end sm:items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Quer ajuda para montar o treino?"
+        >
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsWelcomeOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="relative z-10 w-full max-w-sm bg-surface-card border border-surface-input rounded-3xl shadow-2xl p-6 flex flex-col gap-4"
+            style={{ animation: 'modal-pop-in-prof 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+          >
+            <style>{`
+              @keyframes modal-pop-in-prof {
+                0% { transform: scale(0.88) translateY(16px); opacity: 0; }
+                100% { transform: scale(1) translateY(0); opacity: 1; }
+              }
+            `}</style>
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl shrink-0">
+                🤔
+              </div>
+              <div>
+                <h2 className="text-base font-black text-text leading-snug">
+                  Quer uma ajudinha rápida?
+                </h2>
+                <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                  Posso te guiar pelo processo de montagem em 6 passos simples — é rapidinho!
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                id="btn-ajuda-welcome-sim-prof"
+                type="button"
+                onClick={() => {
+                  setIsWelcomeOpen(false)
+                  setIsHelpOpen(true)
+                }}
+                className="w-full py-3 rounded-2xl bg-primary text-primary-foreground text-sm font-black shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              >
+                Sim, me guia! 🚀
+              </button>
+              <button
+                id="btn-ajuda-welcome-nao-prof"
+                type="button"
+                onClick={() => setIsWelcomeOpen(false)}
+                className="w-full py-2.5 rounded-2xl border border-surface-input bg-surface text-text-muted hover:text-text hover:bg-surface-input text-sm font-semibold transition-all cursor-pointer"
+              >
+                Já sei o que fazer 😎
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Help Wizard Modal */}
+      <WorkoutHelpWizard
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        mode="professor"
       />
     </div>
   )
