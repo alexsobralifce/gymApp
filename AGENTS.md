@@ -56,9 +56,10 @@ apps/api/src/
 
 - **RF03 - Painel de Boas-Vindas (Welcome) + Onboarding Popup**: Tela standalone pós-cadastro com 3 cards explicativos. Conteúdo adaptado: "Aceitar Treino" (aluno com professor) vs "Criar Treino" (autogestão). Controlado por `localStorage` (`gymapp_welcome_seen`). Após o primeiro login no Dashboard, um popup modal (`OnboardingPopup`) aparece para ALUNO e PROFESSOR com links diretos para criar treinos e acessar a documentação, controlado por `localStorage` (`gymapp_onboarding_seen`).
 
-- **RF04 - Gestão de Fichas de Treino**:
+- **RF04 - Gestão de Fichas de Treino & Construtor Mobile-First**:
   - **Professor/Academia**: Criar, editar, excluir e enviar treinos para alunos. Clonagem individual ou em lote para múltiplos alunos. Marcar fichas como templates reutilizáveis.
   - **Aluno**: Criar treinos próprios em autogestão, editar ou excluir treinos salvos (mesmo recebidos de professores, sem apagar histórico de execução).
+  - **Experiência Mobile-First com Drawer & Didática PT-BR**: Construtor fluido com Biblioteca de Exercícios em Bottom-Sheet Drawer (`ExerciseLibraryDrawer`), busca instantânea com `useDeferredValue`, botões touch com área mínima de 44px, feedback visual de exercícios já adicionados, reordenação simplificada e inputs numéricos otimizados (`type="tel" inputMode="numeric"`). Modal de prévia didática (`ExercisePreviewModal`) com GIF animado, nome 100% em português, músculos primários/secundários trabalhados, passo a passo numerado de execução (`passos_pt`), explicação conceitual (`descricao_pt`) e dicas de segurança/performance (`dica`).
 
 - **RF05 - Máquina de Estados de Execução**: Transição rígida `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CONCLUIDO`. Permite cancelamento/abandono `EM_EXECUCAO → ACEITO` com limpeza de sessão e reset do cronômetro. Toda transição inválida → `InvalidStateTransitionError`. Reciclagem automática `CONCLUIDO → ACEITO` pós-finalização. Log imutável append-only em `treino_historico`.
 

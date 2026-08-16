@@ -2,16 +2,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
-import { ChevronLeftIcon } from '../../components/icons/Icon'
-import { EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
+import { ChevronLeftIcon, PlusIcon, DumbbellIcon } from '../../components/icons/Icon'
 import { sugerirNomes } from '../../lib/treinoNome'
-import { resolveExerciseMedia } from '../../lib/media'
-import MuscleCategoryGrid from '../../components/ui/MuscleCategoryGrid'
+import { resolveMediaUrl } from '../../lib/media'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
-import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
 import WorkoutLoading from '../../components/ui/WorkoutLoading'
+import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
+import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -25,56 +23,7 @@ interface ExercicioTreino {
   imagemUrl?: string | null
   gifUrl?: string | null
   grupoMuscular?: string | null
-}
-
-function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void }) {
-  const [hovered, setHovered] = useState(false)
-  const [imgFailed, setImgFailed] = useState(false)
-
-  const imgSrc = !imgFailed ? resolveExerciseMedia(ex.imagem_url, ex.gif_url, hovered) : null
-
-  return (
-    <div
-      className="flex items-center justify-between p-3 bg-surface rounded-xl border border-surface-input gap-3 hover:border-primary/50 transition-all hover:shadow-sm"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="flex items-center gap-3">
-        {imgSrc ? (
-          <img
-            src={imgSrc}
-            alt={ex.nome}
-            loading="lazy"
-            decoding="async"
-            onError={() => setImgFailed(true)}
-            className={`rounded-lg object-cover bg-surface-input border border-surface-input transition-all duration-300 shadow-sm ${hovered ? 'w-32 h-32' : 'w-20 h-20'}`}
-          />
-        ) : (
-          <div className="w-20 h-20 rounded-lg bg-surface-input border border-surface-input flex items-center justify-center text-2xl shrink-0">
-            💪
-          </div>
-        )}
-        <div>
-          <p className="text-xs font-bold text-text leading-tight">{ex.nome}</p>
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {ex.grupo_muscular && (
-              <span className="text-xs text-text-muted font-semibold bg-surface-input px-1.5 py-0.5 rounded border border-surface-input uppercase">
-                {ex.grupo_muscular}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onAdd}
-        className="rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
-      >
-        + Add
-      </button>
-    </div>
-  )
+  originalExercicio?: Exercicio
 }
 
 export default function AlunoCriarTreino() {
@@ -90,9 +39,9 @@ export default function AlunoCriarTreino() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  const [filtroGrupo, setFiltroGrupo] = useState<MuscleCategoryKey | ''>('')
-  const [filtroEquip, setFiltroEquip] = useState('')
-  const [busca, setBusca] = useState('')
+  // Drawer and Preview State
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
+  const [previewExercicio, setPreviewExercicio] = useState<Exercicio | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -125,6 +74,7 @@ export default function AlunoCriarTreino() {
               imagemUrl: ex.exercicio.imagem_url,
               gifUrl: ex.exercicio.gif_url,
               grupoMuscular: ex.exercicio.grupo_muscular,
+              originalExercicio: ex.exercicio,
             })),
           )
         }
@@ -138,28 +88,21 @@ export default function AlunoCriarTreino() {
     }
 
     load()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [treinoId, isEdit, navigate])
 
-  const exercicios = useMemo(
-    () => {
-      const base = filtrarExercicios(todosExercicios, {
-        equipamento: filtroEquip,
-        busca,
-      })
-      return filterByMuscleCategory(base, filtroGrupo)
-    },
-    [todosExercicios, filtroGrupo, filtroEquip, busca],
-  )
+  const addedExerciseIds = useMemo(() => {
+    return new Set(exerciciosTreino.map((e) => e.exercicioId))
+  }, [exerciciosTreino])
 
   function toggleDia(d: number) {
-    setDiasSemana((prev) =>
-      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
-    )
+    setDiasSemana((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
   }
 
   function adicionarExercicio(ex: Exercicio) {
-    if (exerciciosTreino.find((e) => e.exercicioId === ex.id)) return
+    if (addedExerciseIds.has(ex.id)) return
 
     const novo: ExercicioTreino = {
       exercicioId: ex.id,
@@ -170,13 +113,22 @@ export default function AlunoCriarTreino() {
       imagemUrl: ex.imagem_url,
       gifUrl: ex.gif_url,
       grupoMuscular: ex.grupo_muscular,
+      originalExercicio: ex,
     }
     setExerciciosTreino((prev) => [...prev, novo])
   }
 
+  function removerExercicio(exercicioId: string) {
+    setExerciciosTreino((prev) =>
+      prev
+        .filter((e) => e.exercicioId !== exercicioId)
+        .map((e, i) => ({ ...e, ordem: i + 1 })),
+    )
+  }
+
   function atualizarExercicio(idx: number, campo: string, valor: number) {
     setExerciciosTreino((prev) =>
-      prev.map((e, i) => (i === idx ? { ...e, [campo]: valor } : e))
+      prev.map((e, i) => (i === idx ? { ...e, [campo]: valor } : e)),
     )
   }
 
@@ -189,12 +141,6 @@ export default function AlunoCriarTreino() {
     novos[idx] = novos[targetIdx]
     novos[targetIdx] = temp
     setExerciciosTreino(novos.map((e, i) => ({ ...e, ordem: i + 1 })))
-  }
-
-  function removerExercicio(idx: number) {
-    setExerciciosTreino((prev) =>
-      prev.filter((_, i) => i !== idx).map((e, i) => ({ ...e, ordem: i + 1 }))
-    )
   }
 
   async function handleSalvar(e: React.FormEvent) {
@@ -243,25 +189,41 @@ export default function AlunoCriarTreino() {
     }
   }
 
+  function openPreviewForTreinoItem(item: ExercicioTreino) {
+    const fullEx =
+      item.originalExercicio ||
+      todosExercicios.find((ex) => ex.id === item.exercicioId) || {
+        id: item.exercicioId,
+        nome: item.nome,
+        imagem_url: item.imagemUrl,
+        gif_url: item.gifUrl,
+        grupo_muscular: item.grupoMuscular,
+      }
+    setPreviewExercicio(fullEx as Exercicio)
+  }
+
   if (loading) return <WorkoutLoading />
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-3.5 sm:p-6 max-w-4xl mx-auto space-y-5 pb-24">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/meus-treinos')}
-            className="rounded-xl border border-surface-input bg-surface p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+            className="rounded-xl border border-surface-input bg-surface p-2.5 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
             title="Voltar"
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-text">{isEdit ? 'Editar Treino' : 'Criar Treino'}</h1>
-            <p className="text-sm text-text-muted">
+            <h1 className="text-xl sm:text-2xl font-black text-text">
+              {isEdit ? 'Editar Ficha de Treino' : 'Montar Treino'}
+            </h1>
+            <p className="text-xs sm:text-sm text-text-muted">
               {isEdit
-                ? 'Ajuste nome, dias, exercícios, séries e cargas da ficha'
-                : 'Monte seu treino personalizado ou prescreva com auxílio da IA'}
+                ? 'Ajuste nome, dias, exercícios, séries e cargas'
+                : 'Crie sua rotina com exercícios, séries e repetições'}
             </p>
           </div>
         </div>
@@ -270,231 +232,318 @@ export default function AlunoCriarTreino() {
           <button
             type="button"
             onClick={() => navigate('/treino/ia')}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            ✨ Criar com IA
+            ✨ Gerar com IA
           </button>
         )}
       </div>
 
       {feedback && (
-        <div className={`rounded-xl p-4 text-sm font-semibold text-center ${
-          feedback.includes('Erro') ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-success/10 text-success border border-success/20'
-        }`}>
+        <div
+          className={`rounded-2xl p-4 text-xs sm:text-sm font-bold text-center ${
+            feedback.includes('Erro')
+              ? 'bg-destructive/10 text-destructive border border-destructive/20'
+              : 'bg-success/10 text-success border border-success/20'
+          }`}
+        >
           {feedback}
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-7 space-y-4">
-          <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <FormField label="Nome do Treino" htmlFor="nome-treino">
-                  <Input
-                    id="nome-treino"
-                    type="text"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Ex: Treino A — Peito e Tríceps"
-                    maxLength={60}
-                  />
-                </FormField>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {sugerirNomes({ origem: 'criar' }).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setNome(s)}
-                      className="rounded-lg border border-surface-input bg-surface px-2.5 py-1 text-xs font-semibold text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">Dias da Semana</label>
-                <div className="flex gap-1 flex-wrap">
-                  {DIAS.map((d, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => toggleDia(i)}
-                      className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer select-none transition-all ${
-                        diasSemana.includes(i) ? 'bg-primary text-primary-foreground' : 'bg-surface text-text-muted border border-surface-input'
-                      }`}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      {/* Workout Metadata Card */}
+      <div className="bg-surface-card border border-surface-input rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <FormField label="Nome da Ficha" htmlFor="nome-treino">
+              <Input
+                id="nome-treino"
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Ex: Treino A — Peito e Tríceps"
+                maxLength={60}
+                className="text-sm font-semibold"
+              />
+            </FormField>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {sugerirNomes({ origem: 'criar' }).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setNome(s)}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                    nome === s
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-surface-input bg-surface text-text-muted hover:text-text hover:border-primary/40'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="pt-2">
-              <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">Exercícios ({exerciciosTreino.length})</h3>
-
-              {exerciciosTreino.length === 0 ? (
-                <p className="text-sm text-text-muted py-6 text-center border border-dashed border-surface-input rounded-xl">
-                  Selecione exercícios na biblioteca ao lado para montar seu treino.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {exerciciosTreino.map((ex, idx) => (
-                    <div key={ex.exercicioId} className="flex flex-col md:flex-row md:items-center justify-between p-3.5 bg-surface rounded-xl border border-surface-input gap-3">
-                      <div className="flex items-center gap-3">
-                        {(ex.gifUrl || ex.imagemUrl) && (
-                          <img
-                            src={ex.gifUrl || ex.imagemUrl!}
-                            alt={ex.nome}
-                            className="w-12 h-12 rounded-lg object-cover bg-surface-input border border-surface-input"
-                          />
-                        )}
-                        <div>
-                          <p className="text-sm font-bold text-text leading-tight">{ex.ordem}. {ex.nome}</p>
-                          <div className="flex gap-1.5 mt-1">
-                            {ex.grupoMuscular && (
-                              <span className="rounded bg-surface-input px-1.5 py-0.5 text-xs font-bold text-text-muted uppercase">
-                                {ex.grupoMuscular}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3.5">
-                        <div className="flex gap-1.5 max-w-[200px]">
-                          <div>
-                            <label className="block text-xs font-bold text-text-muted uppercase">Séries</label>
-                            <Input
-                              type="number"
-                              min={1}
-                              value={ex.series}
-                              onChange={(e) => atualizarExercicio(idx, 'series', Number(e.target.value))}
-                              className="w-12 px-1.5 py-1 text-xs text-center font-semibold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-text-muted uppercase">Reps</label>
-                            <Input
-                              type="number"
-                              min={1}
-                              value={ex.repeticoes}
-                              onChange={(e) => atualizarExercicio(idx, 'repeticoes', Number(e.target.value))}
-                              className="w-12 px-1.5 py-1 text-xs text-center font-semibold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-text-muted uppercase">Carga (kg)</label>
-                            <Input
-                              type="number"
-                              min={0}
-                              placeholder="Auto"
-                              value={ex.cargaSugeridaKg ?? ''}
-                              onChange={(e) => atualizarExercicio(idx, 'cargaSugeridaKg', Number(e.target.value) || 0)}
-                              className="w-16 px-1.5 py-1 text-xs text-center font-semibold"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1 border-l border-surface-input pl-2.5">
-                          <button
-                            type="button"
-                            onClick={() => moverExercicio(idx, 'sobe')}
-                            disabled={idx === 0}
-                            className="p-1 text-text-muted hover:text-primary disabled:opacity-30 cursor-pointer"
-                            title="Mover para cima"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moverExercicio(idx, 'desce')}
-                            disabled={idx === exerciciosTreino.length - 1}
-                            className="p-1 text-text-muted hover:text-primary disabled:opacity-30 cursor-pointer"
-                            title="Mover para baixo"
-                          >
-                            ▼
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removerExercicio(idx)}
-                            className="p-1 text-destructive hover:text-red-500 ml-1 cursor-pointer"
-                            title="Remover exercício"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+          <div>
+            <label className="mb-1.5 block text-xs font-extrabold text-text-muted uppercase tracking-wider">
+              Dias da Semana
+            </label>
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+              {DIAS.map((d, i) => {
+                const isSelected = diasSemana.includes(i)
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => toggleDia(i)}
+                    className={`py-2 rounded-xl text-xs font-extrabold cursor-pointer select-none transition-all active:scale-95 text-center ${
+                      isSelected
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'bg-surface text-text-muted border border-surface-input hover:border-primary/40'
+                    }`}
+                  >
+                    {d}
+                  </button>
+                )
+              })}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Exercises Section */}
+      <div className="bg-surface-card border border-surface-input rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between gap-2 border-b border-surface-input pb-3">
+          <div>
+            <h2 className="text-sm sm:text-base font-extrabold text-text uppercase tracking-wider flex items-center gap-2">
+              <span>📋</span> Exercícios do Treino ({exerciciosTreino.length})
+            </h2>
+            <p className="text-[11px] text-text-muted">
+              Toque no exercício para ver o GIF com instruções em português
+            </p>
           </div>
 
           <button
             type="button"
-            onClick={handleSalvar}
-            disabled={enviando || exerciciosTreino.length === 0 || !nome.trim()}
-            className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md disabled:opacity-40 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            onClick={() => setIsLibraryOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-extrabold shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            {enviando ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Salvar Treino'}
+            <PlusIcon className="w-3.5 h-3.5" />
+            <span>Adicionar</span>
           </button>
         </div>
 
-        <div className="lg:col-span-5 bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-4">
-          <div>
-            <h2 className="text-base font-bold text-text">Biblioteca de Exercícios</h2>
-            <p className="text-xs text-text-muted">Mais de 900 exercícios com GIFs animados categorizados</p>
+        {exerciciosTreino.length === 0 ? (
+          <div className="py-12 px-4 text-center border-2 border-dashed border-surface-input rounded-2xl flex flex-col items-center justify-center space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl">
+              🏋️
+            </div>
+            <div className="max-w-xs space-y-1">
+              <h3 className="text-sm font-extrabold text-text">Sua ficha está vazia</h3>
+              <p className="text-xs text-text-muted">
+                Adicione exercícios da nossa biblioteca completa com mais de 900 demonstrações em GIF.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsLibraryOpen(true)}
+              className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-black shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Abrir Biblioteca de Exercícios
+            </button>
           </div>
+        ) : (
+          <div className="space-y-2.5">
+            {exerciciosTreino.map((ex, idx) => {
+              const thumb = resolveMediaUrl(ex.imagemUrl || ex.gifUrl)
 
-          <MuscleCategoryGrid
-            selectedCategory={filtroGrupo}
-            onSelectCategory={(catKey) => setFiltroGrupo(catKey || '')}
-          />
+              return (
+                <div
+                  key={ex.exercicioId}
+                  className="p-3 sm:p-3.5 bg-surface rounded-2xl border border-surface-input space-y-3 transition-all hover:border-primary/30"
+                >
+                  <div className="flex items-center justify-between gap-2.5">
+                    {/* Exercise Info (Tap opens Didactic Preview) */}
+                    <button
+                      type="button"
+                      onClick={() => openPreviewForTreinoItem(ex)}
+                      className="flex items-center gap-3 text-left min-w-0 flex-1 cursor-pointer active:scale-98 transition-transform"
+                    >
+                      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-surface-input border border-surface-input overflow-hidden shrink-0 flex items-center justify-center">
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={ex.nome}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <DumbbellIcon className="w-6 h-6 text-text-muted opacity-40" />
+                        )}
+                        <span className="absolute bottom-0.5 right-0.5 bg-black/80 px-1 rounded text-[8px] font-extrabold text-white">
+                          GIF
+                        </span>
+                      </div>
 
-          <div className="space-y-2 pt-2 border-t border-surface-input">
-            <FormField label="Buscar Exercício" htmlFor="busca-exercicio">
-              <Input
-                id="busca-exercicio"
-                type="text"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="🔍 Pesquisar por nome do exercício..."
-              />
-            </FormField>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-black text-text leading-snug truncate">
+                          <span className="text-primary mr-1">#{ex.ordem}</span> {ex.nome}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {ex.grupoMuscular && (
+                            <span className="text-[10px] font-bold text-text-muted bg-surface-input px-1.5 py-0.2 rounded uppercase">
+                              {ex.grupoMuscular}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-semibold text-primary">
+                            👁️ Ver instruções
+                          </span>
+                        </div>
+                      </div>
+                    </button>
 
-            <FormField label="Equipamento" htmlFor="filtro-equip">
-              <Select
-                id="filtro-equip"
-                value={filtroEquip}
-                onChange={(e) => setFiltroEquip(e.target.value)}
-              >
-                <option value="">Todos Equipamentos</option>
-                {EQUIPAMENTOS.map((eq) => (
-                  <option key={eq.value} value={eq.value}>{eq.label}</option>
-                ))}
-              </Select>
-            </FormField>
+                    {/* Reorder and Delete Actions (Large touch targets) */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => moverExercicio(idx, 'sobe')}
+                        disabled={idx === 0}
+                        className="w-9 h-9 rounded-lg bg-surface-input/70 hover:bg-surface-input text-text-muted hover:text-primary disabled:opacity-20 flex items-center justify-center text-xs font-black transition-colors cursor-pointer"
+                        title="Subir na ordem"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moverExercicio(idx, 'desce')}
+                        disabled={idx === exerciciosTreino.length - 1}
+                        className="w-9 h-9 rounded-lg bg-surface-input/70 hover:bg-surface-input text-text-muted hover:text-primary disabled:opacity-20 flex items-center justify-center text-xs font-black transition-colors cursor-pointer"
+                        title="Descer na ordem"
+                      >
+                        ▼
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removerExercicio(ex.exercicioId)}
+                        className="w-9 h-9 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive flex items-center justify-center text-xs font-black transition-colors cursor-pointer ml-1"
+                        title="Remover do treino"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Config Inputs: Séries, Reps, Carga (Mobile Friendly) */}
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-surface-input/70">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                        Séries
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        min={1}
+                        value={ex.series}
+                        onChange={(e) =>
+                          atualizarExercicio(idx, 'series', Math.max(1, Number(e.target.value) || 1))
+                        }
+                        className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                        Repetições
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        min={1}
+                        value={ex.repeticoes}
+                        onChange={(e) =>
+                          atualizarExercicio(
+                            idx,
+                            'repeticoes',
+                            Math.max(1, Number(e.target.value) || 1),
+                          )
+                        }
+                        className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                        Carga (kg)
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        min={0}
+                        placeholder="Opcional"
+                        value={ex.cargaSugeridaKg ?? ''}
+                        onChange={(e) =>
+                          atualizarExercicio(
+                            idx,
+                            'cargaSugeridaKg',
+                            Math.max(0, Number(e.target.value) || 0),
+                          )
+                        }
+                        className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Quick Add Button below list */}
+            <button
+              type="button"
+              onClick={() => setIsLibraryOpen(true)}
+              className="w-full py-3 rounded-2xl border-2 border-dashed border-surface-input hover:border-primary/50 text-xs font-extrabold text-text-muted hover:text-primary flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Adicionar Mais Exercícios
+            </button>
           </div>
-
-          <div className="max-h-[500px] overflow-y-auto divide-y divide-surface-input pr-1 space-y-1.5">
-            {exercicios.length === 0 ? (
-              <p className="text-xs text-text-muted py-6 text-center">Nenhum exercício encontrado.</p>
-            ) : (
-              exercicios.map((ex) => (
-                <BuilderExerciseRow
-                  key={ex.id}
-                  ex={ex}
-                  onAdd={() => adicionarExercicio(ex)}
-                />
-              ))
-            )}
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* Save Workout CTA */}
+      <button
+        type="button"
+        onClick={handleSalvar}
+        disabled={enviando || exerciciosTreino.length === 0 || !nome.trim()}
+        className="w-full rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-lg disabled:opacity-40 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+      >
+        {enviando ? 'Salvando Treino...' : isEdit ? 'Salvar Alterações ✓' : 'Salvar Treino Completo ✓'}
+      </button>
+
+      {/* Exercise Library Bottom-Sheet Drawer */}
+      <ExerciseLibraryDrawer
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        todosExercicios={todosExercicios}
+        addedExerciseIds={addedExerciseIds}
+        onAddExercise={adicionarExercicio}
+        onRemoveExercise={removerExercicio}
+      />
+
+      {/* Didactic Preview Modal for direct items */}
+      <ExercisePreviewModal
+        exercicio={previewExercicio}
+        isOpen={Boolean(previewExercicio)}
+        isAlreadyAdded={previewExercicio ? addedExerciseIds.has(previewExercicio.id) : false}
+        onClose={() => setPreviewExercicio(null)}
+        onToggleAdd={(ex) => {
+          if (addedExerciseIds.has(ex.id)) {
+            removerExercicio(ex.id)
+          } else {
+            adicionarExercicio(ex)
+          }
+        }}
+      />
     </div>
   )
 }

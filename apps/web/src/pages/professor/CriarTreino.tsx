@@ -2,14 +2,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { Exercicio, ProfessorDashboard, Treino, Vinculo } from '../../types/api'
-import { EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
-import { resolveExerciseMedia } from '../../lib/media'
-import MuscleCategoryGrid from '../../components/ui/MuscleCategoryGrid'
+import { resolveMediaUrl } from '../../lib/media'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import FormField from '../../components/ui/FormField'
-import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
 import WorkoutLoading from '../../components/ui/WorkoutLoading'
+import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
+import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
+import { PlusIcon, DumbbellIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -23,62 +23,13 @@ interface ExercicioTreino {
   imagemUrl?: string | null
   gifUrl?: string | null
   grupoMuscular?: string | null
+  originalExercicio?: Exercicio
 }
 
 interface FichaTreino {
   nome: string
   diasSemana: number[]
   exercicios: ExercicioTreino[]
-}
-
-function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void }) {
-  const [hovered, setHovered] = useState(false)
-  const [imgFailed, setImgFailed] = useState(false)
-
-  const imgSrc = !imgFailed ? resolveExerciseMedia(ex.imagem_url, ex.gif_url, hovered) : null
-
-  return (
-    <div
-      className="flex items-center justify-between p-3 bg-surface rounded-xl border border-surface-input gap-3 hover:border-primary/50 transition-all hover:shadow-sm"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="flex items-center gap-3">
-        {imgSrc ? (
-          <img
-            src={imgSrc}
-            alt={ex.nome}
-            loading="lazy"
-            decoding="async"
-            onError={() => setImgFailed(true)}
-            className={`rounded-lg object-cover bg-surface-input border border-surface-input transition-all duration-300 shadow-sm ${hovered ? 'w-32 h-32' : 'w-20 h-20'}`}
-          />
-        ) : (
-          <div className="w-20 h-20 rounded-lg bg-surface-input border border-surface-input flex items-center justify-center text-2xl shrink-0">
-            💪
-          </div>
-        )}
-        <div>
-          <p className="text-xs font-bold text-text leading-tight">{ex.nome}</p>
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {ex.grupo_muscular && (
-              <span className="text-xs text-text-muted font-semibold bg-surface-input px-1.5 py-0.5 rounded border border-surface-input uppercase">
-                {ex.grupo_muscular}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onAdd}
-        className="rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
-      >
-        + Add
-      </button>
-    </div>
-  )
 }
 
 export default function CriarTreino() {
@@ -95,31 +46,18 @@ export default function CriarTreino() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  // Filtros de busca
-  const [filtroGrupo, setFiltroGrupo] = useState<MuscleCategoryKey | ''>('')
-  const [filtroEquip, setFiltroEquip] = useState('')
-  const [busca, setBusca] = useState('')
   const [vinculos, setVinculos] = useState<Vinculo[]>([])
   const [academiaId, setAcademiaId] = useState('')
   const [templates, setTemplates] = useState<Treino[]>([])
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
 
-  const exercicios = useMemo(
-    () => {
-      const base = filtrarExercicios(todosExercicios, {
-        equipamento: filtroEquip,
-        busca,
-      })
-      return filterByMuscleCategory(base, filtroGrupo)
-    },
-    [todosExercicios, filtroGrupo, filtroEquip, busca],
-  )
+  // Library Drawer & Preview Modal state
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
+  const [previewExercicio, setPreviewExercicio] = useState<Exercicio | null>(null)
 
-  // Carregar alunos e exercícios
+  // Carregar vínculos
   useEffect(() => {
-    Promise.all([
-      api.getVinculos(),
-    ])
+    Promise.all([api.getVinculos()])
       .then(([v]) => {
         const ativos = (v as any[]).filter((x: any) => x.status === 'ATIVO')
         setVinculos(ativos)
@@ -128,6 +66,7 @@ export default function CriarTreino() {
       .catch(() => {})
   }, [])
 
+  // Carregar alunos, exercícios e templates
   useEffect(() => {
     setLoading(true)
     Promise.all([
@@ -143,6 +82,13 @@ export default function CriarTreino() {
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
   }, [academiaId])
+
+  const ficha = fichas[fichaAtiva] || fichas[0]
+
+  const addedExerciseIds = useMemo(() => {
+    if (!ficha) return new Set<string>()
+    return new Set(ficha.exercicios.map((e) => e.exercicioId))
+  }, [ficha])
 
   function adicionarFicha() {
     const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -167,7 +113,6 @@ export default function CriarTreino() {
   }
 
   function toggleDia(d: number) {
-    const ficha = fichas[fichaAtiva]
     const novosDias = ficha.diasSemana.includes(d)
       ? ficha.diasSemana.filter((x) => x !== d)
       : [...ficha.diasSemana, d]
@@ -175,7 +120,6 @@ export default function CriarTreino() {
   }
 
   function adicionarExercicio(ex: Exercicio) {
-    const ficha = fichas[fichaAtiva]
     if (ficha.exercicios.find((e) => e.exercicioId === ex.id)) return
 
     const novoExercicio: ExercicioTreino = {
@@ -187,20 +131,26 @@ export default function CriarTreino() {
       imagemUrl: ex.imagem_url,
       gifUrl: ex.gif_url,
       grupoMuscular: ex.grupo_muscular,
+      originalExercicio: ex,
     }
     atualizarFicha(fichaAtiva, { exercicios: [...ficha.exercicios, novoExercicio] })
   }
 
+  function removerExercicio(exercicioId: string) {
+    const novosExercicios = ficha.exercicios
+      .filter((e) => e.exercicioId !== exercicioId)
+      .map((e, i) => ({ ...e, ordem: i + 1 }))
+    atualizarFicha(fichaAtiva, { exercicios: novosExercicios })
+  }
+
   function atualizarExercicio(idx: number, campo: string, valor: number) {
-    const ficha = fichas[fichaAtiva]
     const novosExercicios = ficha.exercicios.map((e, i) =>
-      i === idx ? { ...e, [campo]: valor } : e
+      i === idx ? { ...e, [campo]: valor } : e,
     )
     atualizarFicha(fichaAtiva, { exercicios: novosExercicios })
   }
 
   function moverExercicio(idx: number, direcao: 'sobe' | 'desce') {
-    const ficha = fichas[fichaAtiva]
     const targetIdx = direcao === 'sobe' ? idx - 1 : idx + 1
     if (targetIdx < 0 || targetIdx >= ficha.exercicios.length) return
 
@@ -209,17 +159,8 @@ export default function CriarTreino() {
     novosExercicios[idx] = novosExercicios[targetIdx]
     novosExercicios[targetIdx] = temp
 
-    // Reordenar os números de ordem
     const ordenados = novosExercicios.map((e, i) => ({ ...e, ordem: i + 1 }))
     atualizarFicha(fichaAtiva, { exercicios: ordenados })
-  }
-
-  function removerExercicio(idx: number) {
-    const ficha = fichas[fichaAtiva]
-    const novosExercicios = ficha.exercicios
-      .filter((_, i) => i !== idx)
-      .map((e, i) => ({ ...e, ordem: i + 1 }))
-    atualizarFicha(fichaAtiva, { exercicios: novosExercicios })
   }
 
   async function handleSalvar(e: React.FormEvent) {
@@ -255,7 +196,7 @@ export default function CriarTreino() {
       await Promise.all(treinos.map((t) => api.enviarTreino(t.id)))
 
       setFeedback(`${treinos.length} ficha(s) criada(s) e enviada(s) com sucesso!`)
-      setTimeout(() => navigate('/treinos'), 2000)
+      setTimeout(() => navigate('/treinos'), 1800)
     } catch (err) {
       console.error(err)
       setFeedback('Erro ao criar fichas.')
@@ -282,331 +223,435 @@ export default function CriarTreino() {
         imagemUrl: te.exercicio.imagem_url,
         gifUrl: te.exercicio.gif_url,
         grupoMuscular: te.exercicio.grupo_muscular,
+        originalExercicio: te.exercicio,
       }))
-      setFichas([{
-        nome: treino.nome,
-        diasSemana: treino.dias_semana || [],
-        exercicios: exerciciosPreenchidos,
-      }])
+      setFichas([
+        {
+          nome: treino.nome,
+          diasSemana: treino.dias_semana || [],
+          exercicios: exerciciosPreenchidos,
+        },
+      ])
       setFichaAtiva(0)
-      setAlunoId('')
     } catch (err) {
       console.error(err)
     }
   }
 
+  function openPreviewForTreinoItem(item: ExercicioTreino) {
+    const fullEx =
+      item.originalExercicio ||
+      todosExercicios.find((ex) => ex.id === item.exercicioId) || {
+        id: item.exercicioId,
+        nome: item.nome,
+        imagem_url: item.imagemUrl,
+        gif_url: item.gifUrl,
+        grupo_muscular: item.grupoMuscular,
+      }
+    setPreviewExercicio(fullEx as Exercicio)
+  }
+
   if (loading) return <WorkoutLoading />
 
-  const ficha = fichas[fichaAtiva]
-
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text">Montar Treinos</h1>
-        <p className="text-sm text-text-muted">Selecione o aluno e adicione os treinos A, B ou C</p>
+    <div className="p-3.5 sm:p-6 max-w-4xl mx-auto space-y-5 pb-24">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/treinos')}
+          className="rounded-xl border border-surface-input bg-surface p-2.5 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+          title="Voltar"
+        >
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-text">Montagem de Treinos</h1>
+          <p className="text-xs sm:text-sm text-text-muted">
+            Prescreva fichas (A, B, C...) com demonstração em GIF em português
+          </p>
+        </div>
       </div>
 
       {feedback && (
-        <div className={`rounded-xl p-4 text-sm font-semibold text-center ${
-          feedback.includes('Erro') ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-success/10 text-success border border-success/20'
-        }`}>
+        <div
+          className={`rounded-2xl p-4 text-xs sm:text-sm font-bold text-center ${
+            feedback.includes('Erro')
+              ? 'bg-destructive/10 text-destructive border border-destructive/20'
+              : 'bg-success/10 text-success border border-success/20'
+          }`}
+        >
           {feedback}
         </div>
       )}
 
-      {/* Seletor de Academia (se multi-academia) */}
-      {vinculos.length > 1 && (
-        <div className="max-w-md">
-          <FormField label="Academia" htmlFor="academia-filtro">
+      {/* Selectors Card (Academia, Aluno, Template) */}
+      <div className="bg-surface-card border border-surface-input rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Seletor de Academia (se multi-academia) */}
+          {vinculos.length > 1 && (
+            <FormField label="Academia" htmlFor="academia-filtro">
+              <Select
+                id="academia-filtro"
+                value={academiaId}
+                onChange={(e) => setAcademiaId(e.target.value)}
+              >
+                <option value="">Todas as Academias</option>
+                {vinculos.map((v: any) => (
+                  <option key={v.academia.id} value={v.academia.id}>
+                    {v.academia.nome}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          )}
+
+          {/* Seletor de Aluno */}
+          <FormField label="Aluno Destinatário *" htmlFor="aluno-treino">
             <Select
-              id="academia-filtro"
-              value={academiaId}
-              onChange={(e) => setAcademiaId(e.target.value)}
+              id="aluno-treino"
+              value={alunoId}
+              onChange={(e) => setAlunoId(e.target.value)}
+              required
             >
-              <option value="">Todas</option>
-              {vinculos.map((v: any) => (
-                <option key={v.academia.id} value={v.academia.id}>{v.academia.nome}</option>
+              <option value="">Selecione o aluno...</option>
+              {alunos.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.usuario.nome} ({a.academia?.nome || 'Sem Academia'})
+                </option>
               ))}
             </Select>
           </FormField>
-        </div>
-      )}
 
-      {/* Seletor de Aluno */}
-      <div className="max-w-md bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm">
-        <FormField label="Aluno do Treino" htmlFor="aluno-treino">
-          <Select
-            id="aluno-treino"
-            value={alunoId}
-            onChange={(e) => setAlunoId(e.target.value)}
-            required
-          >
-            <option value="">Selecionar aluno...</option>
-            {alunos.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.usuario.nome} ({a.academia?.nome || 'Sem Academia'})
-              </option>
-            ))}
-          </Select>
-        </FormField>
+          {/* Seletor de Template */}
+          {templates.length > 0 && (
+            <FormField label="Modelo / Template Existente" htmlFor="template-treino">
+              <Select
+                id="template-treino"
+                value={selectedTemplateId}
+                onChange={(e) => handleSelectTemplate(e.target.value)}
+              >
+                <option value="">Criar do Zero</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nome}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          )}
+        </div>
       </div>
 
-      {/* Seletor de Template */}
-      {templates.length > 0 && (
-        <div className="max-w-md bg-surface-card border border-amber-400/20 rounded-2xl p-4 shadow-sm">
-          <FormField label="Criar a partir de Template" htmlFor="template-treino">
-            <Select
-              id="template-treino"
-              value={selectedTemplateId}
-              onChange={(e) => handleSelectTemplate(e.target.value)}
-            >
-              <option value="">Nenhum (criar do zero)</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>{t.nome}</option>
-              ))}
-            </Select>
-          </FormField>
-        </div>
-      )}
-
       {alunoId && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Coluna Esquerda: Seletor de Fichas e Exercícios Configurados (LGI-7) */}
-          <div className="lg:col-span-7 space-y-4">
-            {/* Seletor de Abas de Ficha */}
-            <div className="flex flex-wrap items-center gap-1.5 bg-surface-card p-1.5 rounded-2xl border border-surface-input">
-              {fichas.map((f, idx) => (
-                <div key={idx} className="flex items-center gap-1">
+        <div className="space-y-4">
+          {/* Workout Tabs Bar */}
+          <div className="flex flex-wrap items-center gap-2 bg-surface-card p-2 rounded-2xl border border-surface-input">
+            {fichas.map((f, idx) => (
+              <div key={idx} className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setFichaAtiva(idx)}
+                  className={`rounded-xl px-4 py-2.5 text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                    fichaAtiva === idx
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-text-muted hover:text-text bg-surface hover:bg-surface-input'
+                  }`}
+                >
+                  {f.nome} ({f.exercicios.length})
+                </button>
+                {fichas.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => setFichaAtiva(idx)}
-                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                      fichaAtiva === idx ? 'bg-primary text-primary-foreground shadow-sm' : 'text-text-muted hover:text-text'
-                    }`}
+                    onClick={() => removerFicha(idx)}
+                    className="text-text-muted hover:text-destructive p-1 text-sm font-black transition-colors"
+                    title="Excluir esta ficha"
                   >
-                    {f.nome}
+                    ×
                   </button>
-                  {fichas.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removerFicha(idx)}
-                      className="text-text-muted hover:text-destructive p-1 text-base leading-none transition-colors"
-                      title="Excluir esta ficha"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={adicionarFicha}
-                className="rounded-xl border border-dashed border-surface-input px-3.5 py-2 text-xs font-semibold text-text-muted hover:text-text hover:border-text-muted transition-colors cursor-pointer"
-              >
-                + Adicionar Treino
-              </button>
-            </div>
-
-            {/* Configurações Gerais do Treino Ativo */}
-            <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Identificação do Treino" htmlFor={`ficha-nome-${fichaAtiva}`}>
-                  <Input
-                    id={`ficha-nome-${fichaAtiva}`}
-                    type="text"
-                    value={ficha.nome}
-                    onChange={(e) => atualizarFicha(fichaAtiva, { nome: e.target.value })}
-                    placeholder="Ex: Treino A — Peito e Tríceps"
-                  />
-                </FormField>
-
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">Dias da Semana</label>
-                  <div className="flex gap-1 flex-wrap">
-                    {DIAS.map((d, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => toggleDia(i)}
-                        className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer select-none transition-all ${
-                          ficha.diasSemana.includes(i) ? 'bg-primary text-primary-foreground' : 'bg-surface text-text-muted border border-surface-input'
-                        }`}
-                      >
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Lista de Exercícios Adicionados */}
-              <div className="pt-2">
-                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">Exercícios do Treino ({ficha.exercicios.length})</h3>
-                
-                {ficha.exercicios.length === 0 ? (
-                  <p className="text-sm text-text-muted py-6 text-center border border-dashed border-surface-input rounded-xl">
-                    Selecione exercícios na biblioteca ao lado para montar a ficha.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {ficha.exercicios.map((ex, idx) => {
-                      return (
-                        <div key={ex.exercicioId} className="flex flex-col md:flex-row md:items-center justify-between p-3.5 bg-surface rounded-xl border border-surface-input gap-3">
-                          <div className="flex items-center gap-3">
-                            {(ex.gifUrl || ex.imagemUrl) && (
-                              <img
-                                src={ex.gifUrl || ex.imagemUrl!}
-                                alt={ex.nome}
-                                className="w-12 h-12 rounded-lg object-cover bg-surface-input border border-surface-input"
-                              />
-                            )}
-                            <div>
-                              <p className="text-sm font-bold text-text leading-tight">{ex.ordem}. {ex.nome}</p>
-                              <div className="flex gap-1.5 mt-1">
-                                {ex.grupoMuscular && (
-                                  <span className="rounded bg-surface-input px-1.5 py-0.5 text-xs font-bold text-text-muted uppercase">
-                                    {ex.grupoMuscular}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3.5">
-                            {/* Inputs de carga/reps/séries */}
-                            <div className="flex gap-1.5 max-w-[200px]">
-                              <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase">Séries</label>
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  value={ex.series}
-                                  onChange={(e) => atualizarExercicio(idx, 'series', Number(e.target.value))}
-                                  className="w-12 px-1.5 py-1 text-xs font-semibold text-center"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase">Reps</label>
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  value={ex.repeticoes}
-                                  onChange={(e) => atualizarExercicio(idx, 'repeticoes', Number(e.target.value))}
-                                  className="w-12 px-1.5 py-1 text-xs font-semibold text-center"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase">Carga (kg)</label>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  placeholder="Auto"
-                                  value={ex.cargaSugeridaKg ?? ''}
-                                  onChange={(e) =>
-                                    atualizarExercicio(idx, 'cargaSugeridaKg', Number(e.target.value) || 0)
-                                  }
-                                  className="w-16 px-1.5 py-1 text-xs font-semibold text-center"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Controles de Reordenação e Exclusão */}
-                            <div className="flex items-center gap-1 border-l border-surface-input pl-2.5">
-                              <button
-                                type="button"
-                                onClick={() => moverExercicio(idx, 'sobe')}
-                                disabled={idx === 0}
-                                className="p-1 text-text-muted hover:text-primary disabled:opacity-30"
-                                title="Mover para cima"
-                              >
-                                ▲
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moverExercicio(idx, 'desce')}
-                                disabled={idx === ficha.exercicios.length - 1}
-                                className="p-1 text-text-muted hover:text-primary disabled:opacity-30"
-                                title="Mover para baixo"
-                              >
-                                ▼
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => removerExercicio(idx)}
-                                className="p-1 text-destructive hover:text-red-500 ml-1"
-                                title="Remover exercício"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
                 )}
               </div>
-            </div>
+            ))}
 
             <button
               type="button"
-              onClick={handleSalvar}
-              disabled={!alunoId || enviando || fichas.every((f) => f.exercicios.length === 0)}
-              className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md disabled:opacity-40 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              onClick={adicionarFicha}
+              className="rounded-xl border border-dashed border-surface-input px-3.5 py-2.5 text-xs font-extrabold text-text-muted hover:text-text hover:border-primary transition-colors cursor-pointer"
             >
-              {enviando ? 'Gravando Fichas...' : 'Salvar Treino Completo'}
+              + Nova Ficha
             </button>
           </div>
 
-          {/* Coluna Direita: Biblioteca de Exercícios Local (LGI-5) */}
-          <div className="lg:col-span-5 bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-4">
-            <div>
-              <h2 className="text-base font-bold text-text">Biblioteca de Exercícios</h2>
-              <p className="text-xs text-text-muted">Mais de 900 exercícios com GIFs animados categorizados</p>
+          {/* Active Workout Details Card */}
+          <div className="bg-surface-card border border-surface-input rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField label="Identificação da Ficha" htmlFor={`ficha-nome-${fichaAtiva}`}>
+                <Input
+                  id={`ficha-nome-${fichaAtiva}`}
+                  type="text"
+                  value={ficha.nome}
+                  onChange={(e) => atualizarFicha(fichaAtiva, { nome: e.target.value })}
+                  placeholder="Ex: Treino A — Peito e Tríceps"
+                  className="font-semibold text-sm"
+                />
+              </FormField>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-extrabold text-text-muted uppercase tracking-wider">
+                  Dias Recomendados
+                </label>
+                <div className="grid grid-cols-7 gap-1">
+                  {DIAS.map((d, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => toggleDia(i)}
+                      className={`py-2 rounded-xl text-xs font-extrabold cursor-pointer select-none transition-all ${
+                        ficha.diasSemana.includes(i)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-surface text-text-muted border border-surface-input hover:border-primary/40'
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <MuscleCategoryGrid
-              selectedCategory={filtroGrupo}
-              onSelectCategory={(catKey) => setFiltroGrupo(catKey || '')}
-            />
+            {/* Exercises List */}
+            <div className="pt-2 border-t border-surface-input">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div>
+                  <h3 className="text-xs sm:text-sm font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
+                    <span>📋</span> Exercícios ({ficha.exercicios.length})
+                  </h3>
+                  <p className="text-[11px] text-text-muted">
+                    Toque no item para ver detalhes e passos em português
+                  </p>
+                </div>
 
-            {/* Filtros */}
-            <div className="space-y-2 pt-2 border-t border-surface-input">
-              <Input
-                type="text"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="🔍 Pesquisar por nome do exercício..."
-              />
+                <button
+                  type="button"
+                  onClick={() => setIsLibraryOpen(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-extrabold shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                >
+                  <PlusIcon className="w-3.5 h-3.5" />
+                  <span>Adicionar</span>
+                </button>
+              </div>
 
-              <Select
-                value={filtroEquip}
-                onChange={(e) => setFiltroEquip(e.target.value)}
-              >
-                <option value="">Todos Equipamentos</option>
-                {EQUIPAMENTOS.map((eq) => (
-                  <option key={eq.value} value={eq.value}>{eq.label}</option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Listagem de Exercícios Filtrados */}
-            <div className="max-h-[500px] overflow-y-auto divide-y divide-surface-input pr-1 space-y-1.5">
-              {exercicios.length === 0 ? (
-                <p className="text-xs text-text-muted py-6 text-center">Nenhum exercício correspondente aos filtros.</p>
+              {ficha.exercicios.length === 0 ? (
+                <div className="py-10 px-4 text-center border-2 border-dashed border-surface-input rounded-2xl flex flex-col items-center justify-center space-y-2.5">
+                  <span className="text-3xl">🏋️</span>
+                  <p className="text-xs sm:text-sm text-text-muted font-medium">
+                    Nenhum exercício selecionado para esta ficha.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsLibraryOpen(true)}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Abrir Biblioteca de Exercícios
+                  </button>
+                </div>
               ) : (
-                exercicios.map((ex) => (
-                  <BuilderExerciseRow
-                    key={ex.id}
-                    ex={ex}
-                    onAdd={() => adicionarExercicio(ex)}
-                  />
-                ))
+                <div className="space-y-2.5">
+                  {ficha.exercicios.map((ex, idx) => {
+                    const thumb = resolveMediaUrl(ex.imagemUrl || ex.gifUrl)
+
+                    return (
+                      <div
+                        key={ex.exercicioId}
+                        className="p-3 sm:p-3.5 bg-surface rounded-2xl border border-surface-input space-y-3 transition-all hover:border-primary/30"
+                      >
+                        <div className="flex items-center justify-between gap-2.5">
+                          {/* Exercise Info (Tap opens Didactic Preview) */}
+                          <button
+                            type="button"
+                            onClick={() => openPreviewForTreinoItem(ex)}
+                            className="flex items-center gap-3 text-left min-w-0 flex-1 cursor-pointer active:scale-98 transition-transform"
+                          >
+                            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-surface-input border border-surface-input overflow-hidden shrink-0 flex items-center justify-center">
+                              {thumb ? (
+                                <img
+                                  src={thumb}
+                                  alt={ex.nome}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <DumbbellIcon className="w-6 h-6 text-text-muted opacity-40" />
+                              )}
+                              <span className="absolute bottom-0.5 right-0.5 bg-black/80 px-1 rounded text-[8px] font-extrabold text-white">
+                                GIF
+                              </span>
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm font-black text-text leading-snug truncate">
+                                <span className="text-primary mr-1">#{ex.ordem}</span> {ex.nome}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                {ex.grupoMuscular && (
+                                  <span className="text-[10px] font-bold text-text-muted bg-surface-input px-1.5 py-0.2 rounded uppercase">
+                                    {ex.grupoMuscular}
+                                  </span>
+                                )}
+                                <span className="text-[10px] font-semibold text-primary">
+                                  👁️ Ver instruções
+                                </span>
+                              </div>
+                            </div>
+                          </button>
+
+                          {/* Reorder and Delete Actions */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => moverExercicio(idx, 'sobe')}
+                              disabled={idx === 0}
+                              className="w-9 h-9 rounded-lg bg-surface-input/70 hover:bg-surface-input text-text-muted hover:text-primary disabled:opacity-20 flex items-center justify-center text-xs font-black transition-colors cursor-pointer"
+                              title="Subir na ordem"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moverExercicio(idx, 'desce')}
+                              disabled={idx === ficha.exercicios.length - 1}
+                              className="w-9 h-9 rounded-lg bg-surface-input/70 hover:bg-surface-input text-text-muted hover:text-primary disabled:opacity-20 flex items-center justify-center text-xs font-black transition-colors cursor-pointer"
+                              title="Descer na ordem"
+                            >
+                              ▼
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removerExercicio(ex.exercicioId)}
+                              className="w-9 h-9 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive flex items-center justify-center text-xs font-black transition-colors cursor-pointer ml-1"
+                              title="Remover do treino"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Inputs: Séries, Reps, Carga */}
+                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-surface-input/70">
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                              Séries
+                            </label>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              min={1}
+                              value={ex.series}
+                              onChange={(e) =>
+                                atualizarExercicio(
+                                  idx,
+                                  'series',
+                                  Math.max(1, Number(e.target.value) || 1),
+                                )
+                              }
+                              className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                              Repetições
+                            </label>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              min={1}
+                              value={ex.repeticoes}
+                              onChange={(e) =>
+                                atualizarExercicio(
+                                  idx,
+                                  'repeticoes',
+                                  Math.max(1, Number(e.target.value) || 1),
+                                )
+                              }
+                              className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                              Carga (kg)
+                            </label>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              min={0}
+                              placeholder="Auto"
+                              value={ex.cargaSugeridaKg ?? ''}
+                              onChange={(e) =>
+                                atualizarExercicio(
+                                  idx,
+                                  'cargaSugeridaKg',
+                                  Math.max(0, Number(e.target.value) || 0),
+                                )
+                              }
+                              className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => setIsLibraryOpen(true)}
+                    className="w-full py-3 rounded-2xl border-2 border-dashed border-surface-input hover:border-primary/50 text-xs font-extrabold text-text-muted hover:text-primary flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Adicionar Mais Exercícios nesta Ficha
+                  </button>
+                </div>
               )}
             </div>
           </div>
+
+          {/* Save Button */}
+          <button
+            type="button"
+            onClick={handleSalvar}
+            disabled={!alunoId || enviando || fichas.every((f) => f.exercicios.length === 0)}
+            className="w-full rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-lg disabled:opacity-40 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+          >
+            {enviando ? 'Gravando Fichas...' : 'Salvar Treino Completo e Enviar ao Aluno ✓'}
+          </button>
         </div>
       )}
+
+      {/* Library Drawer */}
+      <ExerciseLibraryDrawer
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        todosExercicios={todosExercicios}
+        addedExerciseIds={addedExerciseIds}
+        onAddExercise={adicionarExercicio}
+        onRemoveExercise={removerExercicio}
+      />
+
+      {/* Didactic Preview Modal */}
+      <ExercisePreviewModal
+        exercicio={previewExercicio}
+        isOpen={Boolean(previewExercicio)}
+        isAlreadyAdded={previewExercicio ? addedExerciseIds.has(previewExercicio.id) : false}
+        onClose={() => setPreviewExercicio(null)}
+        onToggleAdd={(ex) => {
+          if (addedExerciseIds.has(ex.id)) {
+            removerExercicio(ex.id)
+          } else {
+            adicionarExercicio(ex)
+          }
+        }}
+      />
     </div>
   )
 }

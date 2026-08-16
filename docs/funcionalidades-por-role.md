@@ -92,6 +92,16 @@ O aluno tem acesso a uma vitrine de parceiros do ecossistema, que permite:
 - Visualizar descontos exclusivos em suplementacao, vestuario, servicos de nutricao, entre outros.
 - Acessar promocoes destacadas com acesso facilitado as paginas dos parceiros.
 
+### 2.8 Avaliacao do sistema
+
+Apos concluir o primeiro treino, o aluno e convidado a avaliar o sistema:
+
+- Nota geral de 1 a 5 estrelas.
+- Perguntas sobre criar/encontrar treino, navegacao, execucao e recomendacao.
+- Campo livre para mensagem ou reporte de bug.
+
+O aluno tambem pode reavaliar quando quiser pelo menu "Avaliar o App".
+
 ---
 
 ## 3. Professor
@@ -219,6 +229,13 @@ O Root nao pode desativar outro usuario Root.
 
 O Root tem acesso a uma tela de moderacao do feed social.
 
+### 5.6 Avaliacoes do sistema
+
+O Root pode visualizar as avaliacoes enviadas pelos alunos:
+
+- Nota media geral e por pergunta.
+- Lista de avaliacoes com nome do aluno, nota, respostas e mensagem de feedback.
+
 ---
 
 ## 6. Matriz de Permissoes
@@ -242,6 +259,8 @@ Esta tabela resume o que cada perfil pode fazer no sistema.
 | Acessar vitrine de promocoes e parceiros | Sim | Nao | Nao | Nao |
 | Registrar medidas e ver evolucao | Sim, propria | Sim, dos alunos | Nao | Nao |
 | Alterar vinculos e dados pessoais | Sim, proprios | Sim, proprios | Sim, proprios | Nao |
+| Avaliar o sistema (nota + feedback) | Sim | Nao | Nao | Nao |
+| Visualizar avaliacoes do sistema | Nao | Nao | Nao | Sim |
 
 ---
 

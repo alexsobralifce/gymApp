@@ -116,6 +116,12 @@
 - **Capacitor**: compatível com lojas Android e iOS
 - **Tela ligada** durante o treino (KeepAwake)
 
+### 1.12 Avaliação e Feedback
+- **Avaliação do sistema** após o primeiro treino: card com nota de 1 a 5 estrelas
+- Perguntas rápidas sobre usabilidade: criar/encontrar treino, navegação, execução e recomendação
+- **Campo livre** para mensagem ou reporte de bug
+- Menu **"Avaliar o App"** disponível a qualquer momento para reavaliar
+
 ---
 
 ## 2. Para Personal Trainers / Professores
@@ -233,6 +239,10 @@ Avaliação integrada baseada em evidências científicas com:
 - **Exclusão de posts** inapropriados
 - **Gestão de clubes**: criar, editar e excluir
 - **Gestão de amizades**: visualização e moderação
+
+### 4.6 Avaliações do App
+- **Painel de avaliações do sistema**: nota média geral e por pergunta (criar treino, navegação, execução, recomendação)
+- Lista completa de avaliações com nome do aluno, nota, respostas e mensagem de feedback/bug
 
 ---
 

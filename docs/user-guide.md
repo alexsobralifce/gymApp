@@ -185,6 +185,12 @@ O fluxo de execucao tem 3 telas.
 - `iniciado_em` e `finalizado_em` sao limpos
 - O aluno pode fazer o mesmo treino novamente
 
+**Avaliacao do sistema (primeiro treino):**
+- Apos concluir o primeiro treino, um card de avaliacao aparece na tela de conclusao
+- Nota geral de 1 a 5 estrelas + perguntas sobre criar/encontrar treino, navegacao, execucao e recomendacao
+- Campo livre opcional para mensagem ou reporte de bug
+- Se fechar sem enviar, pode reavaliar depois pelo menu "Avaliar o App"
+
 ### 3.5 Maquina de Estados do Treino
 
 | De | Para | Quem | Quando |
@@ -462,6 +468,13 @@ Badges sao conquistas desbloqueadas automaticamente conforme voce treina.
 | GET/POST/PATCH | `/alunos/medidas[/:id]` | CRUD medidas |
 | GET/POST | `/alunos/correlacoes` | Ver/calcular correlacoes |
 | PATCH | `/alunos/academia` | Vincular a academia |
+
+### Avaliacao do sistema
+
+| Metodo | Rota | Descricao | Perfil |
+|--------|------|-----------|--------|
+| POST | `/avaliacoes/sistema` | Criar avaliacao do sistema (nota 1-5 + perguntas + mensagem) | ALUNO |
+| GET | `/root/avaliacoes-sistema` | Listar avaliacoes do sistema | ROOT |
 
 ### Social
 
