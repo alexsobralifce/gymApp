@@ -615,7 +615,9 @@ export const api = {
     api.get<{ avaliacoes: Array<{ id: string; nota: number; respostas: Record<string, number>; mensagem: string | null; criado_em: string; aluno: { nome: string; email: string } }> }>('/root/avaliacoes-sistema'),
 
   // ─── Notícias ──────────────────────────────────────
-  getNoticias: () => api.get('/noticias'),
+  getNoticias: (limit = 50, offset = 0) => api.get<any[]>(`/noticias?limit=${limit}&offset=${offset}`),
+  refreshNoticias: () =>
+    api.post<{ success: boolean; message: string; inseridas: number; total: number }>('/noticias/refresh', {}),
 
   gerarESalvarTreinoIA: (data: {
     planoId?: string

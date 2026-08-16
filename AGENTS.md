@@ -126,17 +126,19 @@ apps/api/src/
   - **Award Badges**: Concede badges por conquistas
   - **Update XP**: Atualiza XP semanal nos clubes
 
-- **RF22 - Verificação de E-mail e Google OAuth**: Suporte a `email_verified`, `email_verify_code` com expiração. Login social via Google (`POST /auth/google`) com `google_auth_library`.
+- **RF22 - Verificação de E-mail e Google OAuth**: Suporte a `email_verified`, `email_verify_code` com expiração. Login e Cadastro social via Google (`POST /auth/google`) presentes em todas as telas de autenticação (`Login.tsx`, `RegisterWizard.tsx`), com fallback robusto e detecção de novo usuário (`isNew`).
 
-- **RF23 - Clube de Parceiros/Vantagens**: Vitrine de parceiros do ecossistema com descontos exclusivos em suplementação, vestuário, nutrição. Promoções destacadas com links externos.
+- **RF23 - Notícias Científicas de Saúde e Treino**: Módulo `NoticiasService` com extração contínua e rica de feeds RSS do Google News em PT-BR (exercícios, musculação, longevidade, endorfina, nutrição), decodificação de entidades HTML, remoção de lixo, associação de capas temáticas de alta resolução do Unsplash, paginação e sincronização sob demanda via `POST /noticias/refresh`. Interface em formato de revista digital com filtros de categoria, busca instantânea e skeletons.
 
-- **RF24 - Smartwatches & Integração com Dispositivos (Open Wearables)**: Sincronização contínua a cada 30 segundos ao longo do dia para consolidação da FC Média diária (fidelidade aos dados reais recebidos do relógio) e acúmulo incremental das calorias ativas do dia (`00:00:00` a `23:59:59`) com base nas medidas vitais cadastradas (peso, altura, idade/nascimento, sexo) e treinos executados. Telemetria de alta frequência a cada 5 segundos durante treinos ativos (`EM_EXECUCAO`) com cálculo contínuo de FC Média da sessão, FC Máxima e gasto calórico em tempo real (Keytel et al.). Painel `WearableConnectCard`, guias `HuaweiBridgeGuide` e diagnóstico em `DebugOverlay`.
+- **RF24 - Clube de Parceiros/Vantagens**: Vitrine de parceiros do ecossistema com descontos exclusivos em suplementação, vestuário, nutrição. Promoções destacadas com links externos.
 
-- **RF25 - PWA (Progressive Web App)**: PWA como via principal de instalação a partir do site, com `PWAInstallPrompt` (Android/Chrome) e guia iOS via Safari. Código preparado para Capacitor como opção futura (ícones, detecção `isNativePlatform()`, CapacitorHttp). Polimento de app nativo: `overscroll-behavior: none` (sem pull-to-refresh/glow), `user-select: none` (sem menu de copiar), `touch-action: manipulation` (sem zoom por duplo-toque), `beforeunload` removido (substituído por `useBlocker` + `ConfirmModal`), `window.confirm` substituído por `ConfirmModal` em 4 páginas. `@capgo/capacitor-keep-awake` para manter tela ligada durante treino.
+- **RF25 - Smartwatches & Integração com Dispositivos (Open Wearables)**: Sincronização contínua a cada 30 segundos ao longo do dia para consolidação da FC Média diária (fidelidade aos dados reais recebidos do relógio) e acúmulo incremental das calorias ativas do dia (`00:00:00` a `23:59:59`) com base nas medidas vitais cadastradas (peso, altura, idade/nascimento, sexo) e treinos executados. Telemetria de alta frequência a cada 5 segundos durante treinos ativos (`EM_EXECUCAO`) com cálculo contínuo de FC Média da sessão, FC Máxima e gasto calórico em tempo real (Keytel et al.). Painel `WearableConnectCard`, guias `HuaweiBridgeGuide` e diagnóstico em `DebugOverlay`.
 
-- **RF26 - Root Admin & Moderação Social**: Painel Root com visão global (academias ativas/pendentes, professores, alunos). CRUD de usuários com busca, filtro, ativação/desativação e reset de senha. Moderação de feed social (excluir posts, gerenciar clubes e amizades). Aprovação/rejeição de academias e vínculos.
+- **RF26 - PWA & Onboarding de Permissões**: PWA como via principal de instalação a partir do site, com modal inicial de permissões (`OnboardingPermissionsModal`) pós-login/cadastro solicitando autorização de push notifications e guiando a instalação tanto no Android/Chrome (`promptInstall`) quanto no iOS/Safari (passo a passo de Adicionar à Tela de Início). Polimento de app nativo: `overscroll-behavior: none`, `user-select: none`, `touch-action: manipulation`.
 
-- **RF27 - Privacidade e Consentimento LGPD**: Três controles independentes: `visibilidadePadrao` (AMIGOS/PUBLICO/PRIVADO), `permiteBuscaEmail`, `consentiuFeedSocial`. Posts com visibilidade PRIVADO não são criados no feed. Busca por email nunca revela se o email existe.
+- **RF27 - Root Admin & Moderação Social**: Painel Root com visão global (academias ativas/pendentes, professores, alunos). CRUD de usuários com busca, filtro, ativação/desativação e reset de senha. Moderação de feed social (excluir posts, gerenciar clubes e amizades). Aprovação/rejeição de academias e vínculos.
+
+- **RF28 - Privacidade e Consentimento LGPD**: Três controles independentes: `visibilidadePadrao` (AMIGOS/PUBLICO/PRIVADO), `permiteBuscaEmail`, `consentiuFeedSocial`. Posts com visibilidade PRIVADO não são criados no feed. Busca por email nunca revela se o email existe.
 
 #### Requisitos Não-Funcionais (RNF)
 

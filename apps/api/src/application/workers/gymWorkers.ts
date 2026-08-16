@@ -10,6 +10,7 @@ import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
 import { handleNotifyFriends } from '../../jobs/social/notify-friends.worker.js'
 import { handleAwardBadges } from '../../jobs/social/award-badges.worker.js'
 import { handleUpdateXp } from '../../jobs/social/update-xp.worker.js'
+import { NoticiasService } from '../../application/usecases/noticias/NoticiasService.js'
 import Redis from 'ioredis'
 
 let connection: { url: string } | null = null
@@ -265,76 +266,11 @@ async function handleCorrelacaoDesempenho(job: Job<{ alunoId: string }>) {
 // ─── News engine (RSS fetch + push rotativo) ─────────────────────────────────
 
 async function handleNewsFetch(job: Job) {
-  const RSS_URL = `https://news.google.com/rss/search?q=${NEWS_FETCH_QUERY}&hl=pt-BR&gl=BR&ceid=BR:pt-419&when=30d`
-
   try {
-    const response = await fetch(RSS_URL, { signal: AbortSignal.timeout(30000) })
-    const xml = await response.text()
-
-    const agora = Date.now()
-    const MAX_IDADE_MS = 30 * 24 * 60 * 60 * 1000 // 30 dias
-    const PRUNE_IDADE_MS = 60 * 24 * 60 * 60 * 1000 // 60 dias (remoção de notícias muito antigas)
-
-    // Parse RSS items with regex (no external deps)
-    const itemRegex = /<item>([\s\S]*?)<\/item>/g
-    let match
-    let inseridas = 0
-    let puladasData = 0
-    while ((match = itemRegex.exec(xml)) !== null) {
-      const item = match[1]
-      const titulo = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1]?.trim()
-      const link = (item.match(/<link>(.*?)<\/link>/))?.[1]?.trim()
-      const desc = (item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || item.match(/<description>(.*?)<\/description>/))?.[1]?.trim()
-      const fonte = (item.match(/<source.*?>(.*?)<\/source>/))?.[1]?.trim()
-      const pubDateRaw = (item.match(/<pubDate>(.*?)<\/pubDate>/))?.[1]?.trim()
-
-      if (!titulo || !link) continue
-
-      // Filtrar por data de publicação: só notícias recentes (últimos 30 dias)
-      let dataPublicacao: Date | null = null
-      if (pubDateRaw) {
-        const parsed = new Date(pubDateRaw)
-        if (!isNaN(parsed.getTime())) {
-          dataPublicacao = parsed
-        }
-      }
-
-      if (dataPublicacao && agora - dataPublicacao.getTime() > MAX_IDADE_MS) {
-        puladasData++
-        continue // muito antiga, não insere
-      }
-      // Se não tem pubDate válida, insere assim mesmo (pode ser conteúdo evergreen do Google News)
-
-      await prisma.noticia.upsert({
-        where: { url: link },
-        create: {
-          titulo: titulo.slice(0, 200),
-          resumo: (desc || titulo).replace(/<[^>]*>/g, '').slice(0, 300),
-          url: link,
-          fonte: fonte || 'Google News',
-          data_publicacao: dataPublicacao,
-        },
-        update: {
-          data_publicacao: dataPublicacao,
-        },
-      })
-      inseridas++
-    }
-
-    // Podar notícias muito antigas (60+ dias) para manter a lista enxuta
-    const cortePrune = new Date(agora - PRUNE_IDADE_MS)
-    const { count } = await prisma.noticia.deleteMany({
-      where: {
-        OR: [
-          { data_publicacao: { lt: cortePrune } },
-        ],
-      },
-    })
-    if (count > 0) console.log(`[News Fetch] Removidas ${count} notícias antigas (anteriores a ${cortePrune.toISOString().slice(0, 10)})`)
-
-    job.log(`Fetched RSS: ${inseridas} inserted/updated, ${puladasData} skipped (old)`)
-  } catch (err) {
-    job.log(`RSS fetch error: ${(err as Error).message}`)
+    const result = await NoticiasService.fetchAndSyncNews()
+    job.log(`Fetched RSS news: ${result.inseridas} processed, total in DB: ${result.total}`)
+  } catch (err: any) {
+    job.log(`RSS fetch error: ${err?.message || err}`)
   }
 }
 

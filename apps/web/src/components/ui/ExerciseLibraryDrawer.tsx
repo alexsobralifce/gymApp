@@ -149,7 +149,7 @@ export default function ExerciseLibraryDrawer({
             <MuscleCategoryGrid
               selectedCategory={filtroGrupo}
               onSelectCategory={(catKey) => setFiltroGrupo(catKey || '')}
-              columns="full"
+              columns="sidebar"
               className="py-0.5"
             />
 

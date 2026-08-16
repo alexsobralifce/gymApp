@@ -1,5 +1,4 @@
 import { MUSCLE_CATEGORIES, type MuscleCategoryKey } from '../../lib/muscleCategories'
-import { getMuscleIcon } from '../icons/MuscleIcons'
 
 interface MuscleCategoryGridProps {
   selectedCategory?: string | null
@@ -20,20 +19,20 @@ export default function MuscleCategoryGrid({
 
   const gridColsClass =
     columns === 'full'
-      ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3'
-      : 'grid grid-cols-3 gap-2 sm:gap-2.5'
+      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2'
+      : 'grid grid-cols-2 gap-1.5 sm:gap-2'
 
   return (
-    <div className={`space-y-2.5 ${className}`}>
+    <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center justify-between px-0.5">
-        <span className="text-[11px] font-extrabold uppercase tracking-wider text-text-muted">
+        <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-muted">
           Grupos Musculares
         </span>
         {showAllOption && currentKey && (
           <button
             type="button"
             onClick={() => onSelectCategory(null)}
-            className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+            className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
           >
             Ver Todos
           </button>
@@ -49,29 +48,21 @@ export default function MuscleCategoryGrid({
               key={cat.key}
               type="button"
               onClick={() => onSelectCategory(isActive ? null : cat.key)}
-              title={cat.label}
-              className={`group flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-95 w-full min-w-0 overflow-hidden ${
+              title={cat.sublabel || cat.label}
+              className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-left transition-all duration-150 cursor-pointer select-none active:scale-97 w-full min-w-0 ${
                 isActive
-                  ? 'border-primary bg-primary/15 text-primary shadow-md ring-2 ring-primary/30'
-                  : 'border-surface-input bg-surface-card text-text-muted hover:border-primary/50 hover:bg-surface hover:text-text'
+                  ? 'border-primary bg-primary/15 text-primary shadow-xs font-black'
+                  : 'border-surface-input/80 bg-surface-card text-text-muted hover:border-primary/40 hover:bg-surface hover:text-text font-bold'
               }`}
             >
-              <div
-                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center mb-1.5 shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                  isActive
-                    ? 'bg-primary/20 text-primary'
-                    : 'bg-surface-input/60 text-text-muted group-hover:text-primary group-hover:bg-primary/10'
-                }`}
-              >
-                {getMuscleIcon(cat.key, { size: 22 })}
-              </div>
-              <span
-                className={`w-full min-w-0 text-[10px] font-extrabold tracking-tight uppercase text-center leading-tight truncate block px-0.5 ${
-                  isActive ? 'text-primary font-black' : 'text-text-muted group-hover:text-text'
-                }`}
-              >
+              <span className="text-[11px] tracking-tight uppercase truncate block flex-1">
                 {cat.label}
               </span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ml-1 transition-colors ${
+                  isActive ? 'bg-primary shadow-xs' : 'bg-transparent group-hover:bg-primary/40'
+                }`}
+              />
             </button>
           )
         })}
@@ -79,3 +70,4 @@ export default function MuscleCategoryGrid({
     </div>
   )
 }
+
