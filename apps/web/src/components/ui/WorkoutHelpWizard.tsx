@@ -46,12 +46,21 @@ const STEPS_PROFESSOR: Step[] = [
   },
   {
     emoji: '🏋️',
-    title: 'Monte os exercícios',
+    title: 'Abra a Biblioteca de Exercícios',
     description:
       'Clique em "Adicionar" pra abrir a biblioteca com mais de 900 exercícios — todos com GIF animado e instruções em português!',
-    tip: 'Toque no exercício pra ver o passo a passo completo antes de adicionar. Nunca mais vai prescrever algo que você não conhece! 😄',
+    tip: 'Toque no card do exercício pra ver o passo a passo completo antes de adicionar. Nunca mais vai prescrever algo que você não conhece! 😄',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10 border-emerald-500/20',
+  },
+  {
+    emoji: '🎯',
+    title: 'Filtre por músculo e equipamento',
+    description:
+      'Dentro da biblioteca, clique em um grupo muscular na grade (Peitoral, Costas, Pernas...) pra filtrar os exercícios. Depois use o menu "Todos Equipamentos" pra escolher: Barra, Halteres, Cabo/Polia, Máquina, Peso Corporal, Kettlebell ou Elásticos.',
+    tip: 'Academia sem barra? Filtra por "Halteres" ou "Peso Corporal" e pronto — só aparecem exercícios possíveis no ambiente do aluno! 🙌',
+    color: 'text-teal-400',
+    bgColor: 'bg-teal-500/10 border-teal-500/20',
   },
   {
     emoji: '⚙️',
@@ -94,12 +103,21 @@ const STEPS_ALUNO: Step[] = [
   },
   {
     emoji: '🏋️',
-    title: 'Escolha os exercícios',
+    title: 'Abra a Biblioteca de Exercícios',
     description:
       'Clique em "Adicionar" pra abrir a biblioteca com mais de 900 exercícios com GIF animado e instruções em PT-BR.',
-    tip: 'Toque no exercício pra ver o passo a passo antes de adicionar — vai que você faz errado e nem sabe, né? 😅',
+    tip: 'Toque no card do exercício pra ver o passo a passo antes de adicionar — vai que você faz errado e nem sabe, né? 😅',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10 border-emerald-500/20',
+  },
+  {
+    emoji: '🎯',
+    title: 'Filtre por músculo e equipamento',
+    description:
+      'Na biblioteca, toque num grupo muscular na grade colorida (Peitoral, Costas, Pernas, Glúteo...) pra ver só os exercícios daquela região. Depois usa o menu "Todos Equipamentos" pra escolher: Barra, Halteres, Cabo/Polia, Máquina, Peso Corporal, Kettlebell ou Elásticos.',
+    tip: 'Treino em casa? Filtra por "Peso Corporal" ou "Elásticos" e monta um treino 100% possível sem sair do quarto! 🏠💪',
+    color: 'text-teal-400',
+    bgColor: 'bg-teal-500/10 border-teal-500/20',
   },
   {
     emoji: '🔢',
