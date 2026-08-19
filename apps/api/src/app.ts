@@ -30,6 +30,7 @@ import { uploadRoutes } from './modules/social/upload/upload.routes.js'
 import { noticiasRoutes } from './presentation/http/routes/noticias.routes.js'
 import { healthRoutes } from './presentation/http/routes/health.routes.js'
 import { wearableRoutes } from './presentation/http/routes/wearable.routes.js'
+import { stravaRoutes } from './presentation/http/routes/strava.routes.js'
 
 // Plugins / Middlewares
 import { jwtAuthPlugin } from './presentation/middlewares/jwtAuth.js'
@@ -159,6 +160,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(uploadRoutes)
   await app.register(noticiasRoutes, { prefix: '/noticias' })
   await app.register(wearableRoutes, { prefix: '/integrations' })
+  await app.register(stravaRoutes, { prefix: '/integrations/strava' })
 
   // ─── Health check ────────────────────────────────────────────────────────
   await app.register(healthRoutes)

@@ -1,6 +1,7 @@
 import { useState, useEffect, Component, type ReactNode } from 'react'
 import { WatchIcon, CheckCircle2Icon, RefreshCwIcon, LinkIcon, UnlinkIcon, ShieldCheckIcon, HeartIcon, FlameIcon, ActivityIcon, ZapIcon, AlertCircleIcon } from 'lucide-react'
 import { api } from '../../api/client'
+import { useToast } from '../ui/Toast'
 
 interface WearableIntegracao {
   id: string
@@ -133,8 +134,10 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
   const [loading, setLoading] = useState<boolean>(true)
   const [testingSync, setTestingSync] = useState<boolean>(false)
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null)
+  const [stravaSyncing, setStravaSyncing] = useState<boolean>(false)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
   const [hasError, setHasError] = useState<boolean>(false)
+  const { showToast, ToastComponent } = useToast()
 
   const fetchIntegracoes = async () => {
     try {
@@ -219,6 +222,58 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
     }
   }
 
+  const handleStravaConnect = async () => {
+    try {
+      setConnectingProvider('strava')
+      setFeedbackMsg(null)
+      const data = await api.getStravaAuthorize()
+      if (data && data.authorizeUrl) {
+        window.location.href = data.authorizeUrl
+      } else {
+        showToast('Falha ao iniciar conexão com o Strava.', 'error')
+      }
+    } catch (err: any) {
+      console.error('Erro ao conectar Strava:', err)
+      showToast(err?.message || 'Falha ao conectar o Strava.', 'error')
+    } finally {
+      setConnectingProvider(null)
+    }
+  }
+
+  const handleStravaSync = async () => {
+    try {
+      setStravaSyncing(true)
+      setFeedbackMsg(null)
+      const res = await api.syncStrava()
+      const synced = typeof res?.synced === 'number' ? res.synced : 0
+      showToast(
+        synced === 1 ? '1 atividade sincronizada' : `${synced} atividades sincronizadas`,
+        'success'
+      )
+      await fetchIntegracoes()
+    } catch (err: any) {
+      console.error('Erro ao sincronizar Strava:', err)
+      showToast(err?.message || 'Falha ao sincronizar as atividades do Strava.', 'error')
+    } finally {
+      setStravaSyncing(false)
+    }
+  }
+
+  const handleStravaDisconnect = async () => {
+    try {
+      setConnectingProvider('strava')
+      setFeedbackMsg(null)
+      await api.disconnectWearable('strava')
+      showToast('Strava desconectado.', 'success')
+      await fetchIntegracoes()
+    } catch (err: any) {
+      console.error('Erro ao desconectar Strava:', err)
+      showToast(err?.message || 'Falha ao desconectar o Strava.', 'error')
+    } finally {
+      setConnectingProvider(null)
+    }
+  }
+
   const handleTestSync = async (provedor: string = 'huawei') => {
     try {
       setTestingSync(true)
@@ -247,6 +302,10 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
     const fromEventos = Array.isArray(eventos) && eventos.some((e) => e && e.provedor && e.provedor.toLowerCase() === provedorId.toLowerCase())
     return Boolean(fromIntegracoes || fromEventos)
   }
+
+  const stravaConnected = Array.isArray(integracoes) && integracoes.some(
+    (i) => i && i.provedor && i.provedor.toLowerCase() === 'strava' && i.ativo
+  )
 
   if (hasError) {
     return (
@@ -478,6 +537,64 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
         })}
       </div>
 
+      {/* Strava — importação de atividades */}
+      <div className="mt-3 p-4 rounded-xl border bg-gradient-to-br from-[#FC4C02]/15 to-orange-950/40 border-[#FC4C02]/40 flex flex-col justify-between transition-all duration-200 hover:scale-[1.01]">
+        <div>
+          <div className="flex items-start justify-between mb-1.5">
+            <div>
+              <h4 className="font-semibold text-sm text-text-primary flex items-center gap-1.5">
+                Strava
+                {stravaConnected && (
+                  <span className="inline-flex items-center gap-1 text-[10px] bg-[#FC4C02]/20 text-[#FC4C02] px-2 py-0.5 rounded-full font-medium">
+                    <CheckCircle2Icon className="w-3 h-3" /> Conectado
+                  </span>
+                )}
+              </h4>
+              <span className="text-[11px] text-text-muted font-mono">Corridas, pedal e caminhadas</span>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-surface-card/60 text-text-secondary font-mono">
+              Strava OAuth
+            </span>
+          </div>
+
+          <p className="text-xs text-text-secondary mb-3 leading-relaxed">
+            Importe suas atividades de corrida, ciclismo e caminhada do Strava para acompanhar o volume e a evolução.
+          </p>
+        </div>
+
+        <div className="pt-2 border-t border-white/5 flex items-center justify-end gap-2">
+          {stravaConnected ? (
+            <>
+              <button
+                onClick={handleStravaSync}
+                disabled={stravaSyncing || connectingProvider === 'strava'}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#FC4C02]/20 hover:bg-[#FC4C02]/30 text-[#FC4C02] border border-[#FC4C02]/40 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCwIcon className={`w-3.5 h-3.5 ${stravaSyncing ? 'animate-spin' : ''}`} />
+                {stravaSyncing ? 'Sincronizando...' : 'Sincronizar agora'}
+              </button>
+              <button
+                onClick={handleStravaDisconnect}
+                disabled={connectingProvider === 'strava'}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <UnlinkIcon className="w-3.5 h-3.5" />
+                {connectingProvider === 'strava' ? 'Desconectando...' : 'Desconectar'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleStravaConnect}
+              disabled={connectingProvider === 'strava'}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#FC4C02]/20 hover:bg-[#FC4C02]/30 text-[#FC4C02] border border-[#FC4C02]/40 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <LinkIcon className="w-3.5 h-3.5" />
+              {connectingProvider === 'strava' ? 'Conectando...' : 'Conectar'}
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Footer Info */}
       <div className="mt-4 pt-3 border-t border-surface-border/40 text-[11px] text-text-muted flex items-center justify-between">
         <span className="flex items-center gap-1">
@@ -485,6 +602,8 @@ function WearableConnectCardInner({ onSync }: { onSync?: (data?: WearableSyncDat
           Seus dados de saúde são criptografados e sincronizados em conformidade com LGPD.
         </span>
       </div>
+
+      {ToastComponent}
     </div>
   )
 }

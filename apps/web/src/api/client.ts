@@ -254,6 +254,13 @@ export const api = {
   disconnectWearable: (provedor: string) =>
     api.delete<{ message: string }>(`/integrations/wearables/${provedor}`),
 
+  // ─── Integrações — Strava ──────────────────────────
+  getStravaAuthorize: () =>
+    api.get<{ authorizeUrl: string }>('/integrations/strava/authorize'),
+
+  syncStrava: () =>
+    api.post<{ success: boolean; synced: number; total: number }>('/integrations/strava/sync'),
+
 
 
   // ─── Notificações ──────────────────────────────────

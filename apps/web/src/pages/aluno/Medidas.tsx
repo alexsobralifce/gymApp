@@ -4,6 +4,7 @@ import BatchActionBar from '../../components/ui/BatchActionBar'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
+import { useToast } from '../../components/ui/Toast'
 import { calcularIdade } from '../../lib/health'
 import type { MedidaCorporal, PerfilAluno } from '../../types/api'
 import { WearableConnectCard } from '../../components/health/WearableConnectCard'
@@ -52,6 +53,7 @@ export default function AlunoMedidas() {
   const [mostrarNovo, setMostrarNovo] = useState(false)
   const [sucesso, setSucesso] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const { showToast, ToastComponent } = useToast()
 
   const [search, setSearch] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -83,6 +85,25 @@ export default function AlunoMedidas() {
       }
     }).finally(() => setLoading(false))
   }, [carregarDados])
+
+  // Resultado do OAuth do Strava — o backend redireciona de volta para
+  // /alunos/medidas?strava=connected (sucesso) ou ?strava=error (falha)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const result = params.get('strava')
+    if (result === 'connected') {
+      showToast('Strava conectado!', 'success')
+    } else if (result === 'error') {
+      showToast('Falha ao conectar o Strava.', 'error')
+    }
+    if (result) {
+      params.delete('strava')
+      const qs = params.toString()
+      const novaUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname
+      window.history.replaceState({}, '', novaUrl)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function abrirNovo() {
     const ultima = medidas.length > 0 ? medidas[medidas.length - 1] : null
@@ -226,6 +247,8 @@ export default function AlunoMedidas() {
           {sucesso}
         </div>
       )}
+
+      {ToastComponent}
 
       {/* IMC Card – última medida */}
       {classificacao && ultimaMedida && (
