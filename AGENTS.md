@@ -132,8 +132,6 @@ apps/api/src/
 
 - **RF24 - Clube de Parceiros/Vantagens**: Vitrine de parceiros do ecossistema com descontos exclusivos em suplementação, vestuário, nutrição. Promoções destacadas com links externos.
 
-- **RF25 - Smartwatches & Integração com Dispositivos (Open Wearables)**: Sincronização contínua a cada 30 segundos ao longo do dia para consolidação da FC Média diária (fidelidade aos dados reais recebidos do relógio) e acúmulo incremental das calorias ativas do dia (`00:00:00` a `23:59:59`) com base nas medidas vitais cadastradas (peso, altura, idade/nascimento, sexo) e treinos executados. Telemetria de alta frequência a cada 5 segundos durante treinos ativos (`EM_EXECUCAO`) com cálculo contínuo de FC Média da sessão, FC Máxima e gasto calórico em tempo real (Keytel et al.). Painel `WearableConnectCard`, guias `HuaweiBridgeGuide` e diagnóstico em `DebugOverlay`.
-
 - **RF26 - PWA & Onboarding de Permissões**: PWA como via principal de instalação a partir do site, com modal inicial de permissões (`OnboardingPermissionsModal`) pós-login/cadastro solicitando autorização de push notifications e guiando a instalação tanto no Android/Chrome (`promptInstall`) quanto no iOS/Safari (passo a passo de Adicionar à Tela de Início). Polimento de app nativo: `overscroll-behavior: none`, `user-select: none`, `touch-action: manipulation`.
 
 - **RF27 - Root Admin & Moderação Social**: Painel Root com visão global (academias ativas/pendentes, professores, alunos). CRUD de usuários com busca, filtro, ativação/desativação e reset de senha. Moderação de feed social (excluir posts, gerenciar clubes e amizades). Aprovação/rejeição de academias e vínculos.
@@ -244,10 +242,6 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 
 ### CorrelacaoDesempenho (`correlacoes_desempenho`) — Cache de correlações
 `id (cuid), aluno_id (unique FK), peso_volume_r?, bf_volume_r?, massa_magra_volume_r?, volume_semanal (Json), pontos (Json), calculado_em`
-
-### Modelos de Wearables & Smartwatches (`wearable_*`)
-- **WearableIntegracao (`wearable_integracoes`)**: `id (cuid), aluno_id, provedor, user_id_ext, access_token_enc?, refresh_token_enc?, token_expira_em?, ativo (default true), criado_em, atualizado_em` — `@@unique([aluno_id, provedor])`
-- **WearableEvento (`wearable_eventos`)**: `id (cuid), aluno_id, provedor, tipo, payload_raw (Json), processado (default false), erro_msg?, recebido_em` — índice `[aluno_id, recebido_em]`
 
 ### Modelos Sociais (`social_*`)
 - **SocialFriendship (`social_friendships`)**: `id, aluno_id, amigo_id, status (FriendshipStatus), criado_em` — `@@unique([aluno_id, amigo_id])`, índice `[amigo_id, status]`
@@ -801,9 +795,6 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `EndorfinappIcon` | `components/branding/EndorfinappIcon.tsx` | Ícone da marca (ECG + Raio) |
 | `EndorfinappWordmark` | `components/branding/EndorfinappWordmark.tsx` | Logotipo texto |
 | `EndorfinappLogo` | `components/branding/EndorfinappLogo.tsx` | Logo completo |
-| `HealthConnectCard` | `components/health/HealthConnectCard.tsx` | Integração Google Health Connect |
-| `HuaweiBridgeGuide` | `components/health/HuaweiBridgeGuide.tsx` | Integração Huawei Health |
-| `WatchSyncButton` | `components/health/WatchSyncButton.tsx` | Sincronização com smartwatch |
 
 ### Stores (Zustand)
 | Store | Arquivo | Responsabilidade |

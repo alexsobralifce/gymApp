@@ -183,17 +183,6 @@ export default function AlunoMedidas() {
     }
   }
 
-  function puxarDadosRelogio() {
-    const ultima = medidas.length > 0 ? medidas[medidas.length - 1] : null
-    if (ultima?.observacao && ultima.observacao.includes('Smartwatch')) {
-      setObservacao(ultima.observacao)
-    } else {
-      setObservacao('Smartwatch: Leitura sincronizada')
-    }
-    if (perfil?.peso_kg && !pesoKg) setPesoKg(perfil.peso_kg.toString())
-    if (perfil?.altura_cm && !alturaCm) setAlturaCm(perfil.altura_cm.toString())
-  }
-
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
@@ -272,14 +261,6 @@ export default function AlunoMedidas() {
               {editando ? 'Editar Medida' : 'Nova Medida'}
             </h3>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={puxarDadosRelogio}
-                className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition-colors cursor-pointer flex items-center gap-1 font-medium"
-                title="Preenche a observação e biometria com os dados do relógio"
-              >
-                ⌚ Puxar do Relógio
-              </button>
               <button type="button" onClick={resetForm} className="text-text-muted hover:text-text text-sm cursor-pointer">Cancelar</button>
             </div>
           </div>
@@ -440,14 +421,9 @@ export default function AlunoMedidas() {
                         <span className="block font-medium text-text">{formatDate(m.data)}</span>
                         {m.observacao && (
                           <span
-                            className={`text-[10px] block truncate max-w-[150px] mt-0.5 ${
-                              m.observacao.includes('Smartwatch')
-                                ? 'text-emerald-400 font-mono font-medium'
-                                : 'text-text-muted'
-                            }`}
+                            className="text-[10px] block truncate max-w-[150px] mt-0.5 text-text-muted"
                             title={m.observacao}
                           >
-                            {m.observacao.includes('Smartwatch') ? '⌚ ' : ''}
                             {m.observacao}
                           </span>
                         )}

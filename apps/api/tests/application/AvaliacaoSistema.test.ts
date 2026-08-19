@@ -10,7 +10,6 @@ const { mockPrisma } = vi.hoisted(() => {
       avaliacaoSistema: { create: vi.fn() },
       treino: { findUnique: vi.fn() },
       treinoHistorico: { count: vi.fn() },
-      wearableEvento: { findMany: vi.fn() },
       $transaction: vi.fn(),
     },
   }
@@ -133,7 +132,6 @@ describe('finalizarTreino — detecção de primeiroTreino', () => {
 
   function mockFinalizacao() {
     mockPrisma.treino.findUnique.mockResolvedValue(treinoEmExecucao)
-    mockPrisma.wearableEvento.findMany.mockResolvedValue([])
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<unknown>) => {
       const tx = {
         treino: {
