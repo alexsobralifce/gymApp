@@ -98,14 +98,14 @@ export async function stravaRoutes(app: FastifyInstance) {
     const webBase = env.WEB_BASE_URL || 'http://localhost:5173'
 
     if (query.error || !query.code || !query.state) {
-      return reply.redirect(`${webBase}/alunos/medidas?strava=error`)
+      return reply.redirect(`${webBase}/medidas?strava=error`)
     }
 
     let payload: { aluno_id: string }
     try {
       payload = app.jwt.verify(query.state) as { aluno_id: string }
     } catch {
-      return reply.redirect(`${webBase}/alunos/medidas?strava=error`)
+      return reply.redirect(`${webBase}/medidas?strava=error`)
     }
 
     const res = await fetch('https://www.strava.com/oauth/token', {
@@ -120,7 +120,7 @@ export async function stravaRoutes(app: FastifyInstance) {
     })
 
     if (!res.ok) {
-      return reply.redirect(`${webBase}/alunos/medidas?strava=error`)
+      return reply.redirect(`${webBase}/medidas?strava=error`)
     }
 
     const data = (await res.json()) as TokenResponse
@@ -153,7 +153,7 @@ export async function stravaRoutes(app: FastifyInstance) {
 
     request.log.info({ tag: '[GymApp:Strava]', alunoId: payload.aluno_id, athleteId: athlete?.id }, 'Strava conectado')
 
-    return reply.redirect(`${webBase}/alunos/medidas?strava=connected`)
+    return reply.redirect(`${webBase}/medidas?strava=connected`)
   })
 
   /**

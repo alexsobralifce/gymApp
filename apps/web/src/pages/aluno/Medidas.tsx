@@ -87,7 +87,7 @@ export default function AlunoMedidas() {
   }, [carregarDados])
 
   // Resultado do OAuth do Strava — o backend redireciona de volta para
-  // /alunos/medidas?strava=connected (sucesso) ou ?strava=error (falha)
+  // /medidas?strava=connected (sucesso) ou ?strava=error (falha)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const result = params.get('strava')
