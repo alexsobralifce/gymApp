@@ -7,12 +7,9 @@ import {
   collectThemeSnapshot,
   collectPushSnapshot,
   diagnosePush,
-  collectWearableSnapshot,
-  diagnoseWearable,
   type LogEntry,
   type ThemeSnapshot,
   type PushSnapshot,
-  type WearableSnapshot,
 } from '../../lib/debug'
 import { BugIcon, XIcon } from '../icons/Icon'
 
@@ -172,70 +169,10 @@ function PushSummary({ snap }: { snap: PushSnapshot | null }) {
   )
 }
 
-function WearableSummary({ snap }: { snap: WearableSnapshot | null }) {
-  if (!snap) return null
-  const ok = snap.status === 'OK'
-  return (
-    <div
-      className={`mx-3 mt-3 rounded-xl border p-3 text-xs space-y-2 ${
-        ok
-          ? 'border-emerald-500/30 bg-emerald-500/5'
-          : snap.status === 'SEM_DISPOSITIVOS'
-            ? 'border-amber-500/30 bg-amber-500/10'
-            : 'border-destructive/40 bg-destructive/10'
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-bold text-text flex items-center gap-1.5">
-          ⌚ Relógio & Smartwatches (Open Wearables)
-        </span>
-        <span className={`font-bold ${ok ? 'text-emerald-400' : snap.status === 'SEM_DISPOSITIVOS' ? 'text-amber-400' : 'text-destructive'}`}>
-          {snap.status}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px] text-text-muted">
-        <span>Dispositivos</span>
-        <span className="text-text font-semibold">{snap.integracoesCount} ativo(s)</span>
-        <span>Eventos Lidos</span>
-        <span className="text-text font-semibold">{snap.ultimosEventosCount} recente(s)</span>
-        {typeof snap.fcMediaDia === 'number' && (
-          <>
-            <span>FC Média (Hoje)</span>
-            <span className="text-emerald-400 font-semibold">{snap.fcMediaDia} bpm ({snap.amostrasDiaCount || 0} amostras)</span>
-          </>
-        )}
-        {typeof snap.caloriasAtivasDia === 'number' && (
-          <>
-            <span>Calorias Ativas (Dia)</span>
-            <span className="text-orange-400 font-semibold">{snap.caloriasAtivasDia} kcal</span>
-          </>
-        )}
-      </div>
-
-      {snap.ultimoEvento && (
-        <div className="rounded-lg bg-surface-card border border-surface-border p-2 font-mono text-[10px] space-y-0.5">
-          <div className="text-emerald-400 font-bold">Último Evento ({snap.ultimoEvento.provedor.toUpperCase()})</div>
-          <div>Tipo: {snap.ultimoEvento.tipo}</div>
-          {snap.ultimoEvento.bpm && <div>FC: {snap.ultimoEvento.bpm} bpm</div>}
-          {snap.ultimoEvento.calories && <div>Calorias: {snap.ultimoEvento.calories} kcal</div>}
-          <div className="text-text-muted opacity-80">{new Date(snap.ultimoEvento.recebido_em).toLocaleString()}</div>
-        </div>
-      )}
-
-
-      {snap.error && (
-        <p className="text-destructive font-medium leading-snug">erro: {snap.error}</p>
-      )}
-    </div>
-  )
-}
-
 export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [snap, setSnap] = useState<ThemeSnapshot | null>(null)
   const [pushSnap, setPushSnap] = useState<PushSnapshot | null>(null)
-  const [wearableSnap, setWearableSnap] = useState<WearableSnapshot | null>(null)
   const [copyState, setCopyState] = useState<'idle' | 'ok' | 'fail'>('idle')
 
   useEffect(() => {
@@ -245,7 +182,6 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
     })
     setSnap(collectThemeSnapshot())
     collectPushSnapshot().then(setPushSnap)
-    collectWearableSnapshot().then(setWearableSnap)
     return () => unsubscribe()
   }, [open])
 
@@ -256,10 +192,6 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
 
   const handlePushDiagnose = useCallback(() => {
     diagnosePush().then(setPushSnap)
-  }, [])
-
-  const handleWearableDiagnose = useCallback(() => {
-    diagnoseWearable().then(setWearableSnap)
   }, [])
 
   const handleCopy = useCallback(async () => {
@@ -332,13 +264,6 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
         <div className="flex items-center gap-2 overflow-x-auto border-b border-surface-input p-2.5 bg-surface-card shrink-0 no-scrollbar">
           <button
             type="button"
-            onClick={handleWearableDiagnose}
-            className="shrink-0 rounded-xl px-3 py-2 text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors cursor-pointer"
-          >
-            ⌚ Diagnóstico Relógio
-          </button>
-          <button
-            type="button"
             onClick={handleDiagnose}
             className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-colors cursor-pointer"
           >
@@ -375,7 +300,6 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
 
         <ThemeSummary snap={snap} />
         <PushSummary snap={pushSnap} />
-        <WearableSummary snap={wearableSnap} />
 
         <div className="flex-1 overflow-y-auto p-3 space-y-2 font-mono text-xs">
           {logs.length === 0 ? (

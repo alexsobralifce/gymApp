@@ -1,15 +1,3 @@
-export interface WearableSnapshot {
-  integracoesCount: number
-  integracoes: Array<{ id: string; provedor: string; ativo: boolean }>
-  ultimosEventosCount: number
-  ultimoEvento: { id: string; provedor: string; tipo: string; bpm?: number; calories?: number; recebido_em: string } | null
-  fcMediaDia?: number | null
-  amostrasDiaCount?: number
-  caloriasAtivasDia?: number | null
-  status: 'OK' | 'SEM_DISPOSITIVOS' | 'ERRO'
-  error?: string
-}
-
 export interface LogEntry {
   id: string
   timestamp: string
@@ -371,64 +359,6 @@ export async function diagnosePush(): Promise<PushSnapshot> {
       subscriptionEndpoint: snap.subscriptionEndpoint?.slice(0, 60) ?? null,
     },
     ok ? 'info' : 'error',
-  )
-  return snap
-}
-
-export async function collectWearableSnapshot(): Promise<WearableSnapshot> {
-  try {
-    const { api } = await import('../api/client')
-    const res: any = await api.getWearables()
-    const integracoes = res && typeof res === 'object' && Array.isArray(res.integracoes) ? res.integracoes : []
-    const ultimosEventos = res && typeof res === 'object' && Array.isArray(res.ultimosEventos) ? res.ultimosEventos : []
-
-    const ultimo = ultimosEventos.length > 0 ? ultimosEventos[0] : null
-    const p: any = ultimo?.payload_raw
-    const snap: WearableSnapshot = {
-      integracoesCount: integracoes.length,
-      integracoes: integracoes.map((i: any) => ({ id: i.id, provedor: i.provedor, ativo: i.ativo })),
-      ultimosEventosCount: ultimosEventos.length,
-      ultimoEvento: ultimo
-        ? {
-            id: ultimo.id,
-            provedor: ultimo.provedor,
-            tipo: ultimo.tipo,
-            bpm: p?.heartRateAvg ?? p?.data?.heartRateAvg ?? p?.data?.value ?? p?.bpm,
-            calories: p?.activeCalories ?? p?.data?.activeCalories ?? p?.calories,
-            recebido_em: ultimo.recebido_em,
-          }
-        : null,
-      fcMediaDia: typeof res?.fcMediaDia === 'number' ? res.fcMediaDia : null,
-      amostrasDiaCount: typeof res?.amostrasDiaCount === 'number' ? res.amostrasDiaCount : 0,
-      caloriasAtivasDia: typeof res?.caloriasAtivasDia === 'number' ? res.caloriasAtivasDia : null,
-      status: integracoes.length > 0 || ultimosEventos.length > 0 ? 'OK' : 'SEM_DISPOSITIVOS',
-    }
-
-    return snap
-  } catch (err: any) {
-    return {
-      integracoesCount: 0,
-      integracoes: [],
-      ultimosEventosCount: 0,
-      ultimoEvento: null,
-      status: 'ERRO',
-      error: err?.message || String(err),
-    }
-  }
-}
-
-
-export async function diagnoseWearable(): Promise<WearableSnapshot> {
-  const snap = await collectWearableSnapshot()
-  debugLog(
-    'WEARABLE-DIAG',
-    snap.status === 'OK'
-      ? `OK: ${snap.integracoesCount} dispositivo(s) conectado(s), ${snap.ultimosEventosCount} evento(s)`
-      : snap.status === 'SEM_DISPOSITIVOS'
-        ? 'Aviso: Nenhum relógio atrelado no momento.'
-        : `Erro: ${snap.error}`,
-    snap,
-    snap.status === 'ERRO' ? 'error' : snap.status === 'SEM_DISPOSITIVOS' ? 'warn' : 'info',
   )
   return snap
 }

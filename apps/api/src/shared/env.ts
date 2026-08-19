@@ -33,13 +33,6 @@ const envSchema = z.object({
   SENDGRID_API_KEY: z.string().optional().default(''),
 
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
-
-  STRAVA_CLIENT_ID: z.string().optional().default(''),
-  STRAVA_CLIENT_SECRET: z.string().optional().default(''),
-  STRAVA_CALLBACK_URL: z.string().optional().default(''),
-
-  OPENWEARABLES_WEBHOOK_SECRET: z.string().optional().default(''),
-  OPENWEARABLES_BASE_URL: z.string().optional().default('https://wearables.endorfinapp.com'),
 })
 
 const parsed = envSchema.safeParse(process.env)

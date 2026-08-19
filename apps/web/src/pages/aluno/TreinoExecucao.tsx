@@ -9,7 +9,6 @@ import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import { useIncompleteWorkoutReminder } from '../../hooks/useIncompleteWorkoutReminder'
 import type { UltimaCarga, PerfilAluno } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
-import { WorkoutHeartRateCard } from '../../components/health/WorkoutHeartRateCard'
 import { calcularCaloriasKeytel, calcularIdade } from '../../lib/health'
 import { api } from '../../api/client'
 
@@ -153,125 +152,19 @@ export default function AlunoTreinoExecucao() {
   const coach = useCoachMark(!!treinoAtual)
   useIncompleteWorkoutReminder(treinoAtual, avaliando || showAvaliacao)
 
-  // ─── Heart Rate & Calorie Telemetry State ─────────────────
-  const [bpm, setBpm] = useState<number>(65)
+  // ─── Heart Rate & Calorie State ────────────────────
+  const [bpm] = useState<number>(65)
   const [caloriasAcumuladas, setCaloriasAcumuladas] = useState<number>(0)
-  const [historicoBpm, setHistoricoBpm] = useState<number[]>([65])
+  const [historicoBpm] = useState<number[]>([65])
   const [perfilAluno, setPerfilAluno] = useState<PerfilAluno | null>(null)
-  const [provedorNome, setProvedorNome] = useState<string>('Huawei GT 5 Pro')
-
-  const [syncingWearable, setSyncingWearable] = useState(false)
-
-  const bpmRef = useRef<number>(65)
-  const perfilAlunoRef = useRef<PerfilAluno | null>(null)
 
   useEffect(() => {
     api.getPerfilAluno()
       .then((p) => {
         setPerfilAluno(p)
-        perfilAlunoRef.current = p
       })
       .catch(() => {})
   }, [])
-
-  const fetchTelemetry = useCallback(async () => {
-    try {
-      const res: any = await api.getWearables()
-      const ultimosEventos = res && typeof res === 'object' && Array.isArray(res.ultimosEventos) ? res.ultimosEventos : []
-      const integracoes = res && typeof res === 'object' && Array.isArray(res.integracoes) ? res.integracoes : []
-
-      if (integracoes.length > 0 && integracoes[0].provedor) {
-        const nameMap: Record<string, string> = {
-          huawei: 'Huawei GT 5 Pro',
-          garmin: 'Garmin Connect',
-          health_connect: 'Google Health Connect',
-          apple_health: 'Apple Watch',
-          polar: 'Polar Flow',
-          fitbit: 'Fitbit',
-        }
-        setProvedorNome(nameMap[integracoes[0].provedor.toLowerCase()] || integracoes[0].provedor)
-      }
-
-      let currentBpm = bpmRef.current
-      const now = Date.now()
-
-      if (ultimosEventos.length > 0) {
-        const ev = ultimosEventos[0]
-        const p = ev.payload_raw
-        const rawBpm = p?.heartRateAvg ?? p?.data?.heartRateAvg ?? p?.data?.value ?? p?.bpm
-        const eventTime = ev.recebido_em ? new Date(ev.recebido_em).getTime() : 0
-        const isRecente = (now - eventTime) < 30_000 // Leitura fresca dos últimos 30s do relógio
-
-        if (typeof rawBpm === 'number' && rawBpm > 30 && rawBpm < 240) {
-          if (isRecente) {
-            currentBpm = rawBpm
-          } else {
-            // Se o último evento for anterior, oscila suavemente ao redor do baseline de esforço
-            const delta = Math.floor(Math.random() * 5) - 2 // -2 a +2 bpm
-            currentBpm = Math.min(185, Math.max(60, (bpmRef.current || rawBpm) + delta))
-          }
-        }
-      } else {
-        // Variação orgânica suave durante a sessão
-        const delta = Math.floor(Math.random() * 5) - 2
-        currentBpm = Math.min(185, Math.max(60, (bpmRef.current || 65) + delta))
-      }
-
-      bpmRef.current = currentBpm
-      setBpm(currentBpm)
-
-      setHistoricoBpm((prev) => {
-        const novoHistorico = [...prev, currentBpm]
-        const avgSessaoBpm = Math.round(novoHistorico.reduce((a, b) => a + b, 0) / novoHistorico.length)
-        const perfil = perfilAlunoRef.current
-        const idade = perfil ? calcularIdade(perfil.data_nascimento) : 30
-        const currentTimer = useTrainingStore.getState().timer
-        const cals = calcularCaloriasKeytel({
-          bpm: avgSessaoBpm,
-          pesoKg: perfil?.peso_kg || 75,
-          idade,
-          sexo: perfil?.sexo,
-          duracaoSegundos: currentTimer,
-        })
-        setCaloriasAcumuladas(cals)
-
-        console.info('[GymApp:WorkoutTelemetry]', {
-          bpmAtual: currentBpm,
-          bpmMedioTreino: avgSessaoBpm,
-          caloriasAcumuladas: cals,
-          duracaoSegundos: currentTimer,
-          provedor: integracoes.length > 0 ? integracoes[0].provedor : 'desconhecido',
-          amostrasCount: novoHistorico.length,
-          timestamp: new Date().toISOString(),
-        })
-
-        return novoHistorico
-      })
-    } catch (err) {
-      console.error('Erro na sincronização de batimentos:', err)
-    }
-  }, [])
-
-  const handleManualSync = useCallback(async () => {
-    if (syncingWearable) return
-    setSyncingWearable(true)
-    try {
-      await fetchTelemetry()
-    } finally {
-      setTimeout(() => setSyncingWearable(false), 800)
-    }
-  }, [fetchTelemetry, syncingWearable])
-
-  // Sincronização periódica a cada 5s com relógio / telemetry
-  useEffect(() => {
-    if (!treinoAtual || treinoAtual.status !== 'EM_EXECUCAO') return
-
-    fetchTelemetry()
-    const heartRateInterval = setInterval(fetchTelemetry, 5_000)
-
-    return () => clearInterval(heartRateInterval)
-  }, [treinoAtual?.id, treinoAtual?.status, fetchTelemetry])
-
 
   // Recalcula calorias acumuladas a cada segundo do cronômetro para exibição em tempo real contínua
   useEffect(() => {
@@ -603,15 +496,6 @@ export default function AlunoTreinoExecucao() {
 
       {/* Exercise List */}
       <div className="flex-1 px-4 py-4 space-y-4 max-w-xl mx-auto w-full pb-28">
-        <WorkoutHeartRateCard
-          bpm={bpm}
-          calorias={caloriasAcumuladas}
-          idade={perfilAluno ? calcularIdade(perfilAluno.data_nascimento) : 30}
-          provedorNome={provedorNome}
-          onSync={handleManualSync}
-          syncing={syncingWearable}
-        />
-
         <OfflinePreloadBadge exercicios={exercicios} className="w-full justify-center text-center" />
         {exercicios.map((ex, exIdx) => {
           const exDetail = ex.exercicio
