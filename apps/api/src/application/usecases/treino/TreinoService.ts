@@ -7,10 +7,24 @@ import {
   ConflictError,
 } from '../../../domain/errors/AppError.js'
 import { assertTransicaoValida } from '../../../domain/entities/TreinoStateMachine.js'
+import { sendDualPush } from '../../../infrastructure/push/sendDualPush.js'
 
 function execucoesDaSessao(iniciadoEm: Date | null | undefined) {
   if (!iniciadoEm) return {}
   return { registrado_em: { gte: iniciadoEm } }
+}
+
+export type InputTreinoExercicio = {
+  exercicioId: string
+  ordem: number
+  series?: number
+  repeticoes?: number
+  cargaSugeridaKg?: number
+  tipo?: string
+  metodo?: string
+  blocoGrupo?: number
+  tempoDescansoSegundos?: number
+  observacoes?: string
 }
 
 // ─── UC-11: Criar ficha de treino ─────────────────────────────────────────────
@@ -19,13 +33,7 @@ export async function criarTreino(professorId: string, input: {
   alunoId: string
   nome: string
   diasSemana: number[]
-  exercicios: Array<{
-    exercicioId: string
-    ordem: number
-    series: number
-    repeticoes: number
-    cargaSugeridaKg?: number
-  }>
+  exercicios: InputTreinoExercicio[]
 }) {
   // Verifica que o aluno pertence ao professor (isolamento de tenant)
   const aluno = await prisma.aluno.findUnique({ where: { id: input.alunoId } })
@@ -42,9 +50,14 @@ export async function criarTreino(professorId: string, input: {
         create: input.exercicios.map((e) => ({
           exercicio_id: e.exercicioId,
           ordem: e.ordem,
-          series: e.series,
-          repeticoes: e.repeticoes,
+          series: e.series ?? 3,
+          repeticoes: e.repeticoes ?? 12,
           carga_sugerida_kg: e.cargaSugeridaKg,
+          tipo: e.tipo ?? 'PRINCIPAL',
+          metodo: e.metodo ?? 'TRADICIONAL',
+          bloco_grupo: e.blocoGrupo,
+          tempo_descanso_segundos: e.tempoDescansoSegundos ?? 60,
+          observacoes: e.observacoes,
         })),
       },
       historico: {
@@ -65,13 +78,7 @@ export async function criarTreino(professorId: string, input: {
 export async function criarTreinoAutogestao(alunoId: string, input: {
   nome: string
   diasSemana: number[]
-  exercicios: Array<{
-    exercicioId: string
-    ordem: number
-    series: number
-    repeticoes: number
-    cargaSugeridaKg?: number
-  }>
+  exercicios: InputTreinoExercicio[]
 }) {
   const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
   if (!aluno) throw new NotFoundError('Aluno')
@@ -88,9 +95,14 @@ export async function criarTreinoAutogestao(alunoId: string, input: {
         create: input.exercicios.map((e) => ({
           exercicio_id: e.exercicioId,
           ordem: e.ordem,
-          series: e.series,
-          repeticoes: e.repeticoes,
+          series: e.series ?? 3,
+          repeticoes: e.repeticoes ?? 12,
           carga_sugerida_kg: e.cargaSugeridaKg,
+          tipo: e.tipo ?? 'PRINCIPAL',
+          metodo: e.metodo ?? 'TRADICIONAL',
+          bloco_grupo: e.blocoGrupo,
+          tempo_descanso_segundos: e.tempoDescansoSegundos ?? 60,
+          observacoes: e.observacoes,
         })),
       },
       historico: {
@@ -419,8 +431,20 @@ export async function finalizarTreino(
   caloriasQueimadas?: number,
   frequenciaCardiacaMedia?: number,
   frequenciaCardiacaMaxima?: number,
+  notaAvaliacao?: number,
+  feedbackComentario?: string,
 ) {
-  const treino = await prisma.treino.findUnique({ where: { id: treinoId } })
+  const treino = await prisma.treino.findUnique({
+    where: { id: treinoId },
+    include: {
+      aluno: {
+        include: {
+          usuario: true,
+          professor: { include: { usuario: true } },
+        },
+      },
+    },
+  })
   if (!treino) throw new NotFoundError('Treino')
   if (treino.aluno_id !== alunoId) throw new TenantAccessError()
 
@@ -452,6 +476,8 @@ export async function finalizarTreino(
         status: TreinoStatus.CONCLUIDO,
         finalizado_em: finalizadoEm,
         ...(avaliacao ? { avaliacao_dificuldade: avaliacao } : {}),
+        ...(notaAvaliacao !== undefined ? { nota_avaliacao: notaAvaliacao } : {}),
+        ...(feedbackComentario !== undefined ? { feedback_comentario: feedbackComentario } : {}),
       },
     })
     await tx.treinoHistorico.create({
@@ -465,6 +491,8 @@ export async function finalizarTreino(
         calorias_queimadas: calcCalorias,
         frequencia_cardiaca_media: calcFcMedia,
         frequencia_cardiaca_maxima: calcFcMax,
+        nota_avaliacao: notaAvaliacao ?? null,
+        feedback_comentario: feedbackComentario ?? null,
       },
     })
 
@@ -495,6 +523,21 @@ export async function finalizarTreino(
       include: { exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } } },
     })
   })
+
+  // Se o aluno possui professor cadastrado, notifica o professor sobre a conclusão/feedback
+  if (treino.aluno?.professor?.usuario) {
+    const nomeAluno = treino.aluno.usuario.nome || 'Seu aluno'
+    const estrelas = notaAvaliacao ? '⭐'.repeat(notaAvaliacao) : ''
+    const msgFeedback = feedbackComentario ? `"${feedbackComentario.slice(0, 80)}"` : ''
+    const corpo = [estrelas, msgFeedback].filter(Boolean).join(' - ') || 'Treino finalizado com sucesso.'
+
+    sendDualPush(
+      treino.aluno.professor.usuario,
+      `Treino Concluído por ${nomeAluno}!`,
+      `${treino.nome}: ${corpo}`,
+      { treinoId: treino.id, alunoId: treino.aluno_id },
+    ).catch(() => {})
+  }
 
   return { ...treinoAtualizado, primeiroTreino }
 }
@@ -541,6 +584,11 @@ export async function clonarTreino(treinoId: string, alunoDestinoId: string, ato
           series: e.series,
           repeticoes: e.repeticoes,
           carga_sugerida_kg: e.carga_sugerida_kg,
+          tipo: e.tipo,
+          metodo: e.metodo,
+          bloco_grupo: e.bloco_grupo,
+          tempo_descanso_segundos: e.tempo_descanso_segundos,
+          observacoes: e.observacoes,
         })),
       },
       historico: {
@@ -603,6 +651,11 @@ export async function clonarTreinoEmLote(treinoId: string, alunoIds: string[], a
               series: e.series,
               repeticoes: e.repeticoes,
               carga_sugerida_kg: e.carga_sugerida_kg,
+              tipo: e.tipo,
+              metodo: e.metodo,
+              bloco_grupo: e.bloco_grupo,
+              tempo_descanso_segundos: e.tempo_descanso_segundos,
+              observacoes: e.observacoes,
             })),
           },
           historico: {

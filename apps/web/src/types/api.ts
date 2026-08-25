@@ -22,6 +22,15 @@ export interface UltimaCarga {
   repeticoes: number
 }
 
+export type WorkoutMethod =
+  | 'TRADICIONAL'
+  | 'BI_SET'
+  | 'TRI_SET'
+  | 'DROP_SET'
+  | 'REST_PAUSE'
+  | 'PIRAMIDE'
+  | 'CIRCUITO'
+
 export interface Treino {
   id: string
   aluno_id: string
@@ -31,6 +40,9 @@ export interface Treino {
   is_template?: boolean
   iniciado_em?: string | null
   finalizado_em?: string | null
+  avaliacao_dificuldade?: string | null
+  nota_avaliacao?: number | null
+  feedback_comentario?: string | null
   criado_em: string
   atualizado_em: string
   exercicios?: TreinoExercicio[]
@@ -55,6 +67,11 @@ export interface TreinoExercicio {
   series: number
   repeticoes: number
   carga_sugerida_kg?: number | null
+  tipo?: string
+  metodo?: WorkoutMethod | string
+  bloco_grupo?: number | null
+  tempo_descanso_segundos?: number | null
+  observacoes?: string | null
   exercicio: Exercicio
 }
 
@@ -286,6 +303,8 @@ export interface ProfessorDashboard {
     status: TreinoStatus
     dias_semana: number[]
     is_template?: boolean
+    nota_avaliacao?: number | null
+    feedback_comentario?: string | null
     iniciado_em?: string | null
     finalizado_em?: string | null
     atualizado_em: string
@@ -301,7 +320,9 @@ export interface AlunoAcademia {
     nome: string
     status: TreinoStatus
     dias_semana: number[]
-    atualizado_em: string
+    nota_avaliacao?: number | null
+    feedback_comentario?: string | null
+    atualizado_em?: string
   }>
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { Exercicio, ProfessorDashboard, Treino, Vinculo } from '../../types/api'
+import type { Exercicio, ProfessorDashboard, Treino, Vinculo, WorkoutMethod } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
@@ -11,6 +11,7 @@ import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
 import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
 import { PlusIcon, DumbbellIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 import WorkoutHelpWizard from '../../components/ui/WorkoutHelpWizard'
+import { WorkoutMethodBadge, WORKOUT_METHODS_CONFIG } from '../../components/ui/WorkoutMethodBadge'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -21,6 +22,9 @@ interface ExercicioTreino {
   series: number
   repeticoes: number
   cargaSugeridaKg?: number
+  metodo?: WorkoutMethod | string
+  tempoDescansoSegundos?: number
+  observacoes?: string
   imagemUrl?: string | null
   gifUrl?: string | null
   grupoMuscular?: string | null
@@ -137,6 +141,8 @@ export default function CriarTreino() {
       ordem: ficha.exercicios.length + 1,
       series: 3,
       repeticoes: 12,
+      metodo: 'TRADICIONAL',
+      tempoDescansoSegundos: 60,
       imagemUrl: ex.imagem_url,
       gifUrl: ex.gif_url,
       grupoMuscular: ex.grupo_muscular,
@@ -152,7 +158,7 @@ export default function CriarTreino() {
     atualizarFicha(fichaAtiva, { exercicios: novosExercicios })
   }
 
-  function atualizarExercicio(idx: number, campo: string, valor: number) {
+  function atualizarExercicio(idx: number, campo: keyof ExercicioTreino, valor: any) {
     const novosExercicios = ficha.exercicios.map((e, i) =>
       i === idx ? { ...e, [campo]: valor } : e,
     )
@@ -198,6 +204,10 @@ export default function CriarTreino() {
             series: e.series,
             repeticoes: e.repeticoes,
             cargaSugeridaKg: e.cargaSugeridaKg,
+            tipo: 'PRINCIPAL',
+            metodo: e.metodo || 'TRADICIONAL',
+            tempoDescansoSegundos: e.tempoDescansoSegundos || 60,
+            observacoes: e.observacoes,
           })),
         })),
       })
@@ -229,6 +239,9 @@ export default function CriarTreino() {
         series: te.series,
         repeticoes: te.repeticoes,
         cargaSugeridaKg: te.carga_sugerida_kg ?? undefined,
+        metodo: (te.metodo as WorkoutMethod) || 'TRADICIONAL',
+        tempoDescansoSegundos: te.tempo_descanso_segundos ?? 60,
+        observacoes: te.observacoes ?? undefined,
         imagemUrl: te.exercicio.imagem_url,
         gifUrl: te.exercicio.gif_url,
         grupoMuscular: te.exercicio.grupo_muscular,
@@ -509,9 +522,14 @@ export default function CriarTreino() {
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs sm:text-sm font-black text-text leading-snug truncate">
-                                <span className="text-primary mr-1">#{ex.ordem}</span> {ex.nome}
-                              </p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-xs sm:text-sm font-black text-text leading-snug">
+                                  <span className="text-primary mr-1">#{ex.ordem}</span> {ex.nome}
+                                </p>
+                                {ex.metodo && ex.metodo !== 'TRADICIONAL' && (
+                                  <WorkoutMethodBadge metodo={ex.metodo} size="sm" />
+                                )}
+                              </div>
                               <div className="flex items-center gap-1.5 mt-0.5">
                                 {ex.grupoMuscular && (
                                   <span className="text-[10px] font-bold text-text-muted bg-surface-input px-1.5 py-0.2 rounded uppercase">
@@ -556,8 +574,48 @@ export default function CriarTreino() {
                           </div>
                         </div>
 
+                        {/* Method & Rest Settings */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-surface-input/70 text-xs">
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                              Método de Execução
+                            </label>
+                            <select
+                              value={ex.metodo || 'TRADICIONAL'}
+                              onChange={(e) => atualizarExercicio(idx, 'metodo', e.target.value)}
+                              className="w-full bg-surface-input text-text font-bold rounded-xl px-2.5 py-1.5 border border-surface-input focus:outline-hidden focus:border-primary text-xs"
+                            >
+                              {Object.entries(WORKOUT_METHODS_CONFIG).map(([k, v]) => (
+                                <option key={k} value={k}>
+                                  {v.icon} {v.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                              Descanso entre Séries
+                            </label>
+                            <select
+                              value={ex.tempoDescansoSegundos || 60}
+                              onChange={(e) =>
+                                atualizarExercicio(idx, 'tempoDescansoSegundos', Number(e.target.value) || 60)
+                              }
+                              className="w-full bg-surface-input text-text font-bold rounded-xl px-2.5 py-1.5 border border-surface-input focus:outline-hidden focus:border-primary text-xs"
+                            >
+                              <option value={30}>⏱️ 30 segundos (Rápido)</option>
+                              <option value={45}>⏱️ 45 segundos</option>
+                              <option value={60}>⏱️ 60 segundos (Padrão)</option>
+                              <option value={90}>⏱️ 90 segundos (Hipertrofia)</option>
+                              <option value={120}>⏱️ 120 segundos (Força/Pesado)</option>
+                              <option value={180}>⏱️ 180 segundos (Força Máxima)</option>
+                            </select>
+                          </div>
+                        </div>
+
                         {/* Inputs: Séries, Reps, Carga */}
-                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-surface-input/70">
+                        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-surface-input/40">
                           <div>
                             <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
                               Séries

@@ -114,6 +114,11 @@ export async function treinoRoutes(app: FastifyInstance) {
         series: z.number().int().min(1).default(3),
         repeticoes: z.number().int().min(1).default(12),
         cargaSugeridaKg: z.number().optional(),
+        tipo: z.string().optional(),
+        metodo: z.string().optional(),
+        blocoGrupo: z.number().int().optional(),
+        tempoDescansoSegundos: z.number().int().optional(),
+        observacoes: z.string().optional(),
       })).min(1),
     }).parse(request.body)
 
@@ -140,6 +145,11 @@ export async function treinoRoutes(app: FastifyInstance) {
         series: z.number().int().min(1).default(3),
         repeticoes: z.number().int().min(1).default(12),
         cargaSugeridaKg: z.number().optional(),
+        tipo: z.string().optional(),
+        metodo: z.string().optional(),
+        blocoGrupo: z.number().int().optional(),
+        tempoDescansoSegundos: z.number().int().optional(),
+        observacoes: z.string().optional(),
       })).min(1),
     }).parse(request.body)
 
@@ -264,8 +274,10 @@ export async function treinoRoutes(app: FastifyInstance) {
   /** POST /treinos/:id/finalizar — UC-23 */
   app.post('/:id/finalizar', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const { avaliacao, caloriasQueimadas, frequenciaCardiacaMedia, frequenciaCardiacaMaxima } = z.object({
+    const { avaliacao, notaAvaliacao, feedbackComentario, caloriasQueimadas, frequenciaCardiacaMedia, frequenciaCardiacaMaxima } = z.object({
       avaliacao: z.string().optional(),
+      notaAvaliacao: z.number().int().min(1).max(5).optional(),
+      feedbackComentario: z.string().max(1000).optional(),
       caloriasQueimadas: z.number().positive().optional(),
       frequenciaCardiacaMedia: z.number().int().positive().optional(),
       frequenciaCardiacaMaxima: z.number().int().positive().optional(),
@@ -273,7 +285,16 @@ export async function treinoRoutes(app: FastifyInstance) {
     const { role } = request.currentUser
     const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
-    const treino = await finalizarTreino(id, aluno.id, avaliacao, caloriasQueimadas, frequenciaCardiacaMedia, frequenciaCardiacaMaxima)
+    const treino = await finalizarTreino(
+      id,
+      aluno.id,
+      avaliacao,
+      caloriasQueimadas,
+      frequenciaCardiacaMedia,
+      frequenciaCardiacaMaxima,
+      notaAvaliacao,
+      feedbackComentario,
+    )
 
     // Criar post social TREINO_CONCLUIDO diretamente (síncrono, sem depender do BullMQ)
     criarPostTreino(id, aluno.id, 'TREINO_CONCLUIDO').catch(() => {})

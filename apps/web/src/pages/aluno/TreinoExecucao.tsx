@@ -11,6 +11,7 @@ import type { UltimaCarga, PerfilAluno } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
 import { calcularCaloriasKeytel, calcularIdade } from '../../lib/health'
 import { api } from '../../api/client'
+import { WorkoutMethodBadge } from '../../components/ui/WorkoutMethodBadge'
 
 const DIFICULDADE_OPCOES = [
   { value: 'FACIL', label: 'Facil', emoji: '😊', cor: 'border-green-500/30 bg-success/10 text-success' },
@@ -146,6 +147,8 @@ export default function AlunoTreinoExecucao() {
   const [previewExercicio, setPreviewExercicio] = useState<any | null>(null)
   const [showAvaliacao, setShowAvaliacao] = useState(false)
   const [avaliando, setAvaliando] = useState(false)
+  const [notaEstrelas, setNotaEstrelas] = useState<number>(5)
+  const [feedbackComentario, setFeedbackComentario] = useState<string>('')
   const [showTimer, setShowTimer] = useState(false)
   const [showSairModal, setShowSairModal] = useState(false)
   const [resuming, setResuming] = useState(false)
@@ -386,6 +389,8 @@ export default function AlunoTreinoExecucao() {
         caloriasQueimadas: caloriasAcumuladas,
         frequenciaCardiacaMedia: avgBpm,
         frequenciaCardiacaMaxima: maxBpm,
+        notaAvaliacao: notaEstrelas,
+        feedbackComentario: feedbackComentario.trim() || undefined,
       })
       navigate(`/treino/${id}/conclusao`, { replace: true })
     } catch (err) {
@@ -448,7 +453,7 @@ export default function AlunoTreinoExecucao() {
             <CircularTimer seconds={timer} label="Tempo de treino" />
             <button
               onClick={() => setShowTimer(false)}
-              className="rounded-xl bg-surface-card border border-border px-6 py-2 text-sm text-text-muted hover:text-text active:scale-95 transition-all cursor-pointer"
+              className="rounded-xl border border-border bg-surface px-6 py-2.5 text-sm font-semibold text-text active:scale-95 transition-all cursor-pointer"
             >
               Fechar
             </button>
@@ -456,40 +461,45 @@ export default function AlunoTreinoExecucao() {
         </div>
       )}
 
-      {/* Rest Timer Overlay */}
+      {/* Rest Timer Floating Toast */}
       {restActive && (
-        <div className="fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 pointer-events-none">
-          <div className="pointer-events-auto w-full max-w-sm rounded-2xl border border-primary/40 bg-surface-card shadow-2xl p-4 animate-slide-up">
-            <div className="flex items-center gap-4">
-              <CircularTimer seconds={restSeconds} maxSeconds={restTotal || 90} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-text">Descanso</p>
-                <p className="text-xs text-text-muted mb-2">Próxima série em breve</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {REST_PRESETS.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => startRest(s)}
-                      className={`rounded-lg px-2 py-1 text-xs font-bold border cursor-pointer ${
-                        restTotal === s
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border text-text-muted hover:text-text'
-                      }`}
-                    >
-                      {s}s
-                    </button>
-                  ))}
-                </div>
+        <div className="fixed bottom-20 left-4 right-4 z-40 max-w-xl mx-auto animate-slide-up">
+          <div className="rounded-2xl border border-primary/30 bg-surface-card/95 backdrop-blur-md p-4 shadow-xl shadow-black/30">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-xs font-bold text-primary uppercase tracking-wider">Descanso</span>
+              </div>
+              <button
+                onClick={skipRest}
+                className="text-xs font-bold text-text-muted hover:text-text px-2 py-1 rounded-lg hover:bg-surface-input transition-colors cursor-pointer"
+              >
+                Pular ›
+              </button>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-mono font-bold text-text tabular-nums">
+                {String(Math.floor(restSeconds / 60)).padStart(2, '0')}:{String(restSeconds % 60).padStart(2, '0')}
+              </span>
+              <div className="flex gap-1.5">
+                {REST_PRESETS.map((sec) => (
+                  <button
+                    key={sec}
+                    onClick={() => startRest(sec)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer ${restTotal === sec ? 'bg-primary text-primary-foreground' : 'bg-surface-input text-text-muted hover:text-text'}`}
+                  >
+                    {sec}s
+                  </button>
+                ))}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={skipRest}
-              className="mt-3 w-full rounded-xl bg-secondary py-2.5 text-sm font-bold text-text hover:bg-border active:scale-[0.98] transition-all cursor-pointer min-h-11"
-            >
-              Pular descanso
-            </button>
+            {/* Mini barra de progresso do descanso */}
+            <div className="mt-2.5 h-1 w-full rounded-full bg-surface-input overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
+                style={{ width: `${restTotal > 0 ? (restSeconds / restTotal) * 100 : 0}%` }}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -501,9 +511,26 @@ export default function AlunoTreinoExecucao() {
           const exDetail = ex.exercicio
           const seriesRegistradas = execucoes.filter((e) => e.exercicio_id === ex.exercicio_id).length
           const exercicioCompleto = seriesRegistradas >= ex.series
+          const isBiSet = ex.metodo === 'BI_SET' || ex.metodo === 'TRI_SET'
 
           return (
-            <div key={ex.id} className={`rounded-2xl border overflow-hidden shadow-sm transition-all duration-300 ${exercicioCompleto ? 'border-success/20 bg-success/5' : 'border-border bg-surface-card'}`}>
+            <div
+              key={ex.id}
+              className={`rounded-2xl border overflow-hidden shadow-sm transition-all duration-300 ${
+                exercicioCompleto
+                  ? 'border-success/20 bg-success/5'
+                  : isBiSet
+                  ? 'border-purple-500/30 bg-purple-950/10'
+                  : 'border-border bg-surface-card'
+              }`}
+            >
+              {isBiSet && (
+                <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-500/15 border-b border-purple-500/20 text-[11px] font-bold text-purple-300">
+                  <span>⚡ Método Conjugado:</span>
+                  <span>Faça 1 série deste exercício e passe direto ao próximo sem descansar!</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-3 p-3 bg-surface-input/20">
                 <ExerciseGif
                   gifSrc={exDetail.gif_url || exDetail.imagem_url}
@@ -512,14 +539,22 @@ export default function AlunoTreinoExecucao() {
                   className="h-12 w-12 rounded-xl object-cover border border-border bg-black shrink-0 cursor-pointer active:scale-95 transition-transform"
                 />
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setPreviewExercicio(exDetail)}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
                       {exIdx + 1}
                     </span>
                     <p className="text-sm font-bold text-text truncate">{exDetail.nome}</p>
+                    {ex.metodo && ex.metodo !== 'TRADICIONAL' && (
+                      <WorkoutMethodBadge metodo={ex.metodo} size="sm" />
+                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 ml-7">
                     <p className="text-xs text-text-muted">{exDetail.grupo_muscular || 'Geral'}</p>
+                    {ex.tempo_descanso_segundos && (
+                      <span className="text-[10px] text-text-muted font-medium bg-surface-input px-1.5 py-0.5 rounded">
+                        ⏱️ {ex.tempo_descanso_segundos}s
+                      </span>
+                    )}
                     {exercicioCompleto && (
                       <span className="inline-flex items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-xs font-bold text-success">
                         <CheckIcon className="h-2.5 w-2.5" />
@@ -676,40 +711,80 @@ export default function AlunoTreinoExecucao() {
         </div>
       )}
 
-      {/* Modal de Avaliação de Dificuldade */}
+      {/* Modal de Avaliação de Dificuldade & Feedback */}
       {showAvaliacao && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/70" onClick={() => setShowAvaliacao(false)} />
-          <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-surface-card border border-border p-6 shadow-2xl z-10 animate-modal-pop">
-            <h2 className="text-xl font-bold text-text text-center mb-1">Como foi o treino?</h2>
-            <p className="text-sm text-text-muted text-center mb-4">Avalie o nível de dificuldade</p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-xs" onClick={() => setShowAvaliacao(false)} />
+          <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-surface-card border border-border p-5 sm:p-6 shadow-2xl z-10 animate-modal-pop max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-black text-text text-center mb-0.5">Como foi o treino?</h2>
+            <p className="text-xs text-text-muted text-center mb-4">Avalie e envie feedback para acompanhar seu progresso</p>
 
             {/* Resumo Fisiológico de Calorias e FC */}
-            <div className="mb-5 p-3 rounded-2xl bg-surface border border-emerald-500/30 grid grid-cols-2 gap-2 text-center">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="mb-4 p-3 rounded-2xl bg-surface border border-emerald-500/30 grid grid-cols-2 gap-2 text-center">
+              <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                 <span className="text-[10px] text-emerald-400 uppercase font-mono font-bold block">🔥 Calorias</span>
-                <span className="text-lg font-black text-text-primary font-mono">{caloriasAcumuladas} <span className="text-xs font-normal text-text-muted">kcal</span></span>
+                <span className="text-base font-black text-text font-mono">{caloriasAcumuladas} <span className="text-xs font-normal text-text-muted">kcal</span></span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20">
+              <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20">
                 <span className="text-[10px] text-red-400 uppercase font-mono font-bold block">❤️ FC Média / Máx</span>
-                <span className="text-lg font-black text-text-primary font-mono">
+                <span className="text-base font-black text-text font-mono">
                   {Math.round(historicoBpm.reduce((a, b) => a + b, 0) / (historicoBpm.length || 1))}
-                  <span className="text-xs font-normal text-text-muted"> / {Math.max(...historicoBpm, bpm)} bpm</span>
+                  <span className="text-xs font-normal text-text-muted"> / {Math.max(...historicoBpm, bpm)}</span>
                 </span>
               </div>
             </div>
 
-            <div className="space-y-2 mb-5">
+            {/* Avaliação em Estrelas (1 a 5) */}
+            <div className="mb-4 text-center bg-surface/50 p-3 rounded-2xl border border-border">
+              <label className="block text-[11px] font-extrabold text-text-muted uppercase mb-1.5 tracking-wider">
+                Sua Nota para a Sessão
+              </label>
+              <div className="flex justify-center items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setNotaEstrelas(star)}
+                    className={`text-2xl transition-transform active:scale-125 cursor-pointer select-none ${
+                      star <= notaEstrelas ? 'text-amber-400 scale-110' : 'text-zinc-600 opacity-40'
+                    }`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Feedback / Comentário para o Professor */}
+            <div className="mb-4">
+              <label className="block text-[11px] font-extrabold text-text-muted uppercase mb-1.5 tracking-wider">
+                Comentário ou Dores (Opcional)
+              </label>
+              <textarea
+                value={feedbackComentario}
+                onChange={(e) => setFeedbackComentario(e.target.value)}
+                placeholder="Ex: Treino muito bom! Senti um leve desconforto no ombro na última série..."
+                rows={2}
+                maxLength={500}
+                className="w-full bg-surface text-text text-xs p-3 rounded-xl border border-border focus:outline-none focus:border-primary resize-none placeholder:text-text-muted/60"
+              />
+            </div>
+
+            {/* Seleção de Intensidade / Dificuldade */}
+            <div className="space-y-1.5 mb-4">
+              <label className="block text-[11px] font-extrabold text-text-muted uppercase mb-1 tracking-wider text-center">
+                Percepção de Esforço
+              </label>
               {DIFICULDADE_OPCOES.map((op) => (
                 <button
                   key={op.value}
                   onClick={() => handleFinalizar(op.value)}
                   disabled={avaliando}
-                  className={`w-full flex items-center gap-3 rounded-xl border p-4 text-left transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer ${op.cor}`}
+                  className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer ${op.cor}`}
                 >
-                  <span className="text-2xl">{op.emoji}</span>
-                  <span className="text-sm font-bold">{op.label}</span>
+                  <span className="text-xl">{op.emoji}</span>
+                  <span className="text-xs font-black">{op.label}</span>
                 </button>
               ))}
             </div>
@@ -717,9 +792,9 @@ export default function AlunoTreinoExecucao() {
             <button
               onClick={() => handleFinalizar()}
               disabled={avaliando}
-              className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-text-muted font-medium active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-xs text-text-muted font-bold active:scale-[0.98] transition-all cursor-pointer"
             >
-              Pular avaliação
+              Concluir sem Percepção de Esforço
             </button>
           </div>
         </div>

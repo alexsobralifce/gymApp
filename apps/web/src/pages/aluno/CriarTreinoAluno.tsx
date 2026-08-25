@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/client'
-import type { Exercicio } from '../../types/api'
+import type { Exercicio, WorkoutMethod } from '../../types/api'
 import { ChevronLeftIcon, PlusIcon, DumbbellIcon } from '../../components/icons/Icon'
 import { sugerirNomes } from '../../lib/treinoNome'
 import { resolveMediaUrl } from '../../lib/media'
@@ -11,6 +11,7 @@ import WorkoutLoading from '../../components/ui/WorkoutLoading'
 import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
 import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
 import WorkoutHelpWizard from '../../components/ui/WorkoutHelpWizard'
+import { WorkoutMethodBadge, WORKOUT_METHODS_CONFIG } from '../../components/ui/WorkoutMethodBadge'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -21,6 +22,9 @@ interface ExercicioTreino {
   series: number
   repeticoes: number
   cargaSugeridaKg?: number
+  metodo?: WorkoutMethod | string
+  tempoDescansoSegundos?: number
+  observacoes?: string
   imagemUrl?: string | null
   gifUrl?: string | null
   grupoMuscular?: string | null
@@ -82,6 +86,9 @@ export default function AlunoCriarTreino() {
               series: ex.series,
               repeticoes: ex.repeticoes,
               cargaSugeridaKg: ex.carga_sugerida_kg ?? undefined,
+              metodo: (ex.metodo as WorkoutMethod) || 'TRADICIONAL',
+              tempoDescansoSegundos: ex.tempo_descanso_segundos ?? 60,
+              observacoes: ex.observacoes ?? undefined,
               imagemUrl: ex.exercicio.imagem_url,
               gifUrl: ex.exercicio.gif_url,
               grupoMuscular: ex.exercicio.grupo_muscular,
@@ -121,6 +128,8 @@ export default function AlunoCriarTreino() {
       ordem: exerciciosTreino.length + 1,
       series: 3,
       repeticoes: 12,
+      metodo: 'TRADICIONAL',
+      tempoDescansoSegundos: 60,
       imagemUrl: ex.imagem_url,
       gifUrl: ex.gif_url,
       grupoMuscular: ex.grupo_muscular,
@@ -137,7 +146,7 @@ export default function AlunoCriarTreino() {
     )
   }
 
-  function atualizarExercicio(idx: number, campo: string, valor: number) {
+  function atualizarExercicio(idx: number, campo: keyof ExercicioTreino, valor: any) {
     setExerciciosTreino((prev) =>
       prev.map((e, i) => (i === idx ? { ...e, [campo]: valor } : e)),
     )
@@ -180,6 +189,9 @@ export default function AlunoCriarTreino() {
         series: e.series,
         repeticoes: e.repeticoes,
         cargaSugeridaKg: e.cargaSugeridaKg,
+        metodo: e.metodo || 'TRADICIONAL',
+        tempoDescansoSegundos: e.tempoDescansoSegundos || 60,
+        observacoes: e.observacoes,
       })),
     }
 
@@ -343,7 +355,7 @@ export default function AlunoCriarTreino() {
               <span>📋</span> Exercícios do Treino ({exerciciosTreino.length})
             </h2>
             <p className="text-[11px] text-text-muted">
-              Toque no exercício para ver o GIF com instruções em português
+              Configure métodos avançados (Bi-Set, Drop-Set) e tempo de descanso
             </p>
           </div>
 
@@ -378,14 +390,21 @@ export default function AlunoCriarTreino() {
             </button>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {exerciciosTreino.map((ex, idx) => {
               const thumb = resolveMediaUrl(ex.imagemUrl || ex.gifUrl)
+              const isBiSet = ex.metodo === 'BI_SET' || ex.metodo === 'TRI_SET'
+              const nextEx = exerciciosTreino[idx + 1]
+              const isConnectedWithNext = isBiSet && nextEx && (nextEx.metodo === ex.metodo)
 
               return (
                 <div
                   key={ex.exercicioId}
-                  className="p-3 sm:p-3.5 bg-surface rounded-2xl border border-surface-input space-y-3 transition-all hover:border-primary/30"
+                  className={`p-3 sm:p-4 bg-surface rounded-2xl border space-y-3 transition-all relative ${
+                    isBiSet
+                      ? 'border-purple-500/40 bg-purple-950/10'
+                      : 'border-surface-input hover:border-primary/30'
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-2.5">
                     {/* Exercise Info (Tap opens Didactic Preview) */}
@@ -411,9 +430,14 @@ export default function AlunoCriarTreino() {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm font-black text-text leading-snug truncate">
-                          <span className="text-primary mr-1">#{ex.ordem}</span> {ex.nome}
-                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-xs sm:text-sm font-black text-text leading-snug">
+                            <span className="text-primary mr-1">#{ex.ordem}</span> {ex.nome}
+                          </p>
+                          {ex.metodo && ex.metodo !== 'TRADICIONAL' && (
+                            <WorkoutMethodBadge metodo={ex.metodo} size="sm" />
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           {ex.grupoMuscular && (
                             <span className="text-[10px] font-bold text-text-muted bg-surface-input px-1.5 py-0.2 rounded uppercase">
@@ -458,8 +482,48 @@ export default function AlunoCriarTreino() {
                     </div>
                   </div>
 
+                  {/* Method & Rest Settings */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-surface-input/70 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                        Método de Execução
+                      </label>
+                      <select
+                        value={ex.metodo || 'TRADICIONAL'}
+                        onChange={(e) => atualizarExercicio(idx, 'metodo', e.target.value)}
+                        className="w-full bg-surface-input text-text font-bold rounded-xl px-2.5 py-1.5 border border-surface-input focus:outline-hidden focus:border-primary text-xs"
+                      >
+                        {Object.entries(WORKOUT_METHODS_CONFIG).map(([k, v]) => (
+                          <option key={k} value={k}>
+                            {v.icon} {v.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
+                        Descanso entre Séries
+                      </label>
+                      <select
+                        value={ex.tempoDescansoSegundos || 60}
+                        onChange={(e) =>
+                          atualizarExercicio(idx, 'tempoDescansoSegundos', Number(e.target.value) || 60)
+                        }
+                        className="w-full bg-surface-input text-text font-bold rounded-xl px-2.5 py-1.5 border border-surface-input focus:outline-hidden focus:border-primary text-xs"
+                      >
+                        <option value={30}>⏱️ 30 segundos (Rápido)</option>
+                        <option value={45}>⏱️ 45 segundos</option>
+                        <option value={60}>⏱️ 60 segundos (Padrão)</option>
+                        <option value={90}>⏱️ 90 segundos (Hipertrofia)</option>
+                        <option value={120}>⏱️ 120 segundos (Força/Pesado)</option>
+                        <option value={180}>⏱️ 180 segundos (Força Máxima)</option>
+                      </select>
+                    </div>
+                  </div>
+
                   {/* Config Inputs: Séries, Reps, Carga (Mobile Friendly) */}
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-surface-input/70">
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-surface-input/40">
                     <div>
                       <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
                         Séries
@@ -517,6 +581,13 @@ export default function AlunoCriarTreino() {
                       />
                     </div>
                   </div>
+
+                  {isConnectedWithNext && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-purple-400 bg-purple-500/10 px-3 py-1.5 rounded-xl border border-purple-500/20">
+                      <span>⚡</span>
+                      <span>Conjugado com o próximo exercício (sem descanso intermediário)</span>
+                    </div>
+                  )}
                 </div>
               )
             })}

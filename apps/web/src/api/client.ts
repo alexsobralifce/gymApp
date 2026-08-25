@@ -209,17 +209,50 @@ export const api = {
     id: string,
     data?: {
       avaliacao?: string
+      notaAvaliacao?: number
+      feedbackComentario?: string
       caloriasQueimadas?: number
       frequenciaCardiacaMedia?: number
       frequenciaCardiacaMaxima?: number
     }
   ) => api.post<Treino & { primeiroTreino?: boolean }>(`/treinos/${id}/finalizar`, data || {}),
 
-  criarTreinoAutogestao: (data: { nome: string; diasSemana: number[]; exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }> }) =>
-    api.post<Treino>('/treinos/autogestao', data),
+  criarTreinoAutogestao: (data: {
+    nome: string
+    diasSemana: number[]
+    exercicios: Array<{
+      exercicioId: string
+      ordem: number
+      series?: number
+      repeticoes?: number
+      cargaSugeridaKg?: number
+      tipo?: string
+      metodo?: string
+      blocoGrupo?: number
+      tempoDescansoSegundos?: number
+      observacoes?: string
+    }>
+  }) => api.post<Treino>('/treinos/autogestao', data),
 
-  editarTreino: (id: string, data: { nome?: string; diasSemana?: number[]; exercicios?: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }> }) =>
-    api.patch<Treino>(`/treinos/${id}`, data),
+  editarTreino: (
+    id: string,
+    data: {
+      nome?: string
+      diasSemana?: number[]
+      exercicios?: Array<{
+        exercicioId: string
+        ordem: number
+        series?: number
+        repeticoes?: number
+        cargaSugeridaKg?: number
+        tipo?: string
+        metodo?: string
+        blocoGrupo?: number
+        tempoDescansoSegundos?: number
+        observacoes?: string
+      }>
+    }
+  ) => api.patch<Treino>(`/treinos/${id}`, data),
 
   deletarTreino: (id: string) =>
     api.delete(`/treinos/${id}`),
@@ -299,7 +332,18 @@ export const api = {
     alunoId: string
     nome: string
     diasSemana: number[]
-    exercicios: Array<{ exercicioId: string; ordem: number; series: number; repeticoes: number; cargaSugeridaKg?: number }>
+    exercicios: Array<{
+      exercicioId: string
+      ordem: number
+      series?: number
+      repeticoes?: number
+      cargaSugeridaKg?: number
+      tipo?: string
+      metodo?: string
+      blocoGrupo?: number
+      tempoDescansoSegundos?: number
+      observacoes?: string
+    }>
   }) => api.post<Treino>('/treinos', data),
 
   criarFichas: (data: {

@@ -36,6 +36,8 @@ interface TrainingState {
       caloriasQueimadas?: number
       frequenciaCardiacaMedia?: number
       frequenciaCardiacaMaxima?: number
+      notaAvaliacao?: number
+      feedbackComentario?: string
     }
   ) => Promise<void>
   tick: () => void
@@ -146,7 +148,9 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
       if (dup) return s
       return { execucoes: [...s.execucoes, execucao] }
     })
-    get().startRest(REST_DEFAULT_SEC)
+    const exConfig = treinoAtual.exercicios?.find((e) => e.exercicio_id === exercicioId)
+    const restSec = exConfig?.tempo_descanso_segundos || REST_DEFAULT_SEC
+    get().startRest(restSec)
   },
 
   finalizarTreino: async (
@@ -155,6 +159,8 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
       caloriasQueimadas?: number
       frequenciaCardiacaMedia?: number
       frequenciaCardiacaMaxima?: number
+      notaAvaliacao?: number
+      feedbackComentario?: string
     }
   ) => {
     const { treinoAtual, timer } = get()
@@ -164,6 +170,8 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     try {
       const res = await api.finalizarTreino(treinoAtual.id, {
         avaliacao,
+        notaAvaliacao: metrics?.notaAvaliacao,
+        feedbackComentario: metrics?.feedbackComentario,
         caloriasQueimadas: metrics?.caloriasQueimadas,
         frequenciaCardiacaMedia: metrics?.frequenciaCardiacaMedia,
         frequenciaCardiacaMaxima: metrics?.frequenciaCardiacaMaxima,

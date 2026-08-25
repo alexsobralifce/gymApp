@@ -336,14 +336,24 @@ export default function ProfessorTreinos() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
                           {t.status}
                         </span>
                         <span className="text-xs text-text-muted">
                           {t.dias_semana?.map((d: number) => DIA_LABEL[d]).join(', ')}
                         </span>
+                        {t.nota_avaliacao && (
+                          <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-xs font-bold text-amber-400">
+                            ⭐ {t.nota_avaliacao}/5
+                          </span>
+                        )}
                       </div>
+                      {t.feedback_comentario && (
+                        <p className="mt-1.5 text-xs text-text-muted italic bg-surface-input/40 px-2 py-1 rounded border border-surface-input">
+                          💬 "{t.feedback_comentario}"
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 justify-end">

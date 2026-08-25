@@ -137,6 +137,8 @@ model Treino {
   criado_em                 DateTime            @default(now())
   atualizado_em             DateTime            @updatedAt
   avaliacao_dificuldade     String?
+  nota_avaliacao            Int?
+  feedback_comentario       String?
   is_template               Boolean             @default(false)
   criado_por_ia             Boolean             @default(false)
   /// Evita spam do push de ociosidade
@@ -168,6 +170,8 @@ model TreinoHistorico {
   calorias_queimadas          Float?
   frequencia_cardiaca_media  Int?
   frequencia_cardiaca_maxima Int?
+  nota_avaliacao             Int?
+  feedback_comentario        String?
   treino                     Treino       @relation(fields: [treino_id], references: [id])
 
   @@map("treino_historico")
@@ -199,16 +203,20 @@ model Exercicio {
 
 /// Associação Treino ↔ Exercício com ordem, séries e reps prescritas
 model TreinoExercicio {
-  id                String    @id @default(cuid())
-  treino_id         String
-  exercicio_id      String
-  ordem             Int
-  series            Int       @default(3)
-  repeticoes        Int       @default(12)
-  carga_sugerida_kg Float?
-  tipo              String    @default("PRINCIPAL")
-  exercicio         Exercicio @relation(fields: [exercicio_id], references: [id])
-  treino            Treino    @relation(fields: [treino_id], references: [id])
+  id                      String    @id @default(cuid())
+  treino_id               String
+  exercicio_id            String
+  ordem                   Int
+  series                  Int       @default(3)
+  repeticoes              Int       @default(12)
+  carga_sugerida_kg       Float?
+  tipo                    String    @default("PRINCIPAL")
+  metodo                  String    @default("TRADICIONAL")
+  bloco_grupo             Int?
+  tempo_descanso_segundos Int?      @default(60)
+  observacoes             String?
+  exercicio               Exercicio @relation(fields: [exercicio_id], references: [id])
+  treino                  Treino    @relation(fields: [treino_id], references: [id])
 
   @@unique([treino_id, ordem])
   @@map("treino_exercicios")
