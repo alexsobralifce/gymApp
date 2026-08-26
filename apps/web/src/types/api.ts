@@ -15,6 +15,14 @@ export interface AuthTokens {
   refreshToken: string
 }
 
+/** Triagem simplificada PAR-Q+ coletada no cadastro (UX-009) — Sim/Não */
+export interface ParqRespostas {
+  q1: boolean
+  q2: boolean
+  q3: boolean
+  q4: boolean
+}
+
 export interface UltimaCarga {
   exercicio_id: string
   serie_numero: number

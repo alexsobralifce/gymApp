@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { api, ApiError } from '../api/client'
-import type { User } from '../types/api'
+import type { User, ParqRespostas } from '../types/api'
 import { debugLog } from '../lib/debug'
 
 // Persistência da sessão: além dos tokens (accessToken/refreshToken), guarda o
@@ -37,7 +37,7 @@ export interface AuthState {
 
   login: (email: string, senha: string) => Promise<void>
   loginWithGoogle: (credential: string, accessToken?: string) => Promise<boolean>
-  register: (nome: string, email: string, senha: string, role: string, telefone?: string) => Promise<void>
+  register: (nome: string, email: string, senha: string, role: string, telefone?: string, parqRespostas?: ParqRespostas) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
   updatePushSubscription: (subscription: PushSubscriptionJSON | null) => Promise<void>
@@ -91,10 +91,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (nome, email, senha, role, telefone) => {
+  register: async (nome, email, senha, role, telefone, parqRespostas) => {
     set({ loading: true, error: null })
     try {
-      await api.register(nome, email, senha, role, telefone)
+      await api.register(nome, email, senha, role, telefone, parqRespostas)
       await get().login(email, senha)
     } catch (err) {
       set({ error: (err as Error).message, loading: false })

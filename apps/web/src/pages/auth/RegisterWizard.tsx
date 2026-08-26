@@ -15,6 +15,17 @@ import Step3Academia from './Step3Academia'
 
 const STEPS = ['Dados', 'Perfil', 'Academia']
 
+// Triagem simplificada PAR-Q+ (UX-009) — não bloqueante, respostas enviadas no registro
+const PARQ_QUESTIONS = [
+  'Você sente dor no peito, tontura ou falta de ar ao fazer atividade física?',
+  'Um médico já disse que você tem problema cardíaco ou de pressão arterial?',
+  'Você tem dor ou limitação em articulações, músculos ou coluna que piora com exercício?',
+  'Você faz uso contínuo de medicação controlada?',
+] as const
+
+type ParqKeys = 'q1' | 'q2' | 'q3' | 'q4'
+type ParqState = Record<ParqKeys, boolean | null>
+
 export default function RegisterWizard() {
   const [step, setStep] = useState(0)
   const [nome, setNome] = useState('')
@@ -30,6 +41,7 @@ export default function RegisterWizard() {
   const [altura, setAltura] = useState('')
   const [sexo, setSexo] = useState('')
   const [consentiuSocial, setConsentiuSocial] = useState(false)
+  const [parq, setParq] = useState<ParqState>({ q1: null, q2: null, q3: null, q4: null })
   const [googleError, setGoogleError] = useState<string | null>(null)
   const [googleBusy, setGoogleBusy] = useState(false)
 
@@ -101,6 +113,12 @@ export default function RegisterWizard() {
   const totalSteps = isAluno ? 3 : 1
   const busy = loading || googleBusy
 
+  const algumParqPositivo = parq.q1 === true || parq.q2 === true || parq.q3 === true || parq.q4 === true
+  const parqCompleto = parq.q1 !== null && parq.q2 !== null && parq.q3 !== null && parq.q4 !== null
+  const parqPayload = parqCompleto
+    ? { q1: parq.q1 as boolean, q2: parq.q2 as boolean, q3: parq.q3 as boolean, q4: parq.q4 as boolean }
+    : undefined
+
   function canProceed(): boolean {
     if (step === 0) {
       return nome.length >= 2 && email.includes('@') && senha.length >= 8
@@ -148,6 +166,7 @@ export default function RegisterWizard() {
       senha,
       role,
       telefone.replace(/\D/g, '') || undefined,
+      parqPayload,
     )
     if (isAluno) {
       await api.criarPerfilAluno({
@@ -259,18 +278,71 @@ export default function RegisterWizard() {
           )}
 
           {step === 1 && isAluno && (
-            <Step2Profile
-              dataNascimento={dataNascimento}
-              setDataNascimento={setDataNascimento}
-              peso={peso}
-              setPeso={setPeso}
-              altura={altura}
-              setAltura={setAltura}
-              sexo={sexo}
-              setSexo={setSexo}
-              consentiuSocial={consentiuSocial}
-              setConsentiuSocial={setConsentiuSocial}
-            />
+            <>
+              <Step2Profile
+                dataNascimento={dataNascimento}
+                setDataNascimento={setDataNascimento}
+                peso={peso}
+                setPeso={setPeso}
+                altura={altura}
+                setAltura={setAltura}
+                sexo={sexo}
+                setSexo={setSexo}
+                consentiuSocial={consentiuSocial}
+                setConsentiuSocial={setConsentiuSocial}
+              />
+
+              <div className="space-y-4 border-t border-surface-input pt-4">
+                <div>
+                  <p className="text-sm font-semibold text-text">Para sua segurança</p>
+                  <p className="text-xs text-text-muted">Isso nos ajuda a personalizar seu treino com segurança.</p>
+                </div>
+
+                {PARQ_QUESTIONS.map((pergunta, index) => {
+                  const key = `q${index + 1}` as ParqKeys
+                  const value = parq[key]
+                  return (
+                    <div key={key} className="space-y-1.5">
+                      <p className="text-xs leading-snug text-text">{pergunta}</p>
+                      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={pergunta}>
+                        <button
+                          type="button"
+                          onClick={() => setParq((p) => ({ ...p, [key]: true }))}
+                          aria-pressed={value === true}
+                          className={`min-h-[44px] rounded-lg border px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                            value === true
+                              ? 'border-warning bg-warning/10 text-warning'
+                              : 'border-surface-input bg-surface text-text-muted hover:text-text'
+                          }`}
+                        >
+                          Sim
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setParq((p) => ({ ...p, [key]: false }))}
+                          aria-pressed={value === false}
+                          className={`min-h-[44px] rounded-lg border px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                            value === false
+                              ? 'border-success bg-success/10 text-success'
+                              : 'border-surface-input bg-surface text-text-muted hover:text-text'
+                          }`}
+                        >
+                          Não
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {algumParqPositivo && (
+                  <div className="flex items-start gap-2 rounded-lg border border-warning/20 bg-warning/10 px-3 py-2.5" role="alert">
+                    <p className="text-xs leading-snug text-warning">
+                      Recomendamos uma avaliação médica antes de iniciar treinos intensos. Seu professor também pode te orientar.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           {step === 2 && isAluno && (

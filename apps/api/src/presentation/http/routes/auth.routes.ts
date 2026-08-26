@@ -9,6 +9,13 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { env } from '../../../shared/env.js'
 import { ensureDir, getAvatarsDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
 
+const parqRespostasSchema = z.object({
+  q1: z.boolean(),
+  q2: z.boolean(),
+  q3: z.boolean(),
+  q4: z.boolean(),
+}).strict()
+
 const registerBodySchema = z.object({
   nome: z.string().min(2).max(100),
   email: z.string().email(),
@@ -18,6 +25,10 @@ const registerBodySchema = z.object({
   ),
   role: z.enum([Role.ACADEMIA, Role.PROFESSOR, Role.ALUNO]),
   telefone: z.string().optional(),
+  // UX-009: triagem PAR-Q+ simplificada (opcional, não bloqueante).
+  // Persistência em `alunos.parq_respostas` depende do registro Aluno, que é
+  // criado pelo POST /alunos/perfil após o cadastro base.
+  parqRespostas: parqRespostasSchema.optional(),
 })
 
 const loginBodySchema = z.object({

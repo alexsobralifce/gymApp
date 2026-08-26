@@ -104,6 +104,8 @@ model Aluno {
   altura_cm                Float?
   consentiu_feed_social_em DateTime?
   data_nascimento          DateTime?
+  /// Triagem simplificada PAR-Q+ coletada no cadastro (UX-009)
+  parq_respostas           Json?
   meta_semanal             Int                           @default(3)
   permite_busca_email      Boolean                       @default(true)
   peso_kg                  Float?
