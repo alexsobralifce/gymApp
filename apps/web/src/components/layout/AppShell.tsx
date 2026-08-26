@@ -44,6 +44,7 @@ import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
 import { EndorfinappLogo } from '../branding'
 import { DebugMenuTrigger, DebugOverlay } from '../ui/DebugOverlay'
+import AssistenteAjuda from '../ui/AssistenteAjuda'
 
 const WHATSAPP_SUPORTE = {
   numero: '5588993573809',
@@ -873,6 +874,7 @@ export default function AppShell() {
         onDismiss={dismissOnboarding}
       />
       <SistemaAvaliacaoModal open={avaliacaoOpen} onClose={() => setAvaliacaoOpen(false)} />
+      {isAluno && !hideNav && <AssistenteAjuda />}
     </div>
   )
 }
