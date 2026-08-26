@@ -1,13 +1,14 @@
 import { create } from 'zustand'
 import { debugLog } from '../lib/debug'
 
-export type ThemeBrand = 'lime' | 'red' | 'violet'
+export type ThemeBrand = 'blue' | 'lime' | 'red' | 'violet'
 export type ThemeMode = 'auto' | 'night' | 'day'
 export type EffectiveMode = 'night' | 'day'
 /** @deprecated use ThemeBrand */
 export type Theme = ThemeBrand
 
 export const THEME_BRANDS: { id: ThemeBrand; label: string; swatch: string }[] = [
+  { id: 'blue', label: 'Azul', swatch: '#3B82F6' },
   { id: 'lime', label: 'Lima', swatch: '#A8E600' },
   { id: 'red', label: 'Vermelho', swatch: '#FF3B3B' },
   { id: 'violet', label: 'Violeta', swatch: '#8B5CF6' },
@@ -110,14 +111,14 @@ function safeSetItem(key: string, value: string): void {
 }
 
 const getStoredBrand = (): ThemeBrand => {
-  if (typeof window === 'undefined') return 'lime'
+  if (typeof window === 'undefined') return 'blue'
   const saved = safeGetItem('gymapp_theme')
-  if (saved === 'red' || saved === 'violet' || saved === 'lime') return saved
+  if (saved === 'blue' || saved === 'red' || saved === 'violet' || saved === 'lime') return saved
   if (saved === 'orange') {
     safeSetItem('gymapp_theme', 'red')
     return 'red'
   }
-  return 'lime'
+  return 'blue'
 }
 
 const getStoredMode = (): ThemeMode => {
@@ -172,7 +173,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   toggleTheme: () => {
     const current = get().theme
     const next: ThemeBrand =
-      current === 'lime' ? 'red' : current === 'red' ? 'violet' : 'lime'
+      current === 'blue' ? 'lime' : current === 'lime' ? 'red' : current === 'red' ? 'violet' : 'blue'
     get().setTheme(next)
   },
 }))

@@ -191,7 +191,78 @@ html[data-mode="night"] #root {
   color: var(--color-text) !important;
 }
 
-/* ─── 1. Lima (Lime) ─── */
+/* ─── 1. Azul (Blue) — tema padrão ─── */
+html[data-theme="blue"] {
+  --color-primary: #3B82F6;
+  --color-primary-dark: #2563EB;
+  --color-primary-hover: #60A5FA;
+  --color-primary-active: #2F6FEB;
+  --color-primary-light: #93C5FD;
+  --color-primary-foreground: #FFFFFF;
+  --color-accent: #3B82F6;
+  --color-accent-foreground: #FFFFFF;
+  --color-ring: #3B82F6;
+}
+
+html[data-theme="blue"][data-mode="night"] {
+  color-scheme: only dark;
+  color-scheme: dark;
+  --color-glass-bg: rgba(17, 28, 51, 0.92);
+  --color-menu-hover: rgba(255, 255, 255, 0.08);
+  --color-menu-border: #24365C;
+  --color-surface: #0B1220;
+  --color-surface-card: #111C33;
+  --color-surface-input: #1A2A4A;
+  --color-background: #0B1220;
+  --color-card: #111C33;
+  --color-card-foreground: #F5F8FF;
+  --color-secondary: #1A2A4A;
+  --color-secondary-foreground: #F5F8FF;
+  --color-muted: #111C33;
+  --color-muted-foreground: #A9B8D4;
+  --color-border: #24365C;
+  --color-input: #1A2A4A;
+  --color-text: #F5F8FF;
+  --color-text-muted: #A9B8D4;
+  --color-text-disabled: #6B7A99;
+  --color-foreground: #F5F8FF;
+}
+
+html[data-theme="blue"][data-mode="day"] {
+  color-scheme: only light;
+  color-scheme: light;
+  --color-primary: #2563EB;
+  --color-primary-dark: #1D4ED8;
+  --color-primary-hover: #3B82F6;
+  --color-primary-active: #1E40AF;
+  --color-primary-light: #93C5FD;
+  --color-primary-foreground: #FFFFFF;
+  --color-accent: #2563EB;
+  --color-accent-foreground: #FFFFFF;
+  --color-ring: #2563EB;
+
+  --color-glass-bg: rgba(255, 255, 255, 0.92);
+  --color-menu-hover: rgba(11, 18, 32, 0.06);
+  --color-menu-border: #DFE5EE;
+  --color-surface: #FFFFFF;
+  --color-surface-card: #F3F6FB;
+  --color-surface-input: #EDF1F8;
+  --color-background: #FFFFFF;
+  --color-card: #F3F6FB;
+  --color-card-foreground: #0B1220;
+  --color-secondary: #EDF1F8;
+  --color-secondary-foreground: #0B1220;
+  --color-muted: #F0F3F8;
+  --color-muted-foreground: #45566F;
+  --color-border: #DFE5EE;
+  --color-input: #EDF1F8;
+  --color-text: #0B1220;
+  --color-text-muted: #45566F;
+  --color-text-disabled: #8A96A8;
+  --color-foreground: #0B1220;
+}
+
+/* ─── 2. Lima (Lime) ─── */
 html[data-theme="lime"] {
   --color-primary: #B8F000;
   --color-primary-dark: #8FCC00;
@@ -262,7 +333,7 @@ html[data-theme="lime"][data-mode="day"] {
   --color-foreground: #0A1628;
 }
 
-/* ─── 2. Vermelho (Red) ─── */
+/* ─── 3. Vermelho (Red) ─── */
 html[data-theme="red"] {
   --color-primary: #FF4D4D;
   --color-primary-dark: #E02020;
@@ -333,7 +404,7 @@ html[data-theme="red"][data-mode="day"] {
   --color-foreground: #141414;
 }
 
-/* ─── 3. Violeta (Violet) ─── */
+/* ─── 4. Violeta (Violet) ─── */
 html[data-theme="violet"] {
   --color-primary: #A78BFA;
   --color-primary-dark: #8B5CF6;
@@ -404,7 +475,7 @@ html[data-theme="violet"][data-mode="day"] {
   --color-foreground: #12121A;
 }
 
-/* ─── 4. Laranja (Legacy → Vermelho) ─── */
+/* ─── 5. Laranja (Legacy → Vermelho) ─── */
 html[data-theme="orange"] {
   --color-primary: #FF4D4D;
   --color-primary-dark: #E02020;

@@ -21,7 +21,7 @@ describe('index.css Theme Variables Verification', () => {
   it('should define explicit day surface colors for lime theme (white bg)', () => {
     const limeDaySection = cssContent.slice(
       cssContent.indexOf('html[data-theme="lime"][data-mode="day"]'),
-      cssContent.indexOf('/* ─── 2. Vermelho'),
+      cssContent.indexOf('/* ─── 3. Vermelho'),
     )
 
     expect(limeDaySection).toContain('--color-surface: #FFFFFF;')
@@ -62,16 +62,20 @@ describe('index.css Theme Variables Verification', () => {
   it('day mode surfaces must be light (luminance heuristic via hex prefix)', () => {
     const dayBlocks = [
       cssContent.slice(
+        cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
+        cssContent.indexOf('/* ─── 2. Lima'),
+      ),
+      cssContent.slice(
         cssContent.indexOf('html[data-theme="lime"][data-mode="day"]'),
-        cssContent.indexOf('/* ─── 2. Vermelho'),
+        cssContent.indexOf('/* ─── 3. Vermelho'),
       ),
       cssContent.slice(
         cssContent.indexOf('html[data-theme="red"][data-mode="day"]'),
-        cssContent.indexOf('/* ─── 3. Violeta'),
+        cssContent.indexOf('/* ─── 4. Violeta'),
       ),
       cssContent.slice(
         cssContent.indexOf('html[data-theme="violet"][data-mode="day"]'),
-        cssContent.indexOf('/* ─── 4. Laranja'),
+        cssContent.indexOf('/* ─── 5. Laranja'),
       ),
     ]
 
@@ -85,6 +89,10 @@ describe('index.css Theme Variables Verification', () => {
 
   it('night mode surfaces must be dark', () => {
     const nightBlocks = [
+      cssContent.slice(
+        cssContent.indexOf('html[data-theme="blue"][data-mode="night"]'),
+        cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
+      ),
       cssContent.slice(
         cssContent.indexOf('html[data-theme="lime"][data-mode="night"]'),
         cssContent.indexOf('html[data-theme="lime"][data-mode="day"]'),

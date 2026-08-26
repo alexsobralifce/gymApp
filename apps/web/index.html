@@ -27,7 +27,7 @@
         var boot={
           storageTheme:null,
           storageMode:null,
-          resolvedTheme:'lime',
+          resolvedTheme:'blue',
           resolvedEff:'night',
           isDay:false,
           matchMediaDark:null,
@@ -37,7 +37,7 @@
           at:new Date().toISOString()
         };
         try{
-          var t=localStorage.getItem('gymapp_theme')||'lime';
+          var t=localStorage.getItem('gymapp_theme')||'blue';
           boot.storageTheme=localStorage.getItem('gymapp_theme');
           if(t==='orange')t='red';
           var m=localStorage.getItem('gymapp_mode')||'auto';
@@ -62,8 +62,8 @@
           if(cs)cs.setAttribute('content',isDay?'only light':'dark');
           var tc=document.getElementById('meta-theme-color');
           if(tc){
-            var surfaces={lime:{day:'#FFFFFF',night:'#0A1628'},red:{day:'#FFFFFF',night:'#0F0F0F'},violet:{day:'#FFFFFF',night:'#0C0C0E'}};
-            var pack=surfaces[t]||surfaces.lime;
+            var surfaces={blue:{day:'#FFFFFF',night:'#0B1220'},lime:{day:'#FFFFFF',night:'#0A1628'},red:{day:'#FFFFFF',night:'#0F0F0F'},violet:{day:'#FFFFFF',night:'#0C0C0E'}};
+            var pack=surfaces[t]||surfaces.blue;
             tc.setAttribute('content',isDay?pack.day:pack.night);
           }
           var sb=document.getElementById('meta-status-bar');
@@ -71,7 +71,7 @@
           console.log('[GymApp:THEME-BOOT]',boot);
         }catch(o){
           boot.error=String(o&&o.message||o);
-          e.setAttribute('data-theme','lime');
+          e.setAttribute('data-theme','blue');
           e.setAttribute('data-mode','night');
           console.warn('[GymApp:THEME-BOOT] fallback night',boot);
         }

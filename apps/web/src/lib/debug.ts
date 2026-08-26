@@ -181,12 +181,14 @@ function readBootstrap(): ThemeBootstrapInfo | null {
 }
 
 const EXPECTED_DAY: Record<string, string> = {
+  blue: '#ffffff',
   lime: '#ffffff',
   red: '#ffffff',
   violet: '#ffffff',
 }
 
 const EXPECTED_NIGHT: Record<string, string> = {
+  blue: '#0b1220',
   lime: '#0a1628',
   red: '#0f0f0f',
   violet: '#0c0c0e',
@@ -215,7 +217,7 @@ export function collectThemeSnapshot(): ThemeSnapshot {
   const dataTheme = html.getAttribute('data-theme')
   const dataMode = html.getAttribute('data-mode')
   const surface = cs.getPropertyValue('--color-surface').trim()
-  const brand = dataTheme && EXPECTED_DAY[dataTheme] ? dataTheme : 'lime'
+  const brand = dataTheme && EXPECTED_DAY[dataTheme] ? dataTheme : 'blue'
   const expected =
     dataMode === 'day'
       ? EXPECTED_DAY[brand]
