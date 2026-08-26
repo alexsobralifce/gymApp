@@ -286,6 +286,7 @@ export interface PerfilAluno {
   objetivo_treino?: string | null
   nivel_treino?: string | null
   restricoes?: string[]
+  meta_semanal?: number
   criado_em: string
   professor?: { id?: string; usuario: { nome: string; email: string; telefone?: string | null } } | null
   academia?: { id?: string; nome: string } | null

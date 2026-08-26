@@ -19,6 +19,7 @@ import {
   clonarTreino,
   clonarTreinoEmLote,
   buscarUltimasCargas,
+  substituirExercicio,
 } from '../../../application/usecases/treino/TreinoService.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
@@ -162,9 +163,19 @@ export async function treinoRoutes(app: FastifyInstance) {
     return reply.status(201).send(treino)
   })
 
-  /** GET /treinos/exercicios — lista todos os exercícios */
-  app.get('/exercicios', { preHandler: [app.authenticate] }, async (_request, reply) => {
+  /** GET /treinos/exercicios — lista exercícios (filtro opcional por grupo muscular) */
+  app.get('/exercicios', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { grupo_muscular } = z.object({
+      grupo_muscular: z.string().optional(),
+    }).parse(request.query)
+
+    const where: Record<string, unknown> = {}
+    if (grupo_muscular) {
+      where.grupo_muscular = { contains: grupo_muscular, mode: 'insensitive' }
+    }
+
     const exercicios = await prisma.exercicio.findMany({
+      where,
       orderBy: { nome: 'asc' },
     })
     return reply.status(200).send(exercicios)
@@ -269,6 +280,46 @@ export async function treinoRoutes(app: FastifyInstance) {
 
     const execucao = await registrarExecucao(id, aluno.id, body)
     return reply.status(201).send(execucao)
+  })
+
+  /** POST /treinos/:id/exercicios/:treinoExercicioId/substituir — UX-004: troca de exercício em execução */
+  app.post('/:id/exercicios/:treinoExercicioId/substituir', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
+    const { id, treinoExercicioId } = z.object({
+      id: z.string(),
+      treinoExercicioId: z.string(),
+    }).parse(request.params)
+
+    const { novo_exercicio_id } = z.object({
+      novo_exercicio_id: z.string().min(1),
+    }).parse(request.body)
+
+    const { sub, role } = request.currentUser
+
+    const treinoBase = await prisma.treino.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        aluno_id: true,
+        aluno: { select: { id: true, professor_id: true, academia_id: true } },
+      },
+    })
+    if (!treinoBase) throw new NotFoundError('Treino')
+
+    if (role === Role.ALUNO) {
+      const aluno = await prisma.aluno.findUnique({ where: { usuario_id: sub } })
+      if (!aluno || treinoBase.aluno_id !== aluno.id) throw new TenantAccessError()
+    } else if (role === Role.PROFESSOR) {
+      const selfAluno = await prisma.aluno.findUnique({ where: { usuario_id: sub } })
+      const professor = await prisma.professor.findUnique({ where: { usuario_id: sub } })
+      const ownsViaSelf = selfAluno && treinoBase.aluno_id === selfAluno.id
+      const ownsViaStudent = professor && treinoBase.aluno.professor_id === professor.id
+      if (!ownsViaSelf && !ownsViaStudent) throw new TenantAccessError()
+    } else {
+      throw new TenantAccessError()
+    }
+
+    const treino = await substituirExercicio(id, treinoExercicioId, novo_exercicio_id, treinoBase.aluno_id)
+    return reply.status(200).send(treino)
   })
 
   /** POST /treinos/:id/finalizar — UC-23 */

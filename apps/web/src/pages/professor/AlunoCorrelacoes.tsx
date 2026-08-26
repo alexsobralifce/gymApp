@@ -234,7 +234,7 @@ export default function ProfessorAlunoEvolucao() {
                     {evolucaoMensal.totalTreinos} <span className="text-xs font-normal text-text-muted">treinos</span>
                   </div>
                   <div className="text-xs text-text-muted flex items-center gap-1">
-                    <span>Meta mensal: 12</span>
+                    <span>Meta mensal: {evolucaoMensal.metaSemanal * 4}</span>
                     <span className="font-bold text-success">({evolucaoMensal.frequenciaPercent}%)</span>
                   </div>
                 </div>

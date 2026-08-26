@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, useDeferredValue } from 'react'
 import { useParams, useNavigate, useBlocker } from 'react-router-dom'
 import { KeepAwake } from '@capgo/capacitor-keep-awake'
 import { useTrainingStore } from '../../stores/training'
-import { DumbbellIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons/Icon'
+import { DumbbellIcon, CheckIcon, ChevronLeftIcon, XIcon } from '../../components/icons/Icon'
+import { RepeatIcon } from 'lucide-react'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import { useIncompleteWorkoutReminder } from '../../hooks/useIncompleteWorkoutReminder'
-import type { UltimaCarga, PerfilAluno } from '../../types/api'
+import { useToast } from '../../components/ui/Toast'
+import type { UltimaCarga, PerfilAluno, Exercicio, TreinoExercicio } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
 import { calcularCaloriasKeytel, calcularIdade } from '../../lib/health'
 import { api } from '../../api/client'
@@ -123,6 +125,7 @@ export default function AlunoTreinoExecucao() {
     finalizarTreino,
     cancelarTreino,
     retomarTreino,
+    substituirExercicio,
 
     timer,
     tick,
@@ -154,6 +157,67 @@ export default function AlunoTreinoExecucao() {
   const [resuming, setResuming] = useState(false)
   const coach = useCoachMark(!!treinoAtual)
   useIncompleteWorkoutReminder(treinoAtual, avaliando || showAvaliacao)
+
+  // ─── UX-004: Substituição de exercício ────────────────────
+  const [substituindoExercicio, setSubstituindoExercicio] = useState<TreinoExercicio | null>(null)
+  const [alternativas, setAlternativas] = useState<Exercicio[]>([])
+  const [carregandoAlternativas, setCarregandoAlternativas] = useState(false)
+  const [buscaSubstituto, setBuscaSubstituto] = useState('')
+  const [substitutoSelecionado, setSubstitutoSelecionado] = useState<Exercicio | null>(null)
+  const [confirmandoSubstituicao, setConfirmandoSubstituicao] = useState(false)
+  const { showToast, ToastComponent } = useToast()
+
+  const deferredBusca = useDeferredValue(buscaSubstituto)
+
+  const alternativasFiltradas = useMemo(() => {
+    if (!substituindoExercicio) return []
+    const q = deferredBusca.trim().toLowerCase()
+    const semAcentos = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    return alternativas.filter((alt) => {
+      const nome = semAcentos(alt.nome || '')
+      const equip = semAcentos(alt.equipamento || '')
+      const grupo = semAcentos(alt.grupo_muscular || '')
+      return !q || nome.includes(semAcentos(q)) || equip.includes(semAcentos(q)) || grupo.includes(semAcentos(q))
+    })
+  }, [alternativas, deferredBusca, substituindoExercicio])
+
+  async function abrirSubstituicao(exercicioTreino: TreinoExercicio) {
+    setSubstituindoExercicio(exercicioTreino)
+    setBuscaSubstituto('')
+    setSubstitutoSelecionado(null)
+    setCarregandoAlternativas(true)
+    setAlternativas([])
+    try {
+      const grupo = exercicioTreino.exercicio?.grupo_muscular || undefined
+      const lista = await api.getExerciciosSubstitutos(grupo)
+      setAlternativas(lista.filter((ex) => ex.id !== exercicioTreino.exercicio_id))
+    } catch (err) {
+      console.error('[UX-004] Erro ao buscar alternativas:', err)
+      showToast('Não foi possível carregar as alternativas', 'error')
+    } finally {
+      setCarregandoAlternativas(false)
+    }
+  }
+
+  function fecharSubstituicao() {
+    setSubstituindoExercicio(null)
+    setSubstitutoSelecionado(null)
+  }
+
+  async function confirmarSubstituicao() {
+    if (!substituindoExercicio || !substitutoSelecionado) return
+    setConfirmandoSubstituicao(true)
+    try {
+      await substituirExercicio(substituindoExercicio.id, substitutoSelecionado.id)
+      showToast('Exercício substituído com sucesso!')
+      fecharSubstituicao()
+    } catch (err) {
+      console.error('[UX-004] Erro ao substituir:', err)
+      showToast((err as Error).message || 'Erro ao substituir exercício', 'error')
+    } finally {
+      setConfirmandoSubstituicao(false)
+    }
+  }
 
   // ─── Heart Rate & Calorie State ────────────────────
   const [bpm] = useState<number>(65)
@@ -569,6 +633,14 @@ export default function AlunoTreinoExecucao() {
                 >
                   Ver
                 </button>
+                <button
+                  onClick={() => abrirSubstituicao(ex)}
+                  aria-label="Trocar exercício"
+                  title="Trocar exercício"
+                  className="shrink-0 min-h-11 min-w-11 flex items-center justify-center rounded-xl border border-border bg-surface-input text-text-muted hover:text-primary hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
+                >
+                  <RepeatIcon className="h-5 w-5" />
+                </button>
               </div>
 
               <div className="p-3 space-y-1.5">
@@ -663,6 +735,182 @@ export default function AlunoTreinoExecucao() {
           )
         })}
       </div>
+
+      {/* Drawer de Substituição de Exercício (UX-004) */}
+      {substituindoExercicio && (
+        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={fecharSubstituicao}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Container (Bottom-Sheet on Mobile, Centered on Desktop) */}
+          <div className="relative w-full max-w-lg h-[85vh] sm:h-[80vh] bg-surface-card border border-surface-input rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 animate-slide-up">
+            {/* Top Grab Handle (Mobile) */}
+            <div className="sm:hidden w-full flex justify-center pt-2 pb-1 bg-surface-card shrink-0">
+              <div className="w-12 h-1.5 rounded-full bg-surface-input" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-surface-input shrink-0">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-black text-text flex items-center gap-2">
+                  <RepeatIcon className="h-4 w-4 text-primary" />
+                  Substituir Exercício
+                </h2>
+                <p className="text-[11px] sm:text-xs text-text-muted truncate">
+                  {substituindoExercicio.exercicio?.nome} · {substituindoExercicio.exercicio?.grupo_muscular || 'Geral'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fecharSubstituicao}
+                className="rounded-full p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer shrink-0"
+                title="Fechar"
+                aria-label="Fechar substituição"
+              >
+                <XIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search Box */}
+            <div className="p-3 sm:p-4 border-b border-surface-input/70 bg-surface/50 shrink-0">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={buscaSubstituto}
+                  onChange={(e) => setBuscaSubstituto(e.target.value)}
+                  placeholder="🔍 Buscar substituto por nome, músculo ou equipamento..."
+                  className="w-full bg-surface-input/80 text-text placeholder:text-text-muted text-xs sm:text-sm font-semibold rounded-xl pl-3.5 pr-10 py-2.5 border border-surface-input focus:outline-hidden focus:border-primary transition-all"
+                />
+                {buscaSubstituto && (
+                  <button
+                    type="button"
+                    onClick={() => setBuscaSubstituto('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text rounded-md"
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] font-bold text-text-muted mt-2">
+                {carregandoAlternativas
+                  ? 'Buscando alternativas...'
+                  : `${alternativasFiltradas.length} ${alternativasFiltradas.length === 1 ? 'alternativa' : 'alternativas'} disponíveis`}
+              </p>
+            </div>
+
+            {/* Alternatives List */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
+              {carregandoAlternativas ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center space-y-2 text-text-muted">
+                  <span className="text-3xl">💪</span>
+                  <p className="text-sm font-bold text-text">Buscando exercícios do mesmo grupo...</p>
+                </div>
+              ) : alternativasFiltradas.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center space-y-2 text-text-muted">
+                  <span className="text-3xl">🔍</span>
+                  <p className="text-sm font-bold text-text">Nenhuma alternativa encontrada</p>
+                  <p className="text-xs">Tente buscar por outro termo ou verificar o grupo muscular.</p>
+                </div>
+              ) : (
+                alternativasFiltradas.map((alt) => (
+                  <button
+                    key={alt.id}
+                    type="button"
+                    onClick={() => setSubstitutoSelecionado(alt)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition-all text-left cursor-pointer active:scale-[0.98] ${
+                      substitutoSelecionado?.id === alt.id
+                        ? 'bg-primary/10 border-primary/40'
+                        : 'bg-surface border-surface-input hover:border-primary/40'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-bold text-text leading-snug line-clamp-2">{alt.nome}</p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {alt.grupo_muscular && (
+                          <span className="text-[10px] font-black uppercase text-primary tracking-wider">
+                            {alt.grupo_muscular}
+                          </span>
+                        )}
+                        {alt.equipamento && (
+                          <span className="text-[10px] font-semibold text-text-muted bg-surface-input px-1.5 py-0.5 rounded border border-surface-input">
+                            ⚙️ {alt.equipamento}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {substitutoSelecionado?.id === alt.id && (
+                      <span className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-primary px-2 py-1 text-[10px] font-extrabold text-primary-foreground">
+                        <CheckIcon className="h-3 w-3" />
+                        Selecionado
+                      </span>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+
+            {/* Footer with Confirm */}
+            <div className="p-3.5 sm:p-4 border-t border-surface-input bg-surface-card shrink-0 flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={fecharSubstituicao}
+                className="px-4 py-3 rounded-xl border border-surface-input bg-surface text-text-muted hover:text-text text-sm font-bold transition-colors cursor-pointer min-h-11"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmandoSubstituicao(true)}
+                disabled={!substitutoSelecionado}
+                className="flex-1 rounded-xl bg-primary py-3 text-sm font-extrabold text-primary-foreground shadow-md hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer min-h-11"
+              >
+                Confirmar Troca
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmação de Substituição (ConfirmModal-style) */}
+      {substitutoSelecionado && substituindoExercicio && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => !confirmandoSubstituicao && setSubstitutoSelecionado(null)}
+          />
+          <div className="relative z-10 w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-surface-card shadow-2xl animate-modal-pop safe-bottom">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-text">Substituir exercício</h3>
+              <p className="mt-2 text-sm text-text-muted leading-relaxed">
+                Substituir <strong className="text-text">{substituindoExercicio.exercicio?.nome}</strong> por{' '}
+                <strong className="text-text">{substitutoSelecionado.nome}</strong>? As séries já registradas serão mantidas.
+              </p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setSubstitutoSelecionado(null)}
+                  disabled={confirmandoSubstituicao}
+                  className="min-h-11 rounded-xl border border-surface-input bg-surface px-5 py-3 text-sm font-semibold text-text-muted hover:text-text disabled:opacity-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarSubstituicao}
+                  disabled={confirmandoSubstituicao}
+                  className="min-h-11 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground hover:bg-primary-hover disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
+                >
+                  {confirmandoSubstituicao ? 'Aguarde...' : 'Sim, substituir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ToastComponent}
 
       {/* Bottom Bar - Finalizar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border glass px-4 py-3 safe-bottom">

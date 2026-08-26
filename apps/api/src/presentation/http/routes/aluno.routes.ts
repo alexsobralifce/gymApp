@@ -44,6 +44,7 @@ export async function alunoRoutes(app: FastifyInstance) {
       nivelTreino: z.string().optional(),
       restricoes: z.array(z.string()).optional(),
       consentiuFeedSocial: z.boolean().optional(),
+      metaSemanal: z.number().int().min(1).max(7).optional(),
     }).parse(request.body || {})
 
     const existente = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
@@ -63,6 +64,7 @@ export async function alunoRoutes(app: FastifyInstance) {
           nivel_treino: body.nivelTreino !== undefined ? body.nivelTreino : undefined,
           restricoes: body.restricoes !== undefined ? body.restricoes : undefined,
           consentiu_feed_social_em: body.consentiuFeedSocial ? new Date() : undefined,
+          meta_semanal: body.metaSemanal !== undefined ? body.metaSemanal : undefined,
         },
       })
 

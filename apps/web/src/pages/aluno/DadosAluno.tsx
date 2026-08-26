@@ -49,6 +49,7 @@ export default function DadosAluno() {
   const [objetivoTreino, setObjetivoTreino] = useState<string>('')
   const [nivelTreino, setNivelTreino] = useState<string>('')
   const [restricoes, setRestricoes] = useState<string[]>([])
+  const [metaSemanal, setMetaSemanal] = useState(3)
   const [salvandoPreferencias, setSalvandoPreferencias] = useState(false)
   const [feedbackPreferencias, setFeedbackPreferencias] = useState<string | null>(null)
 
@@ -92,6 +93,7 @@ export default function DadosAluno() {
         if (pData.objetivo_treino) setObjetivoTreino(pData.objetivo_treino)
         if (pData.nivel_treino) setNivelTreino(pData.nivel_treino)
         if (pData.restricoes) setRestricoes(pData.restricoes)
+        if (pData.meta_semanal != null) setMetaSemanal(pData.meta_semanal)
       } catch (err) {
         console.error(err)
       } finally {
@@ -171,6 +173,7 @@ export default function DadosAluno() {
         objetivoTreino: objetivoTreino || undefined,
         nivelTreino: nivelTreino || undefined,
         restricoes: restricoes,
+        metaSemanal: metaSemanal,
       }) as PerfilAluno
       setPerfil(updated)
       setFeedbackPreferencias('Preferências e restrições atualizadas!')
@@ -486,6 +489,47 @@ export default function DadosAluno() {
               <option value="INTERMEDIARIO">⚡ Intermediário (6m a 2 anos)</option>
               <option value="AVANCADO">🚀 Avançado (&gt; 2 anos)</option>
             </Select>
+          </FormField>
+
+          <FormField
+            label="Meta Semanal de Treinos"
+            htmlFor="meta-semanal"
+            hint="Quantos treinos você pretende fazer por semana (1 a 7)."
+          >
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMetaSemanal((v) => Math.max(1, v - 1))}
+                disabled={metaSemanal <= 1}
+                aria-label="Diminuir meta semanal de treinos"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-surface-input bg-surface text-xl font-bold text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                −
+              </button>
+              <Input
+                id="meta-semanal"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={7}
+                value={metaSemanal}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10)
+                  if (!isNaN(v)) setMetaSemanal(Math.min(7, Math.max(1, v)))
+                }}
+                aria-label="Meta semanal de treinos (1 a 7)"
+                className="h-11 w-16 text-center text-base font-bold text-text"
+              />
+              <button
+                type="button"
+                onClick={() => setMetaSemanal((v) => Math.min(7, v + 1))}
+                disabled={metaSemanal >= 7}
+                aria-label="Aumentar meta semanal de treinos"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-surface-input bg-surface text-xl font-bold text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                +
+              </button>
+            </div>
           </FormField>
 
           <div className="md:col-span-2">

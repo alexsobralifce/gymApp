@@ -30,6 +30,7 @@ interface TrainingState {
   setExercicioAtual: (exercicio: TreinoExercicio | null) => void
 
   registrarExecucao: (exercicioId: string, serieNumero: number, repeticoes: number, cargaKg: number) => Promise<void>
+  substituirExercicio: (treinoExercicioId: string, novoExercicioId: string) => Promise<void>
   finalizarTreino: (
     avaliacao?: string,
     metrics?: {
@@ -151,6 +152,14 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     const exConfig = treinoAtual.exercicios?.find((e) => e.exercicio_id === exercicioId)
     const restSec = exConfig?.tempo_descanso_segundos || REST_DEFAULT_SEC
     get().startRest(restSec)
+  },
+
+  // UX-004: troca o exercício do treino em execução e atualiza o estado em lugar
+  substituirExercicio: async (treinoExercicioId, novoExercicioId) => {
+    const { treinoAtual } = get()
+    if (!treinoAtual) return
+    const treino = await api.substituirExercicio(treinoAtual.id, treinoExercicioId, novoExercicioId)
+    set(applyTreino(treino))
   },
 
   finalizarTreino: async (

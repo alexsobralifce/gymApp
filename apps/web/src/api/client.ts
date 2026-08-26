@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -173,7 +173,7 @@ export const api = {
   sendHeartbeat: () => api.post('/auth/heartbeat', {}),
 
   // ─── Aluno ─────────────────────────────────────────
-  criarPerfilAluno: (data?: { dataNascimento?: string; pesoKg?: number; alturaCm?: number; sexo?: 'MASCULINO' | 'FEMININO'; objetivoTreino?: string; nivelTreino?: string; restricoes?: string[]; consentiuFeedSocial?: boolean }) =>
+  criarPerfilAluno: (data?: { dataNascimento?: string; pesoKg?: number; alturaCm?: number; sexo?: 'MASCULINO' | 'FEMININO'; objetivoTreino?: string; nivelTreino?: string; restricoes?: string[]; consentiuFeedSocial?: boolean; metaSemanal?: number }) =>
     api.post('/alunos/perfil', data),
 
   vincularAcademiaAluno: (academiaId: string) => api.patch('/alunos/academia', { academiaId }),
@@ -323,6 +323,19 @@ export const api = {
     const qs = query.toString()
     return api.get<Exercicio[]>(`/professores/exercicios${qs ? `?${qs}` : ''}`)
   },
+
+  // UX-004: lista exercícios substitutos por grupo muscular (endpoint público de treinos)
+  getExerciciosSubstitutos: (grupoMuscular?: string) => {
+    const qs = grupoMuscular ? `?grupo_muscular=${encodeURIComponent(grupoMuscular)}` : ''
+    return api.get<Exercicio[]>(`/treinos/exercicios${qs}`)
+  },
+
+  // UX-004: troca um exercício do treino em execução por outro (preserva séries já registradas)
+  substituirExercicio: (treinoId: string, treinoExercicioId: string, novoExercicioId: string) =>
+    api.post<Treino & { execucoes?: ExecucaoExercicio[]; ultimas_cargas?: UltimaCarga[] }>(
+      `/treinos/${treinoId}/exercicios/${treinoExercicioId}/substituir`,
+      { novo_exercicio_id: novoExercicioId },
+    ),
 
   criarExercicio: (data: { nome: string; maquina?: string; dica?: string; imagemUrl?: string }) =>
     api.post<Exercicio>('/treinos/exercicios', data),

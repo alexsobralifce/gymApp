@@ -422,6 +422,45 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
   return execucao
 }
 
+// ─── UX-004: Substituir exercício durante execução ─────────────────────────────
+
+export async function substituirExercicio(
+  treinoId: string,
+  treinoExercicioId: string,
+  novoExercicioId: string,
+  alunoId: string,
+) {
+  const treinoExercicio = await prisma.treinoExercicio.findUnique({
+    where: { id: treinoExercicioId },
+    include: {
+      treino: { select: { id: true, aluno_id: true, iniciado_em: true } },
+      exercicio: { select: { id: true, grupo_muscular: true } },
+    },
+  })
+  if (!treinoExercicio) throw new NotFoundError('Exercício do treino')
+  if (treinoExercicio.treino_id !== treinoId) throw new NotFoundError('Treino')
+  if (treinoExercicio.treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  const novoExercicio = await prisma.exercicio.findUnique({ where: { id: novoExercicioId } })
+  if (!novoExercicio) throw new NotFoundError('Exercício')
+
+  // Mesmo grupo muscular (se ambos tiverem definido — senão, permite sem forçar)
+  const grupoAtual = treinoExercicio.exercicio.grupo_muscular
+  const grupoNovo = novoExercicio.grupo_muscular
+  if (grupoAtual && grupoNovo && grupoAtual !== grupoNovo) {
+    throw new ValidationError('O exercício substituto deve ser do mesmo grupo muscular')
+  }
+
+  // Mantém ordem, séries, repetições e carga sugerida — só troca o exercício.
+  // execucao_exercicios registradas continuam apontando para o exercício antigo (integridade histórica).
+  await prisma.treinoExercicio.update({
+    where: { id: treinoExercicioId },
+    data: { exercicio_id: novoExercicioId },
+  })
+
+  return carregarTreinoComSessao(treinoId, treinoExercicio.treino.iniciado_em)
+}
+
 // ─── UC-23: Finalizar treino ──────────────────────────────────────────────────
 
 export async function finalizarTreino(
@@ -881,7 +920,12 @@ export async function obterEvolucaoMensal(alunoId: string, mes?: string) {
     })
   }
 
-  const metaSemanal = 3
+  const aluno = await prisma.aluno.findUnique({
+    where: { id: alunoId },
+    select: { meta_semanal: true },
+  })
+
+  const metaSemanal = Math.min(7, Math.max(1, aluno?.meta_semanal ?? 3))
   const frequenciaPercent = Math.min(100, Math.round((totalTreinos / (4 * metaSemanal)) * 100))
 
   return {
