@@ -26,6 +26,7 @@ let academiaId: string
 async function registerAndLogin(nome: string, email: string, senha: string, role: string) {
   const regRes = await app.inject({ method: 'POST', url: '/auth/register', payload: { nome, email, senha, role } })
   if (regRes.statusCode >= 400) throw new Error(`Register failed (${role}): ${regRes.body}`)
+  await prisma.usuario.update({ where: { email }, data: { email_verified: true } })
   const loginRes = await app.inject({ method: 'POST', url: '/auth/login', payload: { email, senha } })
   if (loginRes.statusCode >= 400) throw new Error(`Login failed (${role}): ${loginRes.body}`)
   return JSON.parse(loginRes.body).accessToken
