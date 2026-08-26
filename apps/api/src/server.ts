@@ -85,9 +85,34 @@ async function migrarTreinosConcluidos() {
   }
 }
 
+async function garantirExerciciosSincronizados() {
+  const prisma = new PrismaClient()
+  try {
+    const totalComGif = await prisma.exercicio.count({
+      where: { gif_url: { not: null } },
+    })
+
+    if (totalComGif < 100) {
+      console.log(`⚡ [Sync] Sincronizando exercícios e GIFs do GifDoTreino em segundo plano (encontrados apenas ${totalComGif})...`)
+      import('child_process').then(({ spawn }) => {
+        const syncProc = spawn('npx', ['tsx', 'prisma/sync-gifdotreino.ts'], {
+          detached: true,
+          stdio: 'ignore',
+        })
+        syncProc.unref()
+      })
+    }
+  } catch (err) {
+    console.error('⚠️ Falha ao verificar sincronização de exercícios:', err)
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
 async function start() {
   await migrarTreinosCadastrados()
   await migrarTreinosConcluidos()
+  await garantirExerciciosSincronizados()
 
   registerSocialEventListeners()
 

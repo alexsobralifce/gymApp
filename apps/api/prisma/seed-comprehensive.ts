@@ -122,7 +122,7 @@ async function main() {
     }
 
     const user = await prisma.usuario.create({
-      data: { nome: a.nome, email: a.email, senha_hash: hashAcad, role: Role.ACADEMIA },
+      data: { nome: a.nome, email: a.email, senha_hash: hashAcad, role: Role.ACADEMIA, email_verified: true, ativo: true },
     })
     const academia = await prisma.academia.create({
       data: { usuario_id: user.id, nome: a.nome, cnpj: a.cnpj, status: AcademiaStatus.ATIVO, max_professores: 20 },
@@ -158,7 +158,7 @@ async function main() {
       }
 
       const user = await prisma.usuario.create({
-        data: { nome, email, senha_hash: hashProf, role: Role.PROFESSOR },
+        data: { nome, email, senha_hash: hashProf, role: Role.PROFESSOR, email_verified: true, ativo: true },
       })
       const professor = await prisma.professor.create({
         data: { usuario_id: user.id, cref: `CREF-${String(nomeIdx + 1).padStart(4, '0')}/BR` },
@@ -216,7 +216,7 @@ async function main() {
     const consentiuSocial = Math.random() < 0.7
 
     const user = await prisma.usuario.create({
-      data: { nome, email, senha_hash: hash, role: Role.ALUNO },
+      data: { nome, email, senha_hash: hash, role: Role.ALUNO, email_verified: true, ativo: true },
     })
 
     const aluno = await prisma.aluno.create({
