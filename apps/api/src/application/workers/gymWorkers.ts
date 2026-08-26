@@ -4,6 +4,7 @@ import { prisma } from '../../infrastructure/database/prisma.js'
 import { assertTransicaoValida } from '../../domain/entities/TreinoStateMachine.js'
 import { sendDualPush } from '../../infrastructure/push/sendDualPush.js'
 import { calcularEAtualizar } from '../../application/usecases/correlacao/CorrelacaoService.js'
+import { podeEnviar } from '../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
 import { env } from '../../shared/env.js'
 import { connection as socialConnection } from '../../jobs/social/queues.js'
 import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
@@ -89,15 +90,18 @@ async function handleInatividade30min(_job: Job) {
       const temWebSub = !!treino.aluno.usuario.web_push_subscription
       console.log(`[Worker] Ocioso treino ${treino.id} (aluno: ${nomeAluno}) — web_sub=${temWebSub}`)
       console.log(`[Worker] Ociosidade treino ${treino.id} — aluno: ${nomeAluno}`)
-      await sendDualPush(
-        treino.aluno.usuario,
-        'Treino te esperando 💪',
-        'Você saiu no meio do treino. Volte e continue de onde parou!',
-        { url, url_estudo: url },
-      )
+
+      if (await podeEnviar(treino.aluno.usuario.id, 'lembreteTreino')) {
+        await sendDualPush(
+          treino.aluno.usuario,
+          'Treino te esperando 💪',
+          'Você saiu no meio do treino. Volte e continue de onde parou!',
+          { url, url_estudo: url },
+        )
+      }
 
       const professor = treino.aluno.professor
-      if (professor) {
+      if (professor && (await podeEnviar(professor.usuario.id, 'lembreteTreino'))) {
         await sendDualPush(
           professor.usuario,
           'Aluno ocioso no treino',
@@ -116,12 +120,14 @@ async function handleInatividade30min(_job: Job) {
     const longo = treino.iniciado_em <= limiteLongo
     if (longo && !treino.notificado_longo_em) {
       console.log(`[Worker] Treino longo 60min ${treino.id} — aluno: ${nomeAluno}`)
-      await sendDualPush(
-        treino.aluno.usuario,
-        'Treino longo demais ⏱️',
-        'Já se passou mais de 1 hora. Finalize o treino ou continue focado!',
-        { url, url_estudo: url },
-      )
+      if (await podeEnviar(treino.aluno.usuario.id, 'lembreteTreino')) {
+        await sendDualPush(
+          treino.aluno.usuario,
+          'Treino longo demais ⏱️',
+          'Já se passou mais de 1 hora. Finalize o treino ou continue focado!',
+          { url, url_estudo: url },
+        )
+      }
       await prisma.treino.update({
         where: { id: treino.id },
         data: { notificado_longo_em: new Date() },
@@ -133,14 +139,17 @@ async function handleInatividade30min(_job: Job) {
     if (!treino.notificado_concluir_em && ultima <= limiteConcluir) {
       console.log(`[Worker] Lembrete 30min treino ${treino.id} — aluno: ${nomeAluno}`)
       const urlConcluir = `${env.WEB_BASE_URL ?? ''}${url}`
-      await sendDualPush(
-        treino.aluno.usuario,
-        'Treino em andamento',
-        'Seu treino está parado há 30 minutos. Volte e conclua! 💪',
-        { url: urlConcluir },
-      )
+
+      if (await podeEnviar(treino.aluno.usuario.id, 'lembreteTreino')) {
+        await sendDualPush(
+          treino.aluno.usuario,
+          'Treino em andamento',
+          'Seu treino está parado há 30 minutos. Volte e conclua! 💪',
+          { url: urlConcluir },
+        )
+      }
       const professor = treino.aluno.professor
-      if (professor) {
+      if (professor && (await podeEnviar(professor.usuario.id, 'lembreteTreino'))) {
         await sendDualPush(
           professor.usuario,
           'Treino do aluno parado',
@@ -170,7 +179,7 @@ async function handleTreinoEmAberto(_job: Job) {
       aluno: {
         include: {
           usuario: { select: { nome: true } },
-          professor: { include: { usuario: { select: { expo_push_token: true, web_push_subscription: true } } } },
+          professor: { include: { usuario: { select: { id: true, expo_push_token: true, web_push_subscription: true } } } },
         },
       },
     },
@@ -197,7 +206,7 @@ async function handleTreinoEmAberto(_job: Job) {
 
     const nomeAluno = treino.aluno.usuario.nome
     const p = treino.aluno.professor
-    if (p) {
+    if (p && (await podeEnviar(p.usuario.id, 'lembreteTreino'))) {
       await sendDualPush(
         p.usuario,
         'Treino em aberto',
@@ -220,7 +229,7 @@ async function handleMensagemMotivacional(job: Job<{ alunoId: string }>) {
     }),
     prisma.aluno.findUnique({
       where: { id: alunoId },
-      include: { usuario: { select: { expo_push_token: true, web_push_subscription: true } } },
+      include: { usuario: { select: { id: true, expo_push_token: true, web_push_subscription: true } } },
     }),
   ])
 
@@ -235,20 +244,21 @@ async function handleMensagemMotivacional(job: Job<{ alunoId: string }>) {
   const mensagem = disponiveis[Math.floor(Math.random() * disponiveis.length)]
   if (!mensagem) return
 
+  // UX-005: usuário pode desabilitar mensagens motivacionais / notícias
+  if (!aluno || !(await podeEnviar(aluno.usuario.id, 'motivacional'))) return
+
   await prisma.mensagemMotivacionalEnviada.create({
     data: { aluno_id: alunoId, mensagem_id: mensagem.id },
   })
 
   console.log(`[Worker] Mensagem motivacional: "${mensagem.titulo}" → aluno ${alunoId}`)
 
-  if (aluno) {
-    await sendDualPush(
-      aluno.usuario,
-      mensagem.titulo,
-      mensagem.resumo,
-      { url: mensagem.url_estudo, url_estudo: mensagem.url_estudo },
-    )
-  }
+  await sendDualPush(
+    aluno.usuario,
+    mensagem.titulo,
+    mensagem.resumo,
+    { url: mensagem.url_estudo, url_estudo: mensagem.url_estudo },
+  )
 }
 
 async function handleCorrelacaoDesempenho(job: Job<{ alunoId: string }>) {
@@ -321,6 +331,23 @@ async function handleNewsPush(job: Job) {
     // Se não há notícia fresca não enviada, pula este usuário (sem reenvio de antigas)
     if (!noticia) {
       // Agenda próximo check em 1-7 dias mesmo sem push
+      const dias = 1 + Math.floor(Math.random() * 7)
+      const proxima = new Date()
+      proxima.setDate(proxima.getDate() + dias)
+      proxima.setUTCHours(11, 0, 0, 0)
+      const randomMin = Math.floor(Math.random() * 600)
+      proxima.setUTCMinutes(randomMin)
+
+      await prisma.usuario.update({
+        where: { id: usuario.id },
+        data: { proxima_noticia_em: proxima },
+      })
+      continue
+    }
+
+    // UX-005: usuário pode desabilitar notícias/mensagens motivacionais — agenda
+    // o próximo check para não consultá-lo a cada 30min.
+    if (!(await podeEnviar(usuario.id, 'motivacional'))) {
       const dias = 1 + Math.floor(Math.random() * 7)
       const proxima = new Date()
       proxima.setDate(proxima.getDate() + dias)

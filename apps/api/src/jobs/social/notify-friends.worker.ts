@@ -2,6 +2,7 @@ import { Job } from 'bullmq'
 import { prisma } from '../../infrastructure/database/prisma.js'
 import { sendPushNotification } from '../../infrastructure/push/expoPush.js'
 import { sendWebPush } from '../../infrastructure/push/webPush.js'
+import { podeEnviar } from '../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
 import type { PushSubscription } from 'web-push'
 
 interface NotifyPayload {
@@ -29,10 +30,13 @@ export async function handleNotifyFriends(job: Job<NotifyPayload>) {
 
   const amigos = await prisma.aluno.findMany({
     where: { id: { in: amigoIds } },
-    include: { usuario: { select: { expo_push_token: true, web_push_subscription: true } } },
+    include: { usuario: { select: { id: true, expo_push_token: true, web_push_subscription: true } } },
   })
 
   for (const amigo of amigos) {
+    // UX-005: respeita as preferências de notificação do amigo (tipo `social`)
+    if (!(await podeEnviar(amigo.usuario.id, 'social'))) continue
+
     const webSub = amigo.usuario.web_push_subscription as PushSubscription | null
     if (amigo.usuario.expo_push_token) {
       sendPushNotification(

@@ -127,6 +127,35 @@ export class ApiError extends Error {
   }
 }
 
+// ─── UX-005: Preferências de notificação ────────────────────────────────────
+export interface HorarioSilencioso {
+  ativo: boolean
+  inicio: string // "HH:mm"
+  fim: string // "HH:mm"
+}
+
+export type FrequenciaNotificacao = 'IMEDIATA' | 'RESUMO_DIARIO' | 'DESATIVADA'
+
+export interface PreferenciasNotificacao {
+  lembreteTreino: boolean
+  social: boolean
+  motivacional: boolean
+  conquistas: boolean
+  horarioSilencioso: HorarioSilencioso
+  frequencia: FrequenciaNotificacao
+}
+
+/**
+ * Distingue falha REAL de rede de um erro HTTP definitivo.
+ * Reutiliza a detecção existente do client: fetch lançou exceção (TypeError)
+ * ou refresh sem conexão, representado por ApiError com status 0 (RNF13).
+ * Usado pela fila offline (UX-001) para decidir entre reter e descartar itens.
+ */
+export function isNetworkError(err: unknown): boolean {
+  if (err instanceof ApiError) return err.status === 0
+  return true
+}
+
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown, isFormData?: boolean) =>
@@ -273,6 +302,13 @@ export const api = {
   getNotificacoes: () => api.get<import('../types/api').Notificacao[]>('/alunos/notificacoes'),
 
   visualizarNotificacoes: () => api.post('/alunos/notificacoes/visualizar'),
+
+  // ─── Notificações — Preferências (UX-005) ──────────
+  getPreferenciasNotificacao: () =>
+    api.get<PreferenciasNotificacao>('/alunos/notificacoes/preferencias'),
+
+  updatePreferenciasNotificacao: (data: Partial<PreferenciasNotificacao>) =>
+    api.patch<PreferenciasNotificacao>('/alunos/notificacoes/preferencias', data),
 
   // ─── Correlações e Evolução Mensal ─────────────────
   getCorrelacoes: () => api.get<CorrelacaoResponse>('/alunos/correlacoes'),

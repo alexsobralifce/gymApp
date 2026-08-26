@@ -43,6 +43,7 @@ import BibliotecaPlanos from './pages/aluno/BibliotecaPlanos'
 import AlunoMural from './pages/aluno/Mural'
 import AlunoAmizades from './pages/aluno/Amizades'
 import AlunoPrivacidade from './pages/aluno/Privacidade'
+import AlunoPreferenciasNotificacao from './pages/aluno/PreferenciasNotificacao'
 import AlunoClubes from './pages/aluno/Clubes'
 import Parceiros from './pages/aluno/Parceiros'
 import WelcomeCards from './pages/aluno/WelcomeCards'
@@ -103,6 +104,7 @@ export default function App() {
           <Route path="mural" element={<Navigate to="/feed" replace />} />
           <Route path="amizades" element={<AlunoAmizades />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
+          <Route path="notificacoes/preferencias" element={<AlunoPreferenciasNotificacao />} />
           <Route path="clubes" element={<AlunoClubes />} />
           <Route path="clubes/:id" element={<ClubeFeed />} />
           <Route path="parceiros" element={<Parceiros />} />

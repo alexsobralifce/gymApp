@@ -32,6 +32,7 @@ model Usuario {
   refreshTokens            RefreshToken[]
   ultima_atividade_em      DateTime?
   proxima_noticia_em       DateTime?
+  preferencias_notificacao Json?
   noticiasEnviadas         NoticiaEnviada[]
 
   @@map("usuarios")

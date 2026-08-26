@@ -5,6 +5,11 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 import { historicoDiasTreino, obterEvolucaoMensal } from '../../../application/usecases/treino/TreinoService.js'
+import {
+  getPreferenciasNotificacao,
+  salvarPreferenciasNotificacao,
+  PartialPreferenciasNotificacaoSchema,
+} from '../../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
 import { env } from '../../../shared/env.js'
 
 function absolutizeMedia(url: string | null | undefined): string | null {
@@ -414,6 +419,19 @@ export async function alunoRoutes(app: FastifyInstance) {
       data: { lida: true },
     })
     return reply.status(204).send()
+  })
+
+  /** GET /alunos/notificacoes/preferencias — UX-005: preferências de notificação (mescladas com defaults) */
+  app.get('/notificacoes/preferencias', { preHandler }, async (request, reply) => {
+    const preferencias = await getPreferenciasNotificacao(request.currentUser.sub)
+    return reply.status(200).send(preferencias)
+  })
+
+  /** PATCH /alunos/notificacoes/preferencias — UX-005: atualização parcial com deep-merge */
+  app.patch('/notificacoes/preferencias', { preHandler }, async (request, reply) => {
+    const body = PartialPreferenciasNotificacaoSchema.parse(request.body || {})
+    const preferencias = await salvarPreferenciasNotificacao(request.currentUser.sub, body)
+    return reply.status(200).send(preferencias)
   })
 
   /** GET /alunos/correlacoes — UC-32 (lê cache, sugere atualização após 30d) */
