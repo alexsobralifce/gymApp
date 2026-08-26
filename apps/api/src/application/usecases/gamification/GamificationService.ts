@@ -74,8 +74,10 @@ export class GamificationService {
     const latestDay = new Date(latest)
     latestDay.setHours(0, 0, 0, 0)
 
+    // UX-008: descanso programado não quebra a sequência (motivação sem punição).
+    // Até 1 dia de descanso entre treinos (dayDiff <= 2) mantém a streak viva.
     const dayDiff = Math.floor((today.getTime() - latestDay.getTime()) / 86400000)
-    if (dayDiff > 1) return 0
+    if (dayDiff > 2) return 0
 
     for (let i = 1; i < treinosConcluidos.length; i++) {
       const curr = new Date(treinosConcluidos[i].finalizado_em!)
@@ -84,10 +86,11 @@ export class GamificationService {
       prev.setHours(0, 0, 0, 0)
 
       const diff = Math.floor((prev.getTime() - curr.getTime()) / 86400000)
-      if (diff === 1) {
+      if (diff === 0) {
+        // mesmo dia: não incrementa nem quebra a sequência
+      } else if (diff <= 2) {
+        // dia consecutivo ou um único dia de descanso: sequência continua
         streak++
-      } else if (diff === 0) {
-        // same day, skip
       } else {
         break
       }

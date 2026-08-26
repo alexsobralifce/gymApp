@@ -26,6 +26,105 @@ export interface GerarTreinoIAInput {
 
 type PlanoComSessoes = Awaited<ReturnType<typeof listarPlanos>>[number]
 
+// ─── UX-007: Feedback-loop adaptation ────────────────────────────────────────
+// Adaptações determinísticas e auditáveis aplicadas na GERAÇÃO do treino,
+// baseadas nas avaliações de dificuldade das últimas sessões finalizadas.
+
+const SERIES_MINIMAS = 2
+const AUMENTO_CARGA_PCT = 1.05
+const INCREMENTO_CARGA_KG = 2.5
+const LIMITE_AVALIACOES = 5
+
+type AvaliacaoDificuldade = 'FACIL' | 'MODERADO' | 'INTENSO' | 'MUITO_INTENSO'
+
+const VALORES_AVALIACAO: readonly string[] = [
+  'FACIL',
+  'MODERADO',
+  'INTENSO',
+  'MUITO_INTENSO',
+]
+
+const EXPLICACAO_ESFORCO_ALTO =
+  'Você relatou esforço muito alto nas últimas sessões — reduzimos uma série de cada exercício para facilitar a recuperação.'
+const EXPLICACAO_CARGA_LEVE =
+  'Suas últimas sessões estão leves — sugerimos um pequeno aumento de carga para continuar evoluindo.'
+
+interface Adaptacoes {
+  adaptacoes: string[]
+  reduzirSeries: boolean
+  aumentarCarga: boolean
+}
+
+const SEM_ADAPTACOES: Adaptacoes = {
+  adaptacoes: [],
+  reduzirSeries: false,
+  aumentarCarga: false,
+}
+
+async function buscarUltimasAvaliacoes(alunoId: string): Promise<AvaliacaoDificuldade[]> {
+  const treinos = await prisma.treino.findMany({
+    where: { aluno_id: alunoId, avaliacao_dificuldade: { not: null } },
+    orderBy: { finalizado_em: 'desc' },
+    take: LIMITE_AVALIACOES,
+    select: { avaliacao_dificuldade: true },
+  })
+
+  return treinos
+    .map((t) => t.avaliacao_dificuldade)
+    .filter(
+      (valor): valor is AvaliacaoDificuldade =>
+        valor !== null && VALORES_AVALIACAO.includes(valor),
+    )
+}
+
+function calcularAdaptacoes(avaliacoes: AvaliacaoDificuldade[]): Adaptacoes {
+  if (avaliacoes.length === 0) return SEM_ADAPTACOES
+
+  const adaptacoes: string[] = []
+  // Regra 1: últimas 2 sessões MUITO_INTENSO → reduz volume (1 série a menos por exercício)
+  const reduzirSeries =
+    avaliacoes.length >= 2 &&
+    avaliacoes[0] === 'MUITO_INTENSO' &&
+    avaliacoes[1] === 'MUITO_INTENSO'
+  if (reduzirSeries) adaptacoes.push(EXPLICACAO_ESFORCO_ALTO)
+
+  // Regra 2: últimas 3 sessões FACIL → progressão de carga (+5%, arredondada para 2,5kg)
+  const aumentarCarga =
+    avaliacoes.length >= 3 &&
+    avaliacoes[0] === 'FACIL' &&
+    avaliacoes[1] === 'FACIL' &&
+    avaliacoes[2] === 'FACIL'
+  if (aumentarCarga) adaptacoes.push(EXPLICACAO_CARGA_LEVE)
+
+  return { adaptacoes, reduzirSeries, aumentarCarga }
+}
+
+function arredondarCargaParaCima(valorKg: number): number {
+  return Math.ceil(valorKg / INCREMENTO_CARGA_KG) * INCREMENTO_CARGA_KG
+}
+
+function aplicarAdaptacoesNasSessoes(
+  sessoes: any[],
+  { reduzirSeries, aumentarCarga }: Adaptacoes,
+): any[] {
+  return sessoes.map((sessao) => ({
+    ...sessao,
+    exercicios: (sessao.exercicios || []).map((ex: any) => {
+      let series = ex.series
+      let cargaSugeridaKg = ex.carga_sugerida_kg
+
+      if (reduzirSeries && typeof series === 'number' && series > SERIES_MINIMAS) {
+        series = Math.max(SERIES_MINIMAS, series - 1)
+      }
+      if (aumentarCarga && typeof cargaSugeridaKg === 'number' && cargaSugeridaKg > 0) {
+        cargaSugeridaKg = arredondarCargaParaCima(cargaSugeridaKg * AUMENTO_CARGA_PCT)
+      }
+
+      return { ...ex, series, carga_sugerida_kg: cargaSugeridaKg }
+    }),
+  }))
+}
+
 const SPLIT_GRUPOS: Record<string, string[]> = {
   PUSH: ['peito', 'ombros', 'bracos', 'braços', 'triceps', 'tríceps'],
   PULL: ['costas', 'bracos', 'braços', 'biceps', 'bíceps'],
@@ -331,8 +430,12 @@ export async function gerarTreinoIA(alunoId: string, input: GerarTreinoIAInput &
   const aluno = await prisma.aluno.findUnique({ where: { id: alunoId } })
   if (!aluno) throw new NotFoundError('Aluno')
 
+  // UX-007: adaptações de feedback calculadas ANTES da geração (auditável/determinístico)
+  const avaliacoes = await buscarUltimasAvaliacoes(alunoId)
+  const adaptacoesFeedback = calcularAdaptacoes(avaliacoes)
+
   if (input.gruposMusculares && input.gruposMusculares.length > 0) {
-    return gerarTreinoPorGrupos(alunoId, {
+    const gerado = await gerarTreinoPorGrupos(alunoId, {
       objetivo: input.objetivo,
       nivel: input.nivel,
       diasPorSemana: input.diasPorSemana,
@@ -341,6 +444,14 @@ export async function gerarTreinoIA(alunoId: string, input: GerarTreinoIAInput &
       splitPreferido: input.splitPreferido || null,
       restricoes: input.restricoes || aluno.restricoes || [],
     })
+
+    if (adaptacoesFeedback.adaptacoes.length === 0) return gerado
+
+    return {
+      ...gerado,
+      sessoes: aplicarAdaptacoesNasSessoes(gerado.sessoes, adaptacoesFeedback),
+      adaptacoes: adaptacoesFeedback.adaptacoes,
+    }
   }
 
   const sexo = aluno.sexo || 'AMBOS'
@@ -409,6 +520,12 @@ export async function gerarTreinoIA(alunoId: string, input: GerarTreinoIAInput &
     todasSubstituicoes.push(...substituicoes)
   }
 
+  // UX-007: aplica adaptações de feedback nas sessões geradas (volume/carga)
+  const sessoesFinal =
+    adaptacoesFeedback.adaptacoes.length > 0
+      ? aplicarAdaptacoesNasSessoes(todasSessoes, adaptacoesFeedback)
+      : todasSessoes
+
   const gruposLabel =
     (input.gruposMusculares && input.gruposMusculares.length > 0
       ? input.gruposMusculares.join(', ')
@@ -423,7 +540,7 @@ export async function gerarTreinoIA(alunoId: string, input: GerarTreinoIAInput &
     planoIds: planosEscolhidos.map((p) => p.id),
     grupo_treino: `${input.objetivo}_${input.nivel}_${input.diasPorSemana}X`,
     nome_treino: planosEscolhidos.length > 1 ? `Programa ${gruposLabel}` : planoPrincipal.nome,
-    sessoes: todasSessoes,
+    sessoes: sessoesFinal,
     score_match: scorePrincipal,
     justificativa_match: `Plano(s) escolhido(s) por: ${detalhesPrincipal.join(', ') || 'melhor match disponível'}. ${nomesPlanos}`,
     grupos_solicitados: input.gruposMusculares || [],
@@ -436,6 +553,7 @@ export async function gerarTreinoIA(alunoId: string, input: GerarTreinoIAInput &
         : 'Sem restrições declaradas.',
       ...todasSubstituicoes.slice(0, 5),
     ],
+    adaptacoes: adaptacoesFeedback.adaptacoes,
   }
 }
 

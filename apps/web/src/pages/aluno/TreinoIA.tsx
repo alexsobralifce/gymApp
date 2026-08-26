@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
 import { GRUPOS_GRANULARES } from '../../lib/exerciseFilters'
 import { sugerirNomes } from '../../lib/treinoNome'
+import { Sparkles } from 'lucide-react'
 import { ChevronLeftIcon } from '../../components/icons/Icon'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Toast from '../../components/ui/Toast'
@@ -563,6 +564,22 @@ export default function TreinoIA() {
               </div>
             )}
           </div>
+
+          {fichaGerada.adaptacoes?.length > 0 && (
+            <div
+              aria-label="Ajustes automáticos"
+              className="flex items-start gap-2.5 rounded-xl border border-surface-input bg-surface-card px-3.5 py-3"
+            >
+              <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-info" aria-hidden="true" />
+              <ul className="space-y-1">
+                {(fichaGerada.adaptacoes as string[]).map((explicacao: string) => (
+                  <li key={explicacao} className="text-xs text-text-muted leading-relaxed">
+                    {explicacao}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Nome do Treino</label>
