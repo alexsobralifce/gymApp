@@ -3,7 +3,7 @@ import { useParams, useNavigate, useBlocker } from 'react-router-dom'
 import { KeepAwake } from '@capgo/capacitor-keep-awake'
 import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, CheckIcon, ChevronLeftIcon, XIcon } from '../../components/icons/Icon'
-import { RepeatIcon, CloudOffIcon, GaugeIcon, ChevronDownIcon } from 'lucide-react'
+import { RepeatIcon, CloudOffIcon, GaugeIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
@@ -203,6 +203,22 @@ export default function AlunoTreinoExecucao() {
   const [dismissedSessaoLonga, setDismissedSessaoLonga] = useState(false)
   const [dismissedRpeAlto, setDismissedRpeAlto] = useState(false)
   const setsRpeAlto = execucoes.filter((e) => (e.rpe ?? 0) >= RPE_ALTO_MIN).length
+
+  // ─── Ocultar exercícios concluídos (UX) ────────────────────
+  const [mostrarConcluidos, setMostrarConcluidos] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('gymapp_show_completed_exercises') === '1'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try {
+      localStorage.setItem('gymapp_show_completed_exercises', mostrarConcluidos ? '1' : '0')
+    } catch {
+      /* storage indisponível */
+    }
+  }, [mostrarConcluidos])
 
   // ─── UX-004: Substituição de exercício ────────────────────
   const [substituindoExercicio, setSubstituindoExercicio] = useState<TreinoExercicio | null>(null)
@@ -464,6 +480,15 @@ export default function AlunoTreinoExecucao() {
   const seriesUnicas = new Set(execucoes.map((e) => `${e.exercicio_id}-${e.serie_numero}`))
   const concluidoSeries = seriesUnicas.size
   const progressoPercent = totalSeries > 0 ? Math.min(100, (concluidoSeries / totalSeries) * 100) : 0
+
+  // Exercícios concluídos (todas as séries registradas)
+  const completedIds = new Set<string>(
+    exercicios
+      .filter((ex) => execucoes.filter((e) => e.exercicio_id === ex.exercicio_id).length >= ex.series)
+      .map((ex) => ex.id),
+  )
+  const exerciciosConcluidos = exercicios.filter((ex) => completedIds.has(ex.id))
+  const exerciciosVisiveis = mostrarConcluidos ? exercicios : exercicios.filter((ex) => !completedIds.has(ex.id))
 
   function handleInputChange(exercicioId: string, serieNumero: number, field: 'carga' | 'reps', value: string) {
     const key = `${exercicioId}-${serieNumero}`
@@ -748,7 +773,30 @@ export default function AlunoTreinoExecucao() {
         </div>
 
         <OfflinePreloadBadge exercicios={exercicios} className="w-full justify-center text-center" />
-        {exercicios.map((ex, exIdx) => {
+
+        {/* Toggle exercícios concluídos */}
+        {exerciciosConcluidos.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setMostrarConcluidos(!mostrarConcluidos)}
+            className="w-full flex items-center justify-between rounded-xl border border-surface-input bg-surface-card px-4 py-2.5 text-xs font-semibold text-text-muted hover:text-text active:scale-[0.99] transition-all cursor-pointer min-h-11 mb-3"
+            aria-label={mostrarConcluidos ? 'Ocultar exercícios concluídos' : 'Mostrar exercícios concluídos'}
+          >
+            <span className="flex items-center gap-2">
+              {mostrarConcluidos ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+              {mostrarConcluidos
+                ? `Ocultar ${exerciciosConcluidos.length} concluído(s)`
+                : `Mostrar ${exerciciosConcluidos.length} concluído(s)`}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
+              <CheckIcon className="h-2.5 w-2.5" />
+              {exerciciosConcluidos.length}/{exercicios.length}
+            </span>
+          </button>
+        )}
+
+        {exerciciosVisiveis.map((ex) => {
+          const exIdx = exercicios.findIndex((e) => e.id === ex.id)
           const exDetail = ex.exercicio
           const seriesRegistradas = execucoes.filter((e) => e.exercicio_id === ex.exercicio_id).length
           const exercicioCompleto = seriesRegistradas >= ex.series
@@ -921,6 +969,16 @@ export default function AlunoTreinoExecucao() {
             </div>
           )
         })}
+
+        {/* Contador de exercícios concluídos no rodapé */}
+        {exerciciosConcluidos.length > 0 && !mostrarConcluidos && (
+          <div className="flex items-center justify-center gap-2 py-3 text-xs text-text-muted">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
+              <CheckIcon className="h-3 w-3" />
+              {exerciciosConcluidos.length}/{exercicios.length} concluídos
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Drawer de Substituição de Exercício (UX-004) */}
