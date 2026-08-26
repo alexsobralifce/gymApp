@@ -424,6 +424,15 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
 
 // ─── UX-004: Substituir exercício durante execução ─────────────────────────────
 
+// RF05: A substituição de exercício só faz sentido enquanto o treino é planejável
+// ou está em andamento. Fora desses estados (CADASTRADO/ENVIADO/CONCLUIDO) a troca
+// viola a máquina de estados e é rejeitada.
+const STATUS_PERMITIDOS_SUBSTITUICAO = new Set<TreinoStatus>([
+  TreinoStatus.ACEITO,
+  TreinoStatus.EM_ABERTO,
+  TreinoStatus.EM_EXECUCAO,
+])
+
 export async function substituirExercicio(
   treinoId: string,
   treinoExercicioId: string,
@@ -433,13 +442,18 @@ export async function substituirExercicio(
   const treinoExercicio = await prisma.treinoExercicio.findUnique({
     where: { id: treinoExercicioId },
     include: {
-      treino: { select: { id: true, aluno_id: true, iniciado_em: true } },
+      treino: { select: { id: true, aluno_id: true, iniciado_em: true, status: true } },
       exercicio: { select: { id: true, grupo_muscular: true } },
     },
   })
   if (!treinoExercicio) throw new NotFoundError('Exercício do treino')
   if (treinoExercicio.treino_id !== treinoId) throw new NotFoundError('Treino')
   if (treinoExercicio.treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  // RF05: rejeita substituição fora dos estados planejáveis/em andamento
+  if (!STATUS_PERMITIDOS_SUBSTITUICAO.has(treinoExercicio.treino.status)) {
+    throw new ValidationError('Só é possível substituir exercícios em treinos aceitos, em aberto ou em execução')
+  }
 
   const novoExercicio = await prisma.exercicio.findUnique({ where: { id: novoExercicioId } })
   if (!novoExercicio) throw new NotFoundError('Exercício')

@@ -191,6 +191,52 @@ describe.skipIf(!dbOk)('UX-004 — POST /treinos/:id/exercicios/:treinoExercicio
     expect(te.exercicio_id).toBe(exSemGrupo)
   })
 
+  it('status: rejeita substituição em treino CONCLUIDO com 422 VALIDATION_ERROR', async () => {
+    const exPeito = await criarExercicio('Supino Concluido', 'PEITO')
+    const exPeito2 = await criarExercicio('Supino Concluido 2', 'PEITO')
+    const { treinoId, treinoExercicioId } = await criarTreinoAutogestao(alunoAToken, exPeito)
+
+    // Força o treino para CONCLUIDO (fora dos estados permitidos pela RF05)
+    await prisma.treino.update({ where: { id: treinoId }, data: { status: 'CONCLUIDO' } })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/treinos/${treinoId}/exercicios/${treinoExercicioId}/substituir`,
+      headers: { authorization: `Bearer ${alunoAToken}` },
+      payload: { novo_exercicio_id: exPeito2 },
+    })
+
+    expect(res.statusCode).toBe(422)
+    expect(JSON.parse(res.body).error).toBe('VALIDATION_ERROR')
+    expect(JSON.parse(res.body).message).toBe('Só é possível substituir exercícios em treinos aceitos, em aberto ou em execução')
+    // Não alterou o exercício no banco
+    const te = await prisma.treinoExercicio.findUniqueOrThrow({ where: { id: treinoExercicioId } })
+    expect(te.exercicio_id).toBe(exPeito)
+  })
+
+  it('status: rejeita substituição em treino CADASTRADO com 422 VALIDATION_ERROR', async () => {
+    const exPeito = await criarExercicio('Supino Cadastrado', 'PEITO')
+    const exPeito2 = await criarExercicio('Supino Cadastrado 2', 'PEITO')
+    const { treinoId, treinoExercicioId } = await criarTreinoAutogestao(alunoAToken, exPeito)
+
+    // Força o treino para CADASTRADO (fora dos estados permitidos pela RF05)
+    await prisma.treino.update({ where: { id: treinoId }, data: { status: 'CADASTRADO' } })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/treinos/${treinoId}/exercicios/${treinoExercicioId}/substituir`,
+      headers: { authorization: `Bearer ${alunoAToken}` },
+      payload: { novo_exercicio_id: exPeito2 },
+    })
+
+    expect(res.statusCode).toBe(422)
+    expect(JSON.parse(res.body).error).toBe('VALIDATION_ERROR')
+    expect(JSON.parse(res.body).message).toBe('Só é possível substituir exercícios em treinos aceitos, em aberto ou em execução')
+    // Não alterou o exercício no banco
+    const te = await prisma.treinoExercicio.findUniqueOrThrow({ where: { id: treinoExercicioId } })
+    expect(te.exercicio_id).toBe(exPeito)
+  })
+
   it('IDOR: ALUNO B não pode substituir exercício no treino de ALUNO A', async () => {
     const exPeito = await criarExercicio('Supino IDOR', 'PEITO')
     const exPeito2 = await criarExercicio('Supino IDOR 2', 'PEITO')
