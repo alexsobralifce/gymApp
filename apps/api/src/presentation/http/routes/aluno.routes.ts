@@ -5,6 +5,7 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 import { historicoDiasTreino, obterEvolucaoMensal, obterRetomada } from '../../../application/usecases/treino/TreinoService.js'
+import { obterHistorico } from '../../../application/usecases/treino/HistoricoExercicioService.js'
 import {
   getPreferenciasNotificacao,
   salvarPreferenciasNotificacao,
@@ -535,6 +536,17 @@ export async function alunoRoutes(app: FastifyInstance) {
   app.get('/retomada', { preHandler }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
     const resultado = await obterRetomada(aluno.id)
+    return reply.status(200).send(resultado)
+  })
+
+  /** GET /alunos/exercicios/:exercicioId/historico — UX-013: progressão de carga/volume/1RM por exercício */
+  app.get('/exercicios/:exercicioId/historico', { preHandler }, async (request, reply) => {
+    const { exercicioId } = z.object({ exercicioId: z.string() }).parse(request.params)
+    const { periodo } = z.object({
+      periodo: z.enum(['7d', '30d', '90d', 'tudo']).default('90d'),
+    }).parse(request.query || {})
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const resultado = await obterHistorico(aluno.id, exercicioId, periodo)
     return reply.status(200).send(resultado)
   })
 }

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Exercicio } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
-import { XIcon, DumbbellIcon, PlusIcon } from '../icons/Icon'
+import { XIcon, DumbbellIcon, PlusIcon, ChartLineIcon } from '../icons/Icon'
+import { useAuthStore } from '../../stores/auth'
 
 interface ExercisePreviewModalProps {
   exercicio: Exercicio | null
@@ -19,6 +21,7 @@ export default function ExercisePreviewModal({
   onToggleAdd,
 }: ExercisePreviewModalProps) {
   const [imgFailed, setImgFailed] = useState(false)
+  const user = useAuthStore((s) => s.user)
 
   // Reset img error state when exercise changes
   useEffect(() => {
@@ -187,6 +190,18 @@ export default function ExercisePreviewModal({
               </span>
               <p className="leading-snug text-amber-200/90">{exercicio.dica}</p>
             </div>
+          )}
+
+          {/* UX-013: Acesso ao histórico de desempenho do exercício (apenas ALUNO) */}
+          {user?.role === 'ALUNO' && (
+            <Link
+              to={`/exercicios/${exercicio.id}/historico`}
+              className="flex items-center justify-center gap-1.5 min-h-11 w-full rounded-xl bg-surface border border-surface-input text-xs font-bold text-text-muted hover:text-primary hover:border-primary/30 transition-colors cursor-pointer"
+              aria-label={`Ver histórico de execuções de ${exercicio.nome}`}
+            >
+              <ChartLineIcon className="h-4 w-4" />
+              Ver histórico
+            </Link>
           )}
         </div>
 

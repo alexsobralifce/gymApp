@@ -17,6 +17,7 @@ import AlunoTreinoExecucao from './pages/aluno/TreinoExecucao'
 import AlunoTreinoConclusao from './pages/aluno/TreinoConclusao'
 import AlunoMedidas from './pages/aluno/Medidas'
 import AlunoEvolucao from './pages/aluno/Evolucao'
+import HistoricoExercicio from './pages/aluno/HistoricoExercicio'
 import ProfessorDashboard from './pages/professor/Dashboard'
 import ProfessorAlunoCorrelacoes from './pages/professor/AlunoCorrelacoes'
 import ProfessorCriarTreino from './pages/professor/CriarTreino'
@@ -39,6 +40,7 @@ import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
 import AlunoCriarTreino from './pages/aluno/CriarTreinoAluno'
 import TreinoIA from './pages/aluno/TreinoIA'
 import AlunoDados from './pages/aluno/DadosAluno'
+import AlunoWearables from './pages/aluno/Wearables'
 import BibliotecaPlanos from './pages/aluno/BibliotecaPlanos'
 import AlunoMural from './pages/aluno/Mural'
 import AlunoAmizades from './pages/aluno/Amizades'
@@ -91,6 +93,7 @@ export default function App() {
           <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
           <Route path="biblioteca-planos" element={<BibliotecaPlanos />} />
           <Route path="dados" element={<AlunoDados />} />
+          <Route path="wearables" element={<AlunoWearables />} />
           <Route path="treino/novo" element={<AlunoCriarTreino />} />
           <Route path="treino/:id/editar" element={<AlunoCriarTreino />} />
           <Route path="treino/ia" element={<TreinoIA />} />
@@ -100,6 +103,7 @@ export default function App() {
           <Route path="documentacao" element={<Documentacao />} />
           <Route path="medidas" element={<AlunoMedidas />} />
           <Route path="evolucao" element={<AlunoEvolucao />} />
+          <Route path="exercicios/:exercicioId/historico" element={<HistoricoExercicio />} />
           <Route path="feed" element={<AlunoMural />} />
           <Route path="mural" element={<Navigate to="/feed" replace />} />
           <Route path="amizades" element={<AlunoAmizades />} />
