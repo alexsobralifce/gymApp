@@ -4,7 +4,7 @@ import { prisma } from '../../infrastructure/database/prisma.js'
 import { assertTransicaoValida } from '../../domain/entities/TreinoStateMachine.js'
 import { sendDualPush } from '../../infrastructure/push/sendDualPush.js'
 import { calcularEAtualizar } from '../../application/usecases/correlacao/CorrelacaoService.js'
-import { podeEnviar } from '../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
+import { podeEnviar, mergeComDefaults, podeEnviarResumoDiarioComPrefs } from '../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
 import { env } from '../../shared/env.js'
 import { connection as socialConnection } from '../../jobs/social/queues.js'
 import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
@@ -22,6 +22,7 @@ let mensagemMotivaicionalQueue: Queue | null = null
 let correlacaoQueue: Queue | null = null
 let newsFetchQueue: Queue | null = null
 let newsPushQueue: Queue | null = null
+let resumoDiarioQueue: Queue | null = null
 
 let inatividade30minWorker: Worker | null = null
 let treinoEmAbertoWorker: Worker | null = null
@@ -29,6 +30,7 @@ let mensagemMotivacionalWorker: Worker | null = null
 let correlacaoWorker: Worker | null = null
 let newsFetchWorker: Worker | null = null
 let newsPushWorker: Worker | null = null
+let resumoDiarioWorker: Worker | null = null
 
 let socialFanoutWorker: Worker | null = null
 let socialNotifyWorker: Worker | null = null
@@ -385,10 +387,159 @@ async function handleNewsPush(job: Job) {
   job.log(`News push: processed ${usuarios.length} users`)
 }
 
+// ─── Resumo diário (frequência RESUMO_DIARIO) ───────────────────────────────
+// Usuários com `frequencia = RESUMO_DIARIO` não recebem pushes individuais
+// (podeEnviarComPrefs retorna false). Este worker consolida as notificações
+// não lidas do dia em UM push único por usuário, ~19:00.
+// Horário espelhado no cron do treino-em-aberto (23:30) — mesma semântica de
+// fuso do servidor (America/Sao_Paulo no Railway).
+
+const DIGEST_CRON = '0 19 * * *'
+const DIGEST_TITLE = 'Seu resumo do dia'
+
+type CategoriaResumo = 'lembreteTreino' | 'social' | 'motivacional' | 'noticias'
+
+const RESUMO_LABELS: Record<CategoriaResumo, { singular: string; plural: string }> = {
+  lembreteTreino: { singular: 'lembrete de treino', plural: 'lembretes de treino' },
+  social: { singular: 'novidade social', plural: 'novidades sociais' },
+  motivacional: { singular: 'mensagem motivacional', plural: 'mensagens motivacionais' },
+  noticias: { singular: 'notícia', plural: 'notícias' },
+}
+
+/**
+ * Deriva a categoria do resumo a partir do `tipo` da linha em `notificacoes`.
+ * O enum atual (NOVO_TREINO | PROFESSOR_ATRIBUIDO) mapeia para "lembrete de
+ * treino"; os demais padrões são defensivos/forward-compatible para tipos
+ * sociais, motivacionais e de notícias que venham a criar linhas no futuro.
+ */
+function categoriaResumo(tipo: string): CategoriaResumo {
+  const t = tipo.toUpperCase()
+  if (/(SOCIAL|CURTIDA|COMENTARIO|AMIZADE|SEGUIR|CLUBE)/.test(t)) return 'social'
+  if (/(MOTIVACIONAL|MENSAGEM)/.test(t)) return 'motivacional'
+  if (/(NOTICIA|NEWS)/.test(t)) return 'noticias'
+  return 'lembreteTreino'
+}
+
+/** "3 lembretes de treino e 1 novidade social esperam por você." */
+function montarCorpoResumo(counts: Partial<Record<CategoriaResumo, number>>): string {
+  const partes: string[] = []
+  let total = 0
+  for (const categoria of Object.keys(RESUMO_LABELS) as CategoriaResumo[]) {
+    const qtd = counts[categoria] ?? 0
+    if (qtd === 0) continue
+    total += qtd
+    partes.push(`${qtd} ${qtd === 1 ? RESUMO_LABELS[categoria].singular : RESUMO_LABELS[categoria].plural}`)
+  }
+  if (partes.length === 0) return ''
+  const verbo = total === 1 ? 'espera' : 'esperam'
+  if (partes.length === 1) return `${partes[0]} ${verbo} por você.`
+  const ultima = partes.pop()!
+  return `${partes.join(', ')} e ${ultima} ${verbo} por você.`
+}
+
+/**
+ * Digest diário: agrupa as notificações não lidas de hoje por categoria e envia
+ * UM push de resumo por usuário RESUMO_DIARIO.
+ *
+ * Decisão de design — leitura/lida: as linhas NÃO são marcadas como lidas. A
+ * lista in-app (`GET /alunos/notificacoes`) filtra `lida: false`, então marcar
+ * como lida removeria o histórico do app. Em vez disso, o timestamp do último
+ * digest é gravado em `preferencias_notificacao.ultimoResumoEnviadoEm` (campo
+ * JSON additivo, sem migração) e usado como dedupe: cada linha entra no digest
+ * apenas na primeira execução após sua criação. Linhas não lidas mais antigas
+ * que o marcador permanecem no app, mas não são re-digestadas (sem digests
+ * repetidos).
+ */
+export async function handleResumoDiario(_job: Job) {
+  const agora = new Date()
+  const inicioDoDia = new Date(agora)
+  inicioDoDia.setHours(0, 0, 0, 0)
+
+  // Candidatos pragmáticos: em vez de filtrar o JSON aninhado via Prisma
+  // (`path` em Json é suportado no Postgres, mas o shape de
+  // preferencias_notificacao é irregular), carregamos alunos com notificações
+  // não lidas de hoje e filtramos a frequência em JS. Escala atual é pequena —
+  // trade-off aceito e documentado.
+  const naoLidas = await prisma.notificacao.findMany({
+    where: {
+      lida: false,
+      criado_em: { gte: inicioDoDia },
+    },
+    select: { id: true, aluno_id: true, tipo: true, criado_em: true },
+    orderBy: { criado_em: 'asc' },
+  })
+
+  if (naoLidas.length === 0) {
+    console.log('[Worker] Resumo diário: nenhuma notificação não lida hoje')
+    return
+  }
+
+  const alunoIds = [...new Set(naoLidas.map((n) => n.aluno_id))]
+
+  const alunos = await prisma.aluno.findMany({
+    where: { id: { in: alunoIds } },
+    select: {
+      id: true,
+      usuario: {
+        select: {
+          id: true,
+          nome: true,
+          expo_push_token: true,
+          web_push_subscription: true,
+          preferencias_notificacao: true,
+        },
+      },
+    },
+  })
+
+  const alunoPorId = new Map(alunos.map((a) => [a.id, a]))
+  let enviados = 0
+
+  for (const alunoId of alunoIds) {
+    const usuario = alunoPorId.get(alunoId)?.usuario
+    if (!usuario) continue
+
+    const prefs = mergeComDefaults(usuario.preferencias_notificacao)
+    // Frequência + horário silencioso (19:00 dentro da janela → pula o dia)
+    if (!podeEnviarResumoDiarioComPrefs(prefs, agora)) continue
+
+    // Dedupe: apenas linhas criadas após o último digest enviado
+    const ultimoEnvio = prefs.ultimoResumoEnviadoEm
+    const rows = naoLidas.filter(
+      (n) =>
+        n.aluno_id === alunoId &&
+        (!ultimoEnvio || new Date(n.criado_em).getTime() > new Date(ultimoEnvio).getTime()),
+    )
+    if (rows.length === 0) continue
+
+    const counts: Partial<Record<CategoriaResumo, number>> = {}
+    for (const row of rows) {
+      const categoria = categoriaResumo(row.tipo)
+      counts[categoria] = (counts[categoria] ?? 0) + 1
+    }
+
+    const corpo = montarCorpoResumo(counts)
+    if (!corpo) continue
+
+    await sendDualPush(usuario, DIGEST_TITLE, corpo, { url: '/' }).catch(() => {})
+
+    // Persiste o marcador (não marca lida — ver doc acima)
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { preferencias_notificacao: { ...prefs, ultimoResumoEnviadoEm: agora.toISOString() } },
+    })
+
+    enviados += 1
+    console.log(`[Worker] Resumo diário → ${usuario.nome} (${rows.length} notificações): ${corpo}`)
+  }
+
+  console.log(`[Worker] Resumo diário: ${enviados} digests enviados`)
+}
+
 // ─── Agendamento de jobs recorrentes ─────────────────────────────────────────
 
 async function scheduleRecurringJobs() {
-  if (!inatividade30minQueue || !treinoEmAbertoQueue || !newsFetchQueue || !newsPushQueue) return
+  if (!inatividade30minQueue || !treinoEmAbertoQueue || !newsFetchQueue || !newsPushQueue || !resumoDiarioQueue) return
 
   await inatividade30minQueue.add('check-inatividade', {}, {
     repeat: { every: 2 * 60 * 1000 },
@@ -407,6 +558,14 @@ async function scheduleRecurringJobs() {
 
   await newsPushQueue.add('push-news', {}, {
     repeat: { every: 30 * 60 * 1000 },
+    removeOnComplete: true,
+  })
+
+  await resumoDiarioQueue.add('send-digest', {}, {
+    // Idempotência por dia: agendamento único em cron diário (roda 1x/dia).
+    // O marcador `preferencias_notificacao.ultimoResumoEnviadoEm` ainda protege
+    // contra re-execução manual/backfill no mesmo dia.
+    repeat: { pattern: DIGEST_CRON },
     removeOnComplete: true,
   })
 
@@ -454,6 +613,7 @@ export async function startWorkers() {
   correlacaoQueue = new Queue('correlacao-desempenho', { connection })
   newsFetchQueue = new Queue('news-fetch', { connection })
   newsPushQueue = new Queue('news-push', { connection })
+  resumoDiarioQueue = new Queue('resumo-diario', { connection })
 
   inatividade30minWorker = new Worker('inatividade-30min', handleInatividade30min, { connection })
   treinoEmAbertoWorker = new Worker('treino-em-aberto', handleTreinoEmAberto, { connection })
@@ -461,6 +621,7 @@ export async function startWorkers() {
   correlacaoWorker = new Worker('correlacao-desempenho', handleCorrelacaoDesempenho, { connection })
   newsFetchWorker = new Worker('news-fetch', handleNewsFetch, { connection })
   newsPushWorker = new Worker('news-push', handleNewsPush, { connection })
+  resumoDiarioWorker = new Worker('resumo-diario', handleResumoDiario, { connection })
 
   socialFanoutWorker = new Worker('social-fanout', handleFanoutPost, { connection: socialConnection })
   socialNotifyWorker = new Worker('social-notify', handleNotifyFriends, { connection: socialConnection })
@@ -475,6 +636,7 @@ export async function startWorkers() {
 
   newsFetchWorker.on('failed', (job, err) => console.error('[News Fetch] Job failed after retries:', job?.id, err.message))
   newsPushWorker.on('failed', (job, err) => console.error('[News Push] Job failed after retries:', job?.id, err.message))
+  resumoDiarioWorker.on('failed', (job, err) => console.error('[Resumo Diário] Job failed after retries:', job?.id, err.message))
 
   await scheduleRecurringJobs()
 }
@@ -484,10 +646,10 @@ export async function stopWorkers() {
   started = false
 
   const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker,
-    newsFetchWorker, newsPushWorker,
+    newsFetchWorker, newsPushWorker, resumoDiarioWorker,
     socialFanoutWorker, socialNotifyWorker, socialBadgeWorker, socialLeaderboardWorker]
   const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue,
-    newsFetchQueue, newsPushQueue]
+    newsFetchQueue, newsPushQueue, resumoDiarioQueue]
 
   await Promise.all([
     ...workers.map((w) => w?.close()),

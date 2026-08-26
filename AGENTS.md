@@ -8,6 +8,7 @@ Este arquivo serve como base de conhecimento para qualquer assistente de IA/LLM 
 
 1. **Leitura de Skills**: Antes de executar qualquer comando, ler todas as skills dentro de `.agent/skills/`. Só prossiga com comandos ou edições após carregar e considerar o conteúdo dessas skills.
 2. **Atualização Contínua**: Sempre que modificações no sistema acrescentarem novos requisitos, modelos ou regras de negócio, o arquivo `AGENTS.md` deve ser atualizado para manter a base de conhecimento sincronizada.
+3. **Padrão Linguístico 100% em Português (PT-BR) nos Modelos**: Todos os modelos de dados, entidades de domínio, exercícios, treinos, grupos musculares, equipamentos, instruções didáticas (`passos_pt`), explicações conceituais (`descricao_pt`), dicas (`dica`), laudos, feedbacks e interfaces devem ser **100% em português brasileiro claro, didático e humanizado**. Termos em inglês não adaptados (ex: *bench press, deadlift, squat, lat pulldown, dumbbell, barbell, lying leg curl, straight legs, circular toe touch, chest, back, waist, body weight*) são **terminantemente proibidos** em campos apresentados, entidades de domínio e payloads dos modelos.
 
 ---
 
@@ -23,11 +24,13 @@ O **GymApp (ENDORFINAPP)** é uma plataforma multi-tenant completa de gerenciame
 - **Landing Page**: Projeto separado em `LandingPage/` (Vite + React + Tailwind)
 - **Marca**: **ENDORFINAPP** — slogan "A Química do Crescimento" — logotipo ECG + Raio em verde neon
 
-### Origem dos Dados de Exercícios
-- **963 exercícios** sincronizados do site https://www.gifdotreino.com
-- Script `apps/api/prisma/sync-gifdotreino.ts` — crawla API paginada, baixa descrições PT, faz upsert no banco
-- Executado automaticamente no startup do Railway via `apps/api/railway-start.sh`
-- Cada exercício tem: nome PT, GIF animado, thumbnail, descrição completa, passos de execução, grupo muscular e equipamento inferidos
+### Origem e Padronização 100% PT-BR dos Dados de Exercícios
+- **963 exercícios** sincronizados e traduzidos do site https://www.gifdotreino.com
+- Script `apps/api/prisma/sync-gifdotreino.ts` — crawla API paginada, processa descrições didáticas em português, infere músculos e equipamentos em PT-BR e faz upsert no banco
+- Scripts auxiliares de garantia linguística: `apps/api/prisma/fix-muscle-groups-pt.ts` e `apps/api/prisma/translate-exercises.ts` (normalização de grupos e equipamentos)
+- Bateria de testes de integridade linguística: `ExercicioLinguagemDidatica.test.ts` e `audit-exercicios-treinos-linguagem.test.ts`
+- Cada exercício possui obrigatoriamente: nome em português (PT-BR), GIF animado, thumbnail, descrição conceitual didática (`descricao_pt`), passos de execução numerados (`passos_pt`), dica prática/segurança (`dica`), grupo muscular canônico em PT-BR e equipamento em PT-BR
+
 
 ### Arquitetura do Backend (Clean Architecture)
 ```
@@ -125,6 +128,7 @@ apps/api/src/
   - **Social Notify**: Push notification para até 50 amigos
   - **Award Badges**: Concede badges por conquistas
   - **Update XP**: Atualiza XP semanal nos clubes
+  - **Resumo Diário (19:00)**: Consolida notificações não lidas do dia em UM push de resumo para usuários com `frequencia = RESUMO_DIARIO`
 
 - **RF22 - Verificação de E-mail e Google OAuth**: Suporte a `email_verified`, `email_verify_code` com expiração. Login e Cadastro social via Google (`POST /auth/google`) presentes em todas as telas de autenticação (`Login.tsx`, `RegisterWizard.tsx`), com fallback robusto e detecção de novo usuário (`isNew`).
 
@@ -177,7 +181,7 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 
 ### Usuario (`usuarios`)
 `id (cuid), email (unique), senha_hash?, nome, role, telefone?, foto_url?, ativo, google_id? (unique), email_verified, email_verify_code?, email_verify_code_expira?, expo_push_token?, web_push_subscription? (Json), preferencias_notificacao? (Json), ultima_atividade_em?, proxima_noticia_em?, criado_em, atualizado_em`
-- `preferencias_notificacao`: `{ lembreteTreino, social, motivacional, conquistas, horarioSilencioso: {ativo, inicio, fim}, frequencia: IMEDIATA|RESUMO_DIARIO|DESATIVADA }` — gating centralizado em `NotificacaoPreferencesService.podeEnviar()` respeitado por todos os workers de push
+- `preferencias_notificacao`: `{ lembreteTreino, social, motivacional, conquistas, horarioSilencioso: {ativo, inicio, fim}, frequencia: IMEDIATA|RESUMO_DIARIO|DESATIVADA, ultimoResumoEnviadoEm? (ISO, additivo) }` — gating centralizado em `NotificacaoPreferencesService.podeEnviar()` respeitado por todos os workers de push. `frequencia = RESUMO_DIARIO` suprime pushes individuais (`podeEnviarComPrefs` retorna false) — o usuário recebe UM digest diário às 19:00 (worker `resumo-diario`)
 - Relacionamentos: academia (1:1), aluno (1:1), professor (1:1), refreshTokens[], avaliacoesAvalidadas[], noticiasEnviadas[]
 
 ### RefreshToken (`refresh_tokens`)
@@ -214,7 +218,16 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 
 ### Exercicio (`exercicios`)
 `id (cuid), nome, maquina?, dica?, imagem_url?, gif_url?, descricao_pt?, passos_pt (String[]), musculo_alvo?, musculos_secundarios (String[]), nivel?, grupo_muscular?, equipamento?, criado_em, atualizado_em`
-- 963 exercícios sincronizados do GifDoTreino
+- **Padrão 100% PT-BR**: Todos os atributos textuais devem estar rigorosamente em português brasileiro, sem termos crus em inglês.
+  - `nome`: Título em português didático (ex.: "Supino Reto com Barra", "Agachamento Livre", "Puxada Frontal").
+  - `grupo_muscular`: 12 Categorias Canônicas (`ABDOMINAL`, `AERÓBICO`, `ANTEBRAÇO`, `BÍCEPS`, `COSTAS`, `GLÚTEO`, `OMBRO`, `PANTURRILHA`, `PEITORAL`, `PERNAS`, `TRAPÉZIO`, `TRÍCEPS`) e grupos primários (`Peito`, `Costas`, `Ombros`, `Braços`, `Antebraços`, `Coxas`, `Panturrilhas / Tibiais`, `Abdomen / Lombar`, `Cardio`).
+  - `equipamento`: Equipamentos canônicos em português (`Barra`, `Halteres`, `Polia`, `Máquina`, `Smith`, `Kettlebell`, `Elásticos`, `Bola Suíça`, `Medball`, `Peso Corporal`).
+  - `descricao_pt`: Explicação conceitual, biomecânica e foco do exercício em português.
+  - `passos_pt`: Array de passos numerados da execução em português ("1. Posicione-se...", "2. Realize o movimento...").
+  - `dica`: Dicas de segurança, respiração e postura em português ("Mantenha os ombros retraídos...", "Inspire na descida...").
+  - `musculo_alvo` & `musculos_secundarios`: Nomes anatômicos em português (ex.: "Peitoral Maior", "Tríceps Braquial").
+- **Base**: 963 exercícios sincronizados do GifDoTreino, normalizados e verificados por testes de domínio (`ExercicioLinguagemDidatica.test.ts`).
+
 
 ### TreinoExercicio (`treino_exercicios`)
 `id (cuid), treino_id, exercicio_id, ordem, series, repeticoes, carga_sugerida_kg?`
@@ -368,6 +381,15 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 #### Conclusão em Lote por Exercício
 - Botão "✓ Concluir Exercício" registra todas as séries pendentes do exercício de uma vez.
 - Usa valores informados nos inputs ou defaults (carga sugerida / repetições do treino).
+
+### 3.2.1 Padronização Didática e Linguagem 100% PT-BR nos Modelos de Exercício
+
+Para garantir acessibilidade total a praticantes iniciantes e conformidade pedagógica:
+1. **Nomes Didáticos em Português**: Nomes de exercícios não podem conter termos em inglês sem tradução (ex.: "Supino Reto" em vez de "Bench Press", "Agachamento Livre" em vez de "Squat", "Levantamento Terra" em vez de "Deadlift", "Puxada Frontal" em vez de "Lat Pulldown", "Mesa Flexora" em vez de "Lying Leg Curl").
+2. **Instruções Didáticas em Passos (`passos_pt`)**: Cada exercício deve fornecer um array numerado com ações claras de preparação, execução e finalização, totalmente em português ("1. Ajuste o banco...", "2. Segure a barra...", "3. Desça controlando o movimento...").
+3. **Explicações Conceituais (`descricao_pt`)**: Resumo em linguagem natural sobre o propósito biomecânico e grupos musculares solicitados.
+4. **Dicas Práticas e Segurança (`dica`)**: Alertas sobre postura correta, cadência e respiração.
+5. **Garantia por Testes**: Todo novo exercício ou migração é auditado por testes unitários e de integração (`ExercicioLinguagemDidatica.test.ts` e `audit-exercicios-treinos-linguagem.test.ts`), rejeitando strings em inglês ou termos ambíguos.
 
 ### 3.3 Módulo Social, Amizades e Mídia
 
@@ -567,7 +589,7 @@ Funcionalidades baseadas em pesquisa de UX de apps de academia (reduzir fricçã
 - **Adaptação explicável da IA**: regras auditáveis sobre `avaliacao_dificuldade` das últimas sessões — 2× MUITO_INTENSO → −1 série (min 2); 3× FACIL → carga +5% arredondada p/ cima em 2,5kg; explicações retornadas em `adaptacoes[]` e exibidas no resultado da IA.
 - **Streak tolerante**: descanso de até 1 dia mantém a sequência (`dayDiff <= 2`).
 - **Triagem PAR-Q+ no cadastro**: 4 perguntas Sim/Não no wizard (não bloqueia conta); alerta não diagnóstico se algum "sim"; persistido via perfil como `{respostas, algumPositivo, respondidoEm}`.
-- **Preferências de notificação**: toggles por tipo + horário silencioso (wrap meia-noite) + frequência; gating central respeitado por todos os workers de push.
+- **Preferências de notificação**: toggles por tipo + horário silencioso (wrap meia-noite) + frequência (IMEDIATA / RESUMO_DIARIO / DESATIVADA); gating central respeitado por todos os workers de push. RESUMO_DIARIO vira digest real: pushes individuais suprimidos + worker `resumo-diario` consolidando as notificações do dia em um único push.
 
 ---
 
@@ -885,6 +907,7 @@ Funcionalidades baseadas em pesquisa de UX de apps de academia (reduzir fricçã
 | `correlacao-desempenho` | `handleCorrelacaoDesempenho` | Sob demanda | Calcula correlações de Pearson assincronamente. |
 | `news-fetch` | `handleNewsFetch` | A cada 6h | Busca RSS do Google News (exercício físico/endorfina/bem-estar), faz upsert em `noticias`. |
 | `news-push` | `handleNewsPush` | A cada 30min | Lote de 20 usuários com push e `proxima_noticia_em <= now`; rotação circular de notícias não enviadas; agenda próximo envio em 1–7 dias. |
+| `resumo-diario` | `handleResumoDiario` | Diário 19:00 (cron `0 19 * * *`, mesmo fuso do treino-em-aberto) | Para usuários `frequencia = RESUMO_DIARIO`: agrupa as `notificacoes` não lidas do dia por categoria (lembretes de treino / novidades sociais / mensagens motivacionais / notícias) e envia UM push "Seu resumo do dia". Dedupe via `preferencias_notificacao.ultimoResumoEnviadoEm` (JSON additivo, sem migração); NÃO marca linhas como lidas (a lista in-app filtra `lida: false`); respeita horário silencioso (19:00 na janela → pula o dia). |
 
 ### Social Workers (jobs/social/)
 | Fila | Worker | Descrição |

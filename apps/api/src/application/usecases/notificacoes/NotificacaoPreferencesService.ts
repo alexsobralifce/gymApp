@@ -26,6 +26,11 @@ export const NotificacaoPreferencesSchema = z.object({
   conquistas: z.boolean().default(true), // badges/XP
   horarioSilencioso: HorarioSilenciosoSchema.default({ ativo: false, inicio: '22:00', fim: '07:00' }),
   frequencia: FrequenciaNotificacaoSchema.default('IMEDIATA'),
+  // Marcador (additivo, sem migração) do último resumo diário enviado pelo worker
+  // `resumo-diario` (ISO datetime). Não é exposto na UI; usado apenas para
+  // deduplicar o digest (evita reenviar as mesmas notificações em execuções
+  // manuais/backfill do mesmo dia). Ausente → primeira execução.
+  ultimoResumoEnviadoEm: z.string().datetime().optional(),
 })
 
 export type PreferenciasNotificacao = z.infer<typeof NotificacaoPreferencesSchema>
@@ -100,6 +105,13 @@ function mergeComDefaults(valor: Prisma.JsonValue | null | undefined): Preferenc
   return parsed.data
 }
 
+/**
+ * Mescla um valor bruto de `preferencias_notificacao` (Json) com os defaults.
+ * Exportado para o worker `resumo-diario` reutilizar o parse sem consultas
+ * adicionais (os candidatos já vêm com `preferencias_notificacao` carregado).
+ */
+export { mergeComDefaults }
+
 /** Lê as preferências do usuário, mescladas com os defaults (nunca null). */
 export async function getPreferenciasNotificacao(usuarioId: string): Promise<PreferenciasNotificacao> {
   const usuario = await prisma.usuario.findUnique({
@@ -159,8 +171,11 @@ export function isEmHorarioSilencioso(inicio: string, fim: string, agora: Date):
 
 /**
  * Decisão de envio baseada apenas nas preferências (sem IO) — testável.
- * RESUMO_DIARIO é tratado como "imediata mas respeita horário silencioso"
- * (digest em lote é follow-up).
+ * - IMEDIATA: envia normalmente (respeitando tipo desabilitado e horário silencioso).
+ * - RESUMO_DIARIO: suprime pushes individuais durante o dia — o usuário recebe
+ *   um único resumo diário (worker `resumo-diario`, ~19:00). O gating do próprio
+ *   digest usa `podeEnviarResumoDiarioComPrefs` (horário silencioso ainda vale).
+ * - DESATIVADA: nenhum push.
  */
 export function podeEnviarComPrefs(
   prefs: PreferenciasNotificacao,
@@ -168,7 +183,26 @@ export function podeEnviarComPrefs(
   agora: Date,
 ): boolean {
   if (prefs.frequencia === 'DESATIVADA') return false
+  if (prefs.frequencia === 'RESUMO_DIARIO') return false
   if (prefs[tipo] === false) return false
+
+  const hs = prefs.horarioSilencioso
+  if (hs.ativo && isEmHorarioSilencioso(hs.inicio, hs.fim, agora)) return false
+
+  return true
+}
+
+/**
+ * Gating do digest diário (`resumo-diario`): libera apenas usuários com
+ * `frequencia = RESUMO_DIARIO` e fora do horário silencioso. O horário
+ * silencioso continua valendo para o digest — se 19:00 cair na janela, o
+ * usuário é pulado naquele dia (acumula para o próximo envio válido).
+ */
+export function podeEnviarResumoDiarioComPrefs(
+  prefs: PreferenciasNotificacao,
+  agora: Date,
+): boolean {
+  if (prefs.frequencia !== 'RESUMO_DIARIO') return false
 
   const hs = prefs.horarioSilencioso
   if (hs.ativo && isEmHorarioSilencioso(hs.inicio, hs.fim, agora)) return false

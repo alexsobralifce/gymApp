@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   isEmHorarioSilencioso,
   podeEnviarComPrefs,
+  podeEnviarResumoDiarioComPrefs,
   DEFAULT_PREFERENCIAS_NOTIFICACAO,
   type PreferenciasNotificacao,
 } from '../../src/application/usecases/notificacoes/NotificacaoPreferencesService.js'
@@ -75,12 +76,17 @@ describe('podeEnviarComPrefs — gating dos workers', () => {
     expect(podeEnviarComPrefs(p, 'conquistas', asData('23:00'))).toBe(true)
   })
 
-  it('RESUMO_DIARIO envia como imediata mas respeita silencioso (digest é follow-up)', () => {
+  it('RESUMO_DIARIO suprime pushes individuais (canal vira o digest diário)', () => {
     const p = prefs({
       frequencia: 'RESUMO_DIARIO',
       horarioSilencioso: { ativo: true, inicio: '22:00', fim: '07:00' },
     })
-    expect(podeEnviarComPrefs(p, 'lembreteTreino', asData('12:00'))).toBe(true)
+    // Mesmo fora do horário silencioso, nenhum push individual é enviado
+    expect(podeEnviarComPrefs(p, 'lembreteTreino', asData('12:00'))).toBe(false)
+    expect(podeEnviarComPrefs(p, 'social', asData('12:00'))).toBe(false)
+    expect(podeEnviarComPrefs(p, 'motivacional', asData('12:00'))).toBe(false)
+    expect(podeEnviarComPrefs(p, 'conquistas', asData('12:00'))).toBe(false)
+    // Dentro do silencioso também bloqueado (redundante, mas explícito)
     expect(podeEnviarComPrefs(p, 'lembreteTreino', asData('23:00'))).toBe(false)
   })
 
@@ -88,5 +94,26 @@ describe('podeEnviarComPrefs — gating dos workers', () => {
     const p = prefs()
     expect(podeEnviarComPrefs(p, 'lembreteTreino', asData('23:59'))).toBe(true)
     expect(podeEnviarComPrefs(p, 'social', asData('00:00'))).toBe(true)
+  })
+})
+
+describe('podeEnviarResumoDiarioComPrefs — gating do digest diário', () => {
+  it('libera usuário RESUMO_DIARIO fora do horário silencioso', () => {
+    const p = prefs({ frequencia: 'RESUMO_DIARIO' })
+    expect(podeEnviarResumoDiarioComPrefs(p, asData('12:00'))).toBe(true)
+  })
+
+  it('bloqueia dentro do horário silencioso (ex.: 19:00 na janela 18:00→23:00)', () => {
+    const p = prefs({
+      frequencia: 'RESUMO_DIARIO',
+      horarioSilencioso: { ativo: true, inicio: '18:00', fim: '23:00' },
+    })
+    expect(podeEnviarResumoDiarioComPrefs(p, asData('19:00'))).toBe(false)
+    expect(podeEnviarResumoDiarioComPrefs(p, asData('12:00'))).toBe(true)
+  })
+
+  it('não libera para IMEDIATA nem DESATIVADA', () => {
+    expect(podeEnviarResumoDiarioComPrefs(prefs({ frequencia: 'IMEDIATA' }), asData('12:00'))).toBe(false)
+    expect(podeEnviarResumoDiarioComPrefs(prefs({ frequencia: 'DESATIVADA' }), asData('12:00'))).toBe(false)
   })
 })
