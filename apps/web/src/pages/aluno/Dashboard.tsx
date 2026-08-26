@@ -13,6 +13,7 @@ import {
   RulerIcon,
   MessageCircleIcon,
   UsersIcon,
+  ClipboardListIcon,
   ChevronRightIcon,
 } from '../../components/icons/Icon'
 import { getInitials } from '../../lib/initials'
@@ -20,7 +21,47 @@ import { resolveMediaUrl } from '../../lib/media'
 import { calcularIMC, classificarIMC, calcularIdade } from '../../lib/health'
 
 
-const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
+const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+// Convenção de dias da semana: 0 = Domingo, 1 = Segunda, ... 6 = Sábado
+// (mesma do Date.getDay() e dos demais construtores de treino do app).
+function diasAteProximo(dias: number[], hoje: number): number {
+  if (!dias || dias.length === 0) return 7
+  let menor = 7
+  for (const d of dias) {
+    const diff = (d - hoje + 7) % 7
+    if (diff === 0) return 0
+    if (diff < menor) menor = diff
+  }
+  return menor
+}
+
+function proximoTreino(treinos: Treino[], hoje: number): Treino | null {
+  return (
+    [...treinos].sort((a, b) => {
+      const da = diasAteProximo(a.dias_semana, hoje)
+      const db = diasAteProximo(b.dias_semana, hoje)
+      return da - db || a.nome.localeCompare(b.nome)
+    })[0] ?? null
+  )
+}
+
+// Duração estimada: ~2,5min por série, arredondada para os 5 min mais próximos.
+function estimativaDuracaoMin(t: Treino): number | null {
+  const totalSeries = t.exercicios?.reduce((acc, e) => acc + (e.series ?? 0), 0) ?? 0
+  if (totalSeries <= 0) return null
+  return Math.max(5, Math.round((totalSeries * 2.5) / 5) * 5)
+}
+
+// Foco muscular: grupos musculares dos exercícios (até 3), omitido se indisponível.
+function focoMuscular(t: Treino): string[] {
+  const set = new Set<string>()
+  t.exercicios?.forEach((e) => {
+    const g = e.exercicio?.grupo_muscular || e.exercicio?.musculo_alvo
+    if (g) set.add(g)
+  })
+  return [...set].slice(0, 3)
+}
 
 export default function AlunoDashboard() {
   const [treinos, setTreinos] = useState<Treino[]>([])
@@ -93,6 +134,35 @@ export default function AlunoDashboard() {
   )
   const concluidos = treinos.filter((t) => t.status === 'CONCLUIDO')
 
+  // — Treino de Hoje (hero) —
+  const hoje = new Date().getDay()
+  const emExecucao = treinos.filter((t) => t.status === 'EM_EXECUCAO')
+  const doDia = disponiveis.filter((t) => t.dias_semana?.includes(hoje))
+
+  let heroTreino: Treino | null = null
+  let heroVariant: 'execucao' | 'iniciar' | 'proximo' | 'pendentes' | 'criar' = 'criar'
+  let tambemHoje: Treino[] = []
+
+  if (emExecucao.length > 0) {
+    // Sessão em andamento tem prioridade absoluta — o usuário precisa retomá-la.
+    heroTreino = emExecucao[0]
+    heroVariant = 'execucao'
+  } else if (doDia.length > 0) {
+    heroTreino = doDia[0]
+    heroVariant = 'iniciar'
+    tambemHoje = doDia.slice(1)
+  } else if (disponiveis.length > 0) {
+    heroTreino = proximoTreino(disponiveis, hoje)
+    heroVariant = 'proximo'
+  } else if (pendentes.length > 0) {
+    heroVariant = 'pendentes'
+  } else {
+    heroVariant = 'criar'
+  }
+
+  const heroDuracao = heroTreino ? estimativaDuracaoMin(heroTreino) : null
+  const heroFoco = heroTreino ? focoMuscular(heroTreino) : []
+
   const imc = calcularIMC(perfil?.peso_kg, perfil?.altura_cm)
   const classificacao = imc ? classificarIMC(imc) : null
   const idade = calcularIdade(perfil?.data_nascimento)
@@ -139,7 +209,7 @@ export default function AlunoDashboard() {
 
       {/* Hero Card */}
       {user && (
-        <div className="relative overflow-hidden rounded-2xl gradient-card border border-surface-input p-5 shadow-lg animate-slide-up">
+        <div className="relative overflow-hidden rounded-2xl bg-surface-card border border-surface-input p-5 shadow-sm animate-slide-up">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
           <div className="relative flex items-center gap-4">
@@ -176,7 +246,7 @@ export default function AlunoDashboard() {
                   </span>
                 )}
                 {!perfil?.professor && !perfil?.academia && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Autogestao</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Autogestão</span>
                 )}
               </div>
             </div>
@@ -211,8 +281,120 @@ export default function AlunoDashboard() {
         </div>
       )}
 
-      {/* Estatisticas rapidas */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Treino de Hoje — Hero dominante */}
+      <div className="relative overflow-hidden rounded-2xl gradient-card border border-surface-input p-5 shadow-lg animate-slide-up">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+        <div className="absolute bottom-0 left-0 w-28 h-28 bg-blue-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 text-primary px-3 py-1 text-xs font-bold uppercase tracking-wider">
+              <DumbbellIcon className="h-3.5 w-3.5" />
+              Treino de Hoje
+            </span>
+            <span className="text-xs font-semibold text-text-muted capitalize">{DIAS[hoje]}</span>
+          </div>
+
+          {(heroVariant === 'execucao' || heroVariant === 'iniciar') && heroTreino && (
+            <>
+              <h2 className="text-2xl font-bold text-text">{heroTreino.nome}</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {heroDuracao !== null && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-text-muted">
+                    <TimerIcon className="h-3.5 w-3.5" />
+                    ≈ {heroDuracao} min
+                  </span>
+                )}
+                {heroFoco.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-text-muted">
+                    <ActivityIcon className="h-3.5 w-3.5" />
+                    {heroFoco.join(' · ')}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-text-muted">
+                  <ClipboardListIcon className="h-3.5 w-3.5" />
+                  {heroTreino.exercicios?.length ?? 0} exercícios
+                </span>
+              </div>
+              <button
+                onClick={() => navigate(heroVariant === 'execucao' ? `/treino/${heroTreino.id}/execucao` : `/treino/${heroTreino.id}/inicio`)}
+                className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl gradient-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                {heroVariant === 'execucao' ? 'Continuar Treino' : 'Iniciar Treino'}
+                <ChevronRightIcon className="h-5 w-5" />
+              </button>
+              {tambemHoje.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <p className="text-xs text-text-muted mb-1.5">Também hoje:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tambemHoje.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => navigate(`/treino/${t.id}/inicio`)}
+                        className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-text hover:bg-white/20 transition-colors cursor-pointer"
+                      >
+                        {t.nome}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {heroVariant === 'proximo' && heroTreino && (
+            <>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">Próximo treino</p>
+              <h2 className="text-xl font-bold text-text">{heroTreino.nome}</h2>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {heroTreino.dias_semana.map((d) => (
+                  <span key={d} className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-text-muted">{DIAS[d]}</span>
+                ))}
+              </div>
+              <button
+                onClick={() => navigate('/meus-treinos')}
+                className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 py-3.5 text-base font-bold text-primary hover:bg-primary/20 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Ver Meus Treinos
+                <ChevronRightIcon className="h-5 w-5" />
+              </button>
+            </>
+          )}
+
+          {heroVariant === 'pendentes' && (
+            <>
+              <h2 className="text-xl font-bold text-text">{pendentes.length} {pendentes.length === 1 ? 'ficha recebida' : 'fichas recebidas'}</h2>
+              <p className="mt-1 text-sm text-text-muted">Você tem novas fichas de treino para aceitar.</p>
+              <button
+                onClick={() => navigate('/meus-treinos')}
+                className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl gradient-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Aceitar agora
+                <ChevronRightIcon className="h-5 w-5" />
+              </button>
+            </>
+          )}
+
+          {heroVariant === 'criar' && (
+            <div className="text-center py-2">
+              <DumbbellIcon className="h-10 w-10 text-primary mx-auto opacity-80" />
+              <h2 className="mt-3 text-xl font-bold text-text">Nenhum treino ainda</h2>
+              <p className="mt-1 text-sm text-text-muted">Crie seu primeiro treino e comece sua jornada!</p>
+              <button
+                onClick={() => navigate('/treino/novo')}
+                className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl gradient-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Criar meu primeiro treino
+                <ChevronRightIcon className="h-5 w-5" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Visão Geral — estatísticas secundárias */}
+      <div className="space-y-2">
+        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">Visão Geral</h2>
+        <div className="grid grid-cols-3 gap-3">
         <StatCard
           icon={<DumbbellIcon className="h-5 w-5" />}
           value={disponiveis.length}
@@ -230,10 +412,11 @@ export default function AlunoDashboard() {
         <StatCard
           icon={<TrophyIcon className="h-5 w-5" />}
           value={concluidos.length}
-          label="Concluidos"
+          label="Concluídos"
           color="text-success"
           bg="bg-success/10"
         />
+      </div>
       </div>
 
       {/* Atalhos de Acesso Rápido */}
@@ -398,7 +581,7 @@ export default function AlunoDashboard() {
 
                 <button
                   onClick={() => navigate(`/treino/${t.id}/inicio`)}
-                  className="mt-4 w-full rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+                  className="mt-4 w-full rounded-xl border border-surface-input bg-surface py-3 text-sm font-bold text-primary hover:border-primary/40 hover:bg-primary/5 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   Iniciar Treino
                 </button>
@@ -486,12 +669,12 @@ function getSaudacao(): string {
 
 function StatCard({ icon, value, label, color, bg }: { icon: React.ReactNode; value: number; label: string; color: string; bg: string }) {
   return (
-    <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
-      <div className={`inline-flex items-center justify-center h-9 w-9 rounded-xl ${bg} ${color} mb-2`}>
+    <div className="rounded-2xl bg-surface-card border border-surface-input p-3 text-center">
+      <div className={`inline-flex items-center justify-center h-8 w-8 rounded-lg ${bg} ${color} mb-1.5`}>
         {icon}
       </div>
-      <p className="text-lg font-bold text-text">{value}</p>
-      <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{label}</p>
+      <p className="text-base font-bold text-text">{value}</p>
+      <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">{label}</p>
     </div>
   )
 }
