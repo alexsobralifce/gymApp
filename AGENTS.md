@@ -176,7 +176,8 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 ```
 
 ### Usuario (`usuarios`)
-`id (cuid), email (unique), senha_hash?, nome, role, telefone?, foto_url?, ativo, google_id? (unique), email_verified, email_verify_code?, email_verify_code_expira?, expo_push_token?, web_push_subscription? (Json), ultima_atividade_em?, proxima_noticia_em?, criado_em, atualizado_em`
+`id (cuid), email (unique), senha_hash?, nome, role, telefone?, foto_url?, ativo, google_id? (unique), email_verified, email_verify_code?, email_verify_code_expira?, expo_push_token?, web_push_subscription? (Json), preferencias_notificacao? (Json), ultima_atividade_em?, proxima_noticia_em?, criado_em, atualizado_em`
+- `preferencias_notificacao`: `{ lembreteTreino, social, motivacional, conquistas, horarioSilencioso: {ativo, inicio, fim}, frequencia: IMEDIATA|RESUMO_DIARIO|DESATIVADA }` — gating centralizado em `NotificacaoPreferencesService.podeEnviar()` respeitado por todos os workers de push
 - Relacionamentos: academia (1:1), aluno (1:1), professor (1:1), refreshTokens[], avaliacoesAvalidadas[], noticiasEnviadas[]
 
 ### RefreshToken (`refresh_tokens`)
@@ -196,7 +197,9 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 - Status: `PENDENTE_ACADEMIA → PENDENTE_ROOT → ATIVO | REJEITADO | REMOVIDO`
 
 ### Aluno (`alunos`)
-`id (cuid), usuario_id (unique FK), professor_id?, academia_id?, data_nascimento?, peso_kg?, altura_cm?, sexo (Sexo?), objetivo_treino?, nivel_treino?, restricoes (String[]), visibilidade_padrao (Visibilidade, default AMIGOS), permite_busca_email (Boolean, default true), consentiu_feed_social_em?, criado_em, atualizado_em`
+`id (cuid), usuario_id (unique FK), professor_id?, academia_id?, data_nascimento?, peso_kg?, altura_cm?, sexo (Sexo?), objetivo_treino?, nivel_treino?, restricoes (String[]), meta_semanal (Int, default 3, clamp 1–7), parq_respostas? (Json), visibilidade_padrao (Visibilidade, default AMIGOS), permite_busca_email (Boolean, default true), consentiu_feed_social_em?, criado_em, atualizado_em`
+- `meta_semanal`: meta semanal editável pelo aluno; usada no dashboard de evolução mensal (fallback 3)
+- `parq_respostas`: triagem PAR-Q+ simplificada do cadastro — `{ respostas: {q1..q4}, algumPositivo, respondidoEm }`; não bloqueia a conta
 - `professor_id = null` → autogestão
 - `academia_id = null` → sem academia
 - Relacionamentos: usuario, professor?, academia?, treinos[], medidas[], notificacoes[], correlacao?, avaliacoes[], mensagensEnviadas[]
@@ -429,6 +432,7 @@ Estados: `CADASTRADO → ENVIADO → ACEITO → EM_ABERTO → EM_EXECUCAO → CO
 - `volumeBonus = totalKg / 100`
 - `durationBonus = durationMin * 0.5`
 - `streakMultiplier = 1.5` se streak >= 3 dias consecutivos
+- **Streak tolerante a descanso**: até 1 dia de descanso entre treinos mantém a sequência (`dayDiff <= 2` continua); só zera com `dayDiff > 2` — motivação sem punição
 - `total = (BASE_XP + volumeBonus + durationBonus) * streakMultiplier`
 - XP acumulado no clube da academia (se houver)
 - Reset anual de XP
@@ -449,12 +453,23 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | *(headings)* | `Barlow Condensed` | Títulos e badges |
 
 #### Estrutura de Temas
-- **3 Marcas (brand)**: `lime` | `red` | `violet`
+- **4 Marcas (brand)**: `blue` (default) | `lime` | `red` | `violet`
 - **3 opções de modo**: `auto` | `day` | `night` → efetivo sempre `day` ou `night` no DOM
 - **Auto**: só horário local (claro 06h–18h, escuro 18h–06h) — **não** segue dark mode do SO
 - **Dia / Noite**: forçam fundo claro / escuro 24h
-- **6 combinações de cor** via `data-theme` × `data-mode` no DOM
-- **Persistência**: `localStorage` (`gymapp_theme`, `gymapp_mode`)
+- **8 combinações de cor** via `data-theme` × `data-mode` no DOM
+- **Persistência**: `localStorage` (`gymapp_theme`, `gymapp_mode`); usuários com tema salvo o mantêm — default `blue` só para novos/usar sem storage
+
+#### Paleta Padrão: Azul & Navy (`data-theme="blue"`)
+| Token | Night | Day |
+|---|---|---|
+| `--color-primary` | `#3B82F6` | `#2563EB` |
+| `--color-primary-dark` | `#2563EB` | `#1D4ED8` |
+| `--color-surface` | `#0B1220` | `#FFFFFF` |
+| `--color-surface-card` | `#111C33` | `#F3F6FB` |
+| `--color-text` | `#F5F8FF` | `#0B1220` |
+| `--color-border` | `#24365C` | `#DFE5EE` |
+| `--color-ring` | `#3B82F6` | `#2563EB` |
 
 #### Cascata de tema (mobile = desktop)
 - Tokens **somente** em `html[data-mode="day|night"]` e `html[data-theme][data-mode]` — **nunca** em `:root` + night juntos.
@@ -540,6 +555,20 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 #### Animações
 `fade-in` (0.3s), `slide-up` (0.4s cubic-bezier), `slide-down` (0.3s), `slide-right` (0.3s), `modal-pop` (0.35s spring), `pulse-soft` (2s), `scale-in` (0.2s)
 
+### 3.7 Alinhamento UX-Pesquisa (P0/P1 implementados)
+
+Funcionalidades baseadas em pesquisa de UX de apps de academia (reduzir fricção, retenção e retomada):
+
+- **CTA "Treino de Hoje"**: card hero dominante no Dashboard com 5 variantes (`execucao`→Continuar, `iniciar`, `proximo`, `pendentes`, `criar`); stats/tiles rebaixados visualmente.
+- **Meta semanal editável**: `alunos.meta_semanal` (1–7), stepper em DadosAluno; evolução mensal usa a meta do aluno (fallback 3).
+- **Substituição de exercício na execução**: drawer com alternativas do mesmo grupo muscular; séries registradas preservadas; restrito a ACEITO/EM_ABERTO/EM_EXECUCAO.
+- **Modo offline**: fila local (`offlineQueue.ts`) para registro de séries sem internet; auto-sync no boot/evento `online`; dead-letter inspecionável p/ rejeições 4xx; chip de status pendente na execução.
+- **Fluxo de retomada**: ausência ≥14 dias → modal "Bem-vindo(a) de volta!" com 3 opções (retomar plano / semana leve com séries ÷2 via `/treinos/:id/semana-retorno` / atualizar objetivo). Copy positiva, sem culpa nem streak quebrado; dispensa por episódio (`gymapp_retomada_vista`).
+- **Adaptação explicável da IA**: regras auditáveis sobre `avaliacao_dificuldade` das últimas sessões — 2× MUITO_INTENSO → −1 série (min 2); 3× FACIL → carga +5% arredondada p/ cima em 2,5kg; explicações retornadas em `adaptacoes[]` e exibidas no resultado da IA.
+- **Streak tolerante**: descanso de até 1 dia mantém a sequência (`dayDiff <= 2`).
+- **Triagem PAR-Q+ no cadastro**: 4 perguntas Sim/Não no wizard (não bloqueia conta); alerta não diagnóstico se algum "sim"; persistido via perfil como `{respostas, algumPositivo, respondidoEm}`.
+- **Preferências de notificação**: toggles por tipo + horário silencioso (wrap meia-noite) + frequência; gating central respeitado por todos os workers de push.
+
 ---
 
 ## 4. Rotas da API (Fastify)
@@ -586,6 +615,8 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | PATCH | `/alunos/professor` | Vincular/desvincular professor |
 | GET | `/alunos/academia/colegas` | Listar colegas da mesma academia |
 | GET/POST | `/alunos/notificacoes[/visualizar]` | Listar/marcar lidas |
+| GET/PATCH | `/alunos/notificacoes/preferencias` | Preferências de notificação (tipos, horário silencioso, frequência) |
+| GET | `/alunos/retomada` | Fluxo de retorno: `{mostrarRetomada, diasSemTreinar, ultimoTreinoEm}` (ausência ≥14 dias) |
 | GET/PATCH | `/alunos/privacidade` | Ver/atualizar configurações de privacidade |
 
 ### Social (`/social`)
@@ -656,6 +687,8 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | POST | `/treinos/:id/clonar` | Clonar p/ 1 aluno | PROF/ACAD |
 | POST | `/treinos/:id/clonar-lote` | Clonar p/ múltiplos | PROF/ACAD |
 | POST | `/treinos/:id/marcar-template` | Toggle is_template | PROF/ACAD |
+| POST | `/treinos/:id/exercicios/:teId/substituir` | Trocar exercício (mesmo grupo; séries registradas preservadas; só ACEITO/EM_ABERTO/EM_EXECUCAO) | ALUNO, PROFESSOR |
+| POST | `/treinos/:id/semana-retorno` | Cópia leve p/ retorno (séries ÷2, min 2, sufixo "(Retorno)") | ALUNO |
 
 ### Treino IA (`/treinos/ia`)
 | Método | Rota | Descrição |
@@ -831,8 +864,11 @@ Design system baseado em **variáveis CSS customizadas** (`--color-*`) em `apps/
 | `gymapp_onboarding_seen` | Popup de onboarding pós-login já exibido |
 | `gymapp_first_workout_done` | Coach marks já exibidas |
 | `gymapp_system_evaluation_done` | Avaliação do sistema já exibida/enviada |
-| `gymapp_theme` | Tema (red/lime/violet) |
+| `gymapp_theme` | Tema (blue/lime/red/violet — default blue) |
 | `gymapp_mode` | Modo (day/night) |
+| `gymapp_pending_execucoes` | Fila offline de séries aguardando sync (`offlineQueue.ts`) |
+| `gymapp_dead_execucoes` | Dead-letter de séries rejeitadas 4xx (inspecionável, máx 50) |
+| `gymapp_retomada_vista` | Episódio de retomada já dispensado (ISO do último treino) |
 | `accessToken` | JWT access token |
 | `refreshToken` | JWT refresh token |
 
