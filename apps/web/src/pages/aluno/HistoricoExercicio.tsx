@@ -264,8 +264,8 @@ export default function HistoricoExercicio() {
                       fontSize: '12px',
                       color: themeColors.text,
                     }}
-                    formatter={(val: number | string | Array<number | string>) => [`${formatKg(Number(val))}`, 'Carga máxima']}
-                    labelFormatter={(label: string) => `Sessão ${label}`}
+                    formatter={(val: unknown) => [`${formatKg(Number(val ?? 0))}`, 'Carga máxima']}
+                    labelFormatter={(label: unknown) => `Sessão ${String(label ?? '')}`}
                   />
                   <Line
                     type="monotone"
