@@ -6,6 +6,7 @@ import {
   Menu, X, Check, ArrowRight, UserPlus, ClipboardList, Trophy,
 } from 'lucide-react'
 import EndorfinappLogo from '../components/branding/EndorfinappLogo'
+import DemoTreino from '../components/landing/DemoTreino'
 
 const NAV_LINKS = ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Funciona']
 
@@ -225,6 +226,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ─── DEMO INTERATIVA (UX-011) ─── */}
+      <DemoTreino />
 
       {/* ─── FEATURES ─── */}
       <section id="funcionalidades" className="py-20 bg-card border-y border-border">
