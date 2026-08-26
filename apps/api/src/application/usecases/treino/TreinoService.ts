@@ -1048,3 +1048,95 @@ export async function obterHistoricoExecucoesDetalhado(alunoId: string, mes?: st
     }
   })
 }
+
+// ─── UX-006: Retomada pós-ausência ─────────────────────────────────────────────
+// Ausência não é falha moral: nunca mostramos streak quebrada ou dias perdidos.
+// O fluxo é positivo — "bem-vindo(a) de volta" com opções de recomeço.
+
+export async function obterRetomada(alunoId: string) {
+  const ultimaConclusao = await prisma.treinoHistorico.findFirst({
+    where: {
+      treino: { aluno_id: alunoId },
+      status_novo: TreinoStatus.CONCLUIDO,
+    },
+    orderBy: { timestamp: 'desc' },
+    select: { timestamp: true },
+  })
+
+  // Usuário novo (sem nenhum treino concluído) não recebe o modal
+  if (!ultimaConclusao) {
+    return { mostrarRetomada: false, diasSemTreinar: null, ultimoTreinoEm: null }
+  }
+
+  const agora = new Date()
+  const diasSemTreinar = Math.max(
+    0,
+    Math.floor((agora.getTime() - ultimaConclusao.timestamp.getTime()) / (24 * 60 * 60 * 1000)),
+  )
+
+  return {
+    mostrarRetomada: diasSemTreinar >= 14,
+    diasSemTreinar,
+    ultimoTreinoEm: ultimaConclusao.timestamp,
+  }
+}
+
+// A "semana de retorno" só faz sentido a partir de um treino planejável
+// ou em andamento. CADASTRADO/ENVIADO/CONCLUIDO não servem de base.
+const STATUS_PERMITIDOS_RETORNO = new Set<TreinoStatus>([
+  TreinoStatus.ACEITO,
+  TreinoStatus.EM_ABERTO,
+  TreinoStatus.EM_EXECUCAO,
+])
+
+export async function criarTreinoSemanaRetorno(treinoId: string, alunoId: string) {
+  const treino = await prisma.treino.findUnique({
+    where: { id: treinoId },
+    include: { exercicios: { orderBy: { ordem: 'asc' } } },
+  })
+  if (!treino) throw new NotFoundError('Treino')
+  if (treino.aluno_id !== alunoId) throw new TenantAccessError()
+
+  if (!STATUS_PERMITIDOS_RETORNO.has(treino.status)) {
+    throw new ValidationError(
+      'Só é possível criar a semana de retorno a partir de um treino aceito, em aberto ou em execução',
+    )
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const novoTreino = await tx.treino.create({
+      data: {
+        aluno_id: alunoId,
+        nome: `${treino.nome} (Retorno)`,
+        dias_semana: treino.dias_semana,
+        status: TreinoStatus.ACEITO,
+        criado_por_ia: false,
+        exercicios: {
+          create: treino.exercicios.map((e) => ({
+            exercicio_id: e.exercicio_id,
+            ordem: e.ordem,
+            // Volume reduzido pela metade, com mínimo de 2 séries
+            series: Math.max(2, Math.floor(e.series / 2)),
+            repeticoes: e.repeticoes,
+            carga_sugerida_kg: e.carga_sugerida_kg,
+            tipo: e.tipo,
+            metodo: e.metodo,
+            bloco_grupo: e.bloco_grupo,
+            tempo_descanso_segundos: e.tempo_descanso_segundos,
+            observacoes: e.observacoes,
+          })),
+        },
+        historico: {
+          create: {
+            status_anterior: TreinoStatus.CADASTRADO,
+            status_novo: TreinoStatus.ACEITO,
+            ator_id: alunoId,
+            ator_tipo: TreinoAtor.ALUNO,
+          },
+        },
+      },
+      include: { exercicios: { include: { exercicio: true }, orderBy: { ordem: 'asc' } } },
+    })
+    return novoTreino
+  })
+}

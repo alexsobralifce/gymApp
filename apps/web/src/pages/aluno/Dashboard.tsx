@@ -19,6 +19,7 @@ import {
 import { getInitials } from '../../lib/initials'
 import { resolveMediaUrl } from '../../lib/media'
 import { calcularIMC, classificarIMC, calcularIdade } from '../../lib/health'
+import RetomadaModal from '../../components/aluno/RetomadaModal'
 
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -70,6 +71,9 @@ export default function AlunoDashboard() {
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [modalNotificacao, setModalNotificacao] = useState<Notificacao | null>(null)
+  // UX-006: retomada pós-ausência (≥14 dias sem treino concluído)
+  const [showRetomada, setShowRetomada] = useState(false)
+  const [retomadaEpisodio, setRetomadaEpisodio] = useState<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
@@ -89,9 +93,36 @@ export default function AlunoDashboard() {
       if (nData.length > 0) {
         setModalNotificacao(nData[0])
       }
+      // UX-006: só verifica a retomada depois de os treinos carregarem
+      await verificarRetomada()
     } catch (err) {
       console.error(err)
     }
+  }
+
+  // UX-006: mostra o modal apenas para um NOVO episódio de ausência
+  // (localStorage guarda o ultimoTreinoEm — ao treinar de novo e sumir de novo,
+  // o valor muda e o modal reaparece).
+  async function verificarRetomada() {
+    try {
+      const r = await api.getRetomada()
+      if (!r.mostrarRetomada || !r.ultimoTreinoEm) return
+      const episodio = new Date(r.ultimoTreinoEm).toISOString()
+      const visto = localStorage.getItem('gymapp_retomada_vista')
+      if (visto !== episodio) {
+        setRetomadaEpisodio(episodio)
+        setShowRetomada(true)
+      }
+    } catch {
+      // best-effort: falha silenciosa não bloqueia o dashboard
+    }
+  }
+
+  function handleFecharRetomada() {
+    if (retomadaEpisodio) {
+      localStorage.setItem('gymapp_retomada_vista', retomadaEpisodio)
+    }
+    setShowRetomada(false)
   }
 
   useEffect(() => {
@@ -162,6 +193,10 @@ export default function AlunoDashboard() {
 
   const heroDuracao = heroTreino ? estimativaDuracaoMin(heroTreino) : null
   const heroFoco = heroTreino ? focoMuscular(heroTreino) : []
+
+  // UX-006: alvo da "semana mais leve" — hero de hoje (inclusive em execução)
+  // ou, na falta dele, o primeiro treino ativo disponível.
+  const treinoAlvo = heroTreino ?? disponiveis[0] ?? null
 
   const imc = calcularIMC(perfil?.peso_kg, perfil?.altura_cm)
   const classificacao = imc ? classificarIMC(imc) : null
@@ -654,6 +689,13 @@ export default function AlunoDashboard() {
           />
         </div>
       </div>
+
+      {/* UX-006: Retomada pós-ausência — "Bem-vindo(a) de volta!" */}
+      <RetomadaModal
+        open={showRetomada}
+        treinoAlvo={treinoAlvo}
+        onDismiss={handleFecharRetomada}
+      />
     </div>
   )
 }

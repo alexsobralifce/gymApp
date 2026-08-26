@@ -20,6 +20,7 @@ import {
   clonarTreinoEmLote,
   buscarUltimasCargas,
   substituirExercicio,
+  criarTreinoSemanaRetorno,
 } from '../../../application/usecases/treino/TreinoService.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
@@ -262,6 +263,16 @@ export async function treinoRoutes(app: FastifyInstance) {
 
     const treino = await cancelarTreino(id, aluno.id)
     return reply.status(200).send(treino)
+  })
+
+  /** POST /treinos/:id/semana-retorno — UX-006: cópia leve do treino para a semana de retorno */
+  app.post('/:id/semana-retorno', { preHandler: prehandlerAluno }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const aluno = await prisma.aluno.findUnique({ where: { usuario_id: request.currentUser.sub } })
+    if (!aluno) throw new NotFoundError('Aluno')
+
+    const treino = await criarTreinoSemanaRetorno(id, aluno.id)
+    return reply.status(201).send(treino)
   })
 
   /** POST /treinos/:id/execucoes — UC-22 */

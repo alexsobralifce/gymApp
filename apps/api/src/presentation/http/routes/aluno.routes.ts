@@ -4,7 +4,7 @@ import { Role, AcademiaStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { obterCorrelacoes, calcularEAtualizar } from '../../../application/usecases/correlacao/CorrelacaoService.js'
-import { historicoDiasTreino, obterEvolucaoMensal } from '../../../application/usecases/treino/TreinoService.js'
+import { historicoDiasTreino, obterEvolucaoMensal, obterRetomada } from '../../../application/usecases/treino/TreinoService.js'
 import {
   getPreferenciasNotificacao,
   salvarPreferenciasNotificacao,
@@ -24,6 +24,24 @@ function absolutizeMedia(url: string | null | undefined): string | null {
 function calcularIMC(pesoKg: number, alturaCm: number): number | null {
   if (!pesoKg || !alturaCm || alturaCm <= 0) return null
   return parseFloat((pesoKg / ((alturaCm / 100) ** 2)).toFixed(2))
+}
+
+// UX-009: triagem simplificada PAR-Q+ — mesma shape estrita do /auth/register
+const parqRespostasSchema = z.object({
+  q1: z.boolean(),
+  q2: z.boolean(),
+  q3: z.boolean(),
+  q4: z.boolean(),
+}).strict()
+
+type ParqRespostas = z.infer<typeof parqRespostasSchema>
+
+function buildParqRespostas(respostas: ParqRespostas) {
+  return {
+    respostas,
+    algumPositivo: respostas.q1 || respostas.q2 || respostas.q3 || respostas.q4,
+    respondidoEm: new Date().toISOString(),
+  }
 }
 
 export async function resolveAluno(usuarioId: string) {
@@ -50,6 +68,7 @@ export async function alunoRoutes(app: FastifyInstance) {
       restricoes: z.array(z.string()).optional(),
       consentiuFeedSocial: z.boolean().optional(),
       metaSemanal: z.number().int().min(1).max(7).optional(),
+      parqRespostas: parqRespostasSchema.optional(),
     }).parse(request.body || {})
 
     const existente = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
@@ -70,6 +89,7 @@ export async function alunoRoutes(app: FastifyInstance) {
           restricoes: body.restricoes !== undefined ? body.restricoes : undefined,
           consentiu_feed_social_em: body.consentiuFeedSocial ? new Date() : undefined,
           meta_semanal: body.metaSemanal !== undefined ? body.metaSemanal : undefined,
+          parq_respostas: body.parqRespostas !== undefined ? buildParqRespostas(body.parqRespostas) : undefined,
         },
       })
 
@@ -112,6 +132,7 @@ export async function alunoRoutes(app: FastifyInstance) {
         sexo: body.sexo,
         consentiu_feed_social_em: body.consentiuFeedSocial ? new Date() : undefined,
         meta_semanal: body.metaSemanal,
+        parq_respostas: body.parqRespostas !== undefined ? buildParqRespostas(body.parqRespostas) : undefined,
       },
     })
 
@@ -507,6 +528,13 @@ export async function alunoRoutes(app: FastifyInstance) {
     }).parse(request.query || {})
 
     const resultado = await obterEvolucaoMensal(aluno.id, mes)
+    return reply.status(200).send(resultado)
+  })
+
+  /** GET /alunos/retomada — UX-006: verifica se o aluno está retornando após ≥14 dias sem treino concluído */
+  app.get('/retomada', { preHandler }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const resultado = await obterRetomada(aluno.id)
     return reply.status(200).send(resultado)
   })
 }

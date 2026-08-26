@@ -2,6 +2,31 @@ import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, Corre
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
+/** Resultado da prescrição por IA (`POST /treinos/ia/gerar`). */
+export interface GerarTreinoIAResult {
+  tipo_tarefa: string
+  alunoId: string
+  planoId?: string
+  planoIds?: string[]
+  grupo_treino?: string
+  nome_treino?: string
+  score_match?: number
+  justificativa_match?: string
+  grupos_solicitados?: string[]
+  split_preferido?: string | null
+  resumo_prescricao?: string
+  observacoes?: string[]
+  sessoes?: Array<{
+    id?: string
+    nome?: string
+    dia_label?: string
+    ordem?: number
+    exercicios?: Array<Record<string, unknown>>
+  }>
+  /** UX-007: explicações das adaptações de feedback aplicadas na geração. */
+  adaptacoes?: string[]
+}
+
 const API_BASE = getApiBaseUrl()
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -176,8 +201,8 @@ export const api = {
   loginWithGoogle: (credential: string, accessToken?: string) =>
     api.post<AuthTokens & { isNew: boolean; nome: string }>('/auth/google', { credential: credential || undefined, access_token: accessToken || undefined }),
 
-  register: (nome: string, email: string, senha: string, role: string, telefone?: string) =>
-    api.post<{ message: string }>('/auth/register', { nome, email, senha, role, telefone }),
+  register: (nome: string, email: string, senha: string, role: string, telefone?: string, parqRespostas?: import('../types/api').ParqRespostas) =>
+    api.post<{ message: string }>('/auth/register', { nome, email, senha, role, telefone, parqRespostas }),
 
   verifyEmail: (email: string, code: string) =>
     api.post('/auth/verify-email', { email, code }),
@@ -669,6 +694,13 @@ export const api = {
   getPlanosRecomendados: () => api.get<PlanoBiblioteca[]>('/planos/recomendados'),
   adotarPlano: (id: string) => api.post<{ plano: { id: string; nome: string }; treinosCriadosCount: number }>(`/planos/${id}/adotar`),
 
+  // ─── UX-006: Retomada pós-ausência ─────────────────────────
+  getRetomada: () =>
+    api.get<{ mostrarRetomada: boolean; diasSemTreinar: number | null; ultimoTreinoEm: string | null }>('/alunos/retomada'),
+
+  criarSemanaRetorno: (treinoId: string) =>
+    api.post<Treino>(`/treinos/${treinoId}/semana-retorno`),
+
   // ─── Prescrição IA ─────────────────────────────────
   gerarTreinoIA: (data: {
     objetivo: string
@@ -678,7 +710,7 @@ export const api = {
     restricoes?: string[]
     gruposMusculares?: string[]
     splitPreferido?: string
-  }) => api.post<Record<string, unknown>>('/treinos/ia/gerar', data),
+  }) => api.post<GerarTreinoIAResult>('/treinos/ia/gerar', data),
 
   // ─── Avaliação do Sistema ──────────────────────────
   enviarAvaliacaoSistema: (data: { nota: number; respostas: Record<string, number>; mensagem?: string }) =>
