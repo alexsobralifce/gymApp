@@ -790,3 +790,65 @@ export interface HealthSyncPayload {
   steps?: number
   data: string
 }
+
+// ─── UX-017: Exportação de dados (LGPD — portabilidade) ────────────────────
+// Downloads exigem JWT no header — não é possível usar <a href> simples.
+// Estas funções usam fetch autenticado (com refresh em 401) e disparam o
+// download via blob → object URL.
+
+function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+async function downloadWithAuth(path: string): Promise<Response> {
+  const token = localStorage.getItem('accessToken')
+  const fullUrl = `${API_BASE}${path}`
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  let res = await fetch(fullUrl, { headers })
+  if (res.status === 401) {
+    const refreshed = await refreshTokens()
+    if (refreshed) {
+      headers['Authorization'] = `Bearer ${localStorage.getItem('accessToken')}`
+      res = await fetch(fullUrl, { headers })
+    }
+  }
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: res.statusText }))
+    throw new ApiError(res.status, error.message || 'Erro na requisição')
+  }
+  return res
+}
+
+function filenameFromDisposition(disposition: string | null, fallback: string): string {
+  if (!disposition) return fallback
+  const match = /filename="?([^";]+)"?/.exec(disposition)
+  return match?.[1] || fallback
+}
+
+/** Baixa o histórico completo (CSV ou JSON) e dispara o download no navegador. */
+export async function baixarExportacao(formato: 'csv' | 'json'): Promise<void> {
+  const res = await downloadWithAuth(`/alunos/exportar?formato=${formato}`)
+  const blob = await res.blob()
+  const dataStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  triggerBlobDownload(blob, filenameFromDisposition(res.headers.get('Content-Disposition'), `gymapp-export-${dataStr}.${formato}`))
+}
+
+/**
+ * Busca o HTML do relatório resumido via fetch autenticado (uma aba aberta com
+ * window.open NÃO carrega o header Authorization). O chamador injeta o HTML
+ * na nova aba via document.write.
+ */
+export async function obterRelatorioHTML(): Promise<string> {
+  const res = await downloadWithAuth('/alunos/exportar/relatorio')
+  return res.text()
+}
+

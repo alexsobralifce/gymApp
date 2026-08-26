@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, HeartPulse } from 'lucide-react'
-import { api } from '../../api/client'
+import { Bell, HeartPulse, Download } from 'lucide-react'
+import { api, baixarExportacao, obterRelatorioHTML } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import type { PerfilAluno, Academia } from '../../types/api'
 import { formatPhone } from '../../lib/phone'
@@ -12,6 +12,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
+import { useToast } from '../../components/ui/Toast'
 import {
   UserCircleIcon,
   RulerIcon,
@@ -68,6 +69,42 @@ export default function DadosAluno() {
   const [salvandoTornarProfessor, setSalvandoTornarProfessor] = useState(false)
 
   const [feedbackGeral, setFeedbackGeral] = useState<string | null>(null)
+
+  // UX-017: Exportação de dados (LGPD)
+  const { showToast, ToastComponent } = useToast()
+  const [exportando, setExportando] = useState<'csv' | 'json' | 'relatorio' | null>(null)
+
+  async function handleExportar(formato: 'csv' | 'json') {
+    setExportando(formato)
+    try {
+      await baixarExportacao(formato)
+      showToast(`Histórico exportado (${formato.toUpperCase()}). Verifique seus downloads.`)
+    } catch (err: any) {
+      showToast(err?.message || 'Erro ao exportar seus dados.', 'error')
+    } finally {
+      setExportando(null)
+    }
+  }
+
+  async function handleRelatorioPDF() {
+    setExportando('relatorio')
+    try {
+      const html = await obterRelatorioHTML()
+      const win = window.open('', '_blank')
+      if (!win) {
+        showToast('Permita pop-ups para abrir o relatório.', 'error')
+        return
+      }
+      win.document.open()
+      win.document.write(html)
+      win.document.close()
+      showToast('Relatório aberto. Use Ctrl/Cmd+P → Salvar como PDF.')
+    } catch (err: any) {
+      showToast(err?.message || 'Erro ao gerar o relatório.', 'error')
+    } finally {
+      setExportando(null)
+    }
+  }
 
   useEffect(() => {
     async function carregar() {
@@ -274,6 +311,8 @@ export default function DadosAluno() {
           {feedbackGeral}
         </div>
       )}
+
+      {ToastComponent}
 
       {/* 1. Dados Pessoais */}
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
@@ -747,6 +786,52 @@ export default function DadosAluno() {
             Wearables & Saúde
           </button>
         </div>
+      </div>
+
+      {/* 5. Meus dados — Exportação LGPD */}
+      <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="flex items-center gap-2 border-b border-surface-input pb-3">
+          <Download className="h-5 w-5 text-primary" />
+          <h2 className="text-sm font-bold text-text uppercase tracking-wider">Meus dados</h2>
+        </div>
+        <p className="text-xs text-text-muted leading-relaxed">
+          Baixe uma cópia completa do seu histórico (treinos, execuções, medidas e avaliações físicas) — seu direito de portabilidade de dados (LGPD, art. 18).
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => handleExportar('csv')}
+            disabled={exportando !== null}
+            aria-label="Exportar histórico em CSV"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Download className="h-4 w-4 text-text-muted" />
+            {exportando === 'csv' ? 'Exportando...' : 'Exportar histórico (CSV)'}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleExportar('json')}
+            disabled={exportando !== null}
+            aria-label="Exportar tudo em JSON"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Download className="h-4 w-4 text-text-muted" />
+            {exportando === 'json' ? 'Exportando...' : 'Exportar tudo (JSON)'}
+          </button>
+          <button
+            type="button"
+            onClick={handleRelatorioPDF}
+            disabled={exportando !== null}
+            aria-label="Abrir relatório resumido para imprimir como PDF"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer disabled:opacity-50 sm:col-span-2"
+          >
+            <Download className="h-4 w-4 text-text-muted" />
+            {exportando === 'relatorio' ? 'Gerando relatório...' : 'Relatório resumido (PDF)'}
+          </button>
+        </div>
+        <p className="text-xs text-text-muted">
+          💡 No relatório, use <strong>Ctrl/Cmd + P</strong> → <strong>"Salvar como PDF"</strong>.
+        </p>
       </div>
 
       {/* Modal Confirmação: Sair da Academia */}

@@ -11,6 +11,7 @@ import {
   salvarPreferenciasNotificacao,
   PartialPreferenciasNotificacaoSchema,
 } from '../../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
+import { exportarDados, gerarCSV, gerarRelatorioHTML } from '../../../application/usecases/aluno/ExportacaoService.js'
 import { env } from '../../../shared/env.js'
 
 function absolutizeMedia(url: string | null | undefined): string | null {
@@ -548,6 +549,52 @@ export async function alunoRoutes(app: FastifyInstance) {
     const aluno = await resolveAluno(request.currentUser.sub)
     const resultado = await obterHistorico(aluno.id, exercicioId, periodo)
     return reply.status(200).send(resultado)
+  })
+
+  /** GET /alunos/exportar?formato=csv|json — UX-017: portabilidade LGPD (download do histórico completo) */
+  app.get('/exportar', {
+    preHandler,
+    // Proteção básica contra abuso: exportações são leituras pesadas (todo o histórico).
+    config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    const { formato } = z.object({
+      formato: z.enum(['csv', 'json']).default('csv'),
+    }).parse(request.query || {})
+
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const dados = await exportarDados(aluno.id)
+
+    const hoje = new Date()
+    const dataStr = `${hoje.getFullYear()}${String(hoje.getMonth() + 1).padStart(2, '0')}${String(hoje.getDate()).padStart(2, '0')}`
+
+    if (formato === 'json') {
+      return reply
+        .header('Content-Type', 'application/json; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="gymapp-export-${dataStr}.json"`)
+        .send(dados)
+    }
+
+    return reply
+      .header('Content-Type', 'text/csv; charset=utf-8')
+      .header('Content-Disposition', `attachment; filename="gymapp-export-${dataStr}.csv"`)
+      .send(gerarCSV(dados))
+  })
+
+  /**
+   * GET /alunos/exportar/relatorio — UX-017: relatório resumido em HTML print-ready.
+   * Requer JWT; o frontend busca o HTML autenticado e injeta em nova aba via document.write
+   * (uma aba aberta via window.open NÃO carrega o header Authorization).
+   */
+  app.get('/exportar/relatorio', {
+    preHandler,
+    config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    const aluno = await resolveAluno(request.currentUser.sub)
+    const html = await gerarRelatorioHTML(aluno.id)
+    return reply
+      .header('Content-Type', 'text/html; charset=utf-8')
+      .header('Cache-Control', 'no-store')
+      .send(html)
   })
 }
 
