@@ -6,6 +6,7 @@
  */
 
 import { api, ApiError, isNetworkError } from '../api/client'
+import { track } from './analytics'
 
 export const PENDING_EXECUCOES_KEY = 'gymapp_pending_execucoes'
 export const DEAD_EXECUCOES_KEY = 'gymapp_dead_execucoes'
@@ -135,6 +136,15 @@ function isDefinitiveRejection(err: unknown): boolean {
 }
 
 /**
+ * UX-015: reporta o resultado do flush como métricas de produto —
+ * resiliência offline (séries sincronizadas) e fricção (rejeições 4xx).
+ */
+function reportFlush(result: FlushResult): void {
+  if (result.synced > 0) track('offline_sets_flushed', { count: result.synced })
+  if (result.deadLettered > 0) track('offline_sets_deadlettered', { count: result.deadLettered })
+}
+
+/**
  * Envia sequencialmente as execuções pendentes.
  * - Sucesso → remove da fila.
  * - Falha real de rede (ou 5xx transitório) → interrompe e mantém os itens.
@@ -170,6 +180,7 @@ export async function flush(
         // Rede fora ou servidor com erro transitório: para e mantém na fila.
         result.stopped = true
         result.remaining = getPending().length
+        reportFlush(result)
         return result
       }
       remove([item.id])
@@ -181,5 +192,6 @@ export async function flush(
   }
 
   result.remaining = getPending().length
+  reportFlush(result)
   return result
 }

@@ -1,9 +1,29 @@
 import { create } from 'zustand'
 import { api, isNetworkError } from '../api/client'
 import { enqueue, flush as flushOfflineQueue, count as pendingQueueCount } from '../lib/offlineQueue'
+import { track } from '../lib/analytics'
 import type { Treino, ExecucaoExercicio, TreinoExercicio, UltimaCarga } from '../types/api'
 
 const REST_DEFAULT_SEC = 90
+
+/**
+ * UX-015: heurística de "primeiro treino da vida" usando o flag de coach mark
+ * (`gymapp_first_workout_done`, gravado quando as coach marks da 1ª execução
+ * são dispensadas em TreinoExecucao). Se o flag nunca foi gravado, este é
+ * (provavelmente) o primeiro treino do usuário.
+ *
+ * Limitação: se o usuário nunca viu/dispensou as coach marks (ex.: fechou o
+ * app no meio da 1ª execução), um segundo treino também conta como "first".
+ * Não é uma detecção server-side definitiva — apenas a disponível no store.
+ */
+function isFirstWorkout(): boolean {
+  try {
+    return localStorage.getItem('gymapp_first_workout_done') !== 'true'
+  } catch {
+    // localStorage indisponível — assume que já treinou (menos ruído)
+    return false
+  }
+}
 
 // UX-001: execução registrada offline fica marcada até a fila sincronizar.
 export interface ExecucaoLocal extends ExecucaoExercicio {
@@ -94,6 +114,12 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     try {
       const treino = await api.iniciarTreino(id)
       set(applyTreino(treino))
+      // UX-015: ativação (primeiro treino) vs. engajamento (treinos seguintes)
+      if (isFirstWorkout()) {
+        track('first_workout_started')
+      } else {
+        track('workout_started')
+      }
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
       throw err
@@ -187,6 +213,8 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
           pendingSyncCount: pendingQueueCount(),
         }
       })
+      // UX-015: série registrada (otimista, offline) — engajamento por sessão
+      track('set_logged', { rpe: rpe != null })
       get().startRest(restSec)
       return
     }
@@ -198,6 +226,8 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
       if (dup) return s
       return { execucoes: [...s.execucoes, execucao] }
     })
+    // UX-015: série registrada (online) — engajamento por sessão
+    track('set_logged', { rpe: rpe != null })
     get().startRest(restSec)
   },
 
@@ -219,7 +249,7 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
       feedbackComentario?: string
     }
   ) => {
-    const { treinoAtual, timer } = get()
+    const { treinoAtual, timer, execucoes } = get()
     if (!treinoAtual) return
 
     set({ loading: true, timerFinalizado: timer, restActive: false, restSeconds: 0 })
@@ -233,6 +263,11 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
         frequenciaCardiacaMaxima: metrics?.frequenciaCardiacaMaxima,
       })
       set({ primeiroTreino: res.primeiroTreino ?? false })
+      // UX-015: north-star — treino concluído (duração + séries da sessão)
+      track('workout_completed', {
+        durationMin: Math.round(timer / 60),
+        seriesCount: execucoes.length,
+      })
       get().reset()
     } catch (err) {
       set({ error: (err as Error).message, loading: false })

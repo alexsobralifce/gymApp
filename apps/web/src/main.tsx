@@ -3,7 +3,13 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import App from './App'
+import { initAnalytics } from './lib/analytics'
 import './index.css'
+
+// UX-015: analytics de produto (opt-in). Sem VITE_POSTHOG_KEY vira no-op —
+// nenhum script é carregado e nenhum evento sai do dispositivo. Guard de
+// double-init dentro do próprio módulo.
+initAnalytics()
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||

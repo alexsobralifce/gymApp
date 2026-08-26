@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { api, ApiError } from '../api/client'
 import type { User, ParqRespostas } from '../types/api'
 import { debugLog } from '../lib/debug'
+import { track } from '../lib/analytics'
 
 // Persistência da sessão: além dos tokens (accessToken/refreshToken), guarda o
 // objeto user para restaurar a UI instantaneamente ao reabrir o app e sobreviver
@@ -58,6 +59,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = await api.getMe()
       saveStoredUser(user)
       set({ user, loading: false })
+      // UX-015: ativação/retenção (DAU)
+      track('login_succeeded', { role: user.role })
     } catch (err) {
       const msg = (err as Error).message
       const friendlyMsg = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : msg
@@ -81,6 +84,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       debugLog('AuthStore', 'api.getMe OK!', { userId: user.id, email: user.email })
       saveStoredUser(user)
       set({ user, loading: false })
+      // UX-015: login social também conta como ativação/retenção (DAU)
+      track('login_succeeded', { role: user.role })
       return result.isNew
     } catch (err) {
       const msg = (err as Error).message
@@ -95,6 +100,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       await api.register(nome, email, senha, role, telefone, parqRespostas)
+      // UX-015: conversão de cadastro (o auto-login em seguida emite login_succeeded)
+      track('register_completed', { role })
       await get().login(email, senha)
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
@@ -107,6 +114,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem('refreshToken')
     saveStoredUser(null)
     set({ user: null })
+    // UX-015: fim de sessão (retenção)
+    track('logout')
   },
 
   fetchUser: async () => {
