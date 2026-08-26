@@ -37,7 +37,7 @@ interface TrainingState {
   cancelarTreino: (id: string) => Promise<void>
   setExercicioAtual: (exercicio: TreinoExercicio | null) => void
 
-  registrarExecucao: (exercicioId: string, serieNumero: number, repeticoes: number, cargaKg: number) => Promise<void>
+  registrarExecucao: (exercicioId: string, serieNumero: number, repeticoes: number, cargaKg: number, rpe?: number) => Promise<void>
   substituirExercicio: (treinoExercicioId: string, novoExercicioId: string) => Promise<void>
   finalizarTreino: (
     avaliacao?: string,
@@ -135,7 +135,7 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
   setExercicioAtual: (exercicio) => set({ exercicioAtual: exercicio }),
 
 
-  registrarExecucao: async (exercicioId, serieNumero, repeticoes, cargaKg) => {
+  registrarExecucao: async (exercicioId, serieNumero, repeticoes, cargaKg, rpe) => {
     const { treinoAtual, execucoes } = get()
     if (!treinoAtual) return
 
@@ -157,13 +157,14 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
         serieNumero,
         repeticoes: reps,
         cargaKg: carga,
+        rpe,
       })
     } catch (err) {
       if (!isNetworkError(err)) throw err
       // UX-001: sem conexão — enfileira a série e mantém otimista no estado local.
       const queued = enqueue({
         treinoId: treinoAtual.id,
-        payload: { exercicioId, serieNumero, repeticoes: reps, cargaKg: carga },
+        payload: { exercicioId, serieNumero, repeticoes: reps, cargaKg: carga, rpe },
       })
       const execucaoOffline: ExecucaoLocal = {
         id: queued.id,
@@ -172,6 +173,7 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
         serie_numero: serieNumero,
         repeticoes: reps,
         carga_kg: carga,
+        rpe: rpe ?? null,
         registrado_em: queued.queuedAt,
         pendingSync: true,
       }

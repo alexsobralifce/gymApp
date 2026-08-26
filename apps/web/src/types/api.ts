@@ -106,6 +106,7 @@ export interface ExecucaoExercicio {
   serie_numero: number
   repeticoes: number
   carga_kg: number
+  rpe?: number | null
   registrado_em: string
 }
 

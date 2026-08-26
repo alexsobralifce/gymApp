@@ -3,7 +3,7 @@ import { useParams, useNavigate, useBlocker } from 'react-router-dom'
 import { KeepAwake } from '@capgo/capacitor-keep-awake'
 import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, CheckIcon, ChevronLeftIcon, XIcon } from '../../components/icons/Icon'
-import { RepeatIcon, CloudOffIcon } from 'lucide-react'
+import { RepeatIcon, CloudOffIcon, GaugeIcon, ChevronDownIcon } from 'lucide-react'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
@@ -23,6 +23,26 @@ const DIFICULDADE_OPCOES = [
 ]
 
 const REST_PRESETS = [60, 90, 120, 180]
+
+// UX-010: RPE (percepção subjetiva de esforço, 1-10) opcional por série
+const RPE_OPCOES = [
+  { valor: 1, rotulo: 'Muito leve' },
+  { valor: 2, rotulo: 'Bem leve' },
+  { valor: 3, rotulo: 'Leve' },
+  { valor: 4, rotulo: 'Moderado' },
+  { valor: 5, rotulo: 'Um pouco difícil' },
+  { valor: 6, rotulo: 'Difícil' },
+  { valor: 7, rotulo: 'Muito difícil' },
+  { valor: 8, rotulo: 'Muito intenso' },
+  { valor: 9, rotulo: 'Quase falha' },
+  { valor: 10, rotulo: 'Falha muscular' },
+]
+
+// UX-016: limiares de alertas de segurança
+const SESSAO_LONGA_SEGUNDOS = 90 * 60
+const DESCANSO_LONGO_SEGUNDOS = 5 * 60
+const RPE_ALTO_MIN = 9
+const RPE_ALTO_LIMITE_SETES = 2
 
 function ExerciseGif({
   gifSrc,
@@ -159,6 +179,30 @@ export default function AlunoTreinoExecucao() {
   const [resuming, setResuming] = useState(false)
   const coach = useCoachMark(!!treinoAtual)
   useIncompleteWorkoutReminder(treinoAtual, avaliando || showAvaliacao)
+
+  // ─── UX-010: RPE opcional por série ─────────────────────
+  const [rpeSelecionado, setRpeSelecionado] = useState<number | null>(null)
+  const [rpeAtivo, setRpeAtivo] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('gymapp_rpe_ativo') === '1'
+    } catch {
+      return false
+    }
+  })
+
+  // Expansão do controle de RPE lembrada entre sessões (colapsado por padrão)
+  useEffect(() => {
+    try {
+      localStorage.setItem('gymapp_rpe_ativo', rpeAtivo ? '1' : '0')
+    } catch {
+      /* storage indisponível — o controle apenas não lembra o estado */
+    }
+  }, [rpeAtivo])
+
+  // ─── UX-016: alertas de segurança contextuais (não punitivos) ────
+  const [dismissedSessaoLonga, setDismissedSessaoLonga] = useState(false)
+  const [dismissedRpeAlto, setDismissedRpeAlto] = useState(false)
+  const setsRpeAlto = execucoes.filter((e) => (e.rpe ?? 0) >= RPE_ALTO_MIN).length
 
   // ─── UX-004: Substituição de exercício ────────────────────
   const [substituindoExercicio, setSubstituindoExercicio] = useState<TreinoExercicio | null>(null)
@@ -422,7 +466,8 @@ export default function AlunoTreinoExecucao() {
 
     registrandoRef.current.add(key)
     try {
-      await registrarExecucao(exercicioId, serieNumero, reps, carga)
+      await registrarExecucao(exercicioId, serieNumero, reps, carga, rpeSelecionado ?? undefined)
+      setRpeSelecionado(null)
     } catch (err) {
       console.error(err)
     } finally {
@@ -445,13 +490,14 @@ export default function AlunoTreinoExecucao() {
       const carga = Math.max(0, Number(val.carga) || 0)
       registrandoRef.current.add(key)
       try {
-        await registrarExecucao(ex.exercicio_id, sNum, reps, carga)
+        await registrarExecucao(ex.exercicio_id, sNum, reps, carga, rpeSelecionado ?? undefined)
       } catch (err) {
         console.error(err)
       } finally {
         registrandoRef.current.delete(key)
       }
     }
+    if (seriesPendentes.length > 0) setRpeSelecionado(null)
   }
 
   async function handleFinalizar(avaliacao?: string) {
@@ -589,12 +635,103 @@ export default function AlunoTreinoExecucao() {
                 style={{ width: `${restTotal > 0 ? (restSeconds / restTotal) * 100 : 0}%` }}
               />
             </div>
+            {/* UX-016: dica gentil de descanso longo (some ao resetar o timer) */}
+            {restTotal > DESCANSO_LONGO_SEGUNDOS && (
+              <p role="status" aria-live="polite" className="mt-2 text-[11px] font-semibold text-warning leading-snug">
+                Descanso longo — uma caminhada leve ajuda na recuperação.
+              </p>
+            )}
           </div>
         </div>
       )}
 
       {/* Exercise List */}
       <div className="flex-1 px-4 py-4 space-y-4 max-w-xl mx-auto w-full pb-28">
+        {/* UX-016: alerta de sessão longa (>90min), dispensável, não bloqueia */}
+        {timer > SESSAO_LONGA_SEGUNDOS && !dismissedSessaoLonga && (
+          <div role="status" aria-live="polite" className="rounded-2xl border border-warning/40 bg-warning/10 p-3.5 flex items-start gap-2.5">
+            <span aria-hidden="true" className="text-sm leading-none mt-0.5">⏱️</span>
+            <p className="flex-1 text-xs font-semibold text-warning leading-relaxed">
+              Sessão longa — se sentir fadiga intensa, considere finalizar por hoje.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDismissedSessaoLonga(true)}
+              aria-label="Dispensar alerta de sessão longa"
+              className="shrink-0 rounded-lg p-1 text-warning/80 hover:text-warning hover:bg-warning/10 transition-colors cursor-pointer"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* UX-016: alerta de esforço muito alto (2+ séries RPE >= 9), dispensável */}
+        {setsRpeAlto >= RPE_ALTO_LIMITE_SETES && !dismissedRpeAlto && (
+          <div role="status" aria-live="polite" className="rounded-2xl border border-warning/40 bg-warning/10 p-3.5 flex items-start gap-2.5">
+            <span aria-hidden="true" className="text-sm leading-none mt-0.5">💧</span>
+            <p className="flex-1 text-xs font-semibold text-warning leading-relaxed">
+              Esforço muito alto registrado. Hidrate-se e reduza a carga se sentir dor — desconforto agudo não é normal.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDismissedRpeAlto(true)}
+              aria-label="Dispensar alerta de esforço alto"
+              className="shrink-0 rounded-lg p-1 text-warning/80 hover:text-warning hover:bg-warning/10 transition-colors cursor-pointer"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* UX-010: controle colapsável de Esforço (RPE) — opcional, zero fricção */}
+        <div className="rounded-2xl border border-border bg-surface-card overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setRpeAtivo((v) => !v)}
+            aria-expanded={rpeAtivo}
+            aria-controls="rpe-panel"
+            className="w-full min-h-11 flex items-center justify-between gap-2 px-4 py-3 cursor-pointer hover:bg-surface-input/30 transition-colors"
+          >
+            <span className="flex items-center gap-2 text-sm font-bold text-text">
+              <GaugeIcon className="h-4 w-4 text-primary" />
+              Esforço (RPE)
+              {rpeSelecionado !== null && (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-extrabold text-primary">
+                  RPE {rpeSelecionado}
+                </span>
+              )}
+            </span>
+            <ChevronDownIcon
+              className={`h-4 w-4 text-text-muted transition-transform duration-200 ${rpeAtivo ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {rpeAtivo && (
+            <div id="rpe-panel" className="px-3.5 pb-3.5">
+              <p className="text-[11px] text-text-muted mb-2">
+                Opcional — marque o esforço da próxima série. A seleção é limpa após registrar.
+              </p>
+              <div className="grid grid-cols-5 gap-1.5">
+                {RPE_OPCOES.map((op) => (
+                  <button
+                    key={op.valor}
+                    type="button"
+                    onClick={() => setRpeSelecionado((atual) => (atual === op.valor ? null : op.valor))}
+                    aria-label={`RPE ${op.valor} — ${op.rotulo}`}
+                    aria-pressed={rpeSelecionado === op.valor}
+                    className={`min-h-9 rounded-lg text-sm font-extrabold transition-all cursor-pointer ${
+                      rpeSelecionado === op.valor
+                        ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                        : 'bg-surface-input text-text-muted hover:text-text'
+                    }`}
+                  >
+                    {op.valor}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <OfflinePreloadBadge exercicios={exercicios} className="w-full justify-center text-center" />
         {exercicios.map((ex, exIdx) => {
           const exDetail = ex.exercicio
@@ -705,8 +842,18 @@ export default function AlunoTreinoExecucao() {
                         <span className="text-xs text-text-muted font-medium">reps</span>
                         <div className="flex-1" />
                         {isLogged ? (
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-success/15 text-success">
-                            <CheckIcon className="h-4 w-4" />
+                          <div className="flex items-center gap-1.5">
+                            {log.rpe != null && (
+                              <span
+                                className="rounded-md bg-surface-input px-1.5 py-1 text-[10px] font-bold text-text-muted"
+                                title="Percepção de esforço registrada"
+                              >
+                                RPE {log.rpe}
+                              </span>
+                            )}
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-success/15 text-success">
+                              <CheckIcon className="h-4 w-4" />
+                            </div>
                           </div>
                         ) : (
                           <button

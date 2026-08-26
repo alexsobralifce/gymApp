@@ -16,6 +16,7 @@ export interface ExecucaoPayload {
   serieNumero: number
   repeticoes: number
   cargaKg: number
+  rpe?: number
 }
 
 export interface PendingExecucao {

@@ -361,6 +361,7 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
   serieNumero: number
   repeticoes: number
   cargaKg: number
+  rpe?: number
 }) {
   const treino = await prisma.treino.findUnique({
     where: { id: treinoId },
@@ -386,6 +387,10 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
   if (input.cargaKg < 0) {
     throw new ValidationError('Carga não pode ser negativa')
   }
+  // UX-010: RPE opcional, sempre 1-10 quando presente
+  if (input.rpe !== undefined && (!Number.isInteger(input.rpe) || input.rpe < 1 || input.rpe > 10)) {
+    throw new ValidationError('RPE deve ser um inteiro entre 1 e 10')
+  }
 
   const jaRegistrada = await prisma.execucaoExercicio.findFirst({
     where: {
@@ -408,6 +413,7 @@ export async function registrarExecucao(treinoId: string, alunoId: string, input
         serie_numero: input.serieNumero,
         repeticoes: input.repeticoes,
         carga_kg: input.cargaKg,
+        rpe: input.rpe,
       },
     }),
     prisma.treino.update({

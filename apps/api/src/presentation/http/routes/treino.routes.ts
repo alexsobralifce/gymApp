@@ -287,6 +287,7 @@ export async function treinoRoutes(app: FastifyInstance) {
       serieNumero: z.number().int().min(1),
       repeticoes: z.number().int().min(1),
       cargaKg: z.number().min(0),
+      rpe: z.number().int().min(1).max(10).optional(),
     }).parse(request.body)
 
     const execucao = await registrarExecucao(id, aluno.id, body)

@@ -283,6 +283,7 @@ model ExecucaoExercicio {
   serie_numero  Int
   repeticoes    Int
   carga_kg      Float
+  rpe           Int?      /// UX-010: Percepção subjetiva de esforço (1-10) informada pelo aluno
   registrado_em DateTime  @default(now())
   exercicio     Exercicio @relation(fields: [exercicio_id], references: [id])
   treino        Treino    @relation(fields: [treino_id], references: [id])

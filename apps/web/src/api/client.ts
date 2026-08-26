@@ -252,7 +252,7 @@ export const api = {
   iniciarTreino: (id: string) =>
     api.post<Treino & { execucoes?: ExecucaoExercicio[] }>(`/treinos/${id}/iniciar`),
 
-  registrarExecucao: (treinoId: string, data: { exercicioId: string; serieNumero: number; repeticoes: number; cargaKg: number }) =>
+  registrarExecucao: (treinoId: string, data: { exercicioId: string; serieNumero: number; repeticoes: number; cargaKg: number; rpe?: number }) =>
     api.post<ExecucaoExercicio>(`/treinos/${treinoId}/execucoes`, data),
 
   cancelarTreino: (id: string) =>
@@ -741,4 +741,52 @@ export const api = {
       planos?: Array<{ id: string; nome: string }>
       treinosCriadosCount: number
     }>('/treinos/ia/gerar-e-salvar', data),
+
+  // ─── UX-013: Histórico de desempenho por exercício ────────────────
+  getHistoricoExercicio: (exercicioId: string, periodo: PeriodoHistorico = '90d') =>
+    api.get<HistoricoExercicioResponse>(`/alunos/exercicios/${exercicioId}/historico?periodo=${periodo}`),
+
+  // ─── Wearables & Saúde (UX-012) ─────────────────────
+  healthSync: (data: HealthSyncPayload) =>
+    api.post<MedidaCorporal>('/alunos/health-sync', data),
+}
+
+// ─── UX-013: Tipos do histórico por exercício ────────────────────────────────
+export type PeriodoHistorico = '7d' | '30d' | '90d' | 'tudo'
+
+export interface SessaoHistoricoExercicio {
+  data: string // YYYY-MM-DD (agrupamento por dia de sessão)
+  cargaMaxima: number
+  volumeTotal: number
+  repsTop: number
+  seriesCount: number
+  estimativa1RM: number | null
+}
+
+export interface HistoricoExercicioResponse {
+  exercicio: { id: string; nome: string; grupo_muscular: string | null }
+  sessoes: SessaoHistoricoExercicio[]
+  recordePessoal: boolean
+  cargaAnterior: number | null
+  estatisticas: {
+    melhorCarga: number
+    volumeTotalPeriodo: number
+    sessoesCount: number
+    estimativa1RMAtual: number | null
+  }
+}
+
+// ─── UX-012: Wearables & Saúde ──────────────────────────
+/**
+ * Payload aceito por `POST /alunos/health-sync` (UC-Health):
+ * - heartRateAvg: FC média do dia (null se não houver leitura)
+ * - activeCalories: calorias ativas do dia (obrigatório — 0 se desconhecido)
+ * - steps: passos do dia (opcional)
+ * - data: ISO datetime — o backend agrupa por dia (UTC)
+ */
+export interface HealthSyncPayload {
+  heartRateAvg: number | null
+  activeCalories: number
+  steps?: number
+  data: string
 }
