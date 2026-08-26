@@ -1,8 +1,14 @@
 import { create } from 'zustand'
-import { api } from '../api/client'
+import { api, isNetworkError } from '../api/client'
+import { enqueue, flush as flushOfflineQueue, count as pendingQueueCount } from '../lib/offlineQueue'
 import type { Treino, ExecucaoExercicio, TreinoExercicio, UltimaCarga } from '../types/api'
 
 const REST_DEFAULT_SEC = 90
+
+// UX-001: execução registrada offline fica marcada até a fila sincronizar.
+export interface ExecucaoLocal extends ExecucaoExercicio {
+  pendingSync?: boolean
+}
 
 function timerDesdeInicio(iniciadoEm?: string | null): number {
   if (!iniciadoEm) return 0
@@ -13,7 +19,7 @@ function timerDesdeInicio(iniciadoEm?: string | null): number {
 interface TrainingState {
   treinoAtual: Treino | null
   exercicioAtual: TreinoExercicio | null
-  execucoes: ExecucaoExercicio[]
+  execucoes: ExecucaoLocal[]
   ultimasCargas: UltimaCarga[]
   timer: number
   timerFinalizado: number
@@ -23,6 +29,8 @@ interface TrainingState {
   loading: boolean
   error: string | null
   primeiroTreino: boolean
+  pendingSyncCount: number
+  syncingPending: boolean
 
   iniciarTreino: (id: string) => Promise<void>
   retomarTreino: (id: string) => Promise<void>
@@ -46,6 +54,7 @@ interface TrainingState {
   startRest: (seconds?: number) => void
   skipRest: () => void
   tickRest: () => void
+  syncPending: () => Promise<void>
   reset: () => void
 }
 
@@ -77,6 +86,8 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
   loading: false,
   error: null,
   primeiroTreino: false,
+  pendingSyncCount: pendingQueueCount(),
+  syncingPending: false,
 
   iniciarTreino: async (id) => {
     set({ loading: true, error: null })
@@ -136,12 +147,48 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     const reps = Math.max(1, Math.floor(Number(repeticoes) || 0))
     const carga = Math.max(0, Number(cargaKg) || 0)
 
-    const execucao = await api.registrarExecucao(treinoAtual.id, {
-      exercicioId,
-      serieNumero,
-      repeticoes: reps,
-      cargaKg: carga,
-    })
+    const exConfig = treinoAtual.exercicios?.find((e) => e.exercicio_id === exercicioId)
+    const restSec = exConfig?.tempo_descanso_segundos || REST_DEFAULT_SEC
+
+    let execucao: ExecucaoLocal
+    try {
+      execucao = await api.registrarExecucao(treinoAtual.id, {
+        exercicioId,
+        serieNumero,
+        repeticoes: reps,
+        cargaKg: carga,
+      })
+    } catch (err) {
+      if (!isNetworkError(err)) throw err
+      // UX-001: sem conexão — enfileira a série e mantém otimista no estado local.
+      const queued = enqueue({
+        treinoId: treinoAtual.id,
+        payload: { exercicioId, serieNumero, repeticoes: reps, cargaKg: carga },
+      })
+      const execucaoOffline: ExecucaoLocal = {
+        id: queued.id,
+        treino_id: treinoAtual.id,
+        exercicio_id: exercicioId,
+        serie_numero: serieNumero,
+        repeticoes: reps,
+        carga_kg: carga,
+        registrado_em: queued.queuedAt,
+        pendingSync: true,
+      }
+      set((s) => {
+        const dup = s.execucoes.some(
+          (e) => e.exercicio_id === exercicioId && e.serie_numero === serieNumero,
+        )
+        if (dup) return s
+        return {
+          execucoes: [...s.execucoes, execucaoOffline],
+          pendingSyncCount: pendingQueueCount(),
+        }
+      })
+      get().startRest(restSec)
+      return
+    }
+
     set((s) => {
       const dup = s.execucoes.some(
         (e) => e.exercicio_id === exercicioId && e.serie_numero === serieNumero,
@@ -149,8 +196,6 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
       if (dup) return s
       return { execucoes: [...s.execucoes, execucao] }
     })
-    const exConfig = treinoAtual.exercicios?.find((e) => e.exercicio_id === exercicioId)
-    const restSec = exConfig?.tempo_descanso_segundos || REST_DEFAULT_SEC
     get().startRest(restSec)
   },
 
@@ -232,6 +277,39 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     set({ restSeconds: restSeconds - 1 })
   },
 
+  // UX-001: sincroniza a fila offline. Chamado no início do app e no evento 'online'.
+  syncPending: async () => {
+    const { syncingPending } = get()
+    if (syncingPending) return
+    set({ syncingPending: true })
+    try {
+      const result = await flushOfflineQueue()
+      set({ pendingSyncCount: pendingQueueCount() })
+      if (result.synced === 0 || result.stopped) return
+
+      const { treinoAtual } = get()
+      if (treinoAtual?.status !== 'EM_EXECUCAO') return
+      if (!result.treinoIds.includes(treinoAtual.id)) return
+
+      // Reconcilia a sessão atual com o servidor: troca as entradas locais
+      // (ids temporários) pelas versões persistidas, preservando qualquer
+      // execução registrada durante o flush que ainda não subiu.
+      const detalhe = await api.getTreino(treinoAtual.id)
+      const serverExecucoes = detalhe.execucoes ?? []
+      set((s) => {
+        const vistos = new Set(serverExecucoes.map((e) => `${e.exercicio_id}-${e.serie_numero}`))
+        const extras = s.execucoes.filter(
+          (e) => !vistos.has(`${e.exercicio_id}-${e.serie_numero}`),
+        )
+        return { execucoes: [...serverExecucoes, ...extras] }
+      })
+    } catch {
+      // Falha de reconciliação não quebra o app; a fila tenta de novo no próximo 'online'.
+    } finally {
+      set({ syncingPending: false })
+    }
+  },
+
   reset: () => set({
     treinoAtual: null,
     exercicioAtual: null,
@@ -245,3 +323,13 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
     error: null,
   }),
 }))
+
+// UX-001: sincroniza pendências de sessões offline anteriores no início do app
+// e sempre que a conexão voltar.
+if (typeof window !== 'undefined') {
+  const syncOfflineQueue = () => {
+    useTrainingStore.getState().syncPending()
+  }
+  window.addEventListener('online', syncOfflineQueue)
+  syncOfflineQueue()
+}

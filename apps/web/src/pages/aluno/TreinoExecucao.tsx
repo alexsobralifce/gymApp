@@ -3,7 +3,7 @@ import { useParams, useNavigate, useBlocker } from 'react-router-dom'
 import { KeepAwake } from '@capgo/capacitor-keep-awake'
 import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, CheckIcon, ChevronLeftIcon, XIcon } from '../../components/icons/Icon'
-import { RepeatIcon } from 'lucide-react'
+import { RepeatIcon, CloudOffIcon } from 'lucide-react'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
@@ -140,11 +140,13 @@ export default function AlunoTreinoExecucao() {
     execucoes,
     ultimasCargas,
     error,
+    pendingSyncCount,
   } = useTrainingStore()
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
   const restIntervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
   const registrandoRef = useRef<Set<string>>(new Set())
   const allowLeaveRef = useRef(false)
+  const prevPendingSyncRef = useRef(pendingSyncCount)
 
   const [inputs, setInputs] = useState<Record<string, { carga: string; reps: string }>>({})
   const [previewExercicio, setPreviewExercicio] = useState<any | null>(null)
@@ -305,6 +307,15 @@ export default function AlunoTreinoExecucao() {
       window.removeEventListener('focus', onVisibility)
     }
   }, [syncTimer])
+
+  // UX-001: avisa quando a fila offline termina de sincronizar (pendingSyncCount > 0 → 0)
+  useEffect(() => {
+    const prev = prevPendingSyncRef.current
+    prevPendingSyncRef.current = pendingSyncCount
+    if (prev > 0 && pendingSyncCount === 0) {
+      showToast('Séries sincronizadas')
+    }
+  }, [pendingSyncCount, showToast])
 
   useEffect(() => {
     let cancelled = false
@@ -499,6 +510,20 @@ export default function AlunoTreinoExecucao() {
             {String(Math.floor(timer / 60)).padStart(2, '0')}:{String(timer % 60).padStart(2, '0')}
           </button>
         </div>
+
+        {/* UX-001: séries registradas offline aguardando sincronização */}
+        {pendingSyncCount > 0 && (
+          <div className="pointer-events-none absolute left-1/2 top-14 z-30 -translate-x-1/2">
+            <span
+              role="status"
+              aria-label={`${pendingSyncCount} ${pendingSyncCount === 1 ? 'série aguardando' : 'séries aguardando'} sincronização`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-surface-card/95 px-3 py-1 text-[11px] font-bold text-warning shadow-lg backdrop-blur-md"
+            >
+              <CloudOffIcon className="h-3.5 w-3.5" />
+              {pendingSyncCount} {pendingSyncCount === 1 ? 'série aguardando' : 'séries aguardando'} sincronização
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Progress Bar */}
