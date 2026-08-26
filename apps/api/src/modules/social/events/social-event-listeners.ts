@@ -1,5 +1,6 @@
 import { eventBus } from '../../../shared/events/event-bus.js'
 import { socialFanoutQueue, socialBadgeQueue, socialLeaderboardQueue } from '../../../jobs/social/queues.js'
+import { buildJobId } from '../../../jobs/social/job-id.js'
 
 export function registerSocialEventListeners() {
   eventBus.on('treino.iniciado', async (event) => {
@@ -14,7 +15,8 @@ export function registerSocialEventListeners() {
         eventType: 'treino.iniciado',
       }, {
         // jobId único por sessão — permite novo post a cada início de treino
-        jobId: `fanout:${event.payload.treinoId}:${ts}:iniciado`,
+        // (buildJobId sanitiza ":" — BullMQ rejeita ":" em jobIds custom)
+        jobId: buildJobId('fanout', event.payload.treinoId, ts, 'iniciado'),
       })
     } catch (err) {
       console.warn('[Social] Falha ao enfileirar treino.iniciado:', err)
@@ -32,21 +34,21 @@ export function registerSocialEventListeners() {
         timestamp: ts,
         eventType: 'treino.concluido',
       }, {
-        jobId: `fanout:${event.payload.treinoId}:${ts}:concluido`,
+        jobId: buildJobId('fanout', event.payload.treinoId, ts, 'concluido'),
       })
 
       await socialBadgeQueue.add('award-badge', {
         alunoId: event.payload.alunoId,
         badgeTipo: 'primeiros_10_treinos',
       }, {
-        jobId: `badge:${event.payload.alunoId}:10treinos`,
+        jobId: buildJobId('badge', event.payload.alunoId, '10treinos'),
       })
 
       await socialLeaderboardQueue.add('update-xp', {
         treinoId: event.payload.treinoId,
         alunoId: event.payload.alunoId,
       }, {
-        jobId: `xp:${event.payload.treinoId}:${ts}`,
+        jobId: buildJobId('xp', event.payload.treinoId, ts),
       })
     } catch (err) {
       console.warn('[Social] Falha ao enfileirar treino.concluido:', err)
@@ -63,7 +65,7 @@ export function registerSocialEventListeners() {
         timestamp: new Date().toISOString(),
         eventType: 'treino.concluido',
       }, {
-        jobId: `fanout:${event.payload.alunoId}:${event.payload.exercicioId}:recorde`,
+        jobId: buildJobId('fanout', event.payload.alunoId, event.payload.exercicioId, 'recorde'),
       })
     } catch (err) {
       console.warn('[Social] Falha ao enfileirar recorde_pessoal:', err)

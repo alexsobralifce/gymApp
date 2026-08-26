@@ -2,6 +2,7 @@ import { Job } from 'bullmq'
 import { PostTipo, Visibilidade } from '@prisma/client'
 import { prisma } from '../../infrastructure/database/prisma.js'
 import { socialNotifyQueue } from './queues.js'
+import { buildJobId } from './job-id.js'
 import { env } from '../../shared/env.js'
 
 function absolutizeMedia(url: string | null | undefined): string | null {
@@ -97,6 +98,6 @@ export async function handleFanoutPost(job: Job<FanoutPayload>) {
   await socialNotifyQueue.add(
     'notify-friends',
     { postId: post.id, alunoId },
-    { jobId: `notify:${post.id}` },
+    { jobId: buildJobId('notify', post.id) },
   )
 }

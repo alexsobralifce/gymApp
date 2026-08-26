@@ -22,6 +22,22 @@ async function plugin(app: FastifyInstance) {
       })
     }
 
+    // Erros de rate limit do @fastify/rate-limit. O plugin lança o objeto
+    // retornado pelo errorResponseBuilder configurado em app.ts —
+    // `{ error: 'RATE_LIMIT', message }` — que NÃO carrega statusCode; sem este
+    // tratamento, o objeto cairia no path genérico e viraria 500 em vez de 429.
+    // Também cobre o shape default do plugin (Error com statusCode 429).
+    const isRateLimit =
+      (error as FastifyError & { error?: unknown }).statusCode === 429 ||
+      (error as { error?: unknown }).error === 'RATE_LIMIT'
+
+    if (isRateLimit) {
+      return reply.status(429).send({
+        error: 'RATE_LIMIT',
+        message: error.message,
+      })
+    }
+
     // Erros do Fastify (ex: schema validation)
     if ('statusCode' in error && error.statusCode && error.statusCode < 500) {
       return reply.status(error.statusCode).send({
