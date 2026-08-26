@@ -420,10 +420,18 @@ export default function AlunoCriarTreino() {
                             alt={ex.nome}
                             className="w-full h-full object-cover"
                             loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              if (e.currentTarget.parentElement) {
+                                const fallback = e.currentTarget.parentElement.querySelector('.img-fallback')
+                                if (fallback) fallback.classList.remove('hidden')
+                              }
+                            }}
                           />
-                        ) : (
+                        ) : null}
+                        <div className={`img-fallback flex items-center justify-center ${thumb ? 'hidden' : ''}`}>
                           <DumbbellIcon className="w-6 h-6 text-text-muted opacity-40" />
-                        )}
+                        </div>
                         <span className="absolute bottom-0.5 right-0.5 bg-black/80 px-1 rounded text-[8px] font-extrabold text-white">
                           GIF
                         </span>

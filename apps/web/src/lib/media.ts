@@ -24,6 +24,14 @@ export function getApiBaseUrl(): string {
     : ''
 
   const native = isNativePlatform()
+
+  // Se estiver em ambiente local no navegador (Vite dev server em localhost), usar a API local por padrão
+  if (typeof window !== 'undefined' && !native) {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3333'
+    }
+  }
+
   let finalUrl = envUrl || DEFAULT_API_URL
 
   if (native && envUrl.includes('localhost')) {
@@ -38,8 +46,8 @@ export function getApiBaseUrl(): string {
 
 /**
  * Resolve URL de mídia (avatar, foto do feed, GIF de exercício).
- * - Absolute (http...) → força HTTPS (evita ATS/Mixed Content no iOS) e codifica espaços/acentos via encodeURI
- * - Relative (/uploads/...) → prefixa com VITE_API_URL
+ * - Absolute (http...) → força HTTPS para domínios externos (evita ATS/Mixed Content no iOS) e codifica espaços/acentos via encodeURI
+ * - Relative (/uploads/..., /exercises/...) → prefixa com getApiBaseUrl()
  */
 export function resolveMediaUrl(url?: string | null): string | null {
   if (url == null) return null
@@ -52,8 +60,8 @@ export function resolveMediaUrl(url?: string | null): string | null {
     fullUrl = s.startsWith('/') ? `${baseUrl}${s}` : `${baseUrl}/${s}`
   }
 
-  // Converte http:// para https:// para evitar bloqueio ATS / Mixed Content no iOS Safari
-  if (fullUrl.startsWith('http://')) {
+  // Converte http:// para https:// para evitar bloqueio ATS / Mixed Content no iOS Safari (exceto localhost / 127.0.0.1)
+  if (fullUrl.startsWith('http://') && !fullUrl.includes('localhost') && !fullUrl.includes('127.0.0.1')) {
     fullUrl = fullUrl.replace('http://', 'https://')
   }
 

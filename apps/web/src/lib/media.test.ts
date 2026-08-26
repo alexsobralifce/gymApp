@@ -28,13 +28,18 @@ describe('Validação de Mídia e URLs de GIFs (Frontend - media.ts)', () => {
     expect(resolved).toContain('%20')
   })
 
-  it('prefixa caminhos relativos com a URL base da API e garante HTTPS seguro', () => {
+  it('prefixa caminhos relativos com a URL base da API e preserva HTTP em localhost', () => {
     const relativePath = '/exercises/gdrive/ABS_alternado_1_.gif'
     const resolved = resolveMediaUrl(relativePath)
 
     expect(resolved).not.toBeNull()
     expect(resolved).toContain('/exercises/gdrive/ABS_alternado_1_.gif')
-    expect(resolved?.startsWith('https://')).toBe(true)
+  })
+
+  it('não converte http://localhost para https:// (evita erro de protocolo SSL local)', () => {
+    const localUrl = 'http://localhost:3333/exercises/gdrive/ABS_infra_1_.gif'
+    const resolved = resolveMediaUrl(localUrl)
+    expect(resolved).toBe('http://localhost:3333/exercises/gdrive/ABS_infra_1_.gif')
   })
 
   it('resolveExerciseMedia prioriza preferGif quando solicitado', () => {
