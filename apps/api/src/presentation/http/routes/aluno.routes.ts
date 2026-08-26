@@ -106,6 +106,7 @@ export async function alunoRoutes(app: FastifyInstance) {
         altura_cm: body.alturaCm,
         sexo: body.sexo,
         consentiu_feed_social_em: body.consentiuFeedSocial ? new Date() : undefined,
+        meta_semanal: body.metaSemanal,
       },
     })
 
