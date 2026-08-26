@@ -11,7 +11,8 @@
     "dev:web": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces --if-present",
-    "verify": "npm run build --workspaces && npm run lint --workspace=apps/web && npm run test --workspace=apps/web"
+    "verify": "npm run build --workspaces && npm run lint --workspace=apps/web && npm run test --workspace=apps/web",
+    "dev": "bash dev.sh"
   },
   "engines": {
     "node": ">=20.0.0"
