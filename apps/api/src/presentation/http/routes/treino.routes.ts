@@ -64,7 +64,8 @@ export async function treinoRoutes(app: FastifyInstance) {
     return `${base}/${url}`
   }
 
-  /** Cria post social diretamente no banco (não depende do worker BullMQ) */
+  /** Cria post social diretamente no banco (não depende do worker BullMQ).
+   *  Idempotente: se já existe um post do mesmo tipo para este treino, retorna o existente. */
   async function criarPostTreino(treinoId: string, alunoId: string, tipo: PostTipo) {
     const aluno = await prisma.aluno.findUnique({
       where: { id: alunoId },
@@ -74,6 +75,12 @@ export async function treinoRoutes(app: FastifyInstance) {
       },
     })
     if (!aluno || aluno.visibilidade_padrao === 'PRIVADO') return null
+
+    // Idempotência: verifica se o post já existe (treino + tipo + aluno)
+    const existente = await prisma.socialPost.findFirst({
+      where: { treino_id: treinoId, aluno_id: alunoId, tipo },
+    })
+    if (existente) return existente
 
     const post = await prisma.socialPost.create({
       data: {
@@ -235,22 +242,35 @@ export async function treinoRoutes(app: FastifyInstance) {
     return reply.status(200).send(treino)
   })
 
-  /** POST /treinos/:id/iniciar — UC-20 */
+  /** POST /treinos/:id/iniciar — UC-20
+   *
+   * IMPORTANTE: só cria o post social TREINO_INICIADO e emite o evento se o treino
+   * foi REALMENTE iniciado (transição ACEITO/EM_ABERTO → EM_EXECUCAO).
+   * Se já estava EM_EXECUCAO (retomada/reabertura do app), os eventos são suprimidos
+   * para evitar posts duplicados no feed social.
+   */
   app.post('/:id/iniciar', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
     const { role } = request.currentUser
     const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
 
+    // Verifica o status ANTES de chamar o serviço (para saber se é início ou retomada)
+    const antes = await prisma.treino.findUnique({
+      where: { id },
+      select: { status: true },
+    })
+    const jaEmExecucao = antes?.status === TreinoStatus.EM_EXECUCAO
+
     const treino = await iniciarTreino(id, aluno.id)
 
-    // Criar post social TREINO_INICIADO diretamente (síncrono, sem depender do BullMQ)
-    criarPostTreino(id, aluno.id, 'TREINO_INICIADO').catch(() => {})
-
-    // Emitir evento para badges / leaderboard / fanout adicional
-    try {
-      eventBus.emit({ type: 'treino.iniciado', payload: { treinoId: id, alunoId: aluno.id, gruposMusculares: [], timestamp: new Date().toISOString() } })
-    } catch (err) {
-      request.log.warn({ err }, '[Social] Erro ao emitir treino.iniciado')
+    // Só dispara eventos sociais se foi um início REAL (não uma retomada)
+    if (!jaEmExecucao) {
+      criarPostTreino(id, aluno.id, 'TREINO_INICIADO').catch(() => {})
+      try {
+        eventBus.emit({ type: 'treino.iniciado', payload: { treinoId: id, alunoId: aluno.id, gruposMusculares: [], timestamp: new Date().toISOString() } })
+      } catch (err) {
+        request.log.warn({ err }, '[Social] Erro ao emitir treino.iniciado')
+      }
     }
     return reply.status(200).send(treino)
   })
