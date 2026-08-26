@@ -316,7 +316,22 @@ export default function AlunoTreinoExecucao() {
     setResuming(true)
     retomarTreino(id)
       .catch(() => {
-        if (!cancelled) navigate(`/treino/${id}/inicio`, { replace: true })
+        if (cancelled) return
+        // BUG-003: se a sessão deste treino chegou a carregar (atualização
+        // paralela setou treinoAtual para este id), navegar agora seria
+        // bloqueado pelo useBlocker (status EM_EXECUCAO) e abriria o modal
+        // "Sair do treino" sem ação do usuário — confirmar cancelaria as
+        // séries registradas. Com sessão carregada, permanecemos na tela e
+        // apenas avisamos. Sem sessão carregada, navegar para /inicio é
+        // seguro (o blocker não dispara).
+        // Lê o estado vivo do store: a closure captura treinoAtual do render
+        // inicial, que pode estar desatualizado durante a operação assíncrona.
+        const sessaoCarregada = useTrainingStore.getState().treinoAtual?.id === id
+        if (sessaoCarregada) {
+          showToast('Não foi possível atualizar a sessão — tente novamente', 'error')
+          return
+        }
+        navigate(`/treino/${id}/inicio`, { replace: true })
       })
       .finally(() => {
         if (!cancelled) setResuming(false)
