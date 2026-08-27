@@ -22,7 +22,7 @@ plugins {
 
 def twaManifest = [
     applicationId: 'com.endorfinapp.app',
-    hostName: 'web-production-c2d3c.up.railway.app', // Domínio ativo de produção
+    hostName: 'www.endorfinapp.com.br', // Domínio próprio oficial
     launchUrl: '/?source=twa',
     name: 'ENDORFINAPP',
     launcherName: 'ENDORFINAPP',
@@ -34,8 +34,8 @@ def twaManifest = [
     navigationDividerColorDark: '#000000',
     backgroundColor: '#0B1220',
     enableNotifications: true,
-    additionalTrustedOrigins: ["https://endorfinapp.com", "https://endorfinapp.com.br"],
-    shortcuts: [[name:'Meus Treinos', short_name:'Treinos', url:'https://web-production-c2d3c.up.railway.app/meus-treinos', icon:'shortcut_0'],[name:'Medidas & Avaliações', short_name:'Medidas', url:'https://web-production-c2d3c.up.railway.app/medidas', icon:'shortcut_1']],
+    additionalTrustedOrigins: ["https://endorfinapp.com.br", "https://web-production-c2d3c.up.railway.app"],
+    shortcuts: [[name:'Meus Treinos', short_name:'Treinos', url:'https://www.endorfinapp.com.br/meus-treinos', icon:'shortcut_0'],[name:'Medidas & Avaliações', short_name:'Medidas', url:'https://www.endorfinapp.com.br/medidas', icon:'shortcut_1']],
     splashScreenFadeOutDuration: 300,
     generatorApp: 'bubblewrap-cli',
     fallbackType: 'customtabs',

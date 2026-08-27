@@ -1,6 +1,6 @@
 {
   "packageId": "com.endorfinapp.app",
-  "host": "web-production-c2d3c.up.railway.app",
+  "host": "www.endorfinapp.com.br",
   "name": "ENDORFINAPP",
   "launcherName": "ENDORFINAPP",
   "display": "standalone",
