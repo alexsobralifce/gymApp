@@ -44,6 +44,10 @@ export function getFeedDir(year: string, month: string): string {
   return path.join(getPublicDir(), 'uploads', 'feed', year, month)
 }
 
+export function getAvaliacoesFotosDir(avaliacaoId: string): string {
+  return path.join(getPublicDir(), 'uploads', 'avaliacoes', avaliacaoId)
+}
+
 export async function ensureDir(dir: string): Promise<void> {
   await fs.mkdir(dir, { recursive: true })
 }

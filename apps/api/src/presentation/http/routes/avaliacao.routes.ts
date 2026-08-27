@@ -1,7 +1,11 @@
+import path from 'path'
+import fs from 'fs/promises'
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { AvaliacaoService } from '../../../application/usecases/avaliacao/AvaliacaoService.js'
+import { AvaliacaoFotoService } from '../../../application/usecases/avaliacao/AvaliacaoFotoService.js'
+import { getAvaliacoesFotosDir } from '../../../infrastructure/storage/paths.js'
 
 export async function avaliacaoRoutes(app: FastifyInstance) {
   // Criar avaliação física (Professor, Academia, Root)
@@ -161,4 +165,81 @@ export async function avaliacaoRoutes(app: FastifyInstance) {
       return reply.send(res)
     }
   )
+
+  // Upload de foto para avaliação (Professor, Academia, Root)
+  app.post(
+    '/avaliacoes/:id/fotos',
+    { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA, Role.ROOT)] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string }
+      const data = await request.file()
+      if (!data) {
+        return reply.status(400).send({ message: 'Nenhum arquivo enviado.' })
+      }
+
+      const buffer = await data.toBuffer()
+      const foto = await AvaliacaoFotoService.uploadFoto(id, buffer, data.mimetype)
+      return reply.status(201).send({ foto })
+    }
+  )
+
+  // Listar fotos de uma avaliação
+  app.get(
+    '/avaliacoes/:id/fotos',
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string }
+      const fotos = await AvaliacaoFotoService.listarFotos(id)
+      return reply.send({ fotos })
+    }
+  )
+
+  // Excluir foto de avaliação (Professor, Academia, Root)
+  app.delete(
+    '/avaliacoes/:id/fotos/:fotoId',
+    { preHandler: [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ACADEMIA, Role.ROOT)] },
+    async (request, reply) => {
+      const { id, fotoId } = request.params as { id: string; fotoId: string }
+      const res = await AvaliacaoFotoService.removerFoto(id, fotoId)
+      return reply.send(res)
+    }
+  )
+
+  // Servir imagem de foto da avaliação
+  app.get('/uploads/avaliacoes/:avaliacaoId/:filename', async (request, reply) => {
+    const { avaliacaoId, filename } = z.object({
+      avaliacaoId: z.string(),
+      filename: z.string(),
+    }).parse(request.params)
+
+    if (!safeFilename(filename) || !safeFilename(avaliacaoId)) {
+      return reply.status(400).send({ message: 'Nome de arquivo ou ID inválido' })
+    }
+
+    const filePath = path.join(getAvaliacoesFotosDir(avaliacaoId), filename)
+    try {
+      const buffer = await fs.readFile(filePath)
+      const ext = path.extname(filename).toLowerCase()
+      return reply
+        .header('Content-Type', MIME_MAP[ext] || 'image/jpeg')
+        .header('Cache-Control', 'public, max-age=86400')
+        .header('Cross-Origin-Resource-Policy', 'cross-origin')
+        .header('Access-Control-Allow-Origin', '*')
+        .send(buffer)
+    } catch {
+      return reply.status(404).send({ message: 'Foto não encontrada' })
+    }
+  })
 }
+
+const MIME_MAP: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+}
+
+function safeFilename(name: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(name) && !name.includes('..')
+}
+

@@ -637,6 +637,12 @@ export const api = {
   uploadFotoFeed: (formData: FormData) =>
     api.post<{ url: string }>('/social/upload/foto', formData, true),
 
+  uploadFotoAvaliacao: (avaliacaoId: string, formData: FormData) =>
+    api.post<{ foto: any }>(`/avaliacoes/${avaliacaoId}/fotos`, formData, true),
+
+  deleteFotoAvaliacao: (avaliacaoId: string, fotoId: string) =>
+    api.delete(`/avaliacoes/${avaliacaoId}/fotos/${fotoId}`),
+
   adicionarFotoPost: (postId: string, midiaUrl: string) =>
     api.patch(`/social/mural/${postId}/foto`, { midiaUrl }),
 

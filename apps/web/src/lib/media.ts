@@ -100,5 +100,26 @@ export function resolveExerciseMedia(
   return null
 }
 
+export async function downloadMediaFile(url: string | null, customFilename?: string): Promise<void> {
+  const resolved = resolveMediaUrl(url)
+  if (!resolved) return
+
+  try {
+    const res = await fetch(resolved)
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = customFilename || `foto_${Date.now()}.${blob.type.split('/')[1] || 'jpg'}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(blobUrl)
+  } catch {
+    window.open(resolved, '_blank')
+  }
+}
+
+
 
 

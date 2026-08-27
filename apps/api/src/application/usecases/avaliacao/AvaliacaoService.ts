@@ -1,7 +1,10 @@
+import path from 'path'
+import fs from 'fs/promises'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { Prisma } from '@prisma/client'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { AvaliacaoMatematicaService, DobrasInput } from './AvaliacaoMatematicaService.js'
+import { getAvaliacoesFotosDir } from '../../../infrastructure/storage/paths.js'
 
 interface CriarAvaliacaoDTO {
   alunoId: string
@@ -111,7 +114,14 @@ export class AvaliacaoService {
       },
       include: {
         aluno: { include: { usuario: { select: { nome: true, email: true } } } },
-        avaliador: { select: { nome: true, email: true } },
+        avaliador: {
+          select: {
+            nome: true,
+            email: true,
+            professor: { select: { cref: true } },
+          },
+        },
+        fotos: { orderBy: { criado_em: 'asc' } },
       },
     })
 
@@ -135,7 +145,14 @@ export class AvaliacaoService {
       where: { aluno_id: targetAlunoId },
       orderBy: { data: 'desc' },
       include: {
-        avaliador: { select: { nome: true } },
+        avaliador: {
+          select: {
+            nome: true,
+            email: true,
+            professor: { select: { cref: true } },
+          },
+        },
+        fotos: { orderBy: { criado_em: 'asc' } },
       },
     })
   }
@@ -145,7 +162,14 @@ export class AvaliacaoService {
       where: { id },
       include: {
         aluno: { include: { usuario: { select: { nome: true, email: true, telefone: true } } } },
-        avaliador: { select: { nome: true, email: true } },
+        avaliador: {
+          select: {
+            nome: true,
+            email: true,
+            professor: { select: { cref: true } },
+          },
+        },
+        fotos: { orderBy: { criado_em: 'asc' } },
       },
     })
     if (!avaliacao) throw new NotFoundError('Avaliação física não encontrada')
@@ -155,6 +179,17 @@ export class AvaliacaoService {
   static async remover(id: string) {
     const avaliacao = await prisma.avaliacaoFisica.findUnique({ where: { id } })
     if (!avaliacao) throw new NotFoundError('Avaliação física não encontrada')
+
+    const fotos = await prisma.avaliacaoFoto.findMany({ where: { avaliacao_id: id } })
+    await Promise.allSettled(
+      fotos.map((f) => fs.unlink(path.join(getAvaliacoesFotosDir(id), f.nome_arquivo)))
+    )
+    try {
+      await fs.rm(getAvaliacoesFotosDir(id), { recursive: true, force: true })
+    } catch {
+      // ignora se diretório não existir
+    }
+
     await prisma.avaliacaoFisica.delete({ where: { id } })
     return { success: true }
   }

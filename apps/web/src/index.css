@@ -625,7 +625,7 @@ html[data-theme="orange"][data-mode="day"] {
 }
 
 @utility input-base {
-  @apply w-full rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply w-full min-h-[44px] rounded-xl border border-surface-input bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* ─── Contraste em botões primary ─── */
@@ -668,3 +668,44 @@ textarea,
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* ─── Impressão / PDF de Avaliação ─── */
+@media print {
+  @page {
+    margin: 12mm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body > *:not(#avaliacao-pdf-target) {
+    display: none !important;
+  }
+
+  #avaliacao-pdf-target {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    z-index: 999999 !important;
+  }
+
+  #avaliacao-pdf-target * {
+    visibility: visible !important;
+    color: #000000 !important;
+  }
+}
+

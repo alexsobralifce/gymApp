@@ -1,7 +1,7 @@
 ---
 description: "Lista as tools disponíveis no servidor MCP LangChain Orchestrator."
 agent: build
-model: deepseek-v4-flash
+model: bailian/deepseek-v4-flash-0731
 ---
 
 Liste as tools disponíveis no servidor MCP LangChain executando:

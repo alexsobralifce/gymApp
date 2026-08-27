@@ -1,7 +1,7 @@
 ---
 description: "Chama uma tool no servidor MCP LangChain Orchestrator. Uso: /mcp-tool <nome> '<args>'"
 agent: build
-model: deepseek-v4-flash
+model: bailian/deepseek-v4-flash-0731
 ---
 
 Execute a tool `$1` no servidor MCP LangChain Orchestrator com os argumentos `$2` usando:

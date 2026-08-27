@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
-import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import LoadingSpinner, { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import Toast from '../../components/ui/Toast'
 import ConfirmModal from '../../components/ui/ConfirmModal'
@@ -10,8 +10,11 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import { RulerIcon, PlusIcon, UserCircleIcon, ClipboardListIcon, DumbbellIcon, ChartLineIcon, PencilIcon, TrashIcon } from '../../components/icons/Icon'
 import ReactMarkdown from 'react-markdown'
+import { resolveMediaUrl, downloadMediaFile } from '../../lib/media'
+import { useAuthStore } from '../../stores/auth'
 
 export default function Avaliacoes() {
+  const currentUser = useAuthStore((s) => s.user)
   const [alunos, setAlunos] = useState<any[]>([])
   const [selectedAluno, setSelectedAluno] = useState<any | null>(null)
   const [avaliacoes, setAvaliacoes] = useState<any[]>([])
@@ -33,6 +36,13 @@ export default function Avaliacoes() {
   const [activeLaudo, setActiveLaudo] = useState<string | null>(null)
   const [activePrescricao, setActivePrescricao] = useState<any | null>(null)
   const [activeComparativo, setActiveComparativo] = useState<any | null>(null)
+
+  // Photos state & inline loaders
+  const [activePhotoList, setActivePhotoList] = useState<string[] | null>(null)
+  const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null)
+  const [uploadingPhotoAvaliacaoId, setUploadingPhotoAvaliacaoId] = useState<string | null>(null)
+  const [loadingLaudoId, setLoadingLaudoId] = useState<string | null>(null)
+  const [loadingPrescricaoId, setLoadingPrescricaoId] = useState<string | null>(null)
 
   // Form state - Antropometria & Vitais
   const [pesoKg, setPesoKg] = useState('')
@@ -256,9 +266,112 @@ export default function Avaliacoes() {
     }
   }
 
+  function handleGerarPDF(av: any) {
+    const nomeAluno = selectedAluno?.usuario?.nome || av.aluno?.usuario?.nome || 'Aluno'
+    const avaliadorNome = currentUser?.nome || 'Professor / Avaliador'
+    const avaliadorCref = (currentUser as any)?.professor?.cref || null
+    const dataFormatada = new Date(av.data).toLocaleDateString('pt-BR')
+
+    let target = document.getElementById('avaliacao-pdf-target')
+    if (target) {
+      target.remove()
+    }
+
+    target = document.createElement('div')
+    target.id = 'avaliacao-pdf-target'
+    document.body.appendChild(target)
+
+    target.innerHTML = `
+      <div style="font-family: Arial, sans-serif; max-width: 750px; margin: 0 auto; color: #111; padding: 24px; box-sizing: border-box;">
+        <div style="border-bottom: 3px solid #0f172a; padding-bottom: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h1 style="font-size: 24px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1.5px; color: #0f172a;">ENDORFINAPP</h1>
+            <p style="font-size: 11px; font-weight: 600; margin: 4px 0 0 0; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Laudo de Avaliação Física Integrada</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="font-size: 12px; font-weight: bold; margin: 0; color: #0f172a;">Data: ${dataFormatada}</p>
+            <p style="font-size: 10px; color: #64748b; margin: 2px 0 0 0;">Protocolo: #${av.id.substring(0, 8).toUpperCase()}</p>
+          </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <p style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #64748b; margin: 0 0 2px 0;">Aluno(a)</p>
+            <p style="font-size: 16px; font-weight: 800; margin: 0; color: #0f172a;">${nomeAluno.toUpperCase()}</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #64748b; margin: 0 0 2px 0;">Avaliador Responsável</p>
+            <p style="font-size: 14px; font-weight: 700; margin: 0; color: #0f172a;">${avaliadorNome}</p>
+            ${avaliadorCref ? `<p style="font-size: 11px; color: #475569; margin: 2px 0 0 0;">CREF: ${avaliadorCref}</p>` : ''}
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #0f172a; padding-bottom: 4px; margin-bottom: 12px; color: #0f172a; letter-spacing: 0.5px;">1. Composição Corporal & Antropometria</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <tr>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; width: 33%;"><strong>Peso:</strong> ${av.peso_kg ? av.peso_kg + ' kg' : '—'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; width: 33%;"><strong>Estatura:</strong> ${av.estatura_m ? av.estatura_m + ' m' : '—'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; width: 33%;"><strong>IMC:</strong> ${av.imc ? Number(av.imc).toFixed(1) : '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #cbd5e1;"><strong>% Gordura:</strong> ${av.percentual_gordura ? av.percentual_gordura + '%' : '—'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1;"><strong>Massa Magra:</strong> ${av.massa_magra_kg ? av.massa_magra_kg + ' kg' : '—'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1;"><strong>Massa Gorda:</strong> ${av.massa_gorda_kg ? av.massa_gorda_kg + ' kg' : '—'}</td>
+            </tr>
+            ${av.rcq ? `<tr><td colspan="3" style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc;"><strong>Relação Cintura-Quadril (RCQ):</strong> ${av.rcq.toFixed(2)}</td></tr>` : ''}
+          </table>
+        </div>
+
+        ${(av.pas || av.fc_repouso || av.parq_positivo || av.risco_cardiaco) ? `
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #0f172a; padding-bottom: 4px; margin-bottom: 12px; color: #0f172a; letter-spacing: 0.5px;">2. Sinais Vitais & Triagem de Saúde</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <tr>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; width: 50%;"><strong>Pressão Arterial:</strong> ${av.pas && av.pad ? av.pas + '/' + av.pad + ' mmHg' : 'Não informada'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; width: 50%;"><strong>FC Repouso:</strong> ${av.fc_repouso ? av.fc_repouso + ' bpm' : 'Não informada'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc;"><strong>Risco Cardíaco:</strong> ${av.risco_cardiaco || 'BAIXO'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc;"><strong>Triagem PAR-Q+:</strong> ${av.parq_positivo ? 'Atenção / Liberação médica recomendada' : 'Sem restrições relatadas'}</td>
+            </tr>
+          </table>
+        </div>` : ''}
+
+        ${(av.cardio_json?.vo2max || av.neuro_json?.oneRmEstimada || av.flexibilidade_json?.bancoWellsCm) ? `
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #0f172a; padding-bottom: 4px; margin-bottom: 12px; color: #0f172a; letter-spacing: 0.5px;">3. Testes Funcionais & Capacidade Física</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <tr>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; width: 33%;"><strong>VO₂máx Estimado:</strong> ${av.cardio_json?.vo2max ? av.cardio_json.vo2max + ' ml/kg/min' : '—'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; width: 33%;"><strong>Força Máxima (1RM):</strong> ${av.neuro_json?.oneRmEstimada ? av.neuro_json.oneRmEstimada + ' kg' : '—'}</td>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; width: 33%;"><strong>Flexibilidade (Wells):</strong> ${av.flexibilidade_json?.bancoWellsCm ? av.flexibilidade_json.bancoWellsCm + ' cm' : '—'}</td>
+            </tr>
+          </table>
+        </div>` : ''}
+
+        ${av.laudo_markdown ? `
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #0f172a; padding-bottom: 4px; margin-bottom: 12px; color: #0f172a; letter-spacing: 0.5px;">4. Parecer e Laudo Técnico</h3>
+          <div style="font-size: 11px; line-height: 1.6; white-space: pre-wrap; font-family: monospace; background: #f8fafc; padding: 14px; border-radius: 6px; border: 1px solid #cbd5e1;">${av.laudo_markdown.replace(/[#*`]/g, '')}</div>
+        </div>` : ''}
+
+        <div style="margin-top: 60px; border-top: 2px solid #0f172a; padding-top: 20px; text-align: center; page-break-inside: avoid;">
+          <p style="font-size: 15px; font-weight: 800; margin: 0; color: #0f172a;">${avaliadorNome}</p>
+          <p style="font-size: 12px; color: #475569; margin: 4px 0 0 0;">${avaliadorCref ? `CREF: ${avaliadorCref}` : 'Profissional de Educação Física'}</p>
+          <p style="font-size: 10px; color: #94a3b8; margin-top: 16px; font-weight: bold; letter-spacing: 1px;">ENDORFINAPP — A QUÍMICA DO CRESCIMENTO</p>
+        </div>
+      </div>
+    `
+
+    setTimeout(() => {
+      window.print()
+    }, 150)
+  }
+
   async function handleGerarLaudo(id: string) {
     try {
-      setLoading(true)
+      setLoadingLaudoId(id)
       const res: any = await api.post(`/avaliacoes/${id}/gerar-laudo`, {})
       const laudo = res?.laudo ?? res?.data?.laudo
       setActiveLaudo(laudo)
@@ -267,13 +380,13 @@ export default function Avaliacoes() {
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao gerar laudo', type: 'error' })
     } finally {
-      setLoading(false)
+      setLoadingLaudoId(null)
     }
   }
 
   async function handleGerarPrescricao(id: string) {
     try {
-      setLoading(true)
+      setLoadingPrescricaoId(id)
       const res: any = await api.post(`/avaliacoes/${id}/gerar-prescricao`, {})
       const prescricao = res?.prescricao ?? res?.data?.prescricao
       setActivePrescricao(prescricao)
@@ -282,7 +395,36 @@ export default function Avaliacoes() {
     } catch (err: any) {
       setToast({ message: err.message || 'Erro ao gerar prescrição', type: 'error' })
     } finally {
-      setLoading(false)
+      setLoadingPrescricaoId(null)
+    }
+  }
+
+  async function handleUploadFoto(avaliacaoId: string, file: File) {
+    if (file.size > 3 * 1024 * 1024) {
+      setToast({ message: 'A foto deve ter no máximo 3 MB.', type: 'error' })
+      return
+    }
+    setUploadingPhotoAvaliacaoId(avaliacaoId)
+    try {
+      const formData = new FormData()
+      formData.append('foto', file)
+      await api.uploadFotoAvaliacao(avaliacaoId, formData)
+      setToast({ message: 'Foto adicionada à avaliação!', type: 'success' })
+      if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
+    } catch (err: any) {
+      setToast({ message: err.message || 'Erro ao enviar foto', type: 'error' })
+    } finally {
+      setUploadingPhotoAvaliacaoId(null)
+    }
+  }
+
+  async function handleDeleteFoto(avaliacaoId: string, fotoId: string) {
+    try {
+      await api.deleteFotoAvaliacao(avaliacaoId, fotoId)
+      setToast({ message: 'Foto removida da avaliação.', type: 'success' })
+      if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
+    } catch (err: any) {
+      setToast({ message: err.message || 'Erro ao remover foto', type: 'error' })
     }
   }
 
@@ -421,7 +563,12 @@ export default function Avaliacoes() {
                 </div>
               )}
 
-              {avaliacoes.length === 0 ? (
+              {loading && avaliacoes.length === 0 ? (
+                <div className="space-y-4">
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </div>
+              ) : avaliacoes.length === 0 ? (
                 <EmptyState icon="📋" title="Nenhuma avaliação registrada" description="Clique em 'Nova Avaliação' para iniciar o protocolo completo." />
               ) : (
                 <div className="space-y-4">
@@ -430,10 +577,17 @@ export default function Avaliacoes() {
                       const dateStr = new Date(av.data).toLocaleDateString('pt-BR')
                       return dateStr.includes(buscaAvaliacao) || (av.laudo_markdown && av.laudo_markdown.toLowerCase().includes(buscaAvaliacao.toLowerCase()))
                     })
-                    .map((av) => {
+                    .map((av, idx) => {
                       const isSelected = selectedIds.includes(av.id)
+                      const isUploading = uploadingPhotoAvaliacaoId === av.id
+                      const isLaudoLoading = loadingLaudoId === av.id
+                      const isPrescricaoLoading = loadingPrescricaoId === av.id
                       return (
-                        <div key={av.id} className={`p-4 rounded-xl border transition-all space-y-3 ${isSelected ? 'border-primary bg-primary/5' : 'bg-surface border-border'}`}>
+                        <div
+                          key={av.id}
+                          className={`p-4 rounded-2xl border transition-all space-y-4 animate-slide-up ${isSelected ? 'border-primary bg-primary/5' : 'bg-surface border-border'}`}
+                          style={{ animationDelay: `${idx * 50}ms` }}
+                        >
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm">
                             <div className="flex items-center gap-3">
                               <input
@@ -446,54 +600,159 @@ export default function Avaliacoes() {
                                 }
                                 className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                               />
-                              <span className="font-semibold text-text">
+                              <span className="font-bold text-text text-base">
                                 Data: {new Date(av.data).toLocaleDateString('pt-BR')}
                               </span>
-                          <button onClick={() => handleOpenEditarAvaliacao(av)} className="text-text-muted hover:text-primary transition-colors" title="Editar">
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
-                          <button onClick={() => setShowConfirmDelete(av.id)} className="text-text-muted hover:text-destructive transition-colors" title="Excluir">
-                            <TrashIcon className="h-4 w-4" />
-                          </button>
+                              <button
+                                onClick={() => handleOpenEditarAvaliacao(av)}
+                                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-primary transition-colors rounded-lg hover:bg-surface-card"
+                                title="Editar"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => setShowConfirmDelete(av.id)}
+                                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-destructive transition-colors rounded-lg hover:bg-surface-card"
+                                title="Excluir"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                              <button
+                                onClick={() => handleGerarLaudo(av.id)}
+                                disabled={isLaudoLoading}
+                                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-surface-card border border-border text-text rounded-xl text-xs font-semibold hover:border-primary min-h-[44px] disabled:opacity-50 transition-all cursor-pointer"
+                              >
+                                <ClipboardListIcon className="h-4 w-4 text-primary" />
+                                {isLaudoLoading ? 'Gerando...' : av.laudo_markdown ? 'Ver Laudo' : 'Gerar Laudo'}
+                              </button>
+                              <button
+                                onClick={() => handleGerarPrescricao(av.id)}
+                                disabled={isPrescricaoLoading}
+                                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-primary/50 text-primary bg-transparent rounded-xl text-xs font-semibold hover:bg-primary/10 min-h-[44px] disabled:opacity-50 transition-all cursor-pointer"
+                              >
+                                <DumbbellIcon className="h-4 w-4" />
+                                {isPrescricaoLoading ? 'Gerando...' : av.prescricao_json ? 'Ver Prescrição' : 'Gerar Treino 4 Semanas'}
+                              </button>
+                              <button
+                                onClick={() => handleGerarPDF(av)}
+                                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-surface-card border border-border text-text rounded-xl text-xs font-semibold hover:border-primary min-h-[44px] transition-all cursor-pointer"
+                                title="Exportar laudo em PDF para impressão"
+                              >
+                                📄 Gerar PDF
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                            <div className="p-4 bg-surface-card rounded-xl border border-border">
+                              <p className="text-sm font-medium text-text-muted">Peso</p>
+                              <p className="font-bold text-text text-base mt-0.5">{av.peso_kg ? `${av.peso_kg} kg` : '—'}</p>
+                            </div>
+                            <div className="p-4 bg-surface-card rounded-xl border border-border">
+                              <p className="text-sm font-medium text-text-muted">IMC</p>
+                              <p className="font-bold text-text text-base mt-0.5">{av.imc ?? '—'}</p>
+                            </div>
+                            <div className="p-4 bg-surface-card rounded-xl border border-border">
+                              <p className="text-sm font-medium text-text-muted">% Gordura</p>
+                              <p className="font-bold text-primary text-base mt-0.5">{av.percentual_gordura ? `${av.percentual_gordura}%` : '—'}</p>
+                            </div>
+                            <div className="p-4 bg-surface-card rounded-xl border border-border">
+                              <p className="text-sm font-medium text-text-muted">VO₂máx</p>
+                              <p className="font-bold text-text text-base mt-0.5">{av.cardio_json?.vo2max ? `${av.cardio_json.vo2max} ml/kg/min` : '—'}</p>
+                            </div>
+                          </div>
+
+                          {/* Seção de Fotos da Avaliação */}
+                          <div className="pt-3 border-t border-border/60 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-text flex items-center gap-1.5">
+                                📷 Fotos da Avaliação
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                  (av.fotos?.length || 0) >= 4
+                                    ? 'bg-surface-input text-text-muted'
+                                    : (av.fotos?.length || 0) === 3
+                                    ? 'bg-amber-500/20 text-warning'
+                                    : 'bg-primary/20 text-primary'
+                                }`}>
+                                  {av.fotos?.length || 0}/4 fotos
+                                </span>
+                              </span>
+
+                              {(av.fotos?.length || 0) < 4 && (
+                                <label className="flex items-center gap-1 text-xs text-primary font-semibold hover:underline cursor-pointer min-h-[44px] px-2.5 py-1 rounded-xl hover:bg-primary/10 transition-colors">
+                                  <PlusIcon className="h-4 w-4" />
+                                  Adicionar Foto
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    capture="environment"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0]
+                                      if (file) handleUploadFoto(av.id, file)
+                                      e.target.value = ''
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-4 gap-2">
+                              {av.fotos?.map((f: any, fIdx: number) => (
+                                <div key={f.id} className="relative group aspect-square rounded-xl overflow-hidden border border-border bg-surface shadow-sm">
+                                  <img
+                                    src={resolveMediaUrl(f.url) || ''}
+                                    alt={f.nome_arquivo}
+                                    onClick={() => {
+                                      const urls = av.fotos.map((p: any) => resolveMediaUrl(p.url)).filter((u: any): u is string => u !== null)
+                                      setActivePhotoList(urls)
+                                      setActivePhotoIndex(fIdx)
+                                    }}
+                                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                  />
+                                  <div className="absolute top-1 right-1 flex items-center gap-1">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        downloadMediaFile(f.url, f.nome_arquivo)
+                                      }}
+                                      className="p-1 bg-black/70 text-white hover:text-primary rounded-lg transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
+                                      title="Baixar foto"
+                                    >
+                                      📥
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDeleteFoto(av.id, f.id)
+                                      }}
+                                      className="p-1 bg-black/70 text-white hover:text-destructive rounded-lg transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
+                                      title="Excluir foto"
+                                    >
+                                      <TrashIcon className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {isUploading && (
+                                <div className="aspect-square rounded-xl border border-dashed border-primary flex items-center justify-center bg-primary/5 animate-pulse">
+                                  <span className="text-[10px] text-primary font-semibold">Enviando...</span>
+                                </div>
+                              )}
+
+                              {(!av.fotos || av.fotos.length === 0) && !isUploading && (
+                                <div className="col-span-4 py-3 text-center text-xs text-text-muted bg-surface/40 rounded-xl border border-dashed border-border">
+                                  Nenhuma foto registrada para esta avaliação.
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                          <button
-                            onClick={() => handleGerarLaudo(av.id)}
-                            className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-3 py-1.5 bg-surface-card border border-border text-text rounded-lg text-xs font-medium hover:border-primary min-h-[36px]"
-                          >
-                            <ClipboardListIcon className="h-3.5 w-3.5 text-primary" />
-                            {av.laudo_markdown ? 'Ver Laudo' : 'Gerar Laudo'}
-                          </button>
-                          <button
-                            onClick={() => handleGerarPrescricao(av.id)}
-                            className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-3 py-1.5 bg-primary/20 text-primary rounded-lg text-xs font-medium hover:opacity-80 min-h-[36px]"
-                          >
-                            <DumbbellIcon className="h-3.5 w-3.5" />
-                            {av.prescricao_json ? 'Ver Prescrição' : 'Gerar Treino 4 Semanas'}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div className="p-3 bg-surface-card rounded-xl border border-border">
-                          <p className="text-xs text-text-muted">Peso</p>
-                          <p className="font-bold text-text">{av.peso_kg ? `${av.peso_kg} kg` : '—'}</p>
-                        </div>
-                        <div className="p-3 bg-surface-card rounded-xl border border-border">
-                          <p className="text-xs text-text-muted">IMC</p>
-                          <p className="font-bold text-text">{av.imc ?? '—'}</p>
-                        </div>
-                        <div className="p-3 bg-surface-card rounded-xl border border-border">
-                          <p className="text-xs text-text-muted">% Gordura</p>
-                          <p className="font-bold text-primary">{av.percentual_gordura ? `${av.percentual_gordura}%` : '—'}</p>
-                        </div>
-                        <div className="p-3 bg-surface-card rounded-xl border border-border">
-                          <p className="text-xs text-text-muted">VO₂máx</p>
-                          <p className="font-bold text-text">{av.cardio_json?.vo2max ? `${av.cardio_json.vo2max} ml/kg/min` : '—'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                      )
+                    })}
                 </div>
               )}
             </>
@@ -505,6 +764,56 @@ export default function Avaliacoes() {
           )}
         </div>
       </div>
+
+      {/* Modal Lightbox de Foto Ampliada */}
+      {activePhotoList && activePhotoIndex !== null && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center justify-center space-y-3">
+            <div className="w-full flex justify-between items-center text-white">
+              <span className="text-sm font-medium text-white/80">
+                Foto {activePhotoIndex + 1} de {activePhotoList.length}
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => downloadMediaFile(activePhotoList[activePhotoIndex], `foto_avaliacao_${activePhotoIndex + 1}.jpg`)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-semibold transition-colors min-h-[44px] cursor-pointer"
+                >
+                  📥 Baixar Foto
+                </button>
+                <button
+                  onClick={() => { setActivePhotoList(null); setActivePhotoIndex(null); }}
+                  className="text-white hover:text-primary font-bold text-lg min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                >
+                  ✕ Fechar
+                </button>
+              </div>
+            </div>
+
+            <img
+              src={activePhotoList[activePhotoIndex]}
+              alt="Foto da avaliação ampliada"
+              className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+            />
+
+            {activePhotoList.length > 1 && (
+              <div className="flex items-center gap-4 text-white pt-2">
+                <button
+                  onClick={() => setActivePhotoIndex((prev) => (prev! > 0 ? prev! - 1 : activePhotoList.length - 1))}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold transition-colors min-h-[44px] cursor-pointer"
+                >
+                  ← Anterior
+                </button>
+                <button
+                  onClick={() => setActivePhotoIndex((prev) => (prev! < activePhotoList.length - 1 ? prev! + 1 : 0))}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold transition-colors min-h-[44px] cursor-pointer"
+                >
+                  Próxima →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Modal Comparativo Evolutivo */}
       {activeComparativo && (

@@ -518,10 +518,25 @@ model AvaliacaoFisica {
   atualizado_em      DateTime        @updatedAt
   aluno              Aluno           @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
   avaliador          Usuario         @relation(fields: [avaliador_id], references: [id])
+  fotos              AvaliacaoFoto[]
 
   @@index([aluno_id])
   @@index([avaliador_id])
   @@map("avaliacoes_fisicas")
+}
+
+model AvaliacaoFoto {
+  id            String          @id @default(cuid())
+  avaliacao_id  String
+  url           String
+  nome_arquivo  String
+  mime_type     String
+  tamanho_bytes Int
+  criado_em     DateTime        @default(now())
+  avaliacao     AvaliacaoFisica @relation(fields: [avaliacao_id], references: [id], onDelete: Cascade)
+
+  @@index([avaliacao_id])
+  @@map("avaliacoes_fotos")
 }
 
 /// Avaliação pós-treino do sistema — nota + respostas do questionário
