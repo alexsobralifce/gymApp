@@ -112,20 +112,32 @@ export default function Landing() {
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 text-sm font-semibold rounded bg-primary text-primary-foreground hover:brightness-110 transition-all duration-200"
+                className="px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:brightness-110 transition-all duration-200"
               >
                 Criar Conta
               </Link>
             </div>
 
-            <button className="md:hidden p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            <div className="flex md:hidden items-center gap-2">
+              <Link
+                to="/login"
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-surface-card border border-border text-foreground hover:bg-surface-input active:scale-95 transition-all"
+              >
+                Entrar
+              </Link>
+              <button
+                className="p-2 text-muted-foreground rounded-lg hover:bg-surface-card transition-colors"
+                onClick={() => setMobileOpen(!mobileOpen)}
+                aria-label="Abrir Menu"
+              >
+                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
 
         {mobileOpen && (
-          <div className="md:hidden bg-card border-t border-border px-4 pb-4 pt-2 safe-bottom">
+          <div className="md:hidden bg-card border-t border-border px-4 pb-4 pt-2 safe-bottom animate-slide-down">
             {NAV_LINKS.map((link) => (
               <a
                 key={link}
@@ -139,14 +151,14 @@ export default function Landing() {
             <div className="mt-4 flex gap-2">
               <Link
                 to="/login"
-                className="flex-1 text-center py-3 text-sm font-semibold rounded text-foreground border border-border"
+                className="flex-1 text-center py-3 text-sm font-semibold rounded-xl text-foreground border border-border"
                 onClick={() => setMobileOpen(false)}
               >
                 Entrar
               </Link>
               <Link
                 to="/register"
-                className="flex-1 text-center py-3 text-sm font-semibold rounded bg-primary text-primary-foreground"
+                className="flex-1 text-center py-3 text-sm font-semibold rounded-xl bg-primary text-primary-foreground"
                 onClick={() => setMobileOpen(false)}
               >
                 Criar Conta
@@ -162,7 +174,7 @@ export default function Landing() {
         <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-primary/15 blur-[100px] pointer-events-none z-0" />
         <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-accent/10 blur-[100px] pointer-events-none z-0" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-16 sm:pb-24">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 mb-6">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -189,24 +201,24 @@ export default function Landing() {
               SUA COMUNIDADE.
             </h1>
 
-            <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed px-2">
               Escolha grupos musculares, receba 3 exercícios por grupo ajustados ao seu nível e objetivo. Execute com GIFs, registre cargas e compartilhe suas conquistas na rede social fitness.
             </p>
 
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 w-full max-w-sm mx-auto px-4">
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded font-semibold text-primary-foreground bg-primary hover:brightness-110 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/25 text-sm"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-primary-foreground bg-primary hover:brightness-110 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/25 text-sm cursor-pointer"
               >
                 Criar Conta Grátis
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <a
-                href="#como-funciona"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded font-semibold text-foreground border border-border hover:border-foreground/30 transition-colors duration-200 text-sm"
+              <Link
+                to="/login"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-foreground border border-border bg-card/60 hover:bg-card active:scale-95 transition-colors duration-200 text-sm cursor-pointer"
               >
-                Como Funciona
-              </a>
+                Entrar no App
+              </Link>
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground">

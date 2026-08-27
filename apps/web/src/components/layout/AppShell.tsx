@@ -226,6 +226,77 @@ const alunoBottomTabs = [
   { to: '/evolucao', label: 'Evolução', icon: ChartLineIcon },
 ]
 
+const professorBottomTabs = [
+  { to: '/', label: 'Início', icon: HomeIcon, end: true },
+  { to: '/treinos', label: 'Treinos', icon: DumbbellIcon },
+  { to: '/fichas', label: 'Fichas', icon: TicketIcon },
+  { to: '/alunos/vincular', label: 'Alunos', icon: UserPlusIcon },
+]
+
+const academiaBottomTabs = [
+  { to: '/', label: 'Início', icon: HomeIcon, end: true },
+  { to: '/treinos', label: 'Treinos', icon: DumbbellIcon },
+  { to: '/professores', label: 'Professores', icon: UsersIcon },
+  { to: '/alunos', label: 'Alunos', icon: UserPlusIcon },
+]
+
+const rootBottomTabs = [
+  { to: '/', label: 'Painel', icon: HomeIcon, end: true },
+  { to: '/vinculos', label: 'Vínculos', icon: LinkIcon },
+  { to: '/usuarios', label: 'Usuários', icon: UsersIcon },
+  { to: '/social', label: 'Social', icon: MessageCircleIcon },
+]
+
+function getRoleBottomTabs(role: string, isAdmin: boolean) {
+  if (isAdmin || role === 'ROOT') return rootBottomTabs
+  if (role === 'PROFESSOR') return professorBottomTabs
+  if (role === 'ACADEMIA') return academiaBottomTabs
+  return alunoBottomTabs
+}
+
+function getRoleMoreItems(role: string, isAdmin: boolean) {
+  if (isAdmin || role === 'ROOT') {
+    return [
+      { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: '⭐', desc: 'Feedbacks recebidos' },
+      { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos & Laudos' },
+      { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
+      { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia do sistema' },
+      { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados da conta' },
+      { to: '/privacidade', label: 'Privacidade', icon: '🛡️', desc: 'Controle de dados' },
+    ]
+  }
+  if (role === 'PROFESSOR') {
+    return [
+      { to: '/treinos/criar', label: 'Criar Treino', icon: '➕', desc: 'Ficha para aluno' },
+      { to: '/meus-treinos', label: 'Meus Treinos', icon: '🏋️', desc: 'Treinos pessoais' },
+      { to: '/treino/novo', label: 'Criar Meu Treino', icon: '📝', desc: 'Treino próprio' },
+      { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos e laudos' },
+      { to: '/exercicios/criar', label: 'Exercícios', icon: '📖', desc: 'Biblioteca & Gifs' },
+      { to: '/academias', label: 'Academias', icon: '🏢', desc: 'Vínculos de trabalho' },
+      { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
+      { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados e CREF' },
+    ]
+  }
+  if (role === 'ACADEMIA') {
+    return [
+      { to: '/treinos/criar', label: 'Criar Treino', icon: '➕', desc: 'Ficha padrão da academia' },
+      { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Avaliações de alunos' },
+      { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
+      { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia da academia' },
+      { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados cadastrais' },
+      { to: '/privacidade', label: 'Privacidade', icon: '🛡️', desc: 'Configurações' },
+    ]
+  }
+  return [
+    { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescrição inteligente' },
+    { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
+    { to: '/amizades', label: 'Amigos', icon: '👥', desc: 'Rede social fitness' },
+    { to: '/medidas', label: 'Minhas Medidas', icon: '📏', desc: 'Peso e dobras' },
+    { to: '/clubes', label: 'Clubes', icon: '🏆', desc: 'Ranking & XP' },
+    { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restrições' },
+  ]
+}
+
 function getPageTitle(pathname: string, role: string, isAdmin: boolean): string {
   const navItems = getNavItems(role, isAdmin)
   for (const entry of navItems) {
@@ -689,17 +760,17 @@ export default function AppShell() {
           )}
         </div>
 
-        {/* Bottom Sheet "Mais" para Aluno no Mobile */}
-        {isAluno && moreSheetOpen && (
+        {/* Bottom Sheet "Mais" no Mobile para todos os perfis */}
+        {!hideNav && moreSheetOpen && (
           <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
             <div
               className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in"
               onClick={() => setMoreSheetOpen(false)}
             />
-            <div className="relative bg-surface-card border-t border-surface-input rounded-t-3xl p-5 shadow-2xl space-y-4 animate-modal-pop z-10 safe-bottom">
+            <div className="relative bg-surface-card border-t border-surface-input rounded-t-3xl p-5 shadow-2xl space-y-4 animate-modal-pop z-10 safe-bottom max-h-[85vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-surface-input pb-3">
                 <h3 className="text-base font-bold text-text flex items-center gap-2">
-                  <span>✨</span> Acesso Rápido & Recursos
+                  <span>✨</span> Menu & Recursos — {user?.admin ? 'Root' : getRoleLabel(role)}
                 </h3>
                 <button
                   type="button"
@@ -711,14 +782,7 @@ export default function AppShell() {
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
-                {[
-                  { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescrição inteligente' },
-                  { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
-                  { to: '/amizades', label: 'Amigos', icon: '👥', desc: 'Rede social fitness' },
-                  { to: '/medidas', label: 'Minhas Medidas', icon: '📏', desc: 'Peso e dobras' },
-                  { to: '/clubes', label: 'Clubes', icon: '🏆', desc: 'Ranking & XP' },
-                  { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restrições' },
-                ].map((item) => (
+                {getRoleMoreItems(role, user?.admin ?? false).map((item) => (
                   <button
                     key={item.to}
                     type="button"
@@ -735,17 +799,33 @@ export default function AppShell() {
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setMoreSheetOpen(false)
-                  setTimeout(() => setColegasSheetOpen(true), 150)
-                }}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-surface-input py-3 text-sm font-bold text-text hover:bg-surface-input/70 active:scale-95 transition-all cursor-pointer min-h-11"
-              >
-                <UsersIcon className="h-4 w-4" />
-                Alunos da Academia
-              </button>
+              {isAluno && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreSheetOpen(false)
+                    setTimeout(() => setColegasSheetOpen(true), 150)
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-surface-input py-3 text-sm font-bold text-text hover:bg-surface-input/70 active:scale-95 transition-all cursor-pointer min-h-11"
+                >
+                  <UsersIcon className="h-4 w-4" />
+                  Alunos da Academia
+                </button>
+              )}
+
+              {role === 'ALUNO' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreSheetOpen(false)
+                    setAvaliacaoOpen(true)
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-surface-input py-3 text-sm font-bold text-text hover:bg-surface-input/70 active:scale-95 transition-all cursor-pointer min-h-11"
+                >
+                  <StarIcon className="h-4 w-4 text-warning" />
+                  Avaliar o App
+                </button>
+              )}
 
               <div className="pt-2 border-t border-surface-input flex flex-col gap-1.5">
                 <button
@@ -813,11 +893,11 @@ export default function AppShell() {
           </div>
         )}
 
-        {/* Bottom tabs — mobile ALUNO */}
-        {isAluno && !hideNav && (
-          <nav className="fixed bottom-0 left-0 right-0 z-30 glass border-t border-surface-input safe-bottom md:hidden">
+        {/* Bottom tabs universais — mobile para todos os perfis */}
+        {!hideNav && (
+          <nav className="fixed bottom-0 left-0 right-0 z-30 glass border-t border-surface-input safe-bottom md:hidden shadow-lg">
             <div className="flex h-16 items-center justify-around px-1">
-              {alunoBottomTabs.map((t) => {
+              {getRoleBottomTabs(role, user?.admin ?? false).map((t) => {
                 const isActive = t.end ? location.pathname === t.to : location.pathname.startsWith(t.to)
                 const Icon = t.icon
                 return (
@@ -863,9 +943,6 @@ export default function AppShell() {
             </div>
           </nav>
         )}
-
-        {/* Bottom nav placeholder for non-ALUNO on mobile when not in execution */}
-        {!isAluno && !hideNav && <div className="md:hidden h-4" />}
       </div>
       <DebugOverlay open={debugOpen} onClose={() => setDebugOpen(false)} />
       <OnboardingPopup
