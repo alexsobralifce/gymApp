@@ -73,6 +73,18 @@ export async function authRoutes(app: FastifyInstance) {
   })
 
   /**
+   * POST /auth/google-code
+   * Troca authorization code do Google OAuth por sessão autenticada
+   */
+  app.post('/google-code', {
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    const body = z.object({ code: z.string().min(1) }).parse(request.body)
+    const result = await AuthService.loginWithGoogleCode(body.code, app.jwt.sign.bind(app.jwt))
+    return reply.status(200).send(result)
+  })
+
+  /**
    * POST /auth/verify-email
    * Verifica o código enviado por e-mail
    */

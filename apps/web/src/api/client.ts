@@ -201,6 +201,9 @@ export const api = {
   loginWithGoogle: (credential: string, accessToken?: string) =>
     api.post<AuthTokens & { isNew: boolean; nome: string }>('/auth/google', { credential: credential || undefined, access_token: accessToken || undefined }),
 
+  loginWithGoogleCode: (code: string) =>
+    api.post<AuthTokens & { isNew: boolean; nome: string }>('/auth/google-code', { code }),
+
   register: (nome: string, email: string, senha: string, role: string, telefone?: string, parqRespostas?: import('../types/api').ParqRespostas) =>
     api.post<{ message: string }>('/auth/register', { nome, email, senha, role, telefone, parqRespostas }),
 

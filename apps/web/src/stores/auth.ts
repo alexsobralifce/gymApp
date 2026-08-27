@@ -38,6 +38,7 @@ export interface AuthState {
 
   login: (email: string, senha: string) => Promise<void>
   loginWithGoogle: (credential: string, accessToken?: string) => Promise<boolean>
+  loginWithGoogleCode: (code: string) => Promise<boolean>
   register: (nome: string, email: string, senha: string, role: string, telefone?: string, parqRespostas?: ParqRespostas) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
@@ -90,6 +91,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err) {
       const msg = (err as Error).message
       debugLog('AuthStore', `Erro em loginWithGoogle: ${msg}`, err, 'error')
+      const friendlyMsg = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : msg
+      set({ error: friendlyMsg, loading: false })
+      throw err
+    }
+  },
+
+  loginWithGoogleCode: async (code) => {
+    set({ loading: true, error: null })
+    debugLog('AuthStore', 'Iniciando loginWithGoogleCode (redirect flow)...', { codeLength: code?.length || 0 })
+    try {
+      const result = await api.loginWithGoogleCode(code)
+      debugLog('AuthStore', 'api.loginWithGoogleCode OK!', { isNew: result.isNew, nome: result.nome })
+      localStorage.setItem('accessToken', result.accessToken)
+      localStorage.setItem('refreshToken', result.refreshToken)
+      const user = await api.getMe()
+      debugLog('AuthStore', 'api.getMe OK após loginWithGoogleCode!', { userId: user.id })
+      saveStoredUser(user)
+      set({ user, loading: false })
+      track('login_succeeded', { role: user.role })
+      return result.isNew
+    } catch (err) {
+      const msg = (err as Error).message
+      debugLog('AuthStore', `Erro em loginWithGoogleCode: ${msg}`, err, 'error')
       const friendlyMsg = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : msg
       set({ error: friendlyMsg, loading: false })
       throw err

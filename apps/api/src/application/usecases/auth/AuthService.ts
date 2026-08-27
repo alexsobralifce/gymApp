@@ -385,6 +385,42 @@ export class AuthService {
   }
 
   /**
+   * Troca authorization code do Google OAuth por sessão (quando o fluxo code é utilizado)
+   */
+  static async loginWithGoogleCode(
+    code: string,
+    jwtSign: (payload: object, opts?: object) => string,
+  ): Promise<AuthTokens & { isNew: boolean; nome: string }> {
+    if (!env.GOOGLE_CLIENT_ID) {
+      throw new Error('Google OAuth não está configurado. Defina GOOGLE_CLIENT_ID.')
+    }
+
+    try {
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+          redirect_uri: `${process.env.APP_URL || 'https://endorfinapp.com'}/auth/google/callback`,
+          grant_type: 'authorization_code',
+        }).toString(),
+      })
+
+      const data = await tokenResponse.json() as any
+      if (!tokenResponse.ok || (!data.id_token && !data.access_token)) {
+        throw new UnauthorizedError(data.error_description || 'Falha ao trocar código do Google por token.')
+      }
+
+      return AuthService.loginWithGoogle(data.id_token || '', jwtSign, data.access_token)
+    } catch (err: any) {
+      if (err instanceof UnauthorizedError) throw err
+      throw new UnauthorizedError('Código Google inválido ou expirado.')
+    }
+  }
+
+  /**
    * Logout — invalida o refresh token
    */
   static async logout(refreshToken: string): Promise<void> {

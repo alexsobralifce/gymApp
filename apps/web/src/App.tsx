@@ -11,6 +11,7 @@ import { OnboardingPermissionsModal } from './components/ui/OnboardingPermission
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import GoogleCallback from './pages/auth/GoogleCallback'
 import AlunoDashboard from './pages/aluno/Dashboard'
 import AlunoTreinoInicio from './pages/aluno/TreinoInicio'
 import AlunoTreinoExecucao from './pages/aluno/TreinoExecucao'
@@ -82,6 +83,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+      <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
       {!user && <Route index element={<Landing />} />}
 
