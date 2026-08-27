@@ -82,6 +82,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         'http://localhost:5173',
         'http://localhost:3000',
         'capacitor://localhost',
+        'android-app://com.endorfinapp.app',
         'https://endorfinapp.com',
         'https://www.endorfinapp.com.br',
         'https://endorfinapp.com.br',
@@ -96,6 +97,27 @@ export async function buildApp(): Promise<FastifyInstance> {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+
+  // ─── Digital Asset Links (TWA Android Verification) ─────────────────────
+  app.get('/.well-known/assetlinks.json', async (_req, reply) => {
+    reply
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .header('Access-Control-Allow-Origin', '*')
+      .header('Cache-Control', 'public, max-age=86400')
+    return [
+      {
+        relation: ['delegate_permission/common.handle_all_urls'],
+        target: {
+          namespace: 'android_app',
+          package_name: 'com.endorfinapp.app',
+          sha256_cert_fingerprints: [
+            'B0:74:2C:44:9A:9B:BB:74:5E:DE:85:9B:45:36:90:83:CC:70:E7:15:2A:6C:A7:C3:57:C0:22:1E:E0:9A:57:63',
+            'E2:F8:81:22:18:40:D7:4E:42:0D:97:C8:01:DB:14:49:D0:15:F0:EE:E9:30:DF:2F:4C:B1:5A:5A:19:8E:A1:9C',
+          ],
+        },
+      },
+    ]
   })
 
   // ─── Multipart (file uploads) ───────────────────────────────────────────

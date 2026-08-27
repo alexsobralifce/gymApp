@@ -12,6 +12,8 @@
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces --if-present",
     "verify": "npm run build --workspaces && npm run lint --workspace=apps/web && npm run test --workspace=apps/web",
+    "twa:update": "cd packages/twa && npx -y @bubblewrap/cli update",
+    "twa:build": "bash packages/twa/build.sh",
     "dev": "bash dev.sh"
   },
   "engines": {
