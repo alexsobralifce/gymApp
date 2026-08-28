@@ -8,6 +8,7 @@ echo "=== Generating Prisma Client ==="
 npx prisma generate
 
 echo "=== Applying database migrations ==="
+npx prisma migrate resolve --applied 20260826000003_add_avaliacao_fields || true
 npx prisma migrate deploy
 
 echo "=== Extending existing refresh tokens to 30 days ==="
@@ -30,6 +31,8 @@ if [ "$EXERCISE_COUNT" -lt "100" ]; then
     npx tsx prisma/translate-exercises.ts >> /tmp/sync-exercises.log 2>&1
     echo "[Sync] Populando biblioteca de planos..."
     npx tsx prisma/seed-planos.ts >> /tmp/sync-exercises.log 2>&1
+    echo "[Sync] Populando planos de assinatura..."
+    npx tsx prisma/seed-planos-assinatura.ts >> /tmp/sync-exercises.log 2>&1
     echo "[Sync] Concluido!"
   ' > /dev/null 2>&1 &
 else
