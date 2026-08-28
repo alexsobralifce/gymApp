@@ -177,6 +177,10 @@ Visibilidade:       AMIGOS | PUBLICO | PRIVADO
 ClubTipo:           ACADEMIA | TEMATICO
 AvaliacaoStatus:    RASCUNHO | CONCLUIDA
 RiscoCardiaco:      BAIXO | MODERADO | ALTO
+AssinaturaStatus:   ATIVA | EM_CARENCIA | EXPIRADA | CANCELADA | REVOGADA
+AssinaturaOrigem:   PROPRIA | PATROCINADA | MANUAL
+Loja:               GOOGLE_PLAY | APPLE_STORE | MANUAL
+ConviteStatus:      PENDENTE | USADO | EXPIRADO | REVOGADO
 ```
 
 ### Usuario (`usuarios`)
@@ -255,6 +259,18 @@ RiscoCardiaco:      BAIXO | MODERADO | ALTO
 ### NoticiaEnviada (`noticias_enviadas`) — Controle de rotação circular por usuário
 `id (cuid), usuario_id, noticia_id, enviada_em` — `@@unique([usuario_id, noticia_id])`
 - `proxima_noticia_em` no Usuario agenda o próximo envio (aleatório 1–7 dias)
+
+### Modelos de Assinaturas (`planos_assinatura`, `assinaturas`, `assinatura_eventos`, `convites_aluno`)
+- **PlanoAssinatura (`planos_assinatura`)**: `id (cuid), codigo (unique), nome, descricao?, papel_alvo (Role), preco_mensal_cents (Int), moeda (default 'BRL'), google_play_product_id (unique), trial_dias (Int, default 15), limite_alunos? (Int), ativo (Boolean, default true), criado_em`
+- **Assinatura (`assinaturas`)**: `id (cuid), usuario_id, plano_id, loja (Loja, default GOOGLE_PLAY), origem (AssinaturaOrigem, default PROPRIA), status (AssinaturaStatus, default ATIVA), google_purchase_token? (unique), google_order_id?, inicio_em?, expires_at?, trial_iniciado_em?, trial_fim_em?, auto_renovating (Boolean, default true), cancelada_em?, motivo_revogacao? (Json), patrocinada_por_usuario_id?, criado_em, atualizado_em`
+  - Índices: `[usuario_id]`, `[patrocinada_por_usuario_id, status]`, `[status, expires_at]`
+  - **Regra de Ouro**: Aluno com `professor_id` e professor com assinatura ATIVA → acesso PATROCINADO (sem custo)
+  - **Revogação automática**: Quando professor perde licença → assinaturas PATROCINADAS atreladas → REVOGADA
+- **AssinaturaEvento (`assinatura_eventos`)**: `id (cuid), assinatura_id?, purchase_token?, tipo_evento, payload (Json), processado (Boolean), erro?, recebido_em` — Log imutável de webhooks RTDN
+- **ConviteAluno (`convites_aluno`)**: `id (cuid), professor_id, token (unique), status (ConviteStatus, default PENDENTE), expira_em, aluno_id? (unique), criado_em, atualizado_em`
+  - Convite de professor para aluno: uso único, validade 7 dias, gera link `endorfinapp.com.br/invite?token=xyz`
+  - Ao vincular: valida `canAddStudent` (professor com licença ativa + <10 alunos), cria assinatura PATROCINADA
+- **Usuario** (novos campos): `premium_manual_em?`, `premium_manual_por?`, `premium_manual_nota?` — Liberação manual pelo ROOT (sem cobrança)
 
 ### CorrelacaoDesempenho (`correlacoes_desempenho`) — Cache de correlações
 `id (cuid), aluno_id (unique FK), peso_volume_r?, bf_volume_r?, massa_magra_volume_r?, volume_semanal (Json), pontos (Json), calculado_em`
@@ -591,6 +607,52 @@ Funcionalidades baseadas em pesquisa de UX de apps de academia (reduzir fricçã
 - **Triagem PAR-Q+ no cadastro**: 4 perguntas Sim/Não no wizard (não bloqueia conta); alerta não diagnóstico se algum "sim"; persistido via perfil como `{respostas, algumPositivo, respondidoEm}`.
 - **Preferências de notificação**: toggles por tipo + horário silencioso (wrap meia-noite) + frequência (IMEDIATA / RESUMO_DIARIO / DESATIVADA); gating central respeitado por todos os workers de push. RESUMO_DIARIO vira digest real: pushes individuais suprimidos + worker `resumo-diario` consolidando as notificações do dia em um único push.
 
+### 3.8 Assinaturas e Monetização (B2C/B2B)
+
+#### Planos e Precificação
+- **Plano Aluno (B2C)**: R$ 12,00/mês, 15 dias de free trial gerenciado pelo Google Play
+- **Plano Professor (B2B)**: R$ 50,00/mês, 15 dias de trial, limite de 10 alunos com licença patrocinada
+- **Regra de Ouro (Patrocínio)**: Aluno com `professor_id` vinculado a professor com assinatura ATIVA → acesso PATROCINADO sem custo (assinatura com `origem = PATROCINADA`)
+- **Liberação Manual (ROOT)**: ROOT pode liberar qualquer usuário sem cobrança via `premium_manual_em` no Usuario → assinatura com `origem = MANUAL`
+
+#### hasActiveAccess(userId)
+Retorna `{ hasAccess, origem, isTrial }`:
+1. **Premium manual** (`premium_manual_em` not null) → `hasAccess: true, origem: 'MANUAL'`
+2. **Assinatura própria ATIVA** (status ATIVA/EM_CARENCIA, expires_at > now) → `hasAccess: true, origem: 'PROPRIA'`
+3. **Trial ativo** (trial_fim_em > now) → `hasAccess: true, isTrial: true`
+4. **Patrocínio** (aluno com professor_id + professor com assinatura ATIVA) → `hasAccess: true, origem: 'PATROCINADA'`
+5. Caso contrário → `hasAccess: false`
+
+#### canAddStudent(professorId)
+Verifica se professor pode adicionar mais alunos patrocinados:
+- Professor com assinatura ATIVA OU premium manual
+- `count(alunos com professor_id) < limite_alunos` (default 10)
+
+#### Webhook RTDN (Google Play Billing)
+- Endpoint público `POST /assinaturas/webhook/play-billing` recebe notificações do Google Pub/Sub
+- Mapeia `notificationType` (1-13) para status: ATIVA, CANCELADA, EXPIRADA, REVOGADA
+- **Revogação automática**: quando professor cancela/expira → todas assinaturas PATROCINADAS atreladas → REVOGADA
+- Worker diário `assinaturas-verificacao` (cron `0 3 * * *`) marca assinaturas com expires_at < now como EXPIRADA
+
+#### Convites de Professor para Aluno
+- Professor gera link único `endorfinapp.com.br/invite?token=<crypto>` (validade 7 dias, uso único)
+- Valida `canAddStudent` antes de gerar
+- Ao vincular: transação atômica cria vínculo aluno→professor + assinatura PATROCINADA
+- Rota pública `GET /convites/:token` retorna nome do professor e validade
+
+#### Recursos Premium Bloqueados
+Sem acesso ativo (nem trial, nem pago, nem patrocinado), ficam bloqueados:
+- **Prescrição IA** (`/treino/ia`)
+- **Biblioteca de Planos** (`/biblioteca-planos`)
+- **Evolução Avançada** (`/evolucao`) — correlações, gráficos detalhados
+- **Clubes** (`/clubes`)
+- **Avaliações Físicas** (`/avaliacoes`) — para PROFESSOR
+
+Gate implementado via `PremiumWrapper` component + `useSubscription` hook (Zustand store).
+
+#### Tema Único Azul
+Sistema simplificado para uma única paleta (azul) com modos day/night/auto. Paletas lime, red, violet e orange removidas.
+
 ---
 
 ## 4. Rotas da API (Fastify)
@@ -621,6 +683,28 @@ Funcionalidades baseadas em pesquisa de UX de apps de academia (reduzir fricçã
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/health` | Diagnóstico completo: `status` (ok/degraded/error), `timestamp`, `uptime`, `version` (package.json), `checks` (vapid, database via `SELECT 1`, redis via ping descartável, workers social com nomes das filas e gym com `available` `boolean`/`'unknown'` — `redisDisponivel` não é exportado de `gymWorkers.ts`). Nunca retorna 500 — cada check é isolado em try/catch. `error` se DB falhou; `degraded` se VAPID/Redis/workers falharam |
+
+### Assinaturas (`/assinaturas`) — autenticação obrigatória exceto webhook
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/assinaturas/me` | Licença atual do usuário (`hasAccess`, `origem`, `isTrial`, `plano`, `expiresAt`, `trialFimEm`, `patrocinadoPorNome`) |
+| POST | `/assinaturas/importar-token` | Importar purchaseToken do Google Play (pelo cliente nativo/TWA) |
+| POST | `/assinaturas/webhook/play-billing` | Webhook RTDN do Google Pub/Sub (público, sem auth) — processa notificações de compra/renovação/cancelamento |
+
+### Convites (`/convites`) — público + professor
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/convites/:token` | Público — resolve convite (válido? nome do professor? expiração?) |
+| POST | `/convites/:token/vincular` | Auth ALUNO — consome convite, cria vínculo professor-aluno + assinatura PATROCINADA |
+| POST | `/assinaturas/convites` | PROFESSOR — gera novo convite (valida `canAddStudent`) |
+| GET | `/assinaturas/convites` | PROFESSOR — lista convites criados |
+| DELETE | `/assinaturas/convites/:id` | PROFESSOR — revoga convite |
+
+### Root Premium (`/root/premium`) — role ROOT
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/root/premium/liberar` | Liberar premium manual para usuário (sem cobrança) |
+| POST | `/root/premium/revogar` | Revogar premium manual |
 
 ### Aluno (`/alunos`) — role ALUNO
 | Método | Rota | Descrição |
@@ -908,6 +992,7 @@ Funcionalidades baseadas em pesquisa de UX de apps de academia (reduzir fricçã
 | `news-fetch` | `handleNewsFetch` | A cada 6h | Busca RSS do Google News (exercício físico/endorfina/bem-estar), faz upsert em `noticias`. |
 | `news-push` | `handleNewsPush` | A cada 30min | Lote de 20 usuários com push e `proxima_noticia_em <= now`; rotação circular de notícias não enviadas; agenda próximo envio em 1–7 dias. |
 | `resumo-diario` | `handleResumoDiario` | Diário 19:00 (cron `0 19 * * *`, mesmo fuso do treino-em-aberto) | Para usuários `frequencia = RESUMO_DIARIO`: agrupa as `notificacoes` não lidas do dia por categoria (lembretes de treino / novidades sociais / mensagens motivacionais / notícias) e envia UM push "Seu resumo do dia". Dedupe via `preferencias_notificacao.ultimoResumoEnviadoEm` (JSON additivo, sem migração); NÃO marca linhas como lidas (a lista in-app filtra `lida: false`); respeita horário silencioso (19:00 na janela → pula o dia). |
+| `assinaturas-verificacao` | `verificarAssinaturasExpiradas` | Diário 03:00 (cron `0 3 * * *`) | Marca assinaturas com `expires_at < now` como EXPIRADA. Revoga automaticamente assinaturas PATROCINADAS quando professor perde licença. |
 
 ### Social Workers (jobs/social/)
 | Fila | Worker | Descrição |
