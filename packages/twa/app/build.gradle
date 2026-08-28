@@ -22,22 +22,29 @@ plugins {
 
 def twaManifest = [
     applicationId: 'com.endorfinapp.app',
-    hostName: 'www.endorfinapp.com.br', // Domínio próprio oficial
-    launchUrl: '/?source=twa',
-    name: 'ENDORFINAPP',
-    launcherName: 'ENDORFINAPP',
-    themeColor: '#0B1220',
-    themeColorDark: '#0B1220',
-    navigationColor: '#0B1220',
-    navigationColorDark: '#0B1220',
-    navigationDividerColor: '#000000',
-    navigationDividerColorDark: '#000000',
-    backgroundColor: '#0B1220',
-    enableNotifications: true,
-    additionalTrustedOrigins: ["https://endorfinapp.com.br", "https://web-production-c2d3c.up.railway.app"],
-    shortcuts: [[name:'Meus Treinos', short_name:'Treinos', url:'https://www.endorfinapp.com.br/meus-treinos', icon:'shortcut_0'],[name:'Medidas & Avaliações', short_name:'Medidas', url:'https://www.endorfinapp.com.br/medidas', icon:'shortcut_1']],
+    hostName: 'www.endorfinapp.com.br', // The domain being opened in the TWA.
+    launchUrl: '/?source=twa', // The start path for the TWA. Must be relative to the domain.
+    name: 'ENDORFINAPP', // The application name.
+    launcherName: 'ENDORFINAPP', // The name shown on the Android Launcher.
+    themeColor: '#0B1220', // The color used for the status bar.
+    themeColorDark: '#0B1220', // The color used for the dark status bar.
+    navigationColor: '#0B1220', // The color used for the navigation bar.
+    navigationColorDark: '#0B1220', // The color used for the dark navbar.
+    navigationDividerColor: '#000000', // The navbar divider color.
+    navigationDividerColorDark: '#000000', // The dark navbar divider color.
+    backgroundColor: '#0B1220', // The color used for the splash screen background.
+    enableNotifications: true, // Set to true to enable notification delegation.
+    // Every shortcut must include the following fields:
+    // - name: String that will show up in the shortcut.
+    // - short_name: Shorter string used if |name| is too long.
+    // - url: Absolute path of the URL to launch the app with (e.g '/create').
+    // - icon: Name of the resource in the drawable folder to use as an icon.
+    shortcuts: [[name:'Meus Treinos', short_name:'Treinos', url:'https://endorfinapp.com/aluno/treinos', icon:'shortcut_0'],[name:'Medidas & Avaliações', short_name:'Medidas', url:'https://endorfinapp.com/aluno/medidas', icon:'shortcut_1']],
+    // The duration of fade out animation in milliseconds to be played when removing splash screen.
     splashScreenFadeOutDuration: 300,
-    generatorApp: 'bubblewrap-cli',
+    generatorApp: 'bubblewrap-cli', // Application that generated the Android Project
+    // The fallback strategy for when Trusted Web Activity is not available. Possible values are
+    // 'customtabs' and 'webview'.
     fallbackType: 'customtabs',
     enableSiteSettingsShortcut: 'true',
     orientation: 'portrait',
@@ -46,11 +53,19 @@ def twaManifest = [
 android {
     compileSdkVersion 36
     namespace "com.endorfinapp.app"
+    signingConfigs {
+        release {
+            storeFile file('../keystore/endorfinapp-release.keystore')
+            storePassword 'endorfinapp2026'
+            keyAlias 'endorfinapp'
+            keyPassword 'endorfinapp2026'
+        }
+    }
     defaultConfig {
         applicationId "com.endorfinapp.app"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 36
-        versionCode 3
+        versionCode 6
         versionName "1.1.0"
 
         // The name for the application
@@ -69,7 +84,7 @@ android {
             // The URL the Web Manifest for the Progressive Web App that the TWA points to. This
             // is used by Chrome OS and Meta Quest to open the Web version of the PWA instead of
             // the TWA, as it will probably give a better user experience for non-mobile devices.
-            resValue "string", "webManifestUrl", 'https://endorfinapp.com/manifest.json'
+            resValue "string", "webManifestUrl", 'http://localhost:5173/manifest.json'
         
 
         
@@ -140,17 +155,9 @@ android {
 
         
     }
-    signingConfigs {
-        release {
-            storeFile file('../keystore/endorfinapp-release.keystore')
-            storePassword 'endorfinapp2026'
-            keyAlias 'endorfinapp'
-            keyPassword 'endorfinapp2026'
-        }
-    }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             signingConfig signingConfigs.release
         }
     }
@@ -207,6 +214,8 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     
-        implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.6.2'
+        implementation 'com.google.androidbrowserhelper:billing:1.2.0'
+    
+        implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.0-alpha02'
     
 }
