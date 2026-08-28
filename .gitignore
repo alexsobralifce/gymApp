@@ -45,3 +45,6 @@ exercises.json-master/
 test-results/
 playwright-report/
 blob-report/
+
+# ─── Deepwork (estado local de orquestração) ───
+.slim/deepwork/

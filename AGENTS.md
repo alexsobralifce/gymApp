@@ -8,6 +8,7 @@ Este arquivo serve como base de conhecimento para qualquer assistente de IA/LLM 
 
 1. **Leitura de Skills**: Antes de executar qualquer comando, ler todas as skills dentro de `.agent/skills/`. Só prossiga com comandos ou edições após carregar e considerar o conteúdo dessas skills.
 2. **Atualização Contínua**: Sempre que modificações no sistema acrescentarem novos requisitos, modelos ou regras de negócio, o arquivo `AGENTS.md` deve ser atualizado para manter a base de conhecimento sincronizada.
+3. **Orquestração (deepwork)**: Toda solicitação de implementação no repositório segue o workflow de orquestração documentado em `.opencode/instructions/orquestracao.md` — plano de fases em `.slim/deepwork/`, gates de revisão Oracle após cada fase (agents `oracle`, `librarian`, `designer`, `fixer` do opencode) e validação final build + testes. Acionável rapidamente via comando `/implementar`.
 3. **Padrão Linguístico 100% em Português (PT-BR) nos Modelos**: Todos os modelos de dados, entidades de domínio, exercícios, treinos, grupos musculares, equipamentos, instruções didáticas (`passos_pt`), explicações conceituais (`descricao_pt`), dicas (`dica`), laudos, feedbacks e interfaces devem ser **100% em português brasileiro claro, didático e humanizado**. Termos em inglês não adaptados (ex: *bench press, deadlift, squat, lat pulldown, dumbbell, barbell, lying leg curl, straight legs, circular toe touch, chest, back, waist, body weight*) são **terminantemente proibidos** em campos apresentados, entidades de domínio e payloads dos modelos.
 
 ---
