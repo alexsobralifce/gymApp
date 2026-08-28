@@ -612,15 +612,23 @@ export default function Landing() {
             {[
               { title: 'Produto', links: ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Funciona'] },
               { title: 'Para Quem', links: ['Aluno Autogestão', 'Professor', 'Academia', 'Personal Trainer'] },
-              { title: 'Links', links: ['Entrar', 'Criar Conta', 'Termos de Uso', 'Privacidade'] },
+              { title: 'Links', links: [
+                { label: 'Entrar', href: '/login' },
+                { label: 'Criar Conta', href: '/register' },
+                { label: 'Termos de Uso', href: '/politica-privacidade' },
+                { label: 'Privacidade', href: '/politica-privacidade' },
+              ] },
             ].map((col) => (
               <div key={col.title}>
                 <h4 className="text-xs font-bold text-foreground uppercase tracking-widest mb-4">{col.title}</h4>
                 <ul className="space-y-2.5">
                   {col.links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                        {link}
+                    <li key={typeof link === 'string' ? link : link.label}>
+                      <a
+                        href={typeof link === 'string' ? '#' : link.href}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {typeof link === 'string' ? link : link.label}
                       </a>
                     </li>
                   ))}
@@ -630,7 +638,7 @@ export default function Landing() {
           </div>
 
           <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>© 2025 ENDORFINAPP. Todos os direitos reservados.</span>
+            <span>© 2026 ENDORFINAPP. Todos os direitos reservados.</span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
               Dados protegidos com criptografia SSL

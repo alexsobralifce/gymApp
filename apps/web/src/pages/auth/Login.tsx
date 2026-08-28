@@ -122,6 +122,12 @@ export default function Login() {
         <p className="text-center text-xs text-text-muted">
           Não tem conta? <Link to="/register" className="text-primary">Cadastre-se</Link>
         </p>
+        <p className="text-center text-xs text-text-muted">
+          Ao entrar, você concorda com a{' '}
+          <Link to="/politica-privacidade" className="text-primary underline">
+            Política de Privacidade
+          </Link>
+        </p>
       </form>
     </div>
   )

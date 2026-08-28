@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import FormField from '../../components/ui/FormField'
@@ -111,6 +112,13 @@ export default function Step2Profile({
           />
           <span className="text-xs text-text-muted">Desejo que meus amigos vejam quando eu treino</span>
         </label>
+        <p className="mt-2 text-xs text-text-muted">
+          Ao continuar, você concorda com a{' '}
+          <Link to="/politica-privacidade" className="text-primary underline">
+            Política de Privacidade
+          </Link>
+          .
+        </p>
       </div>
       {hasErrors && (
         <p className="text-xs text-destructive text-center md:col-span-2">Corrija os campos acima para continuar</p>
