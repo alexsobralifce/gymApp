@@ -29,6 +29,7 @@ import {
   MenuIcon,
   XIcon,
   ChevronRightIcon,
+  ChevronDownIcon,
   MessageCircleIcon,
   UserSearchIcon,
   ShieldIcon,
@@ -128,13 +129,13 @@ function UserAvatar({
         src={src}
         alt=""
         onError={() => setImgOk(false)}
-        className={`${dim} shrink-0 rounded-full object-cover ring-2 ring-offset-2 ring-offset-surface ${ringClass}`}
+        className={`${dim} shrink-0 rounded-full object-cover ring-[3px] ring-offset-2 ring-offset-surface transition-all duration-200 ${ringClass}`}
       />
     )
   }
 
   return (
-    <div className={`flex ${dim} shrink-0 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground ring-2 ring-offset-2 ring-offset-surface overflow-hidden ${ringClass}`}>
+    <div className={`flex ${dim} shrink-0 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground ring-[3px] ring-offset-2 ring-offset-surface overflow-hidden transition-all duration-200 ${ringClass}`}>
       <span className="truncate max-w-full px-0.5">{iniciais}</span>
     </div>
   )
@@ -586,16 +587,42 @@ export default function AppShell() {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="relative" ref={menuRef}>
+              <div className="relative group" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex items-center gap-2.5 rounded-xl p-1.5 pr-2.5 hover:bg-surface-input transition-all cursor-pointer active:scale-95 min-w-0"
+                  className={`group/btn flex items-center gap-2 rounded-xl p-1.5 pr-2.5 transition-all duration-200 cursor-pointer active:scale-95 min-w-0 hover:bg-surface-input ${
+                    menuOpen ? 'bg-surface-input ring-2 ring-primary/20' : ''
+                  }`}
+                  aria-label="Abrir menu do usuário"
+                  aria-expanded={menuOpen}
+                  title={`${user?.nome} • Clique para abrir o menu`}
                 >
-                  <UserAvatar nome={user?.nome} fotoUrl={user?.fotoUrl} size="sm" ringClass={ringColor} />
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-text shrink-0">
+                  <div className="relative">
+                    <UserAvatar
+                      nome={user?.nome}
+                      fotoUrl={user?.fotoUrl}
+                      size="sm"
+                      ringClass={`${ringColor} group-hover/btn:ring-[4px] group-hover/btn:ring-offset-1`}
+                    />
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-surface border-2 border-surface-card flex items-center justify-center shadow-sm transition-all duration-200 ${
+                      menuOpen ? 'rotate-180 bg-primary border-primary' : 'bg-surface-input'
+                    }`}>
+                      <ChevronDownIcon className={`h-2.5 w-2.5 ${menuOpen ? 'text-primary-foreground' : 'text-text-muted'}`} />
+                    </span>
+                  </div>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold shrink-0 transition-colors duration-200 ${
+                    menuOpen ? 'bg-primary text-primary-foreground' : 'bg-secondary text-text'
+                  }`}>
                     {user?.admin ? 'Admin' : getRoleLabel(role)}
                   </span>
                 </button>
+
+                {!menuOpen && (
+                  <div className="absolute right-0 top-full mt-2 px-2 py-1 rounded-lg bg-surface-card border border-border shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-40 whitespace-nowrap">
+                    <p className="text-xs font-semibold text-text">Menu</p>
+                    <p className="text-[10px] text-text-muted">Perfil, tema e configurações</p>
+                  </div>
+                )}
 
                 {menuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-border bg-surface-card shadow-2xl z-30 overflow-hidden animate-scale-in">

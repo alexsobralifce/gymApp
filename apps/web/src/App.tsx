@@ -55,6 +55,8 @@ import ClubeFeed from './pages/aluno/ClubeFeed'
 import AlterarSenha from './pages/auth/AlterarSenha'
 import Avaliacoes from './pages/avaliacoes/Avaliacoes'
 import Documentacao from './pages/Documentacao'
+import Paywall from './pages/paywall/Paywall'
+import Beneficios from './pages/aluno/Beneficios'
 
 import { EndorfinappIcon } from './components/branding'
 
@@ -90,6 +92,8 @@ export default function App() {
       {user?.role === 'ALUNO' && (
         <>
           <Route path="welcome" element={<WelcomeCards />} />
+          <Route path="paywall" element={<Paywall />} />
+          <Route path="beneficios" element={<Beneficios />} />
           <Route element={<AppShell />}>
           <Route index element={<AlunoDashboard />} />
           <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
@@ -122,7 +126,9 @@ export default function App() {
       )}
 
       {user?.role === 'PROFESSOR' && (
-        <Route element={<AppShell />}>
+        <>
+          <Route path="paywall" element={<Paywall />} />
+          <Route element={<AppShell />}>
           <Route index element={<ProfessorDashboard />} />
           <Route path="treinos" element={<ProfessorTreinos />} />
           <Route path="alunos/:alunoId/evolucao" element={<ProfessorAlunoCorrelacoes />} />
@@ -146,6 +152,7 @@ export default function App() {
           <Route path="noticias" element={<Noticias />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
+        </>
       )}
 
       {(user?.role === 'ROOT' || user?.admin) && (

@@ -1,4 +1,4 @@
-const SW_VERSION = 'endorfinapp-v6-twa-offline'
+const SW_VERSION = 'endorfinapp-v7-twa-offline'
 const SHELL_CACHE_NAME = `endorfinapp-shell-${SW_VERSION}`
 const GIF_CACHE_NAME = 'gymapp-workout-gifs-v1'
 

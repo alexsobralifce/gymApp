@@ -20,9 +20,39 @@ import { getInitials } from '../../lib/initials'
 import { resolveMediaUrl } from '../../lib/media'
 import { calcularIMC, classificarIMC, calcularIdade } from '../../lib/health'
 import RetomadaModal from '../../components/aluno/RetomadaModal'
+import HeroEvolucao from '../../components/aluno/HeroEvolucao'
+import FeatureTour, { type FeatureTourStep } from '../../components/ui/FeatureTour'
+import { hasSeenFeatureTour, markFeatureTourSeen } from '../../components/ui/FeatureTour'
 
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+const TOUR_STEPS: FeatureTourStep[] = [
+  {
+    id: 'evolucao',
+    emoji: '📊',
+    title: 'Acompanhe sua evolução',
+    message: 'Veja gráficos de volume, cargas, peso corporal e IMC. Entenda como seu corpo evolui com os treinos.',
+  },
+  {
+    id: 'ia',
+    emoji: '✨',
+    title: 'Treino por Inteligência Artificial',
+    message: 'A IA gera treinos personalizados para seu objetivo, nível e restrições. Experimente!',
+  },
+  {
+    id: 'planos',
+    emoji: '📚',
+    title: 'Biblioteca de Planos Científicos',
+    message: '30+ planos prontos baseados em literatura esportiva. Encontre o ideal para você.',
+  },
+  {
+    id: 'comunidade',
+    emoji: '👥',
+    title: 'Sua Comunidade Fitness',
+    message: 'Conecte-se com amigos, entre em clubes, ganhe XP e compartilhe conquistas no feed.',
+  },
+]
 
 // Convenção de dias da semana: 0 = Domingo, 1 = Segunda, ... 6 = Sábado
 // (mesma do Date.getDay() e dos demais construtores de treino do app).
@@ -74,6 +104,16 @@ export default function AlunoDashboard() {
   // UX-006: retomada pós-ausência (≥14 dias sem treino concluído)
   const [showRetomada, setShowRetomada] = useState(false)
   const [retomadaEpisodio, setRetomadaEpisodio] = useState<string | null>(null)
+  // Feature tour de benefícios
+  const [showTour, setShowTour] = useState(false)
+  // Resumo de evolução para o HeroEvolucao
+  const [evolucaoResumo, setEvolucaoResumo] = useState<{
+    treinosConcluidos: number
+    meta: number
+    volumeKg: number
+    variacaoPct: number | null
+  } | null>(null)
+  const [evolucaoLoading, setEvolucaoLoading] = useState(true)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
@@ -95,8 +135,37 @@ export default function AlunoDashboard() {
       }
       // UX-006: só verifica a retomada depois de os treinos carregarem
       await verificarRetomada()
+      // Carrega resumo de evolução para o HeroEvolucao
+      carregarEvolucao()
+      // Tour de benefícios na primeira visita
+      if (!hasSeenFeatureTour()) {
+        setShowTour(true)
+      }
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  async function carregarEvolucao() {
+    try {
+      const data = new Date()
+      const mes = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`
+      const res = await api.get(`/alunos/evolucao/mensal?mes=${mes}`) as {
+        frequencia?: { concluidos?: number }
+        meta_semanal?: number
+        volume_total_kg?: number
+        variacao_volume_pct?: number
+      }
+      setEvolucaoResumo({
+        treinosConcluidos: res.frequencia?.concluidos ?? 0,
+        meta: res.meta_semanal ?? 3,
+        volumeKg: res.volume_total_kg ?? 0,
+        variacaoPct: res.variacao_volume_pct ?? null,
+      })
+    } catch (err) {
+      console.error('Erro ao carregar evolução:', err)
+    } finally {
+      setEvolucaoLoading(false)
     }
   }
 
@@ -426,6 +495,9 @@ export default function AlunoDashboard() {
         </div>
       </div>
 
+      {/* Hero Evolução — destaque de acompanhamento de performance */}
+      <HeroEvolucao resumo={evolucaoResumo} loading={evolucaoLoading} />
+
       {/* Visão Geral — estatísticas secundárias */}
       <div className="space-y-2">
         <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">Visão Geral</h2>
@@ -695,6 +767,15 @@ export default function AlunoDashboard() {
         open={showRetomada}
         treinoAlvo={treinoAlvo}
         onDismiss={handleFecharRetomada}
+      />
+
+      <FeatureTour
+        steps={TOUR_STEPS}
+        open={showTour}
+        onClose={() => {
+          setShowTour(false)
+          markFeatureTourSeen()
+        }}
       />
     </div>
   )
