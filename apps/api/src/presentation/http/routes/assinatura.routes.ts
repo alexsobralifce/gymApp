@@ -12,7 +12,7 @@ import {
 
 export async function assinaturaRoutes(app: FastifyInstance) {
   app.get('/me', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const usuarioId = (req as any).usuarioId
+    const usuarioId = req.currentUser.sub
     const licenca = await licencaAtual(usuarioId)
     return licenca
   })
@@ -23,7 +23,7 @@ export async function assinaturaRoutes(app: FastifyInstance) {
   })
 
   app.post('/importar-token', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const usuarioId = (req as any).usuarioId
+    const usuarioId = req.currentUser.sub
     const body = importarSchema.parse(req.body)
     const result = await importarToken(usuarioId, body.purchaseToken, body.productId)
     return result
@@ -76,7 +76,7 @@ export async function assinaturaRoutes(app: FastifyInstance) {
   })
 
   app.post('/convites', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const usuarioId = (req as any).usuarioId
+    const usuarioId = req.currentUser.sub
     const usuario = await (await import('../../../infrastructure/database/prisma.js')).prisma.usuario.findUnique({ where: { id: usuarioId } })
     if (!usuario || usuario.role !== 'PROFESSOR') {
       return reply.status(403).send({ error: 'Apenas professores podem criar convites' })
@@ -86,7 +86,7 @@ export async function assinaturaRoutes(app: FastifyInstance) {
   })
 
   app.get('/convites', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const usuarioId = (req as any).usuarioId
+    const usuarioId = req.currentUser.sub
     const prisma = (await import('../../../infrastructure/database/prisma.js')).prisma
     const convites = await prisma.conviteAluno.findMany({
       where: { professor_id: usuarioId },
@@ -97,7 +97,7 @@ export async function assinaturaRoutes(app: FastifyInstance) {
   })
 
   app.delete('/convites/:id', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const usuarioId = (req as any).usuarioId
+    const usuarioId = req.currentUser.sub
     const { id } = req.params as { id: string }
     const prisma = (await import('../../../infrastructure/database/prisma.js')).prisma
     const convite = await prisma.conviteAluno.findFirst({ where: { id, professor_id: usuarioId } })
@@ -127,7 +127,7 @@ export async function conviteRoutes(app: FastifyInstance) {
   })
 
   app.post('/:token/vincular', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const usuarioId = (req as any).usuarioId
+    const usuarioId = req.currentUser.sub
     const { token } = req.params as { token: string }
     try {
       const result = await vincularConvite(usuarioId, token)
@@ -145,7 +145,7 @@ export async function rootPremiumRoutes(app: FastifyInstance) {
   })
 
   app.post('/liberar', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const rootUsuarioId = (req as any).usuarioId
+    const rootUsuarioId = req.currentUser.sub
     const body = liberarSchema.parse(req.body)
     try {
       const result = await liberarPremiumManual(rootUsuarioId, body.usuarioId, body.nota)
@@ -160,7 +160,7 @@ export async function rootPremiumRoutes(app: FastifyInstance) {
   })
 
   app.post('/revogar', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const rootUsuarioId = (req as any).usuarioId
+    const rootUsuarioId = req.currentUser.sub
     const body = revogarSchema.parse(req.body)
     try {
       const result = await revogarPremiumManual(rootUsuarioId, body.usuarioId)
