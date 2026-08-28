@@ -3,8 +3,7 @@ import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-do
 import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
 import { api } from '../../api/client'
-import { useThemeStore, THEME_BRANDS } from '../../stores/theme'
-import type { ThemeBrand } from '../../stores/theme'
+import { useThemeStore } from '../../stores/theme'
 import OnboardingPopup from '../ui/OnboardingPopup'
 import IncompleteWorkoutBanner from '../ui/IncompleteWorkoutBanner'
 import SistemaAvaliacaoModal from '../avaliacao/SistemaAvaliacaoModal'
@@ -366,9 +365,7 @@ function NavSectionComponent({ section, collapsed = false, onClick }: { section:
 export default function AppShell() {
   const logout = useAuthStore((s: AuthState) => s.logout)
   const user = useAuthStore((s: AuthState) => s.user)
-  const theme = useThemeStore((s) => s.theme)
   const mode = useThemeStore((s) => s.mode)
-  const setTheme = useThemeStore((s) => s.setTheme)
   const setMode = useThemeStore((s) => s.setMode)
   const navigate = useNavigate()
   const location = useLocation()
@@ -636,30 +633,7 @@ export default function AppShell() {
                     <div className="px-4 py-3 border-b border-border space-y-2">
                       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                         <PaletteIcon className="h-3.5 w-3.5 text-primary" />
-                        Tema
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {THEME_BRANDS.map((b) => {
-                          const active = theme === b.id
-                          return (
-                            <button
-                              key={b.id}
-                              type="button"
-                              title={b.label}
-                              onClick={() => setTheme(b.id as ThemeBrand)}
-                              className={`flex flex-1 items-center justify-center rounded-xl px-2 py-2 text-xs font-semibold transition-all cursor-pointer border ${
-                                active
-                                  ? 'border-primary bg-primary/15 text-text ring-1 ring-primary/40'
-                                  : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
-                              }`}
-                            >
-                              <span
-                                className={`h-5 w-5 rounded-full border-2 ${active ? 'border-text scale-110' : 'border-transparent'}`}
-                                style={{ backgroundColor: b.swatch }}
-                              />
-                            </button>
-                          )
-                        })}
+                        Modo
                       </div>
                       <div className="grid grid-cols-3 gap-1.5">
                         <button
@@ -670,7 +644,7 @@ export default function AppShell() {
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
-                          title="Auto por horário: claro 06h–18h, escuro 18h–06h (não usa tema do celular)"
+                          title="Auto por horário: claro 06h–18h, escuro 18h–06h"
                         >
                           Auto
                         </button>

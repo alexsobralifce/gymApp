@@ -5,6 +5,7 @@ import BatchActionBar from '../../components/ui/BatchActionBar'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
+import PremiumManagerButton from '../../components/root/PremiumManagerButton'
 
 type Tab = 'academias' | 'professores' | 'alunos'
 
@@ -36,7 +37,7 @@ interface AlunoItem {
   data_nascimento: string | null
   peso_kg: number | null
   altura_cm: number | null
-  usuario: { id: string; email: string; nome: string; telefone: string | null; admin?: boolean }
+  usuario: { id: string; email: string; nome: string; telefone: string | null; admin?: boolean; premium_manual_em?: string | null }
   academia: { id: string; nome: string } | null
   professor: { id: string; usuario: { nome: string } } | null
 }
@@ -651,6 +652,12 @@ function AlunosTab({
           </div>
           <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+            <PremiumManagerButton
+              usuarioId={a.usuario.id}
+              usuarioNome={a.usuario.nome}
+              temPremium={!!a.usuario.premium_manual_em}
+              onToggle={() => {}}
+            />
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
             <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
           </div>

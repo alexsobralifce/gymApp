@@ -2,13 +2,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useThemeStore, computeEffectiveMode, getAutoModeByTime } from './theme'
 
-describe('Theme Store & Mode Separation (TDD)', () => {
+describe('Theme Store — Modo (Blue único)', () => {
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.removeAttribute('data-theme')
     document.documentElement.removeAttribute('data-mode')
     useThemeStore.setState({
-      theme: 'lime',
       mode: 'auto',
       effectiveMode: computeEffectiveMode('auto'),
     })
@@ -32,11 +31,10 @@ describe('Theme Store & Mode Separation (TDD)', () => {
 
     expect(computeEffectiveMode('auto', morning)).toBe('day')
     expect(computeEffectiveMode('auto', evening)).toBe('night')
-    // explicit day always wins even at night hours
     expect(computeEffectiveMode('day', evening)).toBe('day')
   })
 
-  it('should set mode to day independently and update DOM data-mode attribute', () => {
+  it('should set mode to day and update DOM data-mode attribute', () => {
     useThemeStore.getState().setMode('day')
 
     expect(useThemeStore.getState().mode).toBe('day')
@@ -45,7 +43,7 @@ describe('Theme Store & Mode Separation (TDD)', () => {
     expect(localStorage.getItem('gymapp_mode')).toBe('day')
   })
 
-  it('should set mode to night independently and update DOM data-mode attribute', () => {
+  it('should set mode to night and update DOM data-mode attribute', () => {
     useThemeStore.getState().setMode('night')
 
     expect(useThemeStore.getState().mode).toBe('night')
@@ -54,7 +52,7 @@ describe('Theme Store & Mode Separation (TDD)', () => {
     expect(localStorage.getItem('gymapp_mode')).toBe('night')
   })
 
-  it('should set mode to auto independently without overwriting mode state to day/night', () => {
+  it('should set mode to auto without overwriting effective to day/night', () => {
     useThemeStore.getState().setMode('auto')
 
     expect(useThemeStore.getState().mode).toBe('auto')
@@ -62,21 +60,10 @@ describe('Theme Store & Mode Separation (TDD)', () => {
     expect(localStorage.getItem('gymapp_mode')).toBe('auto')
   })
 
-  it('should keep explicit day when changing brand (setTheme must not switch to auto/night)', () => {
+  it('data-theme attribute is always blue', () => {
     useThemeStore.getState().setMode('day')
-    useThemeStore.getState().setTheme('red')
-
-    expect(useThemeStore.getState().mode).toBe('day')
-    expect(useThemeStore.getState().effectiveMode).toBe('day')
-    expect(document.documentElement.getAttribute('data-mode')).toBe('day')
-    expect(document.documentElement.getAttribute('data-theme')).toBe('red')
-  })
-
-  it('should update theme brand and persist in localStorage', () => {
-    useThemeStore.getState().setTheme('red')
-
-    expect(useThemeStore.getState().theme).toBe('red')
-    expect(document.documentElement.getAttribute('data-theme')).toBe('red')
-    expect(localStorage.getItem('gymapp_theme')).toBe('red')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('blue')
+    useThemeStore.getState().setMode('night')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('blue')
   })
 })

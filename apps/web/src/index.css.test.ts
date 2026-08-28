@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 
-describe('index.css Theme Variables Verification', () => {
+describe('index.css — Tema único Azul (Blue)', () => {
   const cssPath = path.resolve(__dirname, 'index.css')
   const cssContent = fs.readFileSync(cssPath, 'utf-8')
 
@@ -11,36 +11,44 @@ describe('index.css Theme Variables Verification', () => {
     expect(cssContent).not.toMatch(/(html)?\[data-mode=["']night["']\]\s*,\s*:root/)
   })
 
+  it('must contain only blue theme (no lime/red/violet/orange)', () => {
+    expect(cssContent).toContain('html[data-theme="blue"]')
+    expect(cssContent).not.toContain('html[data-theme="lime"]')
+    expect(cssContent).not.toContain('html[data-theme="red"]')
+    expect(cssContent).not.toContain('html[data-theme="violet"]')
+    expect(cssContent).not.toContain('html[data-theme="orange"]')
+  })
+
   it('should scope mode tokens to html[data-mode] for identical mobile/desktop', () => {
     expect(cssContent).toContain('html[data-mode="day"]')
     expect(cssContent).toContain('html[data-mode="night"]')
-    expect(cssContent).toContain('html[data-theme="lime"][data-mode="day"]')
-    expect(cssContent).toContain('html[data-theme="lime"][data-mode="night"]')
+    expect(cssContent).toContain('html[data-theme="blue"][data-mode="day"]')
+    expect(cssContent).toContain('html[data-theme="blue"][data-mode="night"]')
   })
 
-  it('should define explicit day surface colors for lime theme (white bg)', () => {
-    const limeDaySection = cssContent.slice(
-      cssContent.indexOf('html[data-theme="lime"][data-mode="day"]'),
-      cssContent.indexOf('/* ─── 3. Vermelho'),
+  it('should define explicit day surface colors for blue theme (white bg)', () => {
+    const blueDaySection = cssContent.slice(
+      cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
+      cssContent.indexOf('/* ─── Animações'),
     )
 
-    expect(limeDaySection).toContain('--color-surface: #FFFFFF;')
-    expect(limeDaySection).toContain('--color-background: #FFFFFF;')
-    expect(limeDaySection).toContain('--color-text: #0A1628;')
-    expect(limeDaySection).toContain('color-scheme: only light;')
+    expect(blueDaySection).toContain('--color-surface: #FFFFFF;')
+    expect(blueDaySection).toContain('--color-background: #FFFFFF;')
+    expect(blueDaySection).toContain('--color-text: #0B1220;')
+    expect(blueDaySection).toContain('color-scheme: only light;')
   })
 
-  it('should define explicit night surface colors for lime theme (dark bg)', () => {
-    const limeNightSection = cssContent.slice(
-      cssContent.indexOf('html[data-theme="lime"][data-mode="night"]'),
-      cssContent.indexOf('html[data-theme="lime"][data-mode="day"]'),
+  it('should define explicit night surface colors for blue theme (dark bg)', () => {
+    const blueNightSection = cssContent.slice(
+      cssContent.indexOf('html[data-theme="blue"][data-mode="night"]'),
+      cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
     )
 
-    expect(limeNightSection).toContain('--color-surface: #0A1628;')
-    expect(limeNightSection).toContain('--color-background: #0A1628;')
-    expect(limeNightSection).toContain('--color-card: #122040;')
-    expect(limeNightSection).toContain('--color-text: #F7F9FC;')
-    expect(limeNightSection).toContain('color-scheme: dark;')
+    expect(blueNightSection).toContain('--color-surface: #0B1220;')
+    expect(blueNightSection).toContain('--color-background: #0B1220;')
+    expect(blueNightSection).toContain('--color-card: #111C33;')
+    expect(blueNightSection).toContain('--color-text: #F5F8FF;')
+    expect(blueNightSection).toContain('color-scheme: dark;')
   })
 
   it('should force html/body/#root background from tokens (viewport-independent)', () => {
@@ -59,59 +67,25 @@ describe('index.css Theme Variables Verification', () => {
     expect(dayBlock).toContain('--color-surface: #FFFFFF;')
   })
 
-  it('day mode surfaces must be light (luminance heuristic via hex prefix)', () => {
-    const dayBlocks = [
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
-        cssContent.indexOf('/* ─── 2. Lima'),
-      ),
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="lime"][data-mode="day"]'),
-        cssContent.indexOf('/* ─── 3. Vermelho'),
-      ),
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="red"][data-mode="day"]'),
-        cssContent.indexOf('/* ─── 4. Violeta'),
-      ),
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="violet"][data-mode="day"]'),
-        cssContent.indexOf('/* ─── 5. Laranja'),
-      ),
-    ]
-
-    for (const block of dayBlocks) {
-      const surface = block.match(/--color-surface:\s*(#[0-9A-Fa-f]{6})/)?.[1]
-      expect(surface).toBeTruthy()
-      const r = parseInt(surface!.slice(1, 3), 16)
-      expect(r).toBeGreaterThan(200)
-    }
+  it('blue day surface must be light (luminance heuristic)', () => {
+    const dayBlock = cssContent.slice(
+      cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
+      cssContent.indexOf('/* ─── Animações'),
+    )
+    const surface = dayBlock.match(/--color-surface:\s*(#[0-9A-Fa-f]{6})/)?.[1]
+    expect(surface).toBeTruthy()
+    const r = parseInt(surface!.slice(1, 3), 16)
+    expect(r).toBeGreaterThan(200)
   })
 
-  it('night mode surfaces must be dark', () => {
-    const nightBlocks = [
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="blue"][data-mode="night"]'),
-        cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
-      ),
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="lime"][data-mode="night"]'),
-        cssContent.indexOf('html[data-theme="lime"][data-mode="day"]'),
-      ),
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="red"][data-mode="night"]'),
-        cssContent.indexOf('html[data-theme="red"][data-mode="day"]'),
-      ),
-      cssContent.slice(
-        cssContent.indexOf('html[data-theme="violet"][data-mode="night"]'),
-        cssContent.indexOf('html[data-theme="violet"][data-mode="day"]'),
-      ),
-    ]
-
-    for (const block of nightBlocks) {
-      const surface = block.match(/--color-surface:\s*(#[0-9A-Fa-f]{6})/)?.[1]
-      expect(surface).toBeTruthy()
-      const r = parseInt(surface!.slice(1, 3), 16)
-      expect(r).toBeLessThan(40)
-    }
+  it('blue night surface must be dark', () => {
+    const nightBlock = cssContent.slice(
+      cssContent.indexOf('html[data-theme="blue"][data-mode="night"]'),
+      cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
+    )
+    const surface = nightBlock.match(/--color-surface:\s*(#[0-9A-Fa-f]{6})/)?.[1]
+    expect(surface).toBeTruthy()
+    const r = parseInt(surface!.slice(1, 3), 16)
+    expect(r).toBeLessThan(40)
   })
 })

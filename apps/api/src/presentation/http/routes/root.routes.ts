@@ -520,7 +520,7 @@ export async function rootRoutes(app: FastifyInstance) {
         prisma.aluno.findMany({
           where,
           include: {
-            usuario: { select: { id: true, email: true, nome: true, telefone: true } },
+            usuario: { select: { id: true, email: true, nome: true, telefone: true, admin: true, premium_manual_em: true } },
             academia: { select: { id: true, nome: true } },
             professor: { select: { id: true, usuario: { select: { nome: true } } } },
           },
@@ -536,7 +536,7 @@ export async function rootRoutes(app: FastifyInstance) {
     const alunos = await prisma.aluno.findMany({
       where,
       include: {
-        usuario: { select: { id: true, email: true, nome: true, telefone: true } },
+        usuario: { select: { id: true, email: true, nome: true, telefone: true, admin: true, premium_manual_em: true } },
         academia: { select: { id: true, nome: true } },
         professor: { select: { id: true, usuario: { select: { nome: true } } } },
       },

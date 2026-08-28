@@ -34,6 +34,12 @@ model Usuario {
   proxima_noticia_em       DateTime?
   preferencias_notificacao Json?
   noticiasEnviadas         NoticiaEnviada[]
+  assinaturas              Assinatura[]
+  premium_manual_em        DateTime?
+  premium_manual_por       String?
+  premium_manual_nota      String?
+  convitesCriados          ConviteAluno[]             @relation("ConvitesCriados")
+  conviteUtilizado         ConviteAluno?              @relation("ConviteUtilizado")
 
   @@map("usuarios")
 }
@@ -673,4 +679,117 @@ enum RiscoCardiaco {
   BAIXO
   MODERADO
   ALTO
+}
+
+/// ─── Módulo de Assinaturas (B2C/B2B) ───────────────────────────────────────
+
+enum AssinaturaStatus {
+  ATIVA
+  EM_CARENCIA
+  EXPIRADA
+  CANCELADA
+  REVOGADA
+}
+
+enum AssinaturaOrigem {
+  PROPRIA
+  PATROCINADA
+  MANUAL
+}
+
+enum Loja {
+  GOOGLE_PLAY
+  APPLE_STORE
+  MANUAL
+}
+
+enum ConviteStatus {
+  PENDENTE
+  USADO
+  EXPIRADO
+  REVOGADO
+}
+
+/// Planos de assinatura disponíveis no sistema
+model PlanoAssinatura {
+  id                     String        @id @default(cuid())
+  codigo                 String        @unique
+  nome                   String
+  descricao              String?
+  papel_alvo             Role
+  preco_mensal_cents     Int
+  moeda                  String        @default("BRL")
+  google_play_product_id String        @unique
+  trial_dias             Int           @default(15)
+  limite_alunos          Int?
+  ativo                  Boolean       @default(true)
+  criado_em              DateTime      @default(now())
+  assinaturas            Assinatura[]
+
+  @@map("planos_assinatura")
+}
+
+/// Assinatura ativa de um usuário (própria, patrocinada ou manual)
+model Assinatura {
+  id                       String            @id @default(cuid())
+  usuario_id               String
+  plano_id                 String
+  loja                     Loja              @default(GOOGLE_PLAY)
+  origem                   AssinaturaOrigem   @default(PROPRIA)
+  status                   AssinaturaStatus   @default(ATIVA)
+  google_purchase_token    String?             @unique
+  google_order_id          String?
+  inicio_em                DateTime?
+  expires_at               DateTime?
+  trial_iniciado_em        DateTime?
+  trial_fim_em             DateTime?
+  auto_renovating          Boolean           @default(true)
+  cancelada_em             DateTime?
+  motivo_revogacao         Json?
+  patrocinada_por_usuario_id String?
+  criado_em                DateTime          @default(now())
+  atualizado_em            DateTime          @updatedAt
+  usuario                  Usuario           @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  plano                    PlanoAssinatura   @relation(fields: [plano_id], references: [id])
+  eventos                  AssinaturaEvento[]
+
+  @@index([usuario_id])
+  @@index([patrocinada_por_usuario_id, status])
+  @@index([status, expires_at])
+  @@map("assinaturas")
+}
+
+/// Log imutável de eventos recebidos do webhook (RTDN) ou manuais
+model AssinaturaEvento {
+  id                String      @id @default(cuid())
+  assinatura_id     String?
+  purchase_token    String?
+  tipo_evento       String
+  payload           Json
+  processado        Boolean     @default(false)
+  erro              String?
+  recebido_em       DateTime    @default(now())
+  assinatura        Assinatura? @relation(fields: [assinatura_id], references: [id], onDelete: Cascade)
+
+  @@index([purchase_token])
+  @@index([assinatura_id, recebido_em])
+  @@map("assinatura_eventos")
+}
+
+/// Convite de professor para aluno (uso único, 7 dias)
+model ConviteAluno {
+  id            String        @id @default(cuid())
+  professor_id  String
+  token         String        @unique
+  status        ConviteStatus @default(PENDENTE)
+  expira_em     DateTime
+  aluno_id      String?       @unique
+  criado_em     DateTime      @default(now())
+  atualizado_em DateTime      @updatedAt
+  professor     Usuario       @relation("ConvitesCriados", fields: [professor_id], references: [id])
+  aluno         Usuario?      @relation("ConviteUtilizado", fields: [aluno_id], references: [id])
+
+  @@index([token])
+  @@index([professor_id, status])
+  @@map("convites_aluno")
 }
