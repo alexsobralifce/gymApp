@@ -474,6 +474,9 @@ export const api = {
   // ─── Root ──────────────────────────────────────────
   getPainel: () => api.get<RootPainel>('/root/painel'),
 
+  importarTokenGooglePlay: (purchaseToken: string, productId: string) =>
+    api.post<{ id: string }>('/assinaturas/importar-token', { purchaseToken, productId }),
+
   aprovarAcademia: (id: string, acao: 'APROVAR' | 'REJEITAR', motivo?: string) =>
     api.patch(`/root/academias/${id}/aprovacao`, { acao, motivo }),
 

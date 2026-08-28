@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { CrownIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 import { useAuthStore } from '../../stores/auth'
+import { usePlayBilling, precoLocalizado } from '../../hooks/usePlayBilling'
 
 const RECURSOS_GRATUITOS = [
   { emoji: '🏋️', titulo: 'Criar e Executar Treinos' },
@@ -17,14 +19,44 @@ const RECURSOS_PREMIUM = [
   { emoji: '🩺', titulo: 'Avaliação Física', descricao: 'Laudo completo com composição corporal' },
 ]
 
+const PLANO_ALUNO_ID = 'sub_aluno_mensal'
+const PLANO_PROFESSOR_ID = 'sub_prof_starter_mensal'
+
 export default function Paywall() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const isProfessor = user?.role === 'PROFESSOR'
+  const { suportado, produtos, carregandoProdutos, comprando, mensagem, buscarProdutos, comprar } = usePlayBilling()
+
+  const planoId = isProfessor ? PLANO_PROFESSOR_ID : PLANO_ALUNO_ID
 
   const plano = isProfessor
     ? { nome: 'Professor', preco: 50, descricao: 'Prescreva treinos para até 10 alunos' }
     : { nome: 'Aluno', preco: 12, descricao: 'Desbloqueie todos os recursos do app' }
+
+  const produto = produtos.find((p) => p.itemId === planoId)
+  const precoExibido = precoLocalizado(produto, `R$ ${plano.preco}`)
+
+  useEffect(() => {
+    buscarProdutos([PLANO_ALUNO_ID, PLANO_PROFESSOR_ID])
+  }, [])
+
+  useEffect(() => {
+    function onStartPurchase(e: Event) {
+      const detail = (e as CustomEvent<{ productId: string }>).detail
+      if (!detail?.productId) return
+      comprar(detail.productId).then((ok) => {
+        if (ok) navigate('/')
+      })
+    }
+    window.addEventListener('endorfinapp:start-purchase', onStartPurchase)
+    return () => window.removeEventListener('endorfinapp:start-purchase', onStartPurchase)
+  }, [comprar, navigate])
+
+  async function handleComecarTeste() {
+    const ok = await comprar(planoId)
+    if (ok) navigate('/')
+  }
 
   return (
     <div className="min-h-screen bg-surface">
@@ -52,7 +84,7 @@ export default function Paywall() {
             </p>
             <div className="flex items-baseline justify-center gap-1 mb-2">
               <span className="text-sm text-text-muted">R$</span>
-              <span className="text-5xl font-bold text-text">{plano.preco}</span>
+              <span className="text-5xl font-bold text-text">{carregandoProdutos ? '--' : precoExibido.replace('R$ ', '')}</span>
               <span className="text-sm text-text-muted">/mês</span>
             </div>
             <div className="inline-flex items-center rounded-full bg-success/20 px-3 py-1 text-xs font-bold text-success mb-6">
@@ -60,18 +92,26 @@ export default function Paywall() {
             </div>
 
             <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('endorfinapp:start-purchase', {
-                  detail: { productId: isProfessor ? 'sub_prof_starter_mensal' : 'sub_aluno_mensal' },
-                }))
-              }}
-              className="w-full rounded-xl bg-primary px-4 py-3.5 text-base font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-lg shadow-primary/30"
+              onClick={handleComecarTeste}
+              disabled={comprando}
+              className="w-full rounded-xl bg-primary px-4 py-3.5 text-base font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-lg shadow-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Começar teste grátis
+              {comprando ? 'Abrindo Google Play...' : 'Começar teste grátis'}
             </button>
 
+            {mensagem && (
+              <p className="text-xs text-warning mt-3" role="status">
+                {mensagem}
+              </p>
+            )}
+            {suportado === false && (
+              <p className="text-xs text-text-muted mt-3">
+                💡 Para assinar, instale o app na Play Store e pague pelo Google Play.
+              </p>
+            )}
+
             <p className="text-xs text-text-muted mt-4">
-              Após 15 dias, R$ {plano.preco}/mês. Cancele quando quiser.
+              Após 15 dias, {precoExibido}/mês. Cancele quando quiser.
             </p>
           </div>
         </div>

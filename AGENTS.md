@@ -635,6 +635,15 @@ Verifica se professor pode adicionar mais alunos patrocinados:
 - **Revogação automática**: quando professor cancela/expira → todas assinaturas PATROCINADAS atreladas → REVOGADA
 - Worker diário `assinaturas-verificacao` (cron `0 3 * * *`) marca assinaturas com expires_at < now como EXPIRADA
 
+#### Fluxo de Compra no Frontend TWA (Digital Goods API + Payment Request API)
+- **Pré-requisito TWA**: `packages/twa/twa-manifest.json` com `features.playBilling.enabled: true` e `alphaDependencies.enabled: true` (bubblewrap injeta a permissão de Play Billing no APK/AAB)
+- **Módulo**: `apps/web/src/lib/playBilling.ts` — `isPlayBillingSupported()` (checa `window.getDigitalGoodsService`), `getBillingService()` (conecta `https://play.google.com/billing`), `fetchProducts()` (`service.getDetails` → preços localizados), `formatPrice()`, `createPaymentRequest(productId)` (`new PaymentRequest` com `supportedMethods: 'https://play.google.com/billing'` e `data: { sku }`), `showPurchaseFlow()` (normaliza `AbortError`/fechamento acidental → `CompraCanceladaError`), `acknowledgePurchase()` (`service.acknowledge(token)`)
+- **Hook**: `apps/web/src/hooks/usePlayBilling.ts` — `suportado`, `produtos`, `buscarProdutos(ids)`, `comprar(productId)` (PaymentRequest → `POST /assinaturas/importar-token` → `acknowledge` → `fetchLicenca()` → boolean)
+- **Client API**: `api.importarTokenGooglePlay(purchaseToken, productId)` → `POST /assinaturas/importar-token` (backend cria assinatura ATIVA com trial de 15 dias, upsert por `google_purchase_token`)
+- **Paywall**: `apps/web/src/pages/paywall/Paywall.tsx` — preços localizados via `getDetails` (fallback hardcoded R$ 12/50), botão "Começar teste grátis" com estados (comprando/mensagem), listener do evento `endorfinapp:start-purchase` (dispara compra a partir de qualquer tela), aviso quando Digital Goods não suportado (navegador comum)
+- **IDs de produto**: `sub_aluno_mensal` (ALUNO) e `sub_prof_starter_mensal` (PROFESSOR) — espelhados em `seed-planos-assinatura.ts` (fonte de verdade) e `Paywall.tsx`
+- **Acknowledge**: chamado somente após sucesso do `POST /assinaturas/importar-token` (evita estorno do Google em 3 dias)
+
 #### Convites de Professor para Aluno
 - Professor gera link único `endorfinapp.com.br/invite?token=<crypto>` (validade 7 dias, uso único)
 - Valida `canAddStudent` antes de gerar
