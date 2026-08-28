@@ -534,7 +534,7 @@ export default function AppShell() {
 
       {/* Sidebar — Desktop (oculta em execução) */}
       {!hideNav && (
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-surface-input bg-surface/50 md:flex">
+        <aside className="hidden h-screen w-60 shrink-0 flex-col border-r border-surface-input bg-surface/50 md:flex">
           <div className="flex flex-col items-center justify-center border-b border-surface-input px-4 py-5 text-center shrink-0">
             <EndorfinappLogo variant="full" iconSize={42} size={18} showSlogan={true} />
           </div>
@@ -556,6 +556,15 @@ export default function AppShell() {
             )}
             {role === 'ALUNO' && <AvaliarAppNavButton onClick={handleAvaliarApp} />}
           </nav>
+          <div className="border-t border-border p-3 shrink-0">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-all duration-200 cursor-pointer"
+            >
+              <LogOutIcon className="h-5 w-5" />
+              <span>Sair da Conta</span>
+            </button>
+          </div>
         </aside>
       )}
 
@@ -852,11 +861,14 @@ export default function AppShell() {
                   <PhoneIcon className="h-4 w-4" />
                   <span>Suporte WhatsApp</span>
                 </a>
+              </div>
 
+              {/* Divisor + Botão Sair destacado */}
+              <div className="border-t border-surface-input pt-3">
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 rounded-xl transition-all cursor-pointer"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all cursor-pointer"
                 >
                   <LogOutIcon className="h-4 w-4" />
                   <span>Sair da Conta</span>

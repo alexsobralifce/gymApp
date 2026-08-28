@@ -3,6 +3,9 @@ import { CheckIcon } from '../icons/Icon'
 import { useState, useEffect } from 'react'
 import { activatePush } from '../../hooks/useNotifications'
 
+const DISMISS_KEY = 'gymapp_notif_prompt_dismissed'
+const REAPPEAR_MS = 7 * 24 * 60 * 60 * 1000
+
 export default function NotificationPrompt() {
   const [visible, setVisible] = useState(false)
   const [permission, setPermission] = useState<string>('default')
@@ -10,6 +13,16 @@ export default function NotificationPrompt() {
   function readPermission(): string {
     if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
     return Notification.permission
+  }
+
+  function suppressedRecently(): boolean {
+    try {
+      const saved = localStorage.getItem(DISMISS_KEY)
+      if (!saved) return false
+      return Date.now() - new Date(saved).getTime() < REAPPEAR_MS
+    } catch {
+      return false
+    }
   }
 
   function recheck() {
@@ -26,6 +39,7 @@ export default function NotificationPrompt() {
     const p = readPermission()
     setPermission(p)
     if (p === 'unsupported') return
+    if (suppressedRecently()) return
     if (p === 'default') {
       const timer = setTimeout(() => setVisible(true), 3000)
       return () => clearTimeout(timer)
@@ -56,6 +70,11 @@ export default function NotificationPrompt() {
   }
 
   function handleDismiss() {
+    try {
+      localStorage.setItem(DISMISS_KEY, new Date().toISOString())
+    } catch {
+      // storage indisponível — ignora
+    }
     setVisible(false)
   }
 
@@ -64,7 +83,7 @@ export default function NotificationPrompt() {
   const isDenied = permission === 'denied'
 
   return (
-    <div className="fixed bottom-20 left-0 right-0 z-50 px-4 animate-slide-up md:bottom-4">
+    <div className="fixed bottom-20 left-0 right-0 z-50 px-4 animate-slide-up md:bottom-4 md:left-auto md:right-4 md:w-80 md:max-w-[85vw]">
       <div
         className={`bg-surface-card border shadow-2xl rounded-2xl p-4 flex flex-col gap-3 relative ${
           isDenied ? 'border-destructive/30' : 'border-surface-input'
@@ -95,10 +114,20 @@ export default function NotificationPrompt() {
               <>
                 <h3 className="text-sm font-bold text-text">Notificações bloqueadas</h3>
                 <p className="text-xs text-text-muted leading-tight mt-1">
-                  O navegador bloqueou as notificações deste site. Para reativar, toque no menu
-                  <span className="font-bold text-text"> ⋮ </span>do Chrome (ou no cadeado da barra
-                  de endereço) e escolha <span className="font-bold text-text">Configurações do
-                  site → Notificações → Permitir</span>.
+                  {isDesktop() ? (
+                    <>
+                      Reative no cadeado da barra de endereço (
+                      <span className="font-bold text-text">Configurações do site → Notificações → Permitir</span>
+                      ) e confira abaixo.
+                    </>
+                  ) : (
+                    <>
+                      O navegador bloqueou as notificações deste site. Para reativar, toque no menu
+                      <span className="font-bold text-text"> ⋮ </span>do Chrome (ou no cadeado da barra
+                      de endereço) e escolha <span className="font-bold text-text">Configurações do
+                      site → Notificações → Permitir</span>.
+                    </>
+                  )}
                 </p>
               </>
             ) : (
@@ -140,4 +169,8 @@ export default function NotificationPrompt() {
       </div>
     </div>
   )
+}
+
+function isDesktop(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
 }

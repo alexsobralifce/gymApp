@@ -118,25 +118,25 @@ html[data-mode="day"] {
   color-scheme: only light;
   color-scheme: light;
 
-  --color-glass-bg: rgba(255, 255, 255, 0.92);
+  --color-glass-bg: rgba(232, 234, 237, 0.92);
   --color-menu-hover: rgba(10, 22, 40, 0.06);
-  --color-menu-border: #E2E5EB;
-  --color-surface: #FFFFFF;
-  --color-surface-card: #F4F6F9;
-  --color-surface-input: #EEF1F5;
+  --color-menu-border: #D4D8DE;
+  --color-surface: #E8EAED;
+  --color-surface-card: #F3F5F7;
+  --color-surface-input: #DFE2E7;
   --color-text: #0A1628;
   --color-text-muted: #4A5A72;
   --color-text-disabled: #8A96A8;
-  --color-background: #FFFFFF;
+  --color-background: #E8EAED;
   --color-foreground: #0A1628;
-  --color-card: #F4F6F9;
+  --color-card: #F3F5F7;
   --color-card-foreground: #0A1628;
-  --color-secondary: #EEF1F5;
+  --color-secondary: #DFE2E7;
   --color-secondary-foreground: #0A1628;
-  --color-muted: #F0F2F5;
+  --color-muted: #E0E3E8;
   --color-muted-foreground: #4A5A72;
-  --color-border: #E2E5EB;
-  --color-input: #EEF1F5;
+  --color-border: #D4D8DE;
+  --color-input: #DFE2E7;
 }
 
 /* Fallback se data-mode ausente (antes do script inline) — escuro seguro */
@@ -177,7 +177,6 @@ html[data-mode="day"] body,
 html[data-mode="day"] #root {
   color-scheme: only light;
   color-scheme: light;
-  background-color: #FFFFFF !important;
   background-color: var(--color-surface) !important;
   color: var(--color-text) !important;
 }
@@ -241,21 +240,21 @@ html[data-theme="blue"][data-mode="day"] {
   --color-accent-foreground: #FFFFFF;
   --color-ring: #2563EB;
 
-  --color-glass-bg: rgba(255, 255, 255, 0.92);
+  --color-glass-bg: rgba(232, 234, 237, 0.92);
   --color-menu-hover: rgba(11, 18, 32, 0.06);
-  --color-menu-border: #DFE5EE;
-  --color-surface: #FFFFFF;
-  --color-surface-card: #F3F6FB;
-  --color-surface-input: #EDF1F8;
-  --color-background: #FFFFFF;
-  --color-card: #F3F6FB;
+  --color-menu-border: #D4D8DE;
+  --color-surface: #E8EAED;
+  --color-surface-card: #F3F5F7;
+  --color-surface-input: #DFE2E7;
+  --color-background: #E8EAED;
+  --color-card: #F3F5F7;
   --color-card-foreground: #0B1220;
-  --color-secondary: #EDF1F8;
+  --color-secondary: #DFE2E7;
   --color-secondary-foreground: #0B1220;
-  --color-muted: #F0F3F8;
+  --color-muted: #E0E3E8;
   --color-muted-foreground: #45566F;
-  --color-border: #DFE5EE;
-  --color-input: #EDF1F8;
+  --color-border: #D4D8DE;
+  --color-input: #DFE2E7;
   --color-text: #0B1220;
   --color-text-muted: #45566F;
   --color-text-disabled: #8A96A8;

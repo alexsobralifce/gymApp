@@ -141,7 +141,7 @@ export default function RootUsuarios() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const params = { page, limit: 20, search: search || undefined }
+      const params = { page, limit: 10, search: search || undefined }
       if (tab === 'academias') {
         const result = await api.getRootAcademias(params)
         setAcademias(result)

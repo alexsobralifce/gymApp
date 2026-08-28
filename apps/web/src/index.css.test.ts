@@ -26,14 +26,14 @@ describe('index.css — Tema único Azul (Blue)', () => {
     expect(cssContent).toContain('html[data-theme="blue"][data-mode="night"]')
   })
 
-  it('should define explicit day surface colors for blue theme (white bg)', () => {
+  it('should define explicit day surface colors for blue theme (gray bg)', () => {
     const blueDaySection = cssContent.slice(
       cssContent.indexOf('html[data-theme="blue"][data-mode="day"]'),
       cssContent.indexOf('/* ─── Animações'),
     )
 
-    expect(blueDaySection).toContain('--color-surface: #FFFFFF;')
-    expect(blueDaySection).toContain('--color-background: #FFFFFF;')
+    expect(blueDaySection).toContain('--color-surface: #E8EAED;')
+    expect(blueDaySection).toContain('--color-background: #E8EAED;')
     expect(blueDaySection).toContain('--color-text: #0B1220;')
     expect(blueDaySection).toContain('color-scheme: only light;')
   })
@@ -64,7 +64,7 @@ describe('index.css — Tema único Azul (Blue)', () => {
       cssContent.indexOf('/* Fallback se data-mode'),
     )
     expect(dayBlock).toContain('color-scheme: only light;')
-    expect(dayBlock).toContain('--color-surface: #FFFFFF;')
+    expect(dayBlock).toContain('--color-surface: #E8EAED;')
   })
 
   it('blue day surface must be light (luminance heuristic)', () => {

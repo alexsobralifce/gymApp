@@ -1,44 +1,80 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../api/client'
 import type { RootPainel } from '../../types/api'
-import Select from '../../components/ui/Select'
+
+interface AcademiaPaginada {
+  id: string
+  nome: string
+  cnpj: string
+  status: string
+  max_professores: number
+  criado_em: string
+  _count: { professores: number; alunos: number }
+}
+
+interface AcademiasPage {
+  items: AcademiaPaginada[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
 
 export default function RootPainel() {
-  const [data, setData] = useState<RootPainel | null>(null)
+  const [painel, setPainel] = useState<RootPainel | null>(null)
+  const [academiasPage, setAcademiasPage] = useState<AcademiasPage | null>(null)
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const limit = 10
   const mostrarLimiteProfessores = false
 
-  useEffect(() => {
-    api.getPainel().then(setData).finally(() => setLoading(false))
+  const fetchPainel = useCallback(async () => {
+    const data = await api.getPainel()
+    setPainel(data)
   }, [])
+
+  const fetchAcademias = useCallback(async (p: number) => {
+    const result = await api.getRootAcademias({ page: p, limit })
+    setAcademiasPage(result)
+  }, [])
+
+  useEffect(() => {
+    Promise.all([fetchPainel(), fetchAcademias(page)])
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (academiasPage) fetchAcademias(page)
+  }, [page])
 
   async function handleAcademia(id: string, acao: 'APROVAR' | 'REJEITAR') {
     await api.aprovarAcademia(id, acao)
     setFeedback(`Academia ${acao === 'APROVAR' ? 'aprovada' : 'rejeitada'}!`)
-    const fresh = await api.getPainel()
-    setData(fresh)
+    await fetchPainel()
+    await fetchAcademias(page)
     setTimeout(() => setFeedback(null), 3000)
   }
 
   async function handleLimite(id: string, limite: number) {
     await api.definirLimiteProfessores(id, limite)
     setFeedback('Limite atualizado!')
-    const fresh = await api.getPainel()
-    setData(fresh)
+    await fetchPainel()
+    await fetchAcademias(page)
     setTimeout(() => setFeedback(null), 3000)
   }
 
   async function handleStatus(id: string, status: 'ATIVO' | 'REJEITADO') {
     await api.alterarStatusAcademia(id, status)
     setFeedback('Status da academia atualizado com sucesso!')
-    const fresh = await api.getPainel()
-    setData(fresh)
+    await fetchPainel()
+    await fetchAcademias(page)
     setTimeout(() => setFeedback(null), 3000)
   }
 
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
-  if (!data) return <div className="p-4 text-text-muted">Sem dados.</div>
+  if (!painel) return <div className="p-4 text-text-muted">Sem dados.</div>
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto">
@@ -49,27 +85,29 @@ export default function RootPainel() {
       {/* Stats */}
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="rounded-lg bg-surface-card p-4">
-          <div className="text-2xl font-bold text-primary">{data.totalAcademias}</div>
+          <div className="text-2xl font-bold text-primary">{painel.totalAcademias}</div>
           <div className="text-xs text-text-muted">Academias ativas</div>
         </div>
         <div className="rounded-lg bg-surface-card p-4">
-          <div className="text-2xl font-bold text-accent">{data.academiasPendentes}</div>
+          <div className="text-2xl font-bold text-accent">{painel.academiasPendentes}</div>
           <div className="text-xs text-text-muted">Pendentes</div>
         </div>
         <div className="rounded-lg bg-surface-card p-4">
-          <div className="text-2xl font-bold text-text">{data.totalProfessores}</div>
+          <div className="text-2xl font-bold text-text">{painel.totalProfessores}</div>
           <div className="text-xs text-text-muted">Professores</div>
         </div>
         <div className="rounded-lg bg-surface-card p-4">
-          <div className="text-2xl font-bold text-text">{data.totalAlunos}</div>
+          <div className="text-2xl font-bold text-text">{painel.totalAlunos}</div>
           <div className="text-xs text-text-muted">Alunos</div>
         </div>
       </div>
 
-      {/* Lista de academias */}
-      <h2 className="mb-3 text-sm font-semibold text-text-muted">Academias</h2>
+      {/* Lista de academias com paginação */}
+      <h2 className="mb-3 text-sm font-semibold text-text-muted">
+        Academias <span className="font-normal text-text-muted">({academiasPage?.total ?? 0})</span>
+      </h2>
       <div className="space-y-2">
-        {data.academias.map((a) => (
+        {academiasPage?.items.map((a) => (
           <div key={a.id} className="rounded-lg bg-surface-card p-4">
             <div className="flex items-start justify-between">
               <div>
@@ -97,15 +135,15 @@ export default function RootPainel() {
                   <>
                     <button onClick={() => handleStatus(a.id, 'REJEITADO')} className="rounded bg-primary/10 px-2 py-1 text-xs text-primary-light">Desabilitar</button>
                     {mostrarLimiteProfessores && (
-                      <Select
+                      <select
                         value={a.max_professores}
                         onChange={(e) => handleLimite(a.id, Number(e.target.value))}
-                        className="!px-2 !py-1 !text-xs !rounded-md w-auto"
+                        className="rounded-md border border-border bg-surface-input px-2 py-1 text-xs"
                       >
                         {[5, 10, 20, 30, 50, 100].map((v) => (
                           <option key={v} value={v}>{v} profs</option>
                         ))}
-                      </Select>
+                      </select>
                     )}
                   </>
                 )}
@@ -117,6 +155,31 @@ export default function RootPainel() {
           </div>
         ))}
       </div>
+
+      {/* Paginação */}
+      {academiasPage && academiasPage.totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-xs text-text-muted">
+            Página {academiasPage.page} de {academiasPage.totalPages}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={academiasPage.page <= 1}
+              className="rounded-lg bg-surface-card px-3 py-1.5 text-sm text-text-muted disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(academiasPage.totalPages, p + 1))}
+              disabled={academiasPage.page >= academiasPage.totalPages}
+              className="rounded-lg bg-surface-card px-3 py-1.5 text-sm text-text-muted disabled:opacity-40"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
