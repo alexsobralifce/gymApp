@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { type ReactNode } from 'react'
 import { usePremiumGate } from '../../hooks/useSubscription'
 import PremiumGate from './PremiumGate'
@@ -18,3 +19,4 @@ export default function PremiumWrapper({ feature, featureName, children }: Premi
 
   return <>{children}</>
 }
+*/

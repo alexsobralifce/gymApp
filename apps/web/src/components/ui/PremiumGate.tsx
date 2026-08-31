@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { useNavigate } from 'react-router-dom'
 import { LockIcon, CrownIcon, CheckIcon } from '../icons/Icon'
 
@@ -111,3 +112,4 @@ export default function PremiumGate({ variant = 'inline', lockedFeature }: Premi
     </div>
   )
 }
+*/

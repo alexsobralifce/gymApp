@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { CrownIcon, CheckIcon, ChevronLeftIcon } from '../../components/icons/Icon'
@@ -162,3 +163,4 @@ export default function Paywall() {
     </div>
   )
 }
+*/

@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { create } from 'zustand'
 import { api } from '../api/client'
 
@@ -64,3 +65,4 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     return licenca?.origem === 'PATROCINADA'
   },
 }))
+*/

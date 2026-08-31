@@ -31,8 +31,9 @@ if [ "$EXERCISE_COUNT" -lt "100" ]; then
     npx tsx prisma/translate-exercises.ts >> /tmp/sync-exercises.log 2>&1
     echo "[Sync] Populando biblioteca de planos..."
     npx tsx prisma/seed-planos.ts >> /tmp/sync-exercises.log 2>&1
-    echo "[Sync] Populando planos de assinatura..."
-    npx tsx prisma/seed-planos-assinatura.ts >> /tmp/sync-exercises.log 2>&1
+    # DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+    # echo "[Sync] Populando planos de assinatura..."
+    # npx tsx prisma/seed-planos-assinatura.ts >> /tmp/sync-exercises.log 2>&1
     echo "[Sync] Concluido!"
   ' > /dev/null 2>&1 &
 else

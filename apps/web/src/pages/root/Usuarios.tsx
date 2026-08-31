@@ -5,7 +5,8 @@ import BatchActionBar from '../../components/ui/BatchActionBar'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
-import PremiumManagerButton from '../../components/root/PremiumManagerButton'
+// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+// import PremiumManagerButton from '../../components/root/PremiumManagerButton'
 
 type Tab = 'academias' | 'professores' | 'alunos'
 
@@ -652,12 +653,13 @@ function AlunosTab({
           </div>
           <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
-            <PremiumManagerButton
+            {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+            {/* <PremiumManagerButton
               usuarioId={a.usuario.id}
               usuarioNome={a.usuario.nome}
               temPremium={!!a.usuario.premium_manual_em}
               onToggle={() => {}}
-            />
+            /> */}
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
             <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
           </div>

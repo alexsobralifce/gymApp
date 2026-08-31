@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import {
@@ -170,3 +171,4 @@ export async function rootPremiumRoutes(app: FastifyInstance) {
     }
   })
 }
+*/

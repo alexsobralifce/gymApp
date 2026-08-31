@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A0A0A"/>
+      <stop offset="0.55" stop-color="#10151A"/>
+      <stop offset="1" stop-color="#0A2E0F"/>
+    </linearGradient>
+    <radialGradient id="glowBg" cx="300" cy="250" r="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#76FF03" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#76FF03" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <rect width="1024" height="500" fill="url(#glowBg)"/>
+
+  <g transform="translate(60, 80) scale(1.5)" filter="url(#glow)" fill="#76FF03" stroke="#76FF03">
+    <path d="M 10 60 H 48 L 56 46 L 66 74 L 76 26 L 90 94 L 102 42 L 112 70 L 120 60 H 132" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 165 10 L 120 62 H 142 L 128 110 L 180 48 H 156 Z" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+
+  <text x="340" y="210" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#F5F8FF" letter-spacing="2">ENDORFINAPP</text>
+  <text x="342" y="268" font-family="Arial, sans-serif" font-size="30" fill="#76FF03" letter-spacing="1">A Química do Crescimento</text>
+
+  <rect x="342" y="300" width="330" height="4" rx="2" fill="#76FF03" fill-opacity="0.6"/>
+
+  <text x="342" y="356" font-family="Arial, sans-serif" font-size="24" fill="#9FB0C3">Treino inteligente com IA</text>
+  <text x="342" y="392" font-family="Arial, sans-serif" font-size="24" fill="#9FB0C3">+900 exercícios em GIF</text>
+  <text x="342" y="428" font-family="Arial, sans-serif" font-size="24" fill="#9FB0C3">Avaliação física e comunidade</text>
+</svg>

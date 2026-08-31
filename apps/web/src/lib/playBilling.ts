@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 const PLAY_BILLING_SERVICE_ID = 'https://play.google.com/billing'
 const PLAY_BILLING_METHOD = 'https://play.google.com/billing'
 const BRL = 'BRL'
@@ -126,3 +127,4 @@ export async function acknowledgePurchase(
 ): Promise<void> {
   await service.acknowledge(purchaseToken)
 }
+*/

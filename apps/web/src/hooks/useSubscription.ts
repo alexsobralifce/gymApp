@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { useEffect } from 'react'
 import { useSubscriptionStore, type PremiumFeature } from '../stores/subscription'
 
@@ -33,3 +34,4 @@ export function usePremiumGate(feature: PremiumFeature) {
     isPatrocinado,
   }
 }
+*/

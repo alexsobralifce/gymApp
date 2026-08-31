@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 export const TRIAL_DIAS = 15
 export const LIMITE_ALUNOS_PROFESSOR = 10
 export const CONVITE_VALIDADE_DIAS = 7
@@ -95,3 +96,4 @@ export function canAddStudent(
 
   return { pode: true, motivo: 'OK' }
 }
+*/

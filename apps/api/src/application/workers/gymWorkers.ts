@@ -12,7 +12,8 @@ import { handleNotifyFriends } from '../../jobs/social/notify-friends.worker.js'
 import { handleAwardBadges } from '../../jobs/social/award-badges.worker.js'
 import { handleUpdateXp } from '../../jobs/social/update-xp.worker.js'
 import { NoticiasService } from '../../application/usecases/noticias/NoticiasService.js'
-import { verificarAssinaturasExpiradas } from '../../application/usecases/assinaturas/AssinaturaService.js'
+// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+// import { verificarAssinaturasExpiradas } from '../../application/usecases/assinaturas/AssinaturaService.js'
 import Redis from 'ioredis'
 
 let connection: { url: string } | null = null
@@ -24,7 +25,8 @@ let correlacaoQueue: Queue | null = null
 let newsFetchQueue: Queue | null = null
 let newsPushQueue: Queue | null = null
 let resumoDiarioQueue: Queue | null = null
-let assinaturasQueue: Queue | null = null
+// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+// let assinaturasQueue: Queue | null = null
 
 let inatividade30minWorker: Worker | null = null
 let treinoEmAbertoWorker: Worker | null = null
@@ -33,7 +35,8 @@ let correlacaoWorker: Worker | null = null
 let newsFetchWorker: Worker | null = null
 let newsPushWorker: Worker | null = null
 let resumoDiarioWorker: Worker | null = null
-let assinaturasWorker: Worker | null = null
+// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+// let assinaturasWorker: Worker | null = null
 
 let socialFanoutWorker: Worker | null = null
 let socialNotifyWorker: Worker | null = null
@@ -542,7 +545,7 @@ export async function handleResumoDiario(_job: Job) {
 // ─── Agendamento de jobs recorrentes ─────────────────────────────────────────
 
 async function scheduleRecurringJobs() {
-  if (!inatividade30minQueue || !treinoEmAbertoQueue || !newsFetchQueue || !newsPushQueue || !resumoDiarioQueue || !assinaturasQueue) return
+  if (!inatividade30minQueue || !treinoEmAbertoQueue || !newsFetchQueue || !newsPushQueue || !resumoDiarioQueue /* || !assinaturasQueue */) return
 
   await inatividade30minQueue.add('check-inatividade', {}, {
     repeat: { every: 2 * 60 * 1000 },
@@ -571,10 +574,11 @@ async function scheduleRecurringJobs() {
     repeat: { pattern: DIGEST_CRON },
     removeOnComplete: true,
   })
-  await assinaturasQueue!.add('verificar-expiradas', {}, {
-    repeat: { pattern: '0 3 * * *' },
-    removeOnComplete: true,
-  })
+  // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+  // await assinaturasQueue!.add('verificar-expiradas', {}, {
+  //   repeat: { pattern: '0 3 * * *' },
+  //   removeOnComplete: true,
+  // })
 
 
   console.log('✅ Workers agendados')
@@ -622,7 +626,8 @@ export async function startWorkers() {
   newsFetchQueue = new Queue('news-fetch', { connection })
   newsPushQueue = new Queue('news-push', { connection })
   resumoDiarioQueue = new Queue('resumo-diario', { connection })
-  assinaturasQueue = new Queue('assinaturas-verificacao', { connection })
+  // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+  // assinaturasQueue = new Queue('assinaturas-verificacao', { connection })
 
   inatividade30minWorker = new Worker('inatividade-30min', handleInatividade30min, { connection })
   treinoEmAbertoWorker = new Worker('treino-em-aberto', handleTreinoEmAberto, { connection })
@@ -631,10 +636,11 @@ export async function startWorkers() {
   newsFetchWorker = new Worker('news-fetch', handleNewsFetch, { connection })
   newsPushWorker = new Worker('news-push', handleNewsPush, { connection })
   resumoDiarioWorker = new Worker('resumo-diario', handleResumoDiario, { connection })
-  assinaturasWorker = new Worker('assinaturas-verificacao', async () => {
-    const count = await verificarAssinaturasExpiradas()
-    console.log(`[Assinaturas] ${count} assinaturas marcadas como expiradas`)
-  }, { connection })
+  // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+  // assinaturasWorker = new Worker('assinaturas-verificacao', async () => {
+  //   const count = await verificarAssinaturasExpiradas()
+  //   console.log(`[Assinaturas] ${count} assinaturas marcadas como expiradas`)
+  // }, { connection })
 
   socialFanoutWorker = new Worker('social-fanout', handleFanoutPost, { connection: socialConnection })
   socialNotifyWorker = new Worker('social-notify', handleNotifyFriends, { connection: socialConnection })
@@ -650,7 +656,8 @@ export async function startWorkers() {
   newsFetchWorker.on('failed', (job, err) => console.error('[News Fetch] Job failed after retries:', job?.id, err.message))
   newsPushWorker.on('failed', (job, err) => console.error('[News Push] Job failed after retries:', job?.id, err.message))
   resumoDiarioWorker.on('failed', (job, err) => console.error('[Resumo Diário] Job failed after retries:', job?.id, err.message))
-  assinaturasWorker.on('failed', (job, err) => console.error('[Assinaturas] Job failed after retries:', job?.id, err.message))
+  // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+  // assinaturasWorker.on('failed', (job, err) => console.error('[Assinaturas] Job failed after retries:', job?.id, err.message))
 
   await scheduleRecurringJobs()
 }
@@ -660,10 +667,10 @@ export async function stopWorkers() {
   started = false
 
   const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker,
-    newsFetchWorker, newsPushWorker, resumoDiarioWorker, assinaturasWorker,
+    newsFetchWorker, newsPushWorker, resumoDiarioWorker, /* assinaturasWorker, */
     socialFanoutWorker, socialNotifyWorker, socialBadgeWorker, socialLeaderboardWorker]
   const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue,
-    newsFetchQueue, newsPushQueue, resumoDiarioQueue, assinaturasQueue]
+    newsFetchQueue, newsPushQueue, resumoDiarioQueue, /* assinaturasQueue */]
 
   await Promise.all([
     ...workers.map((w) => w?.close()),

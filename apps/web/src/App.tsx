@@ -3,7 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/auth'
 import { useNotifications } from './hooks/useNotifications'
 import { useCapacitorTheme } from './hooks/useCapacitorTheme'
-import { useSubscriptionStore } from './stores/subscription'
+// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+// import { useSubscriptionStore } from './stores/subscription'
 import AppShell from './components/layout/AppShell'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt'
@@ -57,9 +58,10 @@ import ClubeFeed from './pages/aluno/ClubeFeed'
 import AlterarSenha from './pages/auth/AlterarSenha'
 import Avaliacoes from './pages/avaliacoes/Avaliacoes'
 import Documentacao from './pages/Documentacao'
-import Paywall from './pages/paywall/Paywall'
-import Beneficios from './pages/aluno/Beneficios'
-import PremiumWrapper from './components/ui/PremiumWrapper'
+// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+// import Paywall from './pages/paywall/Paywall'
+// import Beneficios from './pages/aluno/Beneficios'
+// import PremiumWrapper from './components/ui/PremiumWrapper'
 
 import { EndorfinappIcon } from './components/branding'
 
@@ -67,18 +69,20 @@ export default function App() {
   useNotifications()
   useCapacitorTheme()
   const { user, fetchUser } = useAuthStore()
-  const fetchLicenca = useSubscriptionStore((s) => s.fetchLicenca)
+  // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+  // const fetchLicenca = useSubscriptionStore((s) => s.fetchLicenca)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
     fetchUser().finally(() => setReady(true))
   }, [])
 
-  useEffect(() => {
+  // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+  /* useEffect(() => {
     if (user) {
       fetchLicenca()
     }
-  }, [user])
+  }, [user]) */
 
   if (!ready) return (
     <div className="flex h-screen items-center justify-center bg-surface">
@@ -103,30 +107,39 @@ export default function App() {
       {user?.role === 'ALUNO' && (
         <>
           <Route path="welcome" element={<WelcomeCards />} />
-          <Route path="paywall" element={<Paywall />} />
-          <Route path="beneficios" element={<Beneficios />} />
+          {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+          {/* <Route path="paywall" element={<Paywall />} /> */}
+          {/* <Route path="beneficios" element={<Beneficios />} /> */}
           <Route element={<AppShell />}>
           <Route index element={<AlunoDashboard />} />
           <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
-          <Route path="biblioteca-planos" element={<PremiumWrapper feature="PLANOS" featureName="Biblioteca de Planos"><BibliotecaPlanos /></PremiumWrapper>} />
+          <Route path="biblioteca-planos" element={<BibliotecaPlanos />} />
+          {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+          {/* <Route path="biblioteca-planos" element={<PremiumWrapper feature="PLANOS" featureName="Biblioteca de Planos"><BibliotecaPlanos /></PremiumWrapper>} /> */}
           <Route path="dados" element={<AlunoDados />} />
           <Route path="wearables" element={<AlunoWearables />} />
           <Route path="treino/novo" element={<AlunoCriarTreino />} />
           <Route path="treino/:id/editar" element={<AlunoCriarTreino />} />
-          <Route path="treino/ia" element={<PremiumWrapper feature="IA" featureName="Treino por IA"><TreinoIA /></PremiumWrapper>} />
+          <Route path="treino/ia" element={<TreinoIA />} />
+          {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+          {/* <Route path="treino/ia" element={<PremiumWrapper feature="IA" featureName="Treino por IA"><TreinoIA /></PremiumWrapper>} /> */}
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
           <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />
           <Route path="treino/:id/conclusao" element={<AlunoTreinoConclusao />} />
           <Route path="documentacao" element={<Documentacao />} />
           <Route path="medidas" element={<AlunoMedidas />} />
-          <Route path="evolucao" element={<PremiumWrapper feature="CORRELACOES" featureName="Evolução Avançada"><AlunoEvolucao /></PremiumWrapper>} />
+          <Route path="evolucao" element={<AlunoEvolucao />} />
+          {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+          {/* <Route path="evolucao" element={<PremiumWrapper feature="CORRELACOES" featureName="Evolução Avançada"><AlunoEvolucao /></PremiumWrapper>} /> */}
           <Route path="exercicios/:exercicioId/historico" element={<HistoricoExercicio />} />
           <Route path="feed" element={<AlunoMural />} />
           <Route path="mural" element={<Navigate to="/feed" replace />} />
           <Route path="amizades" element={<AlunoAmizades />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="notificacoes/preferencias" element={<AlunoPreferenciasNotificacao />} />
-          <Route path="clubes" element={<PremiumWrapper feature="CLUBES" featureName="Clubes"><AlunoClubes /></PremiumWrapper>} />
+          <Route path="clubes" element={<AlunoClubes />} />
+          {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+          {/* <Route path="clubes" element={<PremiumWrapper feature="CLUBES" featureName="Clubes"><AlunoClubes /></PremiumWrapper>} /> */}
           <Route path="clubes/:id" element={<ClubeFeed />} />
           <Route path="parceiros" element={<Parceiros />} />
           <Route path="noticias" element={<Noticias />} />
@@ -138,7 +151,8 @@ export default function App() {
 
       {user?.role === 'PROFESSOR' && (
         <>
-          <Route path="paywall" element={<Paywall />} />
+          {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+          {/* <Route path="paywall" element={<Paywall />} /> */}
           <Route element={<AppShell />}>
           <Route index element={<ProfessorDashboard />} />
           <Route path="treinos" element={<ProfessorTreinos />} />
@@ -150,7 +164,9 @@ export default function App() {
           <Route path="academias" element={<ProfessorAcademias />} />
           <Route path="alunos/vincular" element={<ProfessorVincularAluno />} />
           <Route path="fichas" element={<ProfessorFichas />} />
-          <Route path="avaliacoes" element={<PremiumWrapper feature="AVALIACOES" featureName="Avaliações Físicas"><Avaliacoes /></PremiumWrapper>} />
+          <Route path="avaliacoes" element={<Avaliacoes />} />
+          {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
+          {/* <Route path="avaliacoes" element={<PremiumWrapper feature="AVALIACOES" featureName="Avaliações Físicas"><Avaliacoes /></PremiumWrapper>} /> */}
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />

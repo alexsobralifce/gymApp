@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api/client'
 import { useSubscriptionStore } from '../stores/subscription'
@@ -115,3 +116,4 @@ export function usePlayBilling(): UsePlayBillingResult {
 export function precoLocalizado(produto: PlayProduct | undefined, fallback: string): string {
   return produto ? formatPrice(produto) : fallback
 }
+*/

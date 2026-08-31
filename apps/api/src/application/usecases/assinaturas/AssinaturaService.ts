@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { randomBytes } from 'node:crypto'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { env } from '../../../shared/env.js'
@@ -383,3 +384,4 @@ export async function verificarAssinaturasExpiradas(): Promise<number> {
   })
   return result.count
 }
+*/

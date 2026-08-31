@@ -1,4 +1,15 @@
 import { describe, it, expect } from 'vitest'
+
+// DESATIVADO: cobrança — acesso livre. O arquivo original (AssinaturaPolicy.test.ts)
+// está comentado abaixo. Este placeholder mantém o runner de testes verde.
+describe('AssinaturaPolicy (desativado)', () => {
+  it('cobrança desativada — acesso livre', () => {
+    expect(true).toBe(true)
+  })
+})
+
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+import { describe, it, expect } from 'vitest'
 import {
   hasActiveAccess,
   canAddStudent,
@@ -142,3 +153,4 @@ describe('AssinaturaPolicy — bottom-up', () => {
     })
   })
 })
+*/

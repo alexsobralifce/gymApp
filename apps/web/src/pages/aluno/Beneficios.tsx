@@ -1,3 +1,4 @@
+/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { useNavigate } from 'react-router-dom'
 import { CrownIcon, CheckIcon, LockIcon, ChevronRightIcon } from '../../components/icons/Icon'
 
@@ -99,3 +100,4 @@ export default function Beneficios() {
     </div>
   )
 }
+*/

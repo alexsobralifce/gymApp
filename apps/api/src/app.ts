@@ -29,7 +29,8 @@ import { clubRoutes } from './modules/social/clubs/club.routes.js'
 import { uploadRoutes } from './modules/social/upload/upload.routes.js'
 import { noticiasRoutes } from './presentation/http/routes/noticias.routes.js'
 import { healthRoutes } from './presentation/http/routes/health.routes.js'
-import { assinaturaRoutes, conviteRoutes, rootPremiumRoutes } from './presentation/http/routes/assinatura.routes.js'
+// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+// import { assinaturaRoutes, conviteRoutes, rootPremiumRoutes } from './presentation/http/routes/assinatura.routes.js'
 
 // Plugins / Middlewares
 import { jwtAuthPlugin } from './presentation/middlewares/jwtAuth.js'
@@ -180,9 +181,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(clubRoutes)
   await app.register(uploadRoutes)
   await app.register(noticiasRoutes, { prefix: '/noticias' })
-  await app.register(assinaturaRoutes, { prefix: '/assinaturas' })
-  await app.register(conviteRoutes, { prefix: '/convites' })
-  await app.register(rootPremiumRoutes, { prefix: '/root/premium' })
+  // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
+  // await app.register(assinaturaRoutes, { prefix: '/assinaturas' })
+  // await app.register(conviteRoutes, { prefix: '/convites' })
+  // await app.register(rootPremiumRoutes, { prefix: '/root/premium' })
 
   // ─── Health check ────────────────────────────────────────────────────────
   await app.register(healthRoutes)
