@@ -195,6 +195,23 @@ export default function App() {
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="noticias" element={<Noticias />} />
+          <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
+          <Route path="treinos" element={<ProfessorTreinos />} />
+          <Route path="treinos/criar" element={<ProfessorCriarTreino />} />
+          <Route path="treino/novo" element={<AlunoCriarTreino />} />
+          <Route path="treino/:id/editar" element={<AlunoCriarTreino />} />
+          <Route path="treino/ia" element={<TreinoIA />} />
+          <Route path="biblioteca-planos" element={<BibliotecaPlanos />} />
+          <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
+          <Route path="treino/:id/execucao" element={<AlunoTreinoExecucao />} />
+          <Route path="treino/:id/conclusao" element={<AlunoTreinoConclusao />} />
+          <Route path="exercicios/:exercicioId/historico" element={<HistoricoExercicio />} />
+          <Route path="medidas" element={<AlunoMedidas />} />
+          <Route path="evolucao" element={<AlunoEvolucao />} />
+          <Route path="feed" element={<AlunoMural />} />
+          <Route path="amizades" element={<AlunoAmizades />} />
+          <Route path="clubes" element={<AlunoClubes />} />
+          <Route path="clubes/:id" element={<ClubeFeed />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}

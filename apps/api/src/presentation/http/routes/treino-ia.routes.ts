@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ValidationError } from '../../../domain/errors/AppError.js'
+import { resolveAluno } from './aluno.routes.js'
 import {
   classificarGrupo,
   gerarTreinoIA,
@@ -42,14 +43,11 @@ const iaInputSchema = z.object({
 })
 
 export async function treinoIARoutes(app: FastifyInstance) {
-  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO)]
+  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ROOT)]
 
   /** POST /treinos/ia/classificar — Classificar grupo de treino do aluno */
   app.post('/classificar', { preHandler: prehandlerAluno }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const body = iaInputSchema.parse(request.body || {})
     const resultado = await classificarGrupo(aluno.id, body)
@@ -61,10 +59,7 @@ export async function treinoIARoutes(app: FastifyInstance) {
     preHandler: prehandlerAluno,
     config: { rateLimit: { max: 10, timeWindow: '1 hour' } },
   }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const body = z
       .object({
@@ -87,10 +82,7 @@ export async function treinoIARoutes(app: FastifyInstance) {
     preHandler: prehandlerAluno,
     config: { rateLimit: { max: 10, timeWindow: '1 hour' } },
   }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const body = z
       .object({

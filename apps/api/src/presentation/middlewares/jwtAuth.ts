@@ -31,10 +31,10 @@ async function plugin(app: FastifyInstance) {
     }
   })
 
-  // Helper para verificar role específico — admin global bypassa qualquer role check
+  // Helper para verificar role específico — admin global / ROOT bypassa qualquer role check
   app.decorate('requireRole', (...roles: Role[]) => {
     return async (request: FastifyRequest, _reply: FastifyReply) => {
-      if (request.currentUser.admin) return // admin global tem acesso a tudo
+      if (request.currentUser.admin || request.currentUser.role === Role.ROOT) return // admin / root tem acesso a tudo
       if (!roles.includes(request.currentUser.role)) {
         throw new ForbiddenError(
           `Acesso restrito a: ${roles.join(', ')}`,

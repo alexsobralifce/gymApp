@@ -24,15 +24,15 @@ import {
 } from '../../../application/usecases/treino/TreinoService.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
-  const prehandlerProfessor = [app.authenticate, app.requireRole(Role.PROFESSOR)]
-  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO)]
-  const prehandlerAlunoProfessor = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)]
+  const prehandlerProfessor = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ROOT)]
+  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO, Role.ROOT)]
+  const prehandlerAlunoProfessor = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ROOT)]
 
   async function resolveAlunoSelf(usuarioId: string, role: Role) {
     const existing = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
     if (existing) {
-      // Professor self-flow: ensure consent is set for feed social
-      if (role === Role.PROFESSOR && !existing.consentiu_feed_social_em) {
+      // Professor e Root self-flow: ensure consent is set for feed social
+      if ((role === Role.PROFESSOR || role === Role.ROOT) && !existing.consentiu_feed_social_em) {
         return prisma.aluno.update({
           where: { id: existing.id },
           data: { consentiu_feed_social_em: new Date() },
@@ -43,7 +43,7 @@ export async function treinoRoutes(app: FastifyInstance) {
     return prisma.aluno.create({
       data: {
         usuario_id: usuarioId,
-        ...(role === Role.PROFESSOR ? { consentiu_feed_social_em: new Date() } : {}),
+        consentiu_feed_social_em: new Date(),
       },
     })
   }

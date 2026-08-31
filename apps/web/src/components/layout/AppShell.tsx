@@ -206,6 +206,18 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
     case 'ROOT':
       return [
         { to: '/', label: 'Painel Global', icon: <LayoutDashboardIcon className="h-5 w-5" />, end: true },
+        {
+          label: 'Treinos',
+          icon: <DumbbellIcon className="h-5 w-5" />,
+          children: [
+            { to: '/meus-treinos', label: 'Meus Treinos', icon: <ClipboardListIcon className="h-4 w-4" /> },
+            { to: '/treino/novo', label: 'Criar Meu Treino', icon: <PlusIcon className="h-4 w-4" /> },
+            { to: '/treino/ia', label: 'Treino por IA', icon: <StarIcon className="h-4 w-4" /> },
+            { to: '/biblioteca-planos', label: 'Biblioteca de Planos', icon: <BookOpenIcon className="h-4 w-4" /> },
+            { to: '/treinos', label: 'Gerenciar Treinos', icon: <ClipboardListIcon className="h-4 w-4" /> },
+            { to: '/treinos/criar', label: 'Criar Treino para Aluno', icon: <PlusIcon className="h-4 w-4" /> },
+          ],
+        },
         { to: '/vinculos', label: 'Vínculos Pendentes', icon: <LinkIcon className="h-5 w-5" /> },
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
@@ -242,7 +254,7 @@ const academiaBottomTabs = [
 
 const rootBottomTabs = [
   { to: '/', label: 'Painel', icon: HomeIcon, end: true },
-  { to: '/vinculos', label: 'Vínculos', icon: LinkIcon },
+  { to: '/meus-treinos', label: 'Treinos', icon: DumbbellIcon },
   { to: '/usuarios', label: 'Usuários', icon: UsersIcon },
   { to: '/social', label: 'Social', icon: MessageCircleIcon },
 ]
@@ -257,6 +269,12 @@ function getRoleBottomTabs(role: string, isAdmin: boolean) {
 function getRoleMoreItems(role: string, isAdmin: boolean) {
   if (isAdmin || role === 'ROOT') {
     return [
+      { to: '/meus-treinos', label: 'Meus Treinos', icon: '🏋️', desc: 'Treinos pessoais' },
+      { to: '/treino/novo', label: 'Criar Treino', icon: '📝', desc: 'Treino próprio' },
+      { to: '/treino/ia', label: 'Treino por IA', icon: '✨', desc: 'Prescrição inteligente' },
+      { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
+      { to: '/treinos', label: 'Gerenciar Treinos', icon: '📋', desc: 'Fichas de alunos' },
+      { to: '/treinos/criar', label: 'Criar para Aluno', icon: '➕', desc: 'Prescrever ficha' },
       { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: '⭐', desc: 'Feedbacks recebidos' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos & Laudos' },
       { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },

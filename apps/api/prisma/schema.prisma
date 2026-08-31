@@ -536,7 +536,7 @@ model AvaliacaoFoto {
   avaliacao_id  String
   url           String
   nome_arquivo  String
-  mime_type     String
+  mime_type     String          @map("mimetype")
   tamanho_bytes Int
   criado_em     DateTime        @default(now())
   avaliacao     AvaliacaoFisica @relation(fields: [avaliacao_id], references: [id], onDelete: Cascade)

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
+import { resolveAluno } from './aluno.routes.js'
 import {
   listarPlanos,
   getPlanoDetalhe,
@@ -11,7 +12,7 @@ import {
 } from '../../../application/usecases/planos/PlanoService.js'
 
 export async function planosRoutes(app: FastifyInstance) {
-  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO)]
+  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ROOT)]
 
   /** GET /planos — Listar todos os planos da biblioteca com filtros */
   app.get('/', { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -29,11 +30,7 @@ export async function planosRoutes(app: FastifyInstance) {
 
   /** GET /planos/recomendados — Planos recomendados para o aluno logado */
   app.get('/recomendados', { preHandler: prehandlerAluno }, async (request, reply) => {
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
-
+    const aluno = await resolveAluno(request.currentUser.sub)
     const planos = await recomendarPlanos(aluno.id)
     return reply.send(planos)
   })
@@ -48,11 +45,7 @@ export async function planosRoutes(app: FastifyInstance) {
   /** POST /planos/:id/adotar — Aluno adota um plano (cria treinos na conta dele) */
   app.post('/:id/adotar', { preHandler: prehandlerAluno }, async (request, reply) => {
     const params = z.object({ id: z.string() }).parse(request.params)
-    
-    const aluno = await prisma.aluno.findUnique({
-      where: { usuario_id: request.currentUser.sub },
-    })
-    if (!aluno) throw new NotFoundError('Aluno')
+    const aluno = await resolveAluno(request.currentUser.sub)
 
     const resultado = await adotarPlano(params.id, aluno.id)
     return reply.status(201).send(resultado)
