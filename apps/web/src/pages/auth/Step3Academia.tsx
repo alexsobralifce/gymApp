@@ -8,9 +8,17 @@ interface Step3AcademyProps {
   academiaId: string
   setAcademiaId: (v: string) => void
   academias: Academia[]
+  error?: string
 }
 
-export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, setAcademiaId, academias }: Step3AcademyProps) {
+export default function Step3Academy({
+  modoVinculo,
+  setModoVinculo,
+  academiaId,
+  setAcademiaId,
+  academias,
+  error,
+}: Step3AcademyProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
@@ -20,6 +28,8 @@ export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, 
           className={`rounded-2xl border p-4 text-center transition-all cursor-pointer ${
             modoVinculo === 'AUTOGESTAO'
               ? 'border-primary bg-primary/10 ring-1 ring-primary'
+              : error && modoVinculo === ''
+              ? 'border-destructive/60 bg-surface-card hover:border-destructive'
               : 'border-surface-input bg-surface-card hover:border-text-muted'
           }`}
         >
@@ -29,12 +39,15 @@ export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, 
             Monte seus treinos sem professor ou academia
           </p>
         </button>
+
         <button
           type="button"
           onClick={() => { setModoVinculo('ACADEMIA'); setAcademiaId('') }}
           className={`rounded-2xl border p-4 text-center transition-all cursor-pointer ${
             modoVinculo === 'ACADEMIA'
               ? 'border-primary bg-primary/10 ring-1 ring-primary'
+              : error && modoVinculo === ''
+              ? 'border-destructive/60 bg-surface-card hover:border-destructive'
               : 'border-surface-input bg-surface-card hover:border-text-muted'
           }`}
         >
@@ -45,12 +58,18 @@ export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, 
           </p>
         </button>
       </div>
+
+      {error && (
+        <p className="text-xs text-destructive text-center font-medium">{error}</p>
+      )}
+
       {modoVinculo === 'ACADEMIA' && (
-        <FormField label="Selecione a academia" htmlFor="academia">
+        <FormField label="Selecione a academia" htmlFor="academia" error={error && !academiaId ? error : undefined} required>
           <Select
             id="academia"
             value={academiaId}
             onChange={(e) => setAcademiaId(e.target.value)}
+            error={error && !academiaId ? error : undefined}
             required
           >
             <option value="">Selecionar...</option>
@@ -60,6 +79,7 @@ export default function Step3Academy({ modoVinculo, setModoVinculo, academiaId, 
           </Select>
         </FormField>
       )}
+
       {modoVinculo === 'AUTOGESTAO' && (
         <div className="rounded-xl bg-surface-card border border-surface-input p-4 text-sm text-text-muted">
           No modo <strong className="text-text">Autogestão</strong>, você monta seus próprios treinos

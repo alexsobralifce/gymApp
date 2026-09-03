@@ -124,8 +124,20 @@ export async function authRoutes(app: FastifyInstance) {
   })
 
   /**
+   * POST /auth/cancel-registration
+   * Cancela cadastro em andamento e remove o registro não verificado do banco
+   */
+  app.post('/cancel-registration', {
+    config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    const body = z.object({ email: z.string().email() }).parse(request.body)
+    await AuthService.cancelRegistration(body.email)
+    return reply.status(200).send({ message: 'Cadastro cancelado com sucesso.' })
+  })
+
+  /**
    * POST /auth/reset-password
-   * Valida código de 4 dígitos e redefine a senha
+   * Valida código de 4 dígitos, redefine a senha e autentica o usuário imediatamente
    */
   app.post('/reset-password', {
     config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
@@ -138,8 +150,8 @@ export async function authRoutes(app: FastifyInstance) {
         'Senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número',
       ),
     }).parse(request.body)
-    await AuthService.resetPassword(body.email, body.code, body.novaSenha)
-    return reply.status(200).send({ message: 'Senha redefinida com sucesso!' })
+    const result = await AuthService.resetPassword(body.email, body.code, body.novaSenha, app.jwt.sign.bind(app.jwt))
+    return reply.status(200).send(result)
   })
 
   /**

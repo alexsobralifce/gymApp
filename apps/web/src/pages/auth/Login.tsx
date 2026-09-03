@@ -29,7 +29,7 @@ export default function Login() {
   const [forgotMessage, setForgotMessage] = useState<string | null>(null)
   const [forgotError, setForgotError] = useState<string | null>(null)
 
-  const { login, loading, error } = useAuthStore()
+  const { login, loginWithTokens, loading, error } = useAuthStore()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -127,7 +127,12 @@ export default function Login() {
     setForgotLoading(true)
     setForgotError(null)
     try {
-      await api.resetPasswordWithCode(forgotEmail, forgotCode, novaSenha)
+      const result = await api.resetPasswordWithCode(forgotEmail, forgotCode, novaSenha)
+      if (result?.tokens) {
+        await loginWithTokens(result.tokens.accessToken, result.tokens.refreshToken)
+        navigate('/', { replace: true })
+        return
+      }
       setForgotMode(false)
       setForgotStep(1)
       setEmail(forgotEmail)

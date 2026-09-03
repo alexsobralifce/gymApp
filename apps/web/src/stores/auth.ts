@@ -37,6 +37,7 @@ export interface AuthState {
   error: string | null
 
   login: (email: string, senha: string) => Promise<void>
+  loginWithTokens: (accessToken: string, refreshToken: string) => Promise<void>
   loginWithGoogle: (credential: string, accessToken?: string) => Promise<boolean>
   loginWithGoogleCode: (code: string) => Promise<boolean>
   register: (nome: string, email: string, senha: string, role: string, telefone?: string, parqRespostas?: ParqRespostas) => Promise<{ requiresVerification: boolean }>
@@ -66,6 +67,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const msg = (err as Error).message
       const friendlyMsg = msg === 'Failed to fetch' ? 'Sem conexão com o servidor. Verifique sua internet.' : msg
       set({ error: friendlyMsg, loading: false })
+      throw err
+    }
+  },
+
+  loginWithTokens: async (accessToken, refreshToken) => {
+    set({ loading: true, error: null })
+    try {
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      const user = await api.getMe()
+      saveStoredUser(user)
+      set({ user, loading: false })
+      track('login_succeeded', { role: user.role })
+    } catch (err) {
+      set({ loading: false })
       throw err
     }
   },

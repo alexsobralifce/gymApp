@@ -66,10 +66,17 @@ export class AuthService {
   static async register(input: RegisterInput) {
     const emailExistente = await prisma.usuario.findUnique({
       where: { email: input.email },
+      select: { id: true, email_verified: true },
     })
 
     if (emailExistente) {
-      throw new ConflictError('E-mail já cadastrado')
+      if (!emailExistente.email_verified) {
+        // Cadastro anterior não concluído por falta de verificação de e-mail.
+        // Apaga o registro não verificado para permitir novo cadastro limpo.
+        await prisma.usuario.delete({ where: { id: emailExistente.id } })
+      } else {
+        throw new ConflictError('E-mail já cadastrado')
+      }
     }
 
     const senhaHash = await bcrypt.hash(input.senha, 12)
@@ -94,6 +101,46 @@ export class AuthService {
     sendVerificationEmail(input.email, code).catch(() => {})
 
     return { message: 'Conta criada com sucesso.', usuario }
+  }
+
+  /**
+   * Helper para gerar tokens de acesso e refresh para um usuário
+   */
+  static async generateTokensForUser(
+    usuario: { id: string; role: Role; admin: boolean },
+    jwtSign: (payload: object, opts?: object) => string,
+  ): Promise<AuthTokens> {
+    let tenantId: string | undefined
+    if (usuario.role === Role.ACADEMIA) {
+      const academia = await prisma.academia.findUnique({ where: { usuario_id: usuario.id } })
+      tenantId = academia?.id
+    } else if (usuario.role === Role.ALUNO) {
+      const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuario.id } })
+      tenantId = aluno?.academia_id ?? undefined
+    }
+
+    const payload = { sub: usuario.id, role: usuario.role, admin: usuario.admin, tenantId }
+
+    const accessToken = jwtSign(payload, { expiresIn: env.JWT_EXPIRES_IN })
+    const refreshToken = jwtSign(
+      { sub: usuario.id },
+      { secret: env.JWT_REFRESH_SECRET, expiresIn: env.JWT_REFRESH_EXPIRES_IN },
+    )
+
+    // Limitar refresh tokens por usuário
+    await AuthService.enforceRefreshTokenLimit(usuario.id)
+
+    // Persistir refresh token
+    const expiresIn = 30 * 24 * 60 * 60 * 1000 // 30 dias em ms
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        usuario_id: usuario.id,
+        expira_em: new Date(Date.now() + expiresIn),
+      },
+    })
+
+    return { accessToken, refreshToken }
   }
 
   /**
@@ -129,40 +176,10 @@ export class AuthService {
       data: { ultima_atividade_em: new Date() },
     })
 
-    // Montar payload com tenantId dependendo do role
-    let tenantId: string | undefined
-    if (usuario.role === Role.ACADEMIA) {
-      const academia = await prisma.academia.findUnique({ where: { usuario_id: usuario.id } })
-      tenantId = academia?.id
-    } else if (usuario.role === Role.PROFESSOR) {
-      // Professor pode ter múltiplas academias — tenantId vem no header por request
-    } else if (usuario.role === Role.ALUNO) {
-      const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuario.id } })
-      tenantId = aluno?.academia_id ?? undefined
-    }
-
-    const payload = { sub: usuario.id, role: usuario.role, admin: usuario.admin, tenantId }
-
-    const accessToken = jwtSign(payload, { expiresIn: env.JWT_EXPIRES_IN })
-    const refreshToken = jwtSign(
-      { sub: usuario.id },
-      { secret: env.JWT_REFRESH_SECRET, expiresIn: env.JWT_REFRESH_EXPIRES_IN },
+    return AuthService.generateTokensForUser(
+      { id: usuario.id, role: usuario.role, admin: usuario.admin },
+      jwtSign,
     )
-
-    // Limitar refresh tokens por usuário
-    await AuthService.enforceRefreshTokenLimit(usuario.id)
-
-    // Persistir refresh token
-    const expiresIn = 30 * 24 * 60 * 60 * 1000 // 30 dias em ms
-    await prisma.refreshToken.create({
-      data: {
-        token: refreshToken,
-        usuario_id: usuario.id,
-        expira_em: new Date(Date.now() + expiresIn),
-      },
-    })
-
-    return { accessToken, refreshToken }
   }
 
   /**
@@ -285,12 +302,51 @@ export class AuthService {
   }
 
   /**
-   * Redefine a senha com código de recuperação de 4 dígitos
+   * Cancela cadastro em andamento e remove o usuário não verificado do banco
    */
-  static async resetPassword(email: string, code: string, novaSenha: string): Promise<void> {
+  static async cancelRegistration(email: string): Promise<void> {
     const usuario = await prisma.usuario.findUnique({
       where: { email },
-      select: { id: true, reset_password_code: true, reset_password_code_expira: true },
+      select: { id: true, email_verified: true },
+    })
+    if (usuario && !usuario.email_verified) {
+      await prisma.usuario.delete({ where: { id: usuario.id } })
+    }
+  }
+
+  /**
+   * Limpa registros incompletos cujo código de verificação já expirou (TTL de 15 min)
+   */
+  static async cleanExpiredUnverifiedRegistrations(): Promise<number> {
+    const result = await prisma.usuario.deleteMany({
+      where: {
+        email_verified: false,
+        email_verify_code_expira: { lt: new Date() },
+      },
+    })
+    return result.count
+  }
+
+  /**
+   * Redefine a senha com código de recuperação de 4 dígitos e autentica o usuário imediatamente
+   */
+  static async resetPassword(
+    email: string,
+    code: string,
+    novaSenha: string,
+    jwtSign?: (payload: object, opts?: object) => string,
+  ): Promise<{ message: string; tokens?: AuthTokens; usuario?: { id: string; nome: string; email: string; role: Role } }> {
+    const usuario = await prisma.usuario.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        role: true,
+        admin: true,
+        reset_password_code: true,
+        reset_password_code_expira: true,
+      },
     })
     if (!usuario || !usuario.reset_password_code) {
       throw new BadRequestError('Código de recuperação inválido ou expirado.')
@@ -313,8 +369,28 @@ export class AuthService {
         reset_password_code: null,
         reset_password_code_expira: null,
         email_verified: true,
+        ultima_atividade_em: new Date(),
       },
     })
+
+    let tokens: AuthTokens | undefined
+    if (jwtSign) {
+      tokens = await AuthService.generateTokensForUser(
+        { id: usuario.id, role: usuario.role, admin: usuario.admin },
+        jwtSign,
+      )
+    }
+
+    return {
+      message: 'Senha redefinida com sucesso!',
+      tokens,
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        role: usuario.role,
+      },
+    }
   }
 
   /**
