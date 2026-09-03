@@ -204,21 +204,8 @@ export default function AlunoTreinoExecucao() {
   const [dismissedRpeAlto, setDismissedRpeAlto] = useState(false)
   const setsRpeAlto = execucoes.filter((e) => (e.rpe ?? 0) >= RPE_ALTO_MIN).length
 
-  // ─── Ocultar exercícios concluídos (UX) ────────────────────
-  const [mostrarConcluidos, setMostrarConcluidos] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('gymapp_show_completed_exercises') === '1'
-    } catch {
-      return false
-    }
-  })
-  useEffect(() => {
-    try {
-      localStorage.setItem('gymapp_show_completed_exercises', mostrarConcluidos ? '1' : '0')
-    } catch {
-      /* storage indisponível */
-    }
-  }, [mostrarConcluidos])
+  // ─── Ocultar exercícios concluídos (UX) — Sempre inicia falso para focar nos pendentes ───
+  const [mostrarConcluidos, setMostrarConcluidos] = useState<boolean>(false)
 
   // ─── UX-004: Substituição de exercício ────────────────────
   const [substituindoExercicio, setSubstituindoExercicio] = useState<TreinoExercicio | null>(null)
@@ -638,7 +625,7 @@ export default function AlunoTreinoExecucao() {
 
       {/* Rest Timer Floating Toast */}
       {restActive && (
-        <div className="fixed bottom-20 left-4 right-4 z-40 max-w-xl mx-auto animate-slide-up">
+        <div className="fixed bottom-24 left-4 right-4 z-40 max-w-xl mx-auto animate-slide-up">
           <div className="rounded-2xl border border-primary/30 bg-surface-card/95 backdrop-blur-md p-4 shadow-xl shadow-black/30">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -686,7 +673,7 @@ export default function AlunoTreinoExecucao() {
       )}
 
       {/* Exercise List */}
-      <div className="flex-1 px-4 py-4 space-y-4 max-w-xl mx-auto w-full pb-28">
+      <div className="flex-1 px-4 py-4 space-y-4 max-w-xl mx-auto w-full pb-36">
         {/* UX-016: alerta de sessão longa (>90min), dispensável, não bloqueia */}
         {timer > SESSAO_LONGA_SEGUNDOS && !dismissedSessaoLonga && (
           <div role="status" aria-live="polite" className="rounded-2xl border border-warning/40 bg-warning/10 p-3.5 flex items-start gap-2.5">
@@ -970,12 +957,34 @@ export default function AlunoTreinoExecucao() {
           )
         })}
 
+        {/* Banner comemorativo quando todos os exercícios foram concluídos e ocultados */}
+        {exerciciosVisiveis.length === 0 && exerciciosConcluidos.length === exercicios.length && exercicios.length > 0 && (
+          <div className="rounded-2xl border border-success/30 bg-success/10 p-6 text-center space-y-3 animate-modal-pop my-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-success/20 text-success flex items-center justify-center text-2xl font-black shadow-inner">
+              ✓
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-text">Treino 100% Concluído!</h3>
+              <p className="text-xs text-text-muted mt-1">
+                Todas as {exercicios.length} etapas foram finalizadas. Toque em <strong>Finalizar Treino</strong> abaixo para registrar suas métricas.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMostrarConcluidos(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer pt-1"
+            >
+              Revisar séries e cargas registradas
+            </button>
+          </div>
+        )}
+
         {/* Contador de exercícios concluídos no rodapé */}
-        {exerciciosConcluidos.length > 0 && !mostrarConcluidos && (
+        {exerciciosConcluidos.length > 0 && !mostrarConcluidos && exerciciosVisiveis.length > 0 && (
           <div className="flex items-center justify-center gap-2 py-3 text-xs text-text-muted">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-bold text-success">
               <CheckIcon className="h-3 w-3" />
-              {exerciciosConcluidos.length}/{exercicios.length} concluídos
+              {exerciciosConcluidos.length} de {exercicios.length} concluídos · Restam {exercicios.length - exerciciosConcluidos.length}
             </span>
           </div>
         )}
@@ -1158,11 +1167,11 @@ export default function AlunoTreinoExecucao() {
       {ToastComponent}
 
       {/* Bottom Bar - Finalizar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border glass px-4 py-3 safe-bottom">
-        <div className="max-w-xl mx-auto flex gap-2">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border glass px-4 pt-3 pb-[max(1.25rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] shadow-2xl backdrop-blur-lg">
+        <div className="max-w-xl mx-auto flex gap-2.5">
           <button
             onClick={() => setShowSairModal(true)}
-            className="rounded-2xl border border-border bg-secondary px-4 py-3.5 text-sm font-bold text-text-muted hover:text-text active:scale-[0.98] transition-all cursor-pointer min-h-11"
+            className="rounded-2xl border border-border bg-secondary px-5 py-3.5 text-sm font-bold text-text-muted hover:text-text active:scale-[0.98] transition-all cursor-pointer min-h-12 flex items-center justify-center"
           >
             Sair
           </button>
@@ -1170,7 +1179,7 @@ export default function AlunoTreinoExecucao() {
             onClick={() => setShowAvaliacao(true)}
             disabled={loading || avaliando}
             data-coach="finalizar"
-            className="flex-1 rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer min-h-11"
+            className="flex-1 rounded-2xl bg-primary py-3.5 px-4 text-sm font-extrabold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer min-h-12 flex items-center justify-center gap-2"
           >
             Finalizar Treino
           </button>

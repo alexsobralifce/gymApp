@@ -40,7 +40,15 @@ export default function RegisterWizard() {
   const [consentiuSocial, setConsentiuSocial] = useState(false)
   const [parq, setParq] = useState<ParqState>({ q1: null, q2: null, q3: null, q4: null })
 
-  const { register, loading, error } = useAuthStore()
+  // Estados da etapa de verificação de e-mail (4 dígitos)
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
+  const [verifyCode, setVerifyCode] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
+  const [resendSuccess, setResendSuccess] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+
+  const { register, login, loading, error } = useAuthStore()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -103,20 +111,7 @@ export default function RegisterWizard() {
     if (step > 0) setStep(step - 1)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (step < totalSteps - 1) {
-      next()
-      return
-    }
-    await register(
-      nome,
-      email,
-      senha,
-      role,
-      telefone.replace(/\D/g, '') || undefined,
-      parqPayload,
-    )
+  async function finalizeProfile() {
     if (isAluno) {
       await api.criarPerfilAluno({
         dataNascimento: dataNascimento || undefined,
@@ -134,7 +129,59 @@ export default function RegisterWizard() {
     navigate('/welcome')
   }
 
-  if (false) { return null } // guard removido — sem mais estado googleBusy
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (step < totalSteps - 1) {
+      next()
+      return
+    }
+    try {
+      const result = await register(
+        nome,
+        email,
+        senha,
+        role,
+        telefone.replace(/\D/g, '') || undefined,
+        parqPayload,
+      )
+      if (result?.requiresVerification) {
+        setIsVerifyingEmail(true)
+        return
+      }
+      await finalizeProfile()
+    } catch {
+      // Erro tratado pela store
+    }
+  }
+
+  async function handleVerifyEmailAndFinish() {
+    if (verifyCode.length < 4) return
+    setIsVerifying(true)
+    setVerifyError(null)
+    try {
+      await api.verifyEmail(email, verifyCode)
+      await login(email, senha)
+      await finalizeProfile()
+    } catch (err: any) {
+      setVerifyError(err?.message || 'Código inválido ou expirado. Tente novamente.')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  async function handleResendCode() {
+    setIsResending(true)
+    setResendSuccess(false)
+    setVerifyError(null)
+    try {
+      await api.resendCode(email)
+      setResendSuccess(true)
+    } catch (err: any) {
+      setVerifyError(err?.message || 'Erro ao reenviar código.')
+    } finally {
+      setIsResending(false)
+    }
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-8">
@@ -144,25 +191,93 @@ export default function RegisterWizard() {
         </div>
 
         <div className="text-center">
-          <h1 className="text-xl font-bold text-text">Crie sua Conta Grátis</h1>
-          <p className="text-xs text-text-muted mt-0.5">Comece a treinar com inteligência hoje</p>
+          <h1 className="text-xl font-bold text-text">
+            {isVerifyingEmail ? 'Verificação de Conta' : 'Crie sua Conta Grátis'}
+          </h1>
+          <p className="text-xs text-text-muted mt-0.5">
+            {isVerifyingEmail ? 'Ative seu e-mail para começar' : 'Comece a treinar com inteligência hoje'}
+          </p>
         </div>
 
-        {error && !googleRedirectError && (
+        {error && !googleRedirectError && !isVerifyingEmail && (
           <p className="rounded bg-destructive/10 p-2.5 text-xs text-destructive">{error}</p>
         )}
 
-        {googleRedirectError && (
+        {googleRedirectError && !isVerifyingEmail && (
           <p className="rounded bg-destructive/10 p-2.5 text-xs text-destructive">
             {googleRedirectError === 'cancelado'
               ? 'Cadastro com Google cancelado.'
+              : googleRedirectError === 'state_invalido'
+              ? 'A sessão do Google expirou ou foi interrompida. Por favor, tente novamente.'
               : googleRedirectError}
           </p>
         )}
 
-        {/* Botão de Cadastro/Login com Google no Step 0 — redirect, funciona no Android */}
-        {step === 0 && (
-          <div className="space-y-3 pt-1">
+        {/* Etapa de Verificação de E-mail (4 dígitos) */}
+        {isVerifyingEmail ? (
+          <div className="space-y-4 text-center py-1">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+
+            <div>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Enviamos um código de 4 dígitos para <br />
+                <span className="font-semibold text-text">{email}</span>.
+              </p>
+            </div>
+
+            {verifyError && (
+              <p className="rounded bg-destructive/10 p-2.5 text-xs text-destructive">{verifyError}</p>
+            )}
+            {resendSuccess && (
+              <p className="rounded bg-success/10 p-2.5 text-xs text-success">Código reenviado com sucesso!</p>
+            )}
+
+            <div className="py-2">
+              <label htmlFor="wizard-verify-code" className="block text-[11px] font-medium text-text-muted mb-1.5">
+                Digite o código de 4 dígitos
+              </label>
+              <input
+                id="wizard-verify-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="0000"
+                value={verifyCode}
+                onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                className="w-36 text-center tracking-[0.35em] text-2xl font-bold py-2.5 rounded-xl border border-surface-input bg-surface text-text focus:border-primary focus:outline-none shadow-inner"
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={handleVerifyEmailAndFinish}
+                disabled={verifyCode.length < 4 || isVerifying}
+                className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
+              >
+                {isVerifying ? 'Confirmando...' : 'Confirmar e Começar'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={isResending}
+                className="text-xs font-semibold text-primary hover:underline cursor-pointer block w-full py-1"
+              >
+                {isResending ? 'Reenviando...' : 'Não recebeu o e-mail? Reenviar código'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Botão de Cadastro/Login com Google no Step 0 — redirect, funciona no Android */}
+            {step === 0 && (
+              <div className="space-y-3 pt-1">
             <button
               type="button"
               onClick={handleGoogleRedirect}
@@ -299,11 +414,13 @@ export default function RegisterWizard() {
             >
               {loading ? 'Processando...' : step < totalSteps - 1 ? 'Próximo' : 'Concluir Cadastro'}
             </button>
-          </div>
-        </form>
+            </div>
+          </form>
+        </>
+      )}
 
-        <p className="text-center text-xs text-text-muted pt-2 border-t border-surface-input">
-          Já tem conta?{' '}
+      <p className="text-center text-xs text-text-muted pt-2 border-t border-surface-input">
+        Já tem conta?{' '}
           <Link to="/login" className="font-semibold text-primary hover:underline">
             Entrar
           </Link>

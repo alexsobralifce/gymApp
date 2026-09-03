@@ -53,6 +53,16 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Ignorar desenvolvimento local e rotas internas do Vite (evita cache de módulos em localhost)
+  if (
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.includes('/src/')
+  ) {
+    return
+  }
+
   // 1. Imagens e GIFs de treino: Cache-First
   const isImageOrGif =
     request.destination === 'image' ||

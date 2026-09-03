@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Bell, Smartphone, Check, Sparkles, X, Share2, PlusSquare, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Bell, Smartphone, Check, Sparkles, X, Share2, PlusSquare, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react'
 import { useAuthStore } from '../../stores/auth'
-import { activatePush } from '../../hooks/useNotifications'
+import { activatePush, checkNotificationStatus, sendTestNotification, type NotificationStatus } from '../../hooks/useNotifications'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
 import { EndorfinappLogo } from '../branding'
 
@@ -11,14 +11,10 @@ export function OnboardingPermissionsModal() {
   const { user } = useAuthStore()
   const { isIOS, isStandalone, promptInstall } = usePWAInstall()
   const [open, setOpen] = useState(false)
-  const [permission, setPermission] = useState<string>('default')
+  const [permission, setPermission] = useState<NotificationStatus>('default')
   const [pushLoading, setPushLoading] = useState(false)
+  const [testSent, setTestSent] = useState(false)
   const [iosGuideOpen, setIosGuideOpen] = useState(false)
-
-  function readPermission(): string {
-    if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
-    return Notification.permission
-  }
 
   useEffect(() => {
     if (!user) {
@@ -26,29 +22,60 @@ export function OnboardingPermissionsModal() {
       return
     }
 
-    const currentPerm = readPermission()
-    setPermission(currentPerm)
+    let isMounted = true
 
-    const alreadyDone = localStorage.getItem(STORAGE_KEY) === 'true'
-    // Se o usuário ainda não passou pelo onboarding de permissões, exibe o modal
-    if (!alreadyDone) {
-      // Pequeno delay para animação suave logo após autenticação
-      const timer = setTimeout(() => {
-        setOpen(true)
-      }, 600)
-      return () => clearTimeout(timer)
+    async function evaluateOnboarding() {
+      const status = await checkNotificationStatus()
+      if (!isMounted) return
+      setPermission(status.permission)
+
+      const alreadyDone = localStorage.getItem(STORAGE_KEY) === 'true'
+      const isGranted = status.permission === 'granted' || status.hasSubscription
+      const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
+
+      // Se o usuário já concedeu permissões e (está no app PWA instalado ou desktop), finaliza silenciosamente
+      if (isGranted && (isStandalone || isDesktop)) {
+        localStorage.setItem(STORAGE_KEY, 'true')
+        return
+      }
+
+      // Se ainda não concluiu o onboarding, exibe o modal
+      if (!alreadyDone) {
+        const timer = setTimeout(() => {
+          if (isMounted) setOpen(true)
+        }, 600)
+        return () => clearTimeout(timer)
+      }
     }
-  }, [user])
+
+    evaluateOnboarding()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user, isStandalone])
 
   async function handleEnableNotifications() {
     setPushLoading(true)
     try {
       await activatePush()
-      setPermission(readPermission())
+      const status = await checkNotificationStatus()
+      setPermission(status.permission)
+      if (status.permission === 'granted' || status.hasSubscription) {
+        localStorage.setItem(STORAGE_KEY, 'true')
+      }
     } catch (err) {
       console.warn('Erro ao ativar notificações:', err)
     } finally {
       setPushLoading(false)
+    }
+  }
+
+  async function handleTestNotification() {
+    const ok = await sendTestNotification()
+    if (ok) {
+      setTestSent(true)
+      setTimeout(() => setTestSent(false), 4000)
     }
   }
 
@@ -126,7 +153,22 @@ export function OnboardingPermissionsModal() {
                   Receba avisos de horário de treino, mensagens motivacionais científicas e conquistas dos seus amigos.
                 </p>
 
-                {!isGranted && (
+                {isGranted ? (
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <button
+                      onClick={handleTestNotification}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-all cursor-pointer"
+                    >
+                      <Bell className="h-3.5 w-3.5" />
+                      {testSent ? 'Notificação enviada! 🎉' : 'Testar Notificação'}
+                    </button>
+                    {testSent && (
+                      <span className="text-[11px] text-primary flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Enviada com sucesso
+                      </span>
+                    )}
+                  </div>
+                ) : (
                   <div className="mt-3">
                     {isDenied ? (
                       <div className="rounded-lg bg-warning/10 border border-warning/20 p-2.5 text-[11px] text-warning">

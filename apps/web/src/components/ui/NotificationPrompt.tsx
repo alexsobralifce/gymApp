@@ -1,19 +1,15 @@
-import { BellIcon, XIcon } from 'lucide-react'
+import { BellIcon, XIcon, RefreshCw } from 'lucide-react'
 import { CheckIcon } from '../icons/Icon'
-import { useState, useEffect } from 'react'
-import { activatePush } from '../../hooks/useNotifications'
+import { useState, useEffect, useCallback } from 'react'
+import { activatePush, checkNotificationStatus, type NotificationStatus } from '../../hooks/useNotifications'
 
 const DISMISS_KEY = 'gymapp_notif_prompt_dismissed'
 const REAPPEAR_MS = 7 * 24 * 60 * 60 * 1000
 
 export default function NotificationPrompt() {
   const [visible, setVisible] = useState(false)
-  const [permission, setPermission] = useState<string>('default')
-
-  function readPermission(): string {
-    if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
-    return Notification.permission
-  }
+  const [permission, setPermission] = useState<NotificationStatus>('default')
+  const [checking, setChecking] = useState(false)
 
   function suppressedRecently(): boolean {
     try {
@@ -25,48 +21,85 @@ export default function NotificationPrompt() {
     }
   }
 
-  function recheck() {
-    const p = readPermission()
-    setPermission(p)
-    if (p === 'granted' || p === 'unsupported') {
-      setVisible(false)
-    } else {
-      setVisible(true)
+  const recheck = useCallback(async () => {
+    setChecking(true)
+    try {
+      const status = await checkNotificationStatus()
+      setPermission(status.permission)
+      if (status.permission === 'granted' || status.hasSubscription || status.permission === 'unsupported') {
+        setVisible(false)
+      } else if (status.permission === 'denied') {
+        if (!suppressedRecently()) {
+          setVisible(true)
+        }
+      } else if (status.permission === 'default') {
+        if (!suppressedRecently()) {
+          setVisible(true)
+        }
+      }
+    } finally {
+      setChecking(false)
     }
-  }
-
-  useEffect(() => {
-    const p = readPermission()
-    setPermission(p)
-    if (p === 'unsupported') return
-    if (suppressedRecently()) return
-    if (p === 'default') {
-      const timer = setTimeout(() => setVisible(true), 3000)
-      return () => clearTimeout(timer)
-    }
-    if (p === 'denied') {
-      // permissão bloqueada — mostra orientação para reativar no navegador
-      setVisible(true)
-    }
-    // 'granted' → já ativo, não mostra nada
   }, [])
 
-  // Re-checa ao voltar do primeiro plano (usuário pode ter reativado em Configurações do site)
   useEffect(() => {
+    let isMounted = true
+
+    async function initialCheck() {
+      const status = await checkNotificationStatus()
+      if (!isMounted) return
+      setPermission(status.permission)
+
+      if (status.permission === 'granted' || status.hasSubscription || status.permission === 'unsupported') {
+        setVisible(false)
+        return
+      }
+
+      if (suppressedRecently()) return
+
+      if (status.permission === 'default') {
+        const timer = setTimeout(() => {
+          if (isMounted) setVisible(true)
+        }, 3000)
+        return () => clearTimeout(timer)
+      }
+
+      if (status.permission === 'denied') {
+        setVisible(true)
+      }
+    }
+
+    initialCheck()
+
+    // Ouve alterações de permissão do navegador em tempo real
+    if ('permissions' in navigator && navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: 'notifications' as PermissionName })
+        .then((permStatus) => {
+          if (!isMounted) return
+          permStatus.onchange = () => {
+            if (isMounted) recheck()
+          }
+        })
+        .catch(() => {})
+    }
+
     function onVis() {
       if (document.visibilityState === 'visible') recheck()
     }
     document.addEventListener('visibilitychange', onVis)
     window.addEventListener('focus', onVis)
+
     return () => {
+      isMounted = false
       document.removeEventListener('visibilitychange', onVis)
       window.removeEventListener('focus', onVis)
     }
-  }, [])
+  }, [recheck])
 
   async function handleAllow() {
     await activatePush()
-    recheck()
+    await recheck()
   }
 
   function handleDismiss() {
@@ -145,9 +178,11 @@ export default function NotificationPrompt() {
         {isDenied ? (
           <button
             onClick={recheck}
-            className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-bold text-text-muted hover:text-text transition-all cursor-pointer"
+            disabled={checking}
+            className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-bold text-text-muted hover:text-text transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
           >
-            Já reativei — verificar
+            <RefreshCw className={`h-3.5 w-3.5 ${checking ? 'animate-spin' : ''}`} />
+            {checking ? 'Verificando...' : 'Já reativei — verificar'}
           </button>
         ) : (
           <div className="flex gap-2">

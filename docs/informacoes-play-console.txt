@@ -1,0 +1,256 @@
+================================================================
+ENDORFINAPP — INFORMAÇÕES PARA O GOOGLE PLAY CONSOLE
+Preparado em 28/08/2026 — Baseado no app real (login, LGPD, PAR-Q+,
+feed social, avaliação física e assinaturas via Google Play Billing)
+================================================================
+
+IDENTIFICAÇÃO DO APP
+----------------------------------------------------------------
+Package name (Nome do pacote): com.endorfinapp.app
+Nome de exibição (Nome do aplicativo): ENDORFINAPP
+VersionCode: 6
+VersionName: 1.1.0
+Arquivo de upload: packages/twa/endorfinapp-release.aab
+Categoria: Saúde e fitness (treino)
+Preço: Gratuito com compras integradas (assinaturas)
+
+DETALHES DO APP (PÁGINA DA LOJA)
+----------------------------------------------------------------
+Nome do aplicativo:
+ENDORFINAPP - Treino e Fitness
+
+Descrição curta (máximo 80 caracteres):
+Treinos, IA, evolução e comunidade fitness com avaliação física.
+
+Descrição completa (máximo 4000 caracteres):
+
+ENDORFINAPP — A Química do Crescimento
+
+O aplicativo que transforma seu treino em resultado, do primeiro dia ao alto nível.
+
+TREINOS
+- Construtor simples com mais de 900 exercícios em GIF
+- Prescrição por Inteligência Artificial: responda 5 perguntas e receba seu plano
+- Métodos avançados: Bi-Set, Tri-Set, Drop Set, Rest-Pause, Pirâmide e Circuito
+
+ACOMPANHAMENTO CIENTÍFICO
+- Evolução mensal: volume, cargas, frequência e duração
+- Correlações de desempenho entre treino e corpo
+- Gráficos de peso corporal e IMC
+- Relatórios com base em dados científicos (Sports Medicine, JAMA)
+
+AVALIAÇÃO FÍSICA COMPLETA
+- Triagem PAR-Q+ com classificação de risco cardíaco
+- Composição corporal: protocolos de Jackson-Pollock e Guedes
+- Teste de Cooper (VO2max), 1RM e zonas de frequência cardíaca
+- Laudo automático com referências bibliográficas
+
+COMUNIDADE
+- Feed social com conquistas e recordes
+- Clubes com ranking de pontos semanais (XP)
+- Mensagens motivacionais baseadas em pesquisas científicas
+
+EXTRAS
+- Modo offline para registrar séries sem internet
+- Notificações de lembrete de treino
+- Feito para o Brasil, disponível em português
+
+Baixe agora e comece seu próximo ciclo de evolução.
+A química do seu crescimento começa aqui.
+
+Notas da versão (release notes, primeira versão):
+
+Primeira versão do ENDORFINAPP! Crie treinos com mais de 900 exercícios
+em GIF, receba prescrição por inteligência artificial, acompanhe sua
+evolução mensal, faça avaliações físicas completas e participe da nossa
+comunidade com feed social, clubes e mensagens científicas.
+
+================================================================
+1. INFORME A EQUIPE SOBRE O CONTEÚDO DO APP
+================================================================
+"O conteúdo do app é voltado a um grupo restrito de pessoas?":
+NÃO
+
+Questionário de conteúdo:
+- Conteúdo do usuário: SIM é possível (feed social com posts próprios)
+  Marcar a opção de que usuários podem compartilhar conteúdo
+- Informações de saúde: SIM — PAR-Q+, peso, altura, medidas corporais,
+  composição corporal, VO2max (digitadas voluntariamente pelo usuário)
+- Violência: NÃO
+- Conteúdo sexual: NÃO
+- Compras: SIM — assinaturas mensais via Google Play Billing
+  (plano Aluno R$ 12 e plano Professor R$ 50, 15 dias grátis)
+- Drogas, álcool, armas, jogos de azar: NÃO
+
+================================================================
+2. POLÍTICA DE PRIVACIDADE
+================================================================
+Campo obrigatório no Play Console. Usar o endereço abaixo (sem formato
+de link, texto puro ao colar):
+
+www.endorfinapp.com.br/politica-privacidade
+
+A página é pública e já está no ar (política LGPD completa: bases
+legais, direitos do titular, retenção, compartilhamento, menores de 13
+e contato/DPO suportendorfinapp@gmail.com).
+
+Contato para política: suportendorfinapp@gmail.com
+
+================================================================
+3. DETALHES DO LOGIN
+================================================================
+"Os usuários podem criar contas no seu app?":
+SIM, USUÁRIOS CRIAM CONTAS
+
+Métodos de login (marcar todos):
+( X ) E-mail e senha
+( X ) Outros métodos de login: Conta do Google (OAuth)
+( X ) Verificação de e-mail no cadastro
+
+Perfis de usuário: ALUNO, PROFESSOR, ACADEMIA e ROOT (admin)
+O app exige login para usar. Fornecer credenciais de teste ao Google.
+
+================================================================
+4. ANÚNCIOS
+================================================================
+NÃO CONTÉM ANÚNCIOS
+
+================================================================
+5. CLASSIFICAÇÃO DE CONTEÚDO (questionário IARC)
+================================================================
+Categoria primária: Saúde e bem-estar / Fitness
+Marcar no questionário:
+- Conteúdo de saúde: informativo/de bem-estar, sem diagnóstico médico
+- Sem violência, sem conteúdo sexual, sem linguagem forte
+- Sem drogas, álcool, tabaco ou armas
+- Jogos de azar: não se aplica
+
+Resultado esperado: CLASSIFICAÇÃO "TODOS" (3+) ou "12 ANOS OU MAIS"
+(Aceitar o resultado que o questionário gerar — o feed social com
+conteúdo do usuário pode elevar para 12+; isso é normal.)
+
+================================================================
+6. PÚBLICO-ALVO
+================================================================
+- Idade: MAIORES DE 13 ANOS (13+)
+- "O app foi direcionado a crianças": NÃO
+- "O app foi direcionado a famílias com crianças": NÃO
+
+Funcionalidades do app (marcar as que existem):
+( X ) Contas, registro e login
+( X ) Perfil de usuário e foto (avatar)
+( X ) Feed social e amizades
+( X ) Compartilhamento de fotos (feed)
+( X ) Notificações push
+(   ) Anúncios (não há)
+
+================================================================
+7. SEGURANÇA DOS DADOS
+================================================================
+COMPARTILHAMENTO DE DADOS:
+- "Seus dados são compartilhados com terceiros?": NÃO
+  (o app não vende nem compartilha dados do usuário)
+
+DADOS COLETADOS (marcar todos que se aplicam):
+( X ) Nome — obrigatório (cadastro)
+( X ) Endereço de e-mail — obrigatório (login)
+( X ) Telefone — opcional (WhatsApp)
+( X ) Fotos — opcional (avatar e feed social)
+( X ) Dados de saúde e condicionamento — opcional (PAR-Q+, peso,
+      altura, medidas corporais, composição corporal, VO2max,
+      avaliações físicas)
+( X ) Atividade no app — coletada (treinos, cliques, uso)
+( X ) Identificadores do dispositivo — coletados (token de
+      notificação push)
+( X ) Transações financeiras — via Google Play (assinaturas)
+(   ) Localização precisa — NÃO coletada
+(   ) Histórico de navegação na web — NÃO coletado
+
+USO DOS DADOS (marcar):
+( X ) Funcionalidades do app
+( X ) Notificações por push
+( X ) Comunicação com o usuário (e-mails de verificação e suporte)
+( X ) Análise de dados (estatísticas agregadas pseudonimizadas)
+
+PRÁTICAS DE SEGURANÇA (marcar):
+( X ) Dados criptografados em trânsito (HTTPS/TLS)
+( X ) Dados criptografados em repouso (senhas com hash bcrypt)
+( X ) Usuário pode editar os dados (perfil, dados pessoais)
+( X ) Usuários podem solicitar a exclusão dos dados
+      (pelo e-mail de contato, conforme a política de privacidade)
+(   ) Dados anônimos/não identificáveis — não prometer isso
+
+DECLARAÇÃO DE POLÍTICAS DE FAMÍLIAS: não se aplica (13+)
+
+================================================================
+8. APPS GOVERNAMENTAIS
+================================================================
+NÃO — o app não é governamental e não atende a requisitos de governo.
+
+================================================================
+9. RECURSOS FINANCEIROS
+================================================================
+NÃO — o app não é de finanças, banco, empréstimo, criptomoedas ou
+pagamentos entre pessoas. As únicas transações são as assinaturas
+processadas pelo próprio Google Play Billing.
+
+================================================================
+10. SAÚDE
+================================================================
+O app é de saúde/bem-estar e TREINO — responder:
+- Fornece diagnóstico médico: NÃO
+- Fornece tratamento médico: NÃO
+- Acompanhamento pessoal de exercício e condicionamento: SIM
+- Os dados de saúde são digitados voluntariamente pelo usuário: SIM
+- Conteúdo informativo com aviso de que não substitui orientação
+  médica profissional: SIM (incluído no texto da loja)
+
+================================================================
+TESTE E PUBLICAÇÃO (CONTA PESSOAL NOVA)
+================================================================
+Regras obrigatórias (contas pessoais criadas após 13/11/2023):
+1) Rodar TESTE FECHADO com no mínimo 12 testadores optados
+   continuamente por 14 dias consecutivos
+2) Completar a configuração do app (checklist acima)
+3) Solicitar acesso à PRODUÇÃO no Dashboard e responder 3 seções:
+   - Sobre o teste fechado (recrutamento e feedback)
+   - Sobre o app (público-alvo, proposta de valor, instalações)
+   - Sobre prontidão para produção
+4) Fornecer credenciais de teste válidas ao revisor (login obrigatório)
+5) Aguardar revisão do Google (até 7 dias)
+
+Canais:
+- TESTE INTERNO: sem requisitos (recomendado para validar o
+  Play Billing com poucos e-mails)
+- TESTE FECHADO: exigido (12 testadores / 14 dias)
+- ABERTO: só depois da produção
+- PRODUÇÃO: bloqueado até cumprir os requisitos do teste fechado
+
+================================================================
+CREDENCIAIS DE TESTE PARA O GOOGLE (JÁ CRIADAS EM PRODUÇÃO)
+================================================================
+E-mail: revisor.endorfinapp@gmail.com
+Senha: Endorfinapp@2026
+Role: ALUNO
+Conta verificada (email_verified = true) e ativa no banco de produção.
+Login testado com sucesso (token JWT retornado).
+
+ATENÇÃO:
+- Criar o Gmail revisor.endorfinapp@gmail.com (o aplicativo envia o
+  código de verificação para esse endereço em novos cadastros).
+- Informar e-mail e senha no formulário "Credenciais de acesso" do
+  Play Console; o revisor do Google fará login no app com esses dados.
+- Não compartilhar essas credenciais publicamente.
+- Alterar a senha após o teste, se desejar.
+
+================================================================
+TEXTOS EXTRAS ÚTEIS
+================================================================
+Links do rodapé da loja (se solicitado):
+- Política de privacidade: www.endorfinapp.com.br/politica-privacidade
+- E-mail de suporte: suportendorfinapp@gmail.com
+- Site: www.endorfinapp.com.br
+
+================================================================
+FIM DO DOCUMENTO
+================================================================

@@ -12,6 +12,10 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [notVerified, setNotVerified] = useState(false)
+  const [verifyCode, setVerifyCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
+  const [resendSuccess, setResendSuccess] = useState(false)
   const [resending, setResending] = useState(false)
   const { login, loading, error } = useAuthStore()
   const navigate = useNavigate()
@@ -30,6 +34,8 @@ export default function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setNotVerified(false)
+    setVerifyError(null)
+    setResendSuccess(false)
     try {
       await login(email, senha)
       navigate('/', { replace: true })
@@ -40,16 +46,36 @@ export default function Login() {
     }
   }
 
+  async function handleVerifyAndLogin() {
+    if (verifyCode.length < 4) return
+    setVerifying(true)
+    setVerifyError(null)
+    try {
+      await api.verifyEmail(email, verifyCode)
+      await login(email, senha)
+      navigate('/', { replace: true })
+    } catch (err: any) {
+      setVerifyError(err?.message || 'Código inválido ou expirado.')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   async function handleResend() {
     setResending(true)
+    setResendSuccess(false)
+    setVerifyError(null)
     try {
       await api.resendCode(email)
+      setResendSuccess(true)
+    } catch (err: any) {
+      setVerifyError(err?.message || 'Erro ao reenviar código.')
     } finally {
       setResending(false)
     }
   }
 
-  const busy = loading
+  const busy = loading || verifying
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
@@ -67,21 +93,62 @@ export default function Login() {
           <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">
             {googleRedirectError === 'cancelado'
               ? 'Login com Google cancelado.'
+              : googleRedirectError === 'state_invalido'
+              ? 'A sessão de login com o Google expirou ou foi interrompida. Por favor, tente novamente.'
               : googleRedirectError}
           </p>
         )}
 
         {notVerified && (
-          <div className="rounded bg-warning/10 border border-warning/20 p-3 space-y-2">
-            <p className="text-xs text-warning">E-mail não verificado. Verifique sua caixa de entrada ou reenvie o código.</p>
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resending}
-              className="text-xs font-bold text-warning hover:text-warning/80 cursor-pointer"
-            >
-              {resending ? 'Reenviando...' : 'Reenviar código'}
-            </button>
+          <div className="rounded-xl bg-warning/10 border border-warning/30 p-4 space-y-3 text-left">
+            <div className="flex items-start gap-2">
+              <span className="text-lg">📩</span>
+              <div>
+                <p className="text-xs font-semibold text-warning">E-mail não verificado</p>
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  Digite o código de 4 dígitos enviado para <span className="font-semibold text-text">{email}</span>:
+                </p>
+              </div>
+            </div>
+
+            {verifyError && (
+              <p className="rounded bg-destructive/10 p-2 text-xs text-destructive text-center">{verifyError}</p>
+            )}
+            {resendSuccess && (
+              <p className="rounded bg-success/10 p-2 text-xs text-success text-center">Código reenviado com sucesso!</p>
+            )}
+
+            <div className="flex items-center gap-2">
+              <input
+                id="login-verify-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="0000"
+                value={verifyCode}
+                onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                className="w-24 text-center tracking-[0.25em] text-lg font-bold py-2 rounded-lg border border-surface-input bg-surface text-text focus:border-primary focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleVerifyAndLogin}
+                disabled={verifyCode.length < 4 || verifying}
+                className="flex-1 rounded-lg bg-primary py-2 px-3 text-xs font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
+              >
+                {verifying ? 'Verificando...' : 'Verificar e Entrar'}
+              </button>
+            </div>
+
+            <div className="text-center pt-1 border-t border-warning/15">
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="text-xs font-medium text-warning hover:underline cursor-pointer"
+              >
+                {resending ? 'Reenviando...' : 'Não recebeu o e-mail? Reenviar código'}
+              </button>
+            </div>
           </div>
         )}
 

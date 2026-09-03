@@ -39,7 +39,7 @@ export interface AuthState {
   login: (email: string, senha: string) => Promise<void>
   loginWithGoogle: (credential: string, accessToken?: string) => Promise<boolean>
   loginWithGoogleCode: (code: string) => Promise<boolean>
-  register: (nome: string, email: string, senha: string, role: string, telefone?: string, parqRespostas?: ParqRespostas) => Promise<void>
+  register: (nome: string, email: string, senha: string, role: string, telefone?: string, parqRespostas?: ParqRespostas) => Promise<{ requiresVerification: boolean }>
   logout: () => void
   fetchUser: () => Promise<void>
   updatePushSubscription: (subscription: PushSubscriptionJSON | null) => Promise<void>
@@ -124,9 +124,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       await api.register(nome, email, senha, role, telefone, parqRespostas)
-      // UX-015: conversão de cadastro (o auto-login em seguida emite login_succeeded)
+      // UX-015: conversão de cadastro
       track('register_completed', { role })
-      await get().login(email, senha)
+
+      // Tenta login automático (caso o e-mail já venha verificado ou haja bypass)
+      try {
+        await get().login(email, senha)
+        return { requiresVerification: false }
+      } catch (loginErr: any) {
+        if (loginErr?.message?.includes('não verificado') || loginErr?.message?.includes('verificado')) {
+          set({ loading: false, error: null })
+          return { requiresVerification: true }
+        }
+        throw loginErr
+      }
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
       throw err

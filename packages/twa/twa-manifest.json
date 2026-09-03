@@ -21,8 +21,8 @@
     "path": "./keystore/endorfinapp-release.keystore",
     "alias": "endorfinapp"
   },
-  "appVersionName": "1.1.0",
-  "appVersionCode": 6,
+  "appVersionName": "1.1.1",
+  "appVersionCode": 7,
   "shortcuts": [
     {
       "name": "Meus Treinos",
@@ -31,7 +31,7 @@
       "chosenIconUrl": "http://localhost:5173/icon-192.png"
     },
     {
-      "name": "Medidas & Avaliações",
+      "name": "Medidas & Avalia\u00e7\u00f5es",
       "shortName": "Medidas",
       "url": "https://endorfinapp.com/aluno/medidas",
       "chosenIconUrl": "http://localhost:5173/icon-192.png"
@@ -60,5 +60,5 @@
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "displayOverride": [],
-  "appVersion": "1.1.0"
+  "appVersion": "1.1.1"
 }

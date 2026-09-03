@@ -50,5 +50,6 @@ blob-report/
 .slim/deepwork/
 
 
-# ─── Skills
-/agent/*.md
+# ─── Skills & Scripts locais ───
+agent/
+.playconsole/
