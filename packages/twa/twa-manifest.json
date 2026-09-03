@@ -21,8 +21,8 @@
     "path": "./keystore/endorfinapp-release.keystore",
     "alias": "endorfinapp"
   },
-  "appVersionName": "1.1.2",
-  "appVersionCode": 8,
+  "appVersionName": "1.1.3",
+  "appVersionCode": 9,
   "shortcuts": [
     {
       "name": "Meus Treinos",
