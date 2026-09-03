@@ -41,6 +41,12 @@ export class ConflictError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = 'Requisição inválida') {
+    super(message, 400, 'BAD_REQUEST')
+  }
+}
+
 // ─── Domínio / Negócio ────────────────────────────────────────────────────────
 
 export class InvalidStateTransitionError extends AppError {

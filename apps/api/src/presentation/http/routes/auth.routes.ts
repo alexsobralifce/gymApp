@@ -112,6 +112,37 @@ export async function authRoutes(app: FastifyInstance) {
   })
 
   /**
+   * POST /auth/forgot-password
+   * Envia código de 4 dígitos para recuperação de senha
+   */
+  app.post('/forgot-password', {
+    config: { rateLimit: { max: 3, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    const body = z.object({ email: z.string().email() }).parse(request.body)
+    await AuthService.forgotPassword(body.email)
+    return reply.status(200).send({ message: 'Se o e-mail estiver cadastrado, o código de recuperação foi enviado.' })
+  })
+
+  /**
+   * POST /auth/reset-password
+   * Valida código de 4 dígitos e redefine a senha
+   */
+  app.post('/reset-password', {
+    config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    const body = z.object({
+      email: z.string().email(),
+      code: z.string().length(4),
+      novaSenha: z.string().min(8).regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        'Senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número',
+      ),
+    }).parse(request.body)
+    await AuthService.resetPassword(body.email, body.code, body.novaSenha)
+    return reply.status(200).send({ message: 'Senha redefinida com sucesso!' })
+  })
+
+  /**
    * POST /auth/login
    */
   app.post('/login', {

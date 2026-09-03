@@ -24,6 +24,8 @@ model Usuario {
   email_verified           Boolean           @default(false)
   email_verify_code        String?
   email_verify_code_expira DateTime?
+  reset_password_code        String?
+  reset_password_code_expira DateTime?
   google_id                String?           @unique
   academia                 Academia?
   aluno                    Aluno?

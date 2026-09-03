@@ -11,7 +11,7 @@ function getSenderAddress(): string {
   return `ENDORFINAPP <${from}>`
 }
 
-function getHtmlTemplate(code: string): string {
+function getVerificationHtmlTemplate(code: string): string {
   return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px;background:#0A1628;border-radius:12px">
       <h1 style="color:#B8F000;margin:0 0 8px;font-size:24px">ENDORFIN<span style="color:#F7F9FC">APP</span></h1>
@@ -28,7 +28,30 @@ function getHtmlTemplate(code: string): string {
   `
 }
 
-async function sendViaResend(to: string, code: string): Promise<boolean> {
+function getPasswordResetHtmlTemplate(code: string): string {
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px;background:#0A1628;border-radius:12px">
+      <h1 style="color:#B8F000;margin:0 0 8px;font-size:24px">ENDORFIN<span style="color:#F7F9FC">APP</span></h1>
+      <p style="color:#B8C5D9;font-size:14px;margin:0 0 8px">A Química do Crescimento</p>
+      <p style="color:#9BA8C0;font-size:14px;margin:0 0 24px">Você solicitou a recuperação da sua senha.</p>
+      <div style="background:#122040;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+        <p style="color:#9BA8C0;font-size:12px;margin:0 0 8px">SEU CÓDIGO DE RECUPERAÇÃO</p>
+        <p style="color:#F7F9FC;font-size:40px;font-weight:900;letter-spacing:20px;margin:0;font-family:monospace">${code}</p>
+      </div>
+      <p style="color:#9BA8C0;font-size:12px;margin:0">
+        Este código expira em 15 minutos. Se você não solicitou a alteração de senha, ignore este e-mail.
+      </p>
+    </div>
+  `
+}
+
+interface SendMailParams {
+  to: string
+  subject: string
+  html: string
+}
+
+async function sendViaResend(params: SendMailParams): Promise<boolean> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 8000)
 
@@ -41,15 +64,15 @@ async function sendViaResend(to: string, code: string): Promise<boolean> {
       },
       body: JSON.stringify({
         from: getSenderAddress(),
-        to: [to],
-        subject: 'ENDORFINAPP — Código de Verificação',
-        html: getHtmlTemplate(code),
+        to: [params.to],
+        subject: params.subject,
+        html: params.html,
       }),
       signal: controller.signal,
     })
 
     if (response.ok) {
-      console.log(`[mailer:resend] Email enviado com sucesso para ${to}`)
+      console.log(`[mailer:resend] Email enviado com sucesso para ${params.to}`)
       return true
     }
 
@@ -68,7 +91,7 @@ async function sendViaResend(to: string, code: string): Promise<boolean> {
   }
 }
 
-async function sendViaSendgrid(to: string, code: string): Promise<boolean> {
+async function sendViaSendgrid(params: SendMailParams): Promise<boolean> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 8000)
 
@@ -80,19 +103,19 @@ async function sendViaSendgrid(to: string, code: string): Promise<boolean> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
+        personalizations: [{ to: [{ email: params.to }] }],
         from: { email: env.FROM_EMAIL || 'suportendorfinapp@gmail.com' },
-        subject: 'ENDORFINAPP — Código de Verificação',
+        subject: params.subject,
         content: [{
           type: 'text/html',
-          value: getHtmlTemplate(code),
+          value: params.html,
         }],
       }),
       signal: controller.signal,
     })
 
     if (response.ok) {
-      console.log(`[mailer:sendgrid] Email enviado com sucesso para ${to}`)
+      console.log(`[mailer:sendgrid] Email enviado com sucesso para ${params.to}`)
       return true
     }
 
@@ -111,16 +134,32 @@ async function sendViaSendgrid(to: string, code: string): Promise<boolean> {
   }
 }
 
-export async function sendVerificationEmail(to: string, code: string): Promise<boolean> {
+export async function sendEmail(params: SendMailParams): Promise<boolean> {
   if (env.RESEND_API_KEY) {
-    return sendViaResend(to, code)
+    return sendViaResend(params)
   }
 
   if (env.SENDGRID_API_KEY) {
-    return sendViaSendgrid(to, code)
+    return sendViaSendgrid(params)
   }
 
-  console.log(`[mailer] Nenhuma chave de e-mail configurada (RESEND_API_KEY ou SENDGRID_API_KEY). Código para ${to}: ${code}`)
+  console.log(`[mailer] Nenhuma chave de e-mail configurada (RESEND_API_KEY ou SENDGRID_API_KEY). Email para ${params.to}: ${params.subject}`)
   return false
+}
+
+export async function sendVerificationEmail(to: string, code: string): Promise<boolean> {
+  return sendEmail({
+    to,
+    subject: 'ENDORFINAPP — Código de Verificação',
+    html: getVerificationHtmlTemplate(code),
+  })
+}
+
+export async function sendPasswordResetEmail(to: string, code: string): Promise<boolean> {
+  return sendEmail({
+    to,
+    subject: 'ENDORFINAPP — Recuperação de Senha',
+    html: getPasswordResetHtmlTemplate(code),
+  })
 }
 

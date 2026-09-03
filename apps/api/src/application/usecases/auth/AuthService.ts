@@ -2,9 +2,9 @@ import bcrypt from 'bcryptjs'
 import { OAuth2Client } from 'google-auth-library'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { ConflictError, NotFoundError, UnauthorizedError, ForbiddenError } from '../../../domain/errors/AppError.js'
+import { ConflictError, NotFoundError, UnauthorizedError, ForbiddenError, BadRequestError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
-import { sendVerificationEmail } from '../../../infrastructure/email/mailer.js'
+import { sendVerificationEmail, sendPasswordResetEmail } from '../../../infrastructure/email/mailer.js'
 import crypto from 'crypto'
 
 const googleClient = env.GOOGLE_CLIENT_ID
@@ -260,6 +260,61 @@ export class AuthService {
     })
 
     await sendVerificationEmail(email, code)
+  }
+
+  /**
+   * Solicita código de recuperação de senha (4 dígitos via email)
+   */
+  static async forgotPassword(email: string): Promise<void> {
+    const usuario = await prisma.usuario.findUnique({
+      where: { email },
+      select: { id: true, ativo: true },
+    })
+    // Responde com sucesso genérico para não vazar a existência do email
+    if (!usuario || !usuario.ativo) return
+
+    const code = crypto.randomInt(1000, 9999).toString()
+    const codeExpira = new Date(Date.now() + 15 * 60 * 1000)
+
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { reset_password_code: code, reset_password_code_expira: codeExpira },
+    })
+
+    await sendPasswordResetEmail(email, code)
+  }
+
+  /**
+   * Redefine a senha com código de recuperação de 4 dígitos
+   */
+  static async resetPassword(email: string, code: string, novaSenha: string): Promise<void> {
+    const usuario = await prisma.usuario.findUnique({
+      where: { email },
+      select: { id: true, reset_password_code: true, reset_password_code_expira: true },
+    })
+    if (!usuario || !usuario.reset_password_code) {
+      throw new BadRequestError('Código de recuperação inválido ou expirado.')
+    }
+
+    if (usuario.reset_password_code !== code) {
+      throw new BadRequestError('Código de recuperação incorreto.')
+    }
+
+    if (!usuario.reset_password_code_expira || usuario.reset_password_code_expira < new Date()) {
+      throw new BadRequestError('Código de recuperação expirado. Solicite um novo.')
+    }
+
+    const novaSenhaHash = await bcrypt.hash(novaSenha, 12)
+
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: {
+        senha_hash: novaSenhaHash,
+        reset_password_code: null,
+        reset_password_code_expira: null,
+        email_verified: true,
+      },
+    })
   }
 
   /**

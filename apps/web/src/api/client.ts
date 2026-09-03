@@ -213,6 +213,12 @@ export const api = {
   resendCode: (email: string) =>
     api.post('/auth/resend-code', { email }),
 
+  forgotPassword: (email: string) =>
+    api.post<{ message: string }>('/auth/forgot-password', { email }),
+
+  resetPasswordWithCode: (email: string, code: string, novaSenha: string) =>
+    api.post<{ message: string }>('/auth/reset-password', { email, code, novaSenha }),
+
   getMe: () => api.get<User>('/auth/me'),
 
   updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null; nome?: string; telefone?: string | null; fotoUrl?: string | null }) =>
