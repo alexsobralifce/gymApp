@@ -17,7 +17,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
 echo "🔨 Compilando APK e AAB com Gradle..."
-./gradlew assembleRelease bundleRelease
+./gradlew clean assembleRelease bundleRelease
 
 echo "📦 Copiando artefatos gerados..."
 cp app/build/outputs/apk/release/app-release.apk ./endorfinapp-release.apk
