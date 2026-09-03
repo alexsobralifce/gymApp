@@ -31,6 +31,7 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional().default(''),
   FROM_EMAIL: z.string().optional().default('suportendorfinapp@gmail.com'),
   SENDGRID_API_KEY: z.string().optional().default(''),
+  RESEND_API_KEY: z.string().optional().default(''),
 
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
 
