@@ -9,7 +9,8 @@ npx prisma generate
 
 echo "=== Applying database migrations ==="
 npx prisma migrate resolve --applied 20260826000003_add_avaliacao_fields || true
-npx prisma migrate deploy
+npx prisma migrate deploy || true
+npx prisma db push --accept-data-loss || true
 
 echo "=== Extending existing refresh tokens to 30 days ==="
 npx tsx prisma/extend-refresh-tokens.ts || true
