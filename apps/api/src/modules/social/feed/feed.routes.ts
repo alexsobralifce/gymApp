@@ -13,9 +13,11 @@ function absolutizeMedia(url: string | null | undefined): string | null {
 }
 
 async function resolveAluno(usuarioId: string) {
-  const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
-  if (!aluno) throw new NotFoundError('Aluno')
-  return aluno
+  return prisma.aluno.upsert({
+    where: { usuario_id: usuarioId },
+    create: { usuario_id: usuarioId },
+    update: {},
+  })
 }
 
 export async function feedRoutes(app: FastifyInstance) {

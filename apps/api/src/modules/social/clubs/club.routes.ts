@@ -6,9 +6,11 @@ import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { ClubService } from './club.service.js'
 
 async function resolveAluno(usuarioId: string) {
-  const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
-  if (!aluno) throw new NotFoundError('Aluno')
-  return aluno
+  return prisma.aluno.upsert({
+    where: { usuario_id: usuarioId },
+    create: { usuario_id: usuarioId },
+    update: {},
+  })
 }
 
 export async function clubRoutes(app: FastifyInstance) {
@@ -54,7 +56,7 @@ export async function clubRoutes(app: FastifyInstance) {
   /** POST /social/clubes/:id/entrar — entrar em um clube */
   app.post('/social/clubes/:id/entrar', { preHandler }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
-    const { codigo } = z.object({ codigo: z.string().optional() }).parse(request.body)
+    const { codigo } = z.object({ codigo: z.string().optional() }).parse(request.body ?? {})
     const aluno = await resolveAluno(request.currentUser.sub)
     const result = await ClubService.entrar(aluno.id, id, codigo)
     return reply.status(200).send(result)

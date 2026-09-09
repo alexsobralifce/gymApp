@@ -5,9 +5,11 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
 
 async function resolveAluno(usuarioId: string) {
-  const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
-  if (!aluno) throw new NotFoundError('Aluno')
-  return aluno
+  return prisma.aluno.upsert({
+    where: { usuario_id: usuarioId },
+    create: { usuario_id: usuarioId },
+    update: {},
+  })
 }
 
 export async function friendshipRoutes(app: FastifyInstance) {

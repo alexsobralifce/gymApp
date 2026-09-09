@@ -9,9 +9,11 @@ import { env } from '../../../shared/env.js'
 import { ensureDir, getAvatarsDir, getFeedDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
 
 async function resolveAluno(usuarioId: string) {
-  const aluno = await prisma.aluno.findUnique({ where: { usuario_id: usuarioId } })
-  if (!aluno) throw new NotFoundError('Aluno')
-  return aluno
+  return prisma.aluno.upsert({
+    where: { usuario_id: usuarioId },
+    create: { usuario_id: usuarioId },
+    update: {},
+  })
 }
 
 const EXTENSOES: Record<string, string> = {

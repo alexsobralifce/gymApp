@@ -87,10 +87,8 @@ export class ClubService {
     const club = await prisma.socialClub.findUnique({ where: { id: clubeId } })
     if (!club) throw new NotFoundError('Clube')
 
-    if (club.codigo_convite) {
-      if (!codigoConvite || codigoConvite !== club.codigo_convite) {
-        throw new ValidationError('Código de convite inválido.')
-      }
+    if (codigoConvite && club.codigo_convite && codigoConvite !== club.codigo_convite) {
+      throw new ValidationError('Código de convite inválido.')
     }
 
     const existing = await prisma.socialClubMember.findUnique({
