@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useTrainingStore } from '../../stores/training'
+import { useAuthStore } from '../../stores/auth'
 import { TrophyIcon, TimerIcon } from '../../components/icons/Icon'
 import { api } from '../../api/client'
 import { useEffect, useState, useMemo } from 'react'
 import PostarTreinoCard from '../../components/social/PostarTreinoCard'
 import SistemaAvaliacaoModal from '../../components/avaliacao/SistemaAvaliacaoModal'
+import { resolveMediaUrl } from '../../lib/media'
 
 const CONQUISTAS = [
   { msg: 'Cada repetição conta! Continue assim e os resultados virão.', emoji: '🏆' },
@@ -16,6 +18,7 @@ const CONQUISTAS = [
 
 export default function AlunoTreinoConclusao() {
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const { treinoAtual, timerFinalizado, primeiroTreino, execucoes } = useTrainingStore()
   const [postId, setPostId] = useState<string | null>(null)
   const [avaliacaoOpen, setAvaliacaoOpen] = useState(false)
@@ -46,13 +49,34 @@ export default function AlunoTreinoConclusao() {
     }, 0)
   }, [execucoes])
 
-  const storyData = useMemo(() => ({
-    treinoNome: treinoAtual?.nome || 'Treino do Dia',
-    duracaoFormatada: duracao,
-    volumeKg: volumeKg > 0 ? Math.round(volumeKg) : undefined,
-    seriesConcluidas: execucoes.length > 0 ? execucoes.length : undefined,
-    data: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase(),
-  }), [treinoAtual, duracao, volumeKg, execucoes.length])
+  const storyData = useMemo(() => {
+    const agora = new Date()
+    const horaFim = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    let horaInicio: string
+    if (treinoAtual?.iniciado_em) {
+      horaInicio = new Date(treinoAtual.iniciado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    } else {
+      const inicio = new Date(agora.getTime() - timerFinalizado * 1000)
+      horaInicio = inicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    }
+
+    // Estimativa de calorias: ~7 kcal por minuto de treino de força
+    const minutos = Math.max(1, Math.round(timerFinalizado / 60))
+    const caloriasEstimadas = Math.round(minutos * 7.5)
+
+    return {
+      treinoNome: treinoAtual?.nome || 'Treino do Dia',
+      duracaoFormatada: duracao,
+      volumeKg: volumeKg > 0 ? Math.round(volumeKg) : undefined,
+      seriesConcluidas: execucoes.length > 0 ? execucoes.length : undefined,
+      calorias: caloriasEstimadas,
+      data: agora.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase(),
+      horaInicio,
+      horaFim,
+      fotoUsuario: resolveMediaUrl(user?.fotoUrl),
+      alunoNome: user?.nome,
+    }
+  }, [treinoAtual, duracao, volumeKg, execucoes.length, timerFinalizado, user])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-surface px-4 py-8 sm:py-12 safe-top safe-bottom">

@@ -662,11 +662,27 @@ export const api = {
   adicionarFotoPost: (postId: string, midiaUrl: string) =>
     api.patch(`/social/mural/${postId}/foto`, { midiaUrl }),
 
+  editarPost: (postId: string, data: { midiaUrl?: string | null }) =>
+    api.patch<{ id: string; midia_url: string | null }>(`/social/mural/${postId}`, data),
+
+  excluirPost: (postId: string) =>
+    api.delete(`/social/mural/${postId}`),
+
   getMeuUltimoPostTreino: () =>
     api.get<{ postId: string | null }>('/social/mural/meu-ultimo-post'),
 
   getAtividadeMural: () =>
     api.get<{ totalComentarios: number }>('/social/mural/atividade'),
+
+  // ─── Social — Instagram ────────────────────────────
+  obterStatusInstagram: () =>
+    api.get<{ conectado: boolean; username?: string; expiraEm?: string }>('/auth/instagram/status'),
+
+  desconectarInstagram: () =>
+    api.delete<{ message: string }>('/auth/instagram'),
+
+  publicarNoInstagram: (data: { imagemUrl: string; caption?: string }) =>
+    api.post<{ mediaId: string; permalink: string }>('/social/instagram/publicar', data),
 
   // ─── Social — Privacidade ──────────────────────────
   getPrivacidade: () => api.get<PrivacidadeSettings>('/alunos/privacidade'),

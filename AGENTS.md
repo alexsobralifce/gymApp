@@ -87,7 +87,12 @@ apps/api/src/
 
 - **RF10 - Análise Científica & Mensagens Motivacionais**: Sistema de rotação circular de mensagens científicas baseadas em pesquisas (Sports Medicine, JAMA, The Lancet). Workers enviam push notifications com título, resumo e link para estudo.
 
-- **RF11 - Feed Social & Notificações**: Feed interativo com paginação por cursor composto (`data+id`). Compartilhamento automático de início/fim de treino, recordes e conquistas. Curtidas e comentários (280 chars). Badge de atividade recente via polling de 30s. Fanout de posts para amigos via worker BullMQ.
+- **RF11 - Feed Social, Edição de Posts & Notificações**: Feed interativo com paginação por cursor composto (`data+id`). Compartilhamento automático de início/fim de treino, recordes e conquistas. Curtidas e comentários (280 chars). Edição completa de posts pelo autor (`PATCH /social/mural/:postId` para adicionar/trocar/remover foto) e exclusão com cascateamento de likes e comentários (`DELETE /social/mural/:postId`). Badge de atividade recente via polling de 30s. Fanout de posts para amigos via worker BullMQ.
+
+- **RF29 - Compartilhamento Multi-Redes & Integração Instagram/Meta Graph API**:
+  - **Story Card 9:16 (1080x1920)**: Gerador Canvas em alta resolução com foto do usuário ou fundo neon futurista, logotipo oficial ENDORFINAPP (ECG + Raio), avatar circular do aluno com borda neon, badge de data e horário de execução (`09:15 → 10:02`), grid com tempo de treino, carga total levantada (volume kg), séries concluídas, estimativa de calorias e FC média.
+  - **Modal de Compartilhamento Multi-Redes (`SharePostModal`)**: Opções de envio para Instagram Stories (Web Share API com fallback para download), Feed do Instagram (publicação direta via API), Facebook (Share Dialog), WhatsApp e Download PNG.
+  - **OAuth Instagram & Meta Content Publishing API**: Conexão de conta Instagram via OAuth (`GET /auth/instagram` + callback), troca e persistência de token de longa duração (60 dias) com auto-renovação, consulta de status (`GET /auth/instagram/status`) e publicação direta no feed (`POST /social/instagram/publicar`). Banner de incentivo `ConectarInstagramBanner`.
 
 - **RF12 - Gestão de Colegas de Academia**: Painel lateral (`AcademySidebar`) listando alunos da mesma academia não seguidos, com botão "Seguir". Visível em telas XL+ e no drawer mobile.
 

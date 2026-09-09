@@ -94,7 +94,50 @@ export async function feedRoutes(app: FastifyInstance) {
     return reply.status(200).send({ items, nextCursor })
   })
 
-  /** PATCH /social/mural/:postId/foto — aluno adiciona foto ao próprio post */
+  /** PATCH /social/mural/:postId — editar postagem (ex: adicionar, trocar ou remover foto) */
+  app.patch('/social/mural/:postId', { preHandler }, async (request, reply) => {
+    const { postId } = z.object({ postId: z.string() }).parse(request.params)
+    const { midiaUrl } = z.object({ midiaUrl: z.string().nullable().optional() }).parse(request.body)
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const post = await prisma.socialPost.findUnique({ where: { id: postId } })
+    if (!post) throw new NotFoundError('Post')
+    const isRoot = request.currentUser.role === Role.ROOT
+    if (!isRoot && post.aluno_id !== aluno.id) throw new ForbiddenError()
+
+    const updated = await prisma.socialPost.update({
+      where: { id: postId },
+      data: {
+        ...(midiaUrl !== undefined ? { midia_url: midiaUrl } : {}),
+      },
+    })
+    return reply.status(200).send({
+      id: updated.id,
+      midia_url: absolutizeMedia(updated.midia_url),
+    })
+  })
+
+  /** DELETE /social/mural/:postId — excluir postagem e suas dependências */
+  app.delete('/social/mural/:postId', { preHandler }, async (request, reply) => {
+    const { postId } = z.object({ postId: z.string() }).parse(request.params)
+    const aluno = await resolveAluno(request.currentUser.sub)
+
+    const post = await prisma.socialPost.findUnique({ where: { id: postId } })
+    if (!post) throw new NotFoundError('Post')
+    const isRoot = request.currentUser.role === Role.ROOT
+    if (!isRoot && post.aluno_id !== aluno.id) throw new ForbiddenError()
+
+    await prisma.$transaction([
+      prisma.socialLike.deleteMany({ where: { post_id: postId } }),
+      prisma.socialComment.deleteMany({ where: { post_id: postId } }),
+      prisma.socialPostClub.deleteMany({ where: { post_id: postId } }),
+      prisma.socialPost.delete({ where: { id: postId } }),
+    ])
+
+    return reply.status(204).send()
+  })
+
+  /** PATCH /social/mural/:postId/foto — aluno adiciona foto ao próprio post (compatibilidade retroativa) */
   app.patch('/social/mural/:postId/foto', { preHandler }, async (request, reply) => {
     const { postId } = z.object({ postId: z.string() }).parse(request.params)
     const { midiaUrl } = z.object({ midiaUrl: z.string() }).parse(request.body)

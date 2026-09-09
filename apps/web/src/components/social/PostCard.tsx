@@ -1,9 +1,20 @@
 import { useState } from 'react'
-import { HeartIcon, MessageCircleIcon } from '../../components/icons/Icon'
+import {
+  HeartIcon,
+  MessageCircleIcon,
+  Share2Icon,
+  MoreVerticalIcon,
+  Edit2Icon,
+  TrashIcon,
+} from '../../components/icons/Icon'
 import type { SocialPost, SocialComment } from '../../types/api'
 import { api } from '../../api/client'
 import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
+import { useAuthStore } from '../../stores/auth'
+import EditarPostModal from './EditarPostModal'
+import SharePostModal from './SharePostModal'
+import ConfirmModal from '../ui/ConfirmModal'
 
 function formatHora(dataStr: string): string {
   try {
@@ -52,6 +63,8 @@ interface PostCardProps {
   onCurtir: (postId: string) => void
   onDescurtir: (postId: string) => void
   onComentar: (postId: string, texto: string) => Promise<void>
+  onPostUpdated?: (postId: string, data: Partial<SocialPost>) => void
+  onPostDeleted?: (postId: string) => void
 }
 
 const tipoBadge: Record<string, { label: string; color: string }> = {
@@ -62,7 +75,15 @@ const tipoBadge: Record<string, { label: string; color: string }> = {
   DESAFIO_COMPLETO: { label: 'Desafio completo', color: 'text-primary-light' },
 }
 
-export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: PostCardProps) {
+export default function PostCard({
+  post,
+  onCurtir,
+  onDescurtir,
+  onComentar,
+  onPostUpdated,
+  onPostDeleted,
+}: PostCardProps) {
+  const { user } = useAuthStore()
   const [showComments, setShowComments] = useState(false)
   const [comentarios, setComentarios] = useState<SocialComment[]>([])
   const [loadingComments, setLoadingComments] = useState(false)
@@ -72,9 +93,15 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
   const [curtidasCount, setCurtidasCount] = useState(post.curtidas_count)
   const [curtidoEm, setCurtidoEm] = useState<string | null>(post.curtido_em ? formatHora(post.curtido_em) : null)
 
+  // Estados dos modais de ação
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
+
+  const isAuthor = Boolean(user && (user.nome === post.autor_nome || user.role === 'ROOT'))
   const badge = tipoBadge[post.tipo] || { label: post.tipo, color: 'text-text-muted' }
-
-
 
   async function handleCurtir() {
     try {
@@ -118,8 +145,21 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
     setEnviando(false)
   }
 
+  async function handleExcluirPost() {
+    setExcluindo(true)
+    try {
+      await api.excluirPost(post.id)
+      onPostDeleted?.(post.id)
+      setDeleteConfirmOpen(false)
+    } catch (err: any) {
+      alert(err?.message || 'Erro ao excluir postagem.')
+    } finally {
+      setExcluindo(false)
+    }
+  }
+
   return (
-    <div className="rounded-2xl bg-surface-card border border-surface-input p-4 animate-fade-in space-y-3">
+    <div className="relative rounded-2xl bg-surface-card border border-surface-input p-4 animate-fade-in space-y-3">
       {/* Header */}
       <div className="flex items-center gap-3">
         {resolveMediaUrl(post.autor_foto_url) ? (
@@ -137,9 +177,58 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
           <p className="text-sm font-semibold text-text">{post.autor_nome}</p>
           <p className="text-xs text-text-muted">{tempoRelativo(post.criado_em)}</p>
         </div>
+
         <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${badge.color} bg-white/5 border border-white/10`}>
           {badge.label}
         </span>
+
+        {/* Menu de Ações (Apenas Autor ou Root) */}
+        {isAuthor && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rounded-full p-1 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+              title="Opções da postagem"
+            >
+              <MoreVerticalIcon className="h-4 w-4" />
+            </button>
+
+            {menuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-20"
+                  onClick={() => setMenuOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-1 z-30 w-44 rounded-xl bg-surface-card border border-surface-input p-1.5 shadow-xl animate-modal-pop space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      setEditModalOpen(true)
+                    }}
+                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
+                  >
+                    <Edit2Icon className="h-3.5 w-3.5 text-primary" />
+                    <span>Editar Foto</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      setDeleteConfirmOpen(true)
+                    }}
+                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left"
+                  >
+                    <TrashIcon className="h-3.5 w-3.5" />
+                    <span>Excluir Post</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -169,7 +258,7 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
         </div>
       )}
 
-      {/* Actions */}
+      {/* Actions Bar */}
       <div className="flex items-center justify-between pt-2 border-t border-surface-input">
         <div className="flex items-center gap-4">
           <button
@@ -187,6 +276,15 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
           >
             <MessageCircleIcon className="h-4 w-4" />
             <span>{post.comentarios_count > 0 ? `${post.comentarios_count} comentários` : 'Comentar'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShareModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
+            title="Compartilhar treino no Instagram, Facebook, etc."
+          >
+            <Share2Icon className="h-4 w-4 text-primary" />
+            <span>Compartilhar</span>
           </button>
         </div>
 
@@ -244,6 +342,36 @@ export default function PostCard({ post, onCurtir, onDescurtir, onComentar }: Po
           </div>
         </div>
       )}
+
+      {/* Modal de Edição de Foto */}
+      <EditarPostModal
+        post={post}
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSaved={(atualizacao) => {
+          onPostUpdated?.(post.id, atualizacao)
+        }}
+      />
+
+      {/* Modal de Compartilhamento Multi-Redes */}
+      <SharePostModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        post={post}
+      />
+
+      {/* Confirmação de Exclusão */}
+      <ConfirmModal
+        open={deleteConfirmOpen}
+        title="Excluir Postagem"
+        message="Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        loading={excluindo}
+        onConfirm={handleExcluirPost}
+        onCancel={() => setDeleteConfirmOpen(false)}
+      />
     </div>
   )
 }
+

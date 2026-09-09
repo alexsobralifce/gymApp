@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { api } from '../../api/client'
 import { MessageCircleIcon } from '../../components/icons/Icon'
 import PostCard from '../../components/social/PostCard'
+import ConectarInstagramBanner from '../../components/social/ConectarInstagramBanner'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import type { SocialPost } from '../../types/api'
 
@@ -54,12 +55,25 @@ export default function Mural() {
     await api.comentarPost(postId, texto)
   }
 
+  function handlePostUpdated(postId: string, data: Partial<SocialPost>) {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, ...data } : p))
+    )
+  }
+
+  function handlePostDeleted(postId: string) {
+    setPosts((prev) => prev.filter((p) => p.id !== postId))
+  }
+
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-4">
       <div className="flex items-center gap-3">
         <MessageCircleIcon className="h-6 w-6 text-primary" />
         <h1 className="text-lg font-bold text-text">Feed Social</h1>
       </div>
+
+      {/* Banner de Conexão com Instagram */}
+      <ConectarInstagramBanner />
 
       {loading ? (
         <div className="space-y-4">
@@ -84,6 +98,8 @@ export default function Mural() {
               onCurtir={handleCurtir}
               onDescurtir={handleDescurtir}
               onComentar={handleComentar}
+              onPostUpdated={handlePostUpdated}
+              onPostDeleted={handlePostDeleted}
             />
           ))}
 
@@ -98,10 +114,11 @@ export default function Mural() {
           )}
 
           {!nextCursor && posts.length > 0 && (
-            <p className="text-center text-xs text-text-muted py-4">Voce viu tudo!</p>
+            <p className="text-center text-xs text-text-muted py-4">Você viu tudo!</p>
           )}
         </>
       )}
     </div>
   )
 }
+

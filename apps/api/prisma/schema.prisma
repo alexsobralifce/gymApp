@@ -42,6 +42,10 @@ model Usuario {
   premium_manual_nota      String?
   convitesCriados          ConviteAluno[]             @relation("ConvitesCriados")
   conviteUtilizado         ConviteAluno?              @relation("ConviteUtilizado")
+  instagram_user_id        String?                    @unique
+  instagram_token          String?
+  instagram_token_expira   DateTime?
+  facebook_page_id         String?
 
   @@map("usuarios")
 }

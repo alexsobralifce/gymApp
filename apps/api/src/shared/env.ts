@@ -39,6 +39,10 @@ const envSchema = z.object({
   GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL: z.string().optional().default(''),
   GOOGLE_PLAY_SERVICE_ACCOUNT_KEY: z.string().optional().default(''),
   GOOGLE_PLAY_PUBSUB_AUDIENCE: z.string().optional().default(''),
+
+  META_APP_ID: z.string().optional().default(''),
+  META_APP_SECRET: z.string().optional().default(''),
+  INSTAGRAM_REDIRECT_URI: z.string().optional().default(''),
 })
 
 const parsed = envSchema.safeParse(process.env)

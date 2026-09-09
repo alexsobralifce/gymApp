@@ -7,6 +7,53 @@ export interface StoryData {
   bpmMedio?: number
   bpmMax?: number
   data?: string
+  horaInicio?: string
+  horaFim?: string
+  fotoUsuario?: string | null
+  alunoNome?: string
+}
+
+/**
+ * Carrega uma imagem de forma assíncrona com suporte a CORS
+ */
+function carregarImagem(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = src
+  })
+}
+
+/**
+ * Desenha avatar circular com borda neon e brilho
+ */
+function drawCircularAvatar(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  radius: number
+) {
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, Math.PI * 2)
+  ctx.closePath()
+  ctx.clip()
+  ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2)
+  ctx.restore()
+
+  // Borda neon esmeralda
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, Math.PI * 2)
+  ctx.strokeStyle = '#10B981'
+  ctx.lineWidth = 4
+  ctx.shadowColor = 'rgba(16, 185, 129, 0.7)'
+  ctx.shadowBlur = 12
+  ctx.stroke()
+  ctx.restore()
 }
 
 /**
@@ -98,13 +145,8 @@ export async function gerarStoryImage(
   // 1. Fundo (Foto do usuário ou Gradiente Dark Neon)
   if (fotoSrc) {
     try {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = () => reject(new Error('Erro ao carregar imagem'))
-        img.src = fotoSrc
-      })
+      const img = await carregarImagem(fotoSrc)
+      if (!img) throw new Error('Falha ao carregar foto de fundo')
 
       // Desenhar foto ajustada com cover
       const imgAspect = img.width / img.height
@@ -155,12 +197,36 @@ export async function gerarStoryImage(
   ctx.fillRect(0, height - 700, width, 700)
   ctx.restore()
 
-  // 3. Header com Logotipo
-  drawBrandLogo(ctx, width / 2, 170)
+  // 3. Header com Logotipo e Avatar do Usuário (se disponível)
+  let avatarImg: HTMLImageElement | null = null
+  if (data.fotoUsuario) {
+    try {
+      avatarImg = await carregarImagem(data.fotoUsuario)
+    } catch {
+      avatarImg = null
+    }
+  }
 
-  // 4. Badge "TREINO PAGO / CONCLUÍDO"
+  if (avatarImg) {
+    drawCircularAvatar(ctx, avatarImg, 130, 170, 42)
+    drawBrandLogo(ctx, 580, 170)
+  } else {
+    drawBrandLogo(ctx, width / 2, 170)
+  }
+
+  // 4. Badge "TREINO CONCLUÍDO • DATA • HORÁRIO"
   ctx.save()
-  const badgeW = 340
+  const dataTxt = data.data ?? new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase()
+  const horarioTxt = data.horaInicio && data.horaFim
+    ? ` • ${data.horaInicio} → ${data.horaFim}`
+    : data.horaFim
+    ? ` • ${data.horaFim}`
+    : ''
+  const badgeTexto = `⚡ TREINO CONCLUÍDO • ${dataTxt}${horarioTxt}`
+
+  ctx.font = '800 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  const textWidth = ctx.measureText(badgeTexto).width
+  const badgeW = Math.max(360, textWidth + 60)
   const badgeH = 54
   const badgeX = (width - badgeW) / 2
   const badgeY = 270
@@ -173,11 +239,9 @@ export async function gerarStoryImage(
   ctx.stroke()
 
   ctx.fillStyle = '#34D399'
-  ctx.font = '800 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  const dataTxt = data.data ?? new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase()
-  ctx.fillText(`⚡ TREINO CONCLUÍDO • ${dataTxt}`, width / 2, badgeY + badgeH / 2)
+  ctx.fillText(badgeTexto, width / 2, badgeY + badgeH / 2)
   ctx.restore()
 
   // 5. Nome do Treino em Destaque

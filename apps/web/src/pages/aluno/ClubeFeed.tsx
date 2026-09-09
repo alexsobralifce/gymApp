@@ -98,6 +98,16 @@ export default function ClubeFeed() {
     await api.comentarPost(postId, texto)
   }
 
+  function handlePostUpdated(postId: string, data: Partial<SocialPost>) {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, ...data } : p))
+    )
+  }
+
+  function handlePostDeleted(postId: string) {
+    setPosts((prev) => prev.filter((p) => p.id !== postId))
+  }
+
   async function handleSair() {
     if (!id) return
     try {
@@ -183,6 +193,8 @@ export default function ClubeFeed() {
               onCurtir={handleCurtir}
               onDescurtir={handleDescurtir}
               onComentar={handleComentar}
+              onPostUpdated={handlePostUpdated}
+              onPostDeleted={handlePostDeleted}
             />
           ))}
           {nextCursor && (
