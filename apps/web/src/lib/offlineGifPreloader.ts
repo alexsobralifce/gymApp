@@ -132,22 +132,32 @@ async function fetchAndCacheGif(url: string, cache: Cache | null): Promise<boole
       }
     }
 
-    // Pre-carregar em elemento Image na memória do navegador
-    const imgPromise = new Promise<boolean>((res) => {
-      const img = new Image()
-      img.src = url
-      img.onload = () => res(true)
-      img.onerror = () => res(false)
-    })
-
     if (cache) {
-      const response = await fetch(url, { mode: 'cors', cache: 'force-cache' })
-      if (response.ok) {
-        await cache.put(url, response.clone())
-        await imgPromise
-        return true
+      try {
+        const response = await fetch(url, { mode: 'no-cors', cache: 'force-cache' })
+        if (response && (response.ok || response.type === 'opaque')) {
+          await cache.put(url, response.clone())
+          return true
+        }
+      } catch {
+        // Falha no fetch é absorvida para tentar via Image
       }
     }
+
+    // Pre-carregar em elemento Image na memória do navegador como fallback
+    const imgPromise = new Promise<boolean>((res) => {
+      const img = new Image()
+      const timer = setTimeout(() => res(true), 1500)
+      img.onload = () => {
+        clearTimeout(timer)
+        res(true)
+      }
+      img.onerror = () => {
+        clearTimeout(timer)
+        res(false)
+      }
+      img.src = url
+    })
 
     return await imgPromise
   } catch {

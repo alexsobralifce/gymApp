@@ -368,7 +368,7 @@ export default function AlunoMeusTreinos() {
                   src={ex.exercicio.gif_url}
                   alt={ex.exercicio.nome}
                   loading="lazy"
-                  {...(ex.ordem <= 3 ? { fetchpriority: 'high' as any } : {})}
+                  {...(ex.ordem <= 3 ? { fetchPriority: 'high' as any } : {})}
                   className="w-16 h-16 rounded-xl border border-surface-input shrink-0 object-cover bg-black"
                 />
               ) : ex.exercicio.imagem_url ? (

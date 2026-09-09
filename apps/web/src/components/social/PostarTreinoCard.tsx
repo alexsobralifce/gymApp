@@ -80,11 +80,11 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
       const res = await compartilharStoryCard(blob, `Treino - ${storyData.treinoNome}`)
       
       if (res.compartilhado) {
-        setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado com sucesso!' })
+        setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado! Selecione o Instagram nos seus apps.' })
       } else if (res.baixado) {
         setFeedbackMsg({
           tipo: 'info',
-          texto: 'Imagem salva na sua galeria! Abra o Instagram e poste nos Stories.',
+          texto: 'Card 9:16 salvo em Downloads! Como Stories são postados pelo celular, envie a imagem para o seu celular ou use o Instagram Web.',
         })
       }
     } catch (err) {

@@ -358,12 +358,12 @@ export async function treinoRoutes(app: FastifyInstance) {
   app.post('/:id/finalizar', { preHandler: prehandlerAlunoProfessor }, async (request, reply) => {
     const { id } = z.object({ id: z.string() }).parse(request.params)
     const { avaliacao, notaAvaliacao, feedbackComentario, caloriasQueimadas, frequenciaCardiacaMedia, frequenciaCardiacaMaxima } = z.object({
-      avaliacao: z.string().optional(),
-      notaAvaliacao: z.number().int().min(1).max(5).optional(),
-      feedbackComentario: z.string().max(1000).optional(),
-      caloriasQueimadas: z.number().positive().optional(),
-      frequenciaCardiacaMedia: z.number().int().positive().optional(),
-      frequenciaCardiacaMaxima: z.number().int().positive().optional(),
+      avaliacao: z.string().optional().nullable(),
+      notaAvaliacao: z.number().int().min(1).max(5).optional().nullable(),
+      feedbackComentario: z.string().max(1000).optional().nullable(),
+      caloriasQueimadas: z.number().min(0).optional().nullable(),
+      frequenciaCardiacaMedia: z.number().int().min(0).optional().nullable(),
+      frequenciaCardiacaMaxima: z.number().int().min(0).optional().nullable(),
     }).parse(request.body || {})
     const { role } = request.currentUser
     const aluno = await resolveAlunoSelf(request.currentUser.sub, role)
@@ -371,12 +371,12 @@ export async function treinoRoutes(app: FastifyInstance) {
     const treino = await finalizarTreino(
       id,
       aluno.id,
-      avaliacao,
-      caloriasQueimadas,
-      frequenciaCardiacaMedia,
-      frequenciaCardiacaMaxima,
-      notaAvaliacao,
-      feedbackComentario,
+      avaliacao || undefined,
+      caloriasQueimadas && caloriasQueimadas > 0 ? caloriasQueimadas : undefined,
+      frequenciaCardiacaMedia && frequenciaCardiacaMedia > 0 ? frequenciaCardiacaMedia : undefined,
+      frequenciaCardiacaMaxima && frequenciaCardiacaMaxima > 0 ? frequenciaCardiacaMaxima : undefined,
+      notaAvaliacao && notaAvaliacao >= 1 && notaAvaliacao <= 5 ? notaAvaliacao : undefined,
+      feedbackComentario || undefined,
     )
 
     // Criar post social TREINO_CONCLUIDO diretamente (síncrono, sem depender do BullMQ)

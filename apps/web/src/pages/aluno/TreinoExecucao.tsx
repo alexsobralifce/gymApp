@@ -531,13 +531,18 @@ export default function AlunoTreinoExecucao() {
     setAvaliando(true)
     allowLeaveRef.current = true
     try {
-      const avgBpm = Math.round(historicoBpm.reduce((a, b) => a + b, 0) / (historicoBpm.length || 1))
-      const maxBpm = Math.max(...historicoBpm, bpm)
+      const avgBpm = historicoBpm.length > 0
+        ? Math.round(historicoBpm.reduce((a, b) => a + b, 0) / historicoBpm.length)
+        : (bpm && bpm > 0 ? bpm : undefined)
+      const maxBpm = (historicoBpm.length > 0 || (bpm && bpm > 0))
+        ? Math.max(...historicoBpm, bpm || 0)
+        : undefined
+
       await finalizarTreino(avaliacao, {
-        caloriasQueimadas: caloriasAcumuladas,
-        frequenciaCardiacaMedia: avgBpm,
-        frequenciaCardiacaMaxima: maxBpm,
-        notaAvaliacao: notaEstrelas,
+        caloriasQueimadas: caloriasAcumuladas > 0 ? caloriasAcumuladas : undefined,
+        frequenciaCardiacaMedia: avgBpm && avgBpm > 0 ? avgBpm : undefined,
+        frequenciaCardiacaMaxima: maxBpm && maxBpm > 0 ? maxBpm : undefined,
+        notaAvaliacao: notaEstrelas >= 1 && notaEstrelas <= 5 ? notaEstrelas : 5,
         feedbackComentario: feedbackComentario.trim() || undefined,
       })
       navigate(`/treino/${id}/conclusao`, { replace: true })

@@ -5,6 +5,7 @@ import {
   DownloadIcon,
   CheckIcon,
 } from '../../components/icons/Icon'
+import InstagramLoginModal from './InstagramLoginModal'
 import {
   gerarStoryImage,
   compartilharStoryCard,
@@ -12,7 +13,7 @@ import {
   type StoryData,
 } from '../../utils/instagramStoryGenerator'
 import { api } from '../../api/client'
-import { getApiBaseUrl, resolveMediaUrl } from '../../lib/media'
+import { resolveMediaUrl } from '../../lib/media'
 import type { SocialPost } from '../../types/api'
 
 interface SharePostModalProps {
@@ -32,6 +33,7 @@ export default function SharePostModal({
 }: SharePostModalProps) {
   const [gerando, setGerando] = useState(false)
   const [publicandoIg, setPublicandoIg] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
   const [igConectado, setIgConectado] = useState(false)
   const [igUsername, setIgUsername] = useState<string | null>(null)
   const [igConfigurado, setIgConfigurado] = useState(true)
@@ -78,9 +80,9 @@ export default function SharePostModal({
       const blob = await gerarStoryImage(effectiveStoryData, effectiveFotoSrc)
       const res = await compartilharStoryCard(blob, 'Treino Concluído - Endorfinapp')
       if (res.compartilhado) {
-        setMensagemSucesso('Compartilhado com sucesso nos Stories!')
+        setMensagemSucesso('Compartilhamento iniciado! Selecione o Instagram nos seus apps.')
       } else if (res.baixado) {
-        setMensagemSucesso('Imagem do Story salva na galeria para postar!')
+        setMensagemSucesso('Card 9:16 oficial salvo em Downloads! Envie para seu celular ou poste no Instagram.')
       }
     } catch (err: any) {
       setErro(err?.message || 'Falha ao gerar Story Card.')
@@ -91,13 +93,7 @@ export default function SharePostModal({
 
   async function handlePublicarInstagramFeed() {
     if (!igConectado) {
-      if (igConfigurado === false) {
-        setErro('A publicação direta no Feed via API requer configuração de chaves da Meta no servidor. Utilize a opção "Instagram Stories" acima, que gera o card oficial 9:16 imediatamente!')
-        return
-      }
-      // Redireciona para login OAuth do Instagram
-      const token = localStorage.getItem('accessToken') || ''
-      window.location.href = `${getApiBaseUrl()}/auth/instagram?token=${encodeURIComponent(token)}`
+      setLoginModalOpen(true)
       return
     }
 
@@ -351,6 +347,26 @@ export default function SharePostModal({
           Fechar
         </button>
       </div>
+
+      {/* Modal de Login / Conexão com Instagram */}
+      <InstagramLoginModal
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        initialStatus={{
+          conectado: igConectado,
+          configurado: igConfigurado,
+          username: igUsername || undefined,
+        }}
+        onSuccess={() => {
+          setIgConectado(true)
+          setLoginModalOpen(false)
+          setMensagemSucesso('Instagram conectado com sucesso! Clique novamente para publicar no feed.')
+        }}
+        onSelectStoriesFallback={() => {
+          setLoginModalOpen(false)
+          handleCompartilharStories()
+        }}
+      />
     </div>
   )
 }

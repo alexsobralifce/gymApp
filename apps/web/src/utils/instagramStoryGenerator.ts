@@ -13,14 +13,23 @@ export interface StoryData {
   alunoNome?: string
 }
 
+const imageCache = new Map<string, HTMLImageElement>()
+
 /**
- * Carrega uma imagem de forma assíncrona com suporte a CORS
+ * Carrega uma imagem de forma assíncrona com suporte a CORS e cache em memória
  */
 function carregarImagem(src: string): Promise<HTMLImageElement | null> {
+  if (imageCache.has(src)) {
+    return Promise.resolve(imageCache.get(src)!)
+  }
+
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
+    img.onload = () => {
+      imageCache.set(src, img)
+      resolve(img)
+    }
     img.onerror = () => resolve(null)
     img.src = src
   })
@@ -76,6 +85,121 @@ function roundRect(
   ctx.arcTo(x, y + h, x, y, r)
   ctx.arcTo(x, y, x + w, y, r)
   ctx.closePath()
+}
+
+/**
+ * Desenha uma imagem com ajuste 'contain' (sem corte),
+ * centralizada com proporção preservada, ambientação de fundo e cantos arredondados.
+ */
+function drawImageContain(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number = 26
+) {
+  ctx.save()
+
+  // 1. Fundo da moldura com cantos arredondados
+  roundRect(ctx, x, y, w, h, r)
+  ctx.fillStyle = 'rgba(11, 18, 32, 0.88)'
+  ctx.fill()
+  ctx.clip()
+
+  // 2. Fundo ambientado (reflexo suave da própria foto)
+  const imgAspect = img.width / img.height
+  const boxAspect = w / h
+  let bgW = w
+  let bgH = h
+  let bgX = x
+  let bgY = y
+  if (imgAspect > boxAspect) {
+    bgW = h * imgAspect
+    bgX = x + (w - bgW) / 2
+  } else {
+    bgH = w / imgAspect
+    bgY = y + (h - bgH) / 2
+  }
+  ctx.save()
+  ctx.globalAlpha = 0.30
+  ctx.drawImage(img, bgX, bgY, bgW, bgH)
+  ctx.fillStyle = 'rgba(11, 18, 32, 0.60)'
+  ctx.fillRect(x, y, w, h)
+  ctx.restore()
+
+  // 3. Imagem principal com ajuste 'contain' (zero cortes)
+  let renderW: number
+  let renderH: number
+  if (imgAspect > boxAspect) {
+    renderW = w
+    renderH = w / imgAspect
+  } else {
+    renderH = h
+    renderW = h * imgAspect
+  }
+  const renderX = x + (w - renderW) / 2
+  const renderY = y + (h - renderH) / 2
+
+  ctx.save()
+  roundRect(ctx, renderX, renderY, renderW, renderH, Math.min(18, r))
+  ctx.clip()
+  ctx.drawImage(img, renderX, renderY, renderW, renderH)
+  ctx.restore()
+
+  ctx.restore()
+
+  // 4. Borda externa elegante da moldura
+  ctx.save()
+  roundRect(ctx, x, y, w, h, r)
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)'
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.restore()
+}
+
+/**
+ * Desenha uma imagem com ajuste 'cover' e cantos arredondados
+ */
+export function drawImageCover(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number = 28
+) {
+  ctx.save()
+  roundRect(ctx, x, y, w, h, r)
+  ctx.clip()
+
+  const imgAspect = img.width / img.height
+  const boxAspect = w / h
+  let renderW = w
+  let renderH = h
+  let offsetX = x
+  let offsetY = y
+
+  if (imgAspect > boxAspect) {
+    renderW = h * imgAspect
+    offsetX = x + (w - renderW) / 2
+  } else {
+    renderH = w / imgAspect
+    offsetY = y + (h - renderH) / 2
+  }
+
+  ctx.drawImage(img, offsetX, offsetY, renderW, renderH)
+  ctx.restore()
+
+  // Borda elegante translúcida e suave brilho
+  ctx.save()
+  roundRect(ctx, x, y, w, h, r)
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)'
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.restore()
 }
 
 /**
@@ -143,13 +267,14 @@ export async function gerarStoryImage(
   if (!ctx) throw new Error('Não foi possível obter o contexto 2D do Canvas')
 
   // 1. Fundo (Foto do usuário ou Gradiente Dark Neon)
+  let userPhotoImg: HTMLImageElement | null = null
   if (fotoSrc) {
     try {
-      const img = await carregarImagem(fotoSrc)
-      if (!img) throw new Error('Falha ao carregar foto de fundo')
+      userPhotoImg = await carregarImagem(fotoSrc)
+      if (!userPhotoImg) throw new Error('Falha ao carregar foto de fundo')
 
-      // Desenhar foto ajustada com cover
-      const imgAspect = img.width / img.height
+      // Desenhar foto ajustada com cover no fundo
+      const imgAspect = userPhotoImg.width / userPhotoImg.height
       const canvasAspect = width / height
       let renderW = width
       let renderH = height
@@ -164,14 +289,14 @@ export async function gerarStoryImage(
         offsetY = (height - renderH) / 2
       }
 
-      ctx.drawImage(img, offsetX, offsetY, renderW, renderH)
+      ctx.drawImage(userPhotoImg, offsetX, offsetY, renderW, renderH)
 
       // Overlay escuro com vinheta para garantir contraste e legibilidade
       const overlayGrad = ctx.createLinearGradient(0, 0, 0, height)
-      overlayGrad.addColorStop(0, 'rgba(11, 18, 32, 0.85)')
-      overlayGrad.addColorStop(0.35, 'rgba(11, 18, 32, 0.55)')
-      overlayGrad.addColorStop(0.65, 'rgba(11, 18, 32, 0.70)')
-      overlayGrad.addColorStop(1, 'rgba(11, 18, 32, 0.95)')
+      overlayGrad.addColorStop(0, 'rgba(11, 18, 32, 0.88)')
+      overlayGrad.addColorStop(0.35, 'rgba(11, 18, 32, 0.60)')
+      overlayGrad.addColorStop(0.65, 'rgba(11, 18, 32, 0.72)')
+      overlayGrad.addColorStop(1, 'rgba(11, 18, 32, 0.96)')
       ctx.fillStyle = overlayGrad
       ctx.fillRect(0, 0, width, height)
     } catch {
@@ -247,7 +372,7 @@ export async function gerarStoryImage(
   // 5. Nome do Treino em Destaque
   ctx.save()
   ctx.fillStyle = '#FFFFFF'
-  ctx.font = '900 64px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  ctx.font = '900 60px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.shadowColor = 'rgba(0, 0, 0, 0.8)'
@@ -256,24 +381,24 @@ export async function gerarStoryImage(
   const maxTitleWidth = width - 160
   let titulo = data.treinoNome || 'Treino do Dia'
   if (ctx.measureText(titulo).width > maxTitleWidth) {
-    ctx.font = '900 50px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    ctx.font = '900 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   }
-  ctx.fillText(titulo, width / 2, 400)
+  ctx.fillText(titulo, width / 2, 380)
   ctx.restore()
 
-  // 6. Card Principal de Métricas (Glassmorphism Dark)
-  const cardX = 90
-  const cardY = 500
-  const cardW = width - 180
-  const cardH = 920
+  // 6. Card Principal de Métricas (Glassmorphism Dark - Expandido para acomodar foto e métricas)
+  const cardX = 80
+  const cardY = 430
+  const cardW = width - 160
+  const cardH = 1180
 
   ctx.save()
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.80)'
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)'
   ctx.lineWidth = 2.5
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.6)'
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.65)'
   ctx.shadowBlur = 40
-  roundRect(ctx, cardX, cardY, cardW, cardH, 40)
+  roundRect(ctx, cardX, cardY, cardW, cardH, 36)
   ctx.fill()
   ctx.stroke()
   ctx.restore()
@@ -333,65 +458,138 @@ export async function gerarStoryImage(
     })
   }
 
-  // Desenhar Métricas em formato 2 colunas ou blocos
-  const gridStartX = cardX + 50
-  const gridStartY = cardY + 70
-  const colWidth = (cardW - 140) / 2
-  const rowHeight = 250
+  if (userPhotoImg) {
+    // ─── CENÁRIO A: COM FOTO POSTADA PELO USUÁRIO ───
+    // 7.1 Moldura da foto com destaque ampliado e ajuste contain (zero corte)
+    const photoPad = 24
+    const photoX = cardX + photoPad
+    const photoY = cardY + photoPad
+    const photoW = cardW - photoPad * 2
+    const photoH = 750
 
-  items.forEach((item, index) => {
-    const col = index % 2
-    const row = Math.floor(index / 2)
-    const itemX = gridStartX + col * (colWidth + 40)
-    const itemY = gridStartY + row * (rowHeight + 25)
+    drawImageContain(ctx, userPhotoImg, photoX, photoY, photoW, photoH, 26)
 
-    // Se for o último e for ímpar, centralizar ou estender
-    const isSingleLast = index === items.length - 1 && items.length % 2 === 1 && items.length > 2
-
-    const boxW = isSingleLast ? cardW - 100 : colWidth
-    const boxX = isSingleLast ? gridStartX : itemX
-
+    // Tag sutil na foto
     ctx.save()
-    // Mini card da métrica
-    ctx.fillStyle = 'rgba(30, 41, 59, 0.6)'
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
-    ctx.lineWidth = 1.5
-    roundRect(ctx, boxX, itemY, boxW, rowHeight, 28)
+    const photoBadgeTxt = 'ENDORFINAPP • TREINO REALIZADO'
+    ctx.font = '800 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    const pbw = ctx.measureText(photoBadgeTxt).width + 30
+    roundRect(ctx, photoX + 16, photoY + 16, pbw, 34, 17)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.70)'
     ctx.fill()
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)'
+    ctx.lineWidth = 1.5
     ctx.stroke()
-
-    // Ícone
-    ctx.font = '40px -apple-system, sans-serif'
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'top'
-    ctx.fillText(item.icon, boxX + 30, itemY + 30)
-
-    // Label
-    ctx.fillStyle = '#94A3B8'
-    ctx.font = '800 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    ctx.fillText(item.label, boxX + 30, itemY + 95)
-
-    // Valor
-    ctx.fillStyle = '#FFFFFF'
-    ctx.font = '900 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    ctx.fillText(item.valor, boxX + 30, itemY + 145)
-
-    // Unidade
-    if (item.unidade) {
-      const valW = ctx.measureText(item.valor).width
-      ctx.fillStyle = item.cor
-      ctx.font = '800 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-      ctx.fillText(` ${item.unidade}`, boxX + 30 + valW, itemY + 162)
-    }
-
+    ctx.fillStyle = '#34D399'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(photoBadgeTxt, photoX + 16 + pbw / 2, photoY + 33)
     ctx.restore()
-  })
+
+    // 7.2 Métricas desenhadas abaixo da foto
+    const metricsStartY = photoY + photoH + 20
+    const isMultiRow = items.length > 2
+    const metricRowHeight = isMultiRow ? 115 : 150
+    const colWidth = (photoW - 20) / 2
+
+    items.slice(0, 4).forEach((item, index) => {
+      const col = index % 2
+      const row = Math.floor(index / 2)
+      const itemX = photoX + col * (colWidth + 20)
+      const itemY = metricsStartY + row * (metricRowHeight + 14)
+
+      ctx.save()
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.75)'
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)'
+      ctx.lineWidth = 1.5
+      roundRect(ctx, itemX, itemY, colWidth, metricRowHeight, 20)
+      ctx.fill()
+      ctx.stroke()
+
+      // Ícone
+      ctx.font = isMultiRow ? '28px -apple-system, sans-serif' : '36px -apple-system, sans-serif'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'top'
+      ctx.fillText(item.icon, itemX + 22, itemY + (isMultiRow ? 14 : 20))
+
+      // Label
+      ctx.fillStyle = '#94A3B8'
+      ctx.font = isMultiRow
+        ? '800 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : '800 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.fillText(item.label, itemX + 22, itemY + (isMultiRow ? 46 : 64))
+
+      // Valor
+      ctx.fillStyle = '#FFFFFF'
+      ctx.font = isMultiRow
+        ? '900 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : '900 44px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.fillText(item.valor, itemX + 22, itemY + (isMultiRow ? 70 : 96))
+
+      // Unidade
+      if (item.unidade) {
+        const valW = ctx.measureText(item.valor).width
+        ctx.fillStyle = item.cor
+        ctx.font = isMultiRow
+          ? '800 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          : '800 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        ctx.fillText(` ${item.unidade}`, itemX + 22 + valW, itemY + (isMultiRow ? 82 : 112))
+      }
+      ctx.restore()
+    })
+  } else {
+    // ─── CENÁRIO B: SEM FOTO (LAYOUT COMPLETO DE MÉTRICAS) ───
+    const gridStartX = cardX + 50
+    const gridStartY = cardY + 70
+    const colWidth = (cardW - 140) / 2
+    const rowHeight = 250
+
+    items.forEach((item, index) => {
+      const col = index % 2
+      const row = Math.floor(index / 2)
+      const itemX = gridStartX + col * (colWidth + 40)
+      const itemY = gridStartY + row * (rowHeight + 25)
+
+      const isSingleLast = index === items.length - 1 && items.length % 2 === 1 && items.length > 2
+      const boxW = isSingleLast ? cardW - 100 : colWidth
+      const boxX = isSingleLast ? gridStartX : itemX
+
+      ctx.save()
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.6)'
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
+      ctx.lineWidth = 1.5
+      roundRect(ctx, boxX, itemY, boxW, rowHeight, 28)
+      ctx.fill()
+      ctx.stroke()
+
+      ctx.font = '40px -apple-system, sans-serif'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'top'
+      ctx.fillText(item.icon, boxX + 30, itemY + 30)
+
+      ctx.fillStyle = '#94A3B8'
+      ctx.font = '800 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.fillText(item.label, boxX + 30, itemY + 95)
+
+      ctx.fillStyle = '#FFFFFF'
+      ctx.font = '900 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.fillText(item.valor, boxX + 30, itemY + 145)
+
+      if (item.unidade) {
+        const valW = ctx.measureText(item.valor).width
+        ctx.fillStyle = item.cor
+        ctx.font = '800 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        ctx.fillText(` ${item.unidade}`, boxX + 30 + valW, itemY + 162)
+      }
+      ctx.restore()
+    })
+  }
 
   // 8. Frase de Impacto no Rodapé do Card
   ctx.save()
-  const quoteY = cardY + cardH - 100
-  ctx.fillStyle = 'rgba(16, 185, 129, 0.9)'
-  ctx.font = 'italic 700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  const quoteY = cardY + cardH - 55
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.95)'
+  ctx.font = 'italic 700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText('“A constância vence qualquer obstáculo.”', width / 2, quoteY)
@@ -403,11 +601,11 @@ export async function gerarStoryImage(
   ctx.font = '700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText('ENDORFINAPP • A Química do Crescimento', width / 2, height - 260)
+  ctx.fillText('ENDORFINAPP • A Química do Crescimento', width / 2, height - 210)
 
   ctx.fillStyle = '#10B981'
   ctx.font = '900 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  ctx.fillText('@endorfinapp', width / 2, height - 210)
+  ctx.fillText('@endorfinapp', width / 2, height - 165)
   ctx.restore()
 
   return new Promise<Blob>((resolve, reject) => {
@@ -451,8 +649,14 @@ function drawDefaultBackground(ctx: CanvasRenderingContext2D, width: number, hei
   ctx.restore()
 }
 
+function isMobileDeviceCheck(): boolean {
+  if (typeof window === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  return /android|iphone|ipad|ipod/i.test(ua) || (window.innerWidth <= 768)
+}
+
 /**
- * Dispara o compartilhamento nativo para Instagram Stories ou baixa o arquivo
+ * Dispara o compartilhamento nativo para Instagram Stories no celular ou baixa o arquivo no computador
  */
 export async function compartilharStoryCard(
   blob: Blob,
@@ -460,8 +664,8 @@ export async function compartilharStoryCard(
 ): Promise<{ compartilhado: boolean; baixado: boolean }> {
   const file = new File([blob], 'treino-endorfinapp.png', { type: 'image/png' })
 
-  // Tenta usar Web Share API se suportar arquivos
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  // No celular (iOS/Android), usa Web Share API para abrir diretamente o menu com o app do Instagram
+  if (isMobileDeviceCheck() && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({
         files: [file],
@@ -478,7 +682,7 @@ export async function compartilharStoryCard(
     }
   }
 
-  // Fallback: Download automático do arquivo
+  // No computador ou se Web Share falhar: Download automático do card em alta resolução
   baixarBlobComoArquivo(blob, 'treino-endorfinapp.png')
   return { compartilhado: false, baixado: true }
 }

@@ -35,6 +35,7 @@ export default function ExerciseLibraryDrawer({
   const [busca, setBusca] = useState('')
   const [filtroGrupo, setFiltroGrupo] = useState<MuscleCategoryKey | ''>('')
   const [filtroEquip, setFiltroEquip] = useState('')
+  const [viewMode, setViewMode] = useState<'chips' | 'grid'>('chips')
   const [previewExercise, setPreviewExercise] = useState<Exercicio | null>(null)
 
   const deferredBusca = useDeferredValue(busca)
@@ -96,71 +97,89 @@ export default function ExerciseLibraryDrawer({
         />
 
         {/* Drawer Container (Bottom-Sheet on Mobile, Centered Modal on Desktop) */}
-        <div className="relative w-full max-w-4xl h-[92vh] sm:h-[88vh] bg-surface-card border border-surface-input rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 animate-slideUp">
+        <div className="relative w-full max-w-4xl h-[94vh] sm:h-[90vh] bg-surface-card border border-surface-input rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 animate-slideUp">
           {/* Top Grab Handle (Mobile) */}
           <div className="sm:hidden w-full flex justify-center pt-2 pb-1 bg-surface-card shrink-0">
             <div className="w-12 h-1.5 rounded-full bg-surface-input" />
           </div>
 
           {/* Drawer Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-surface-input shrink-0">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b border-surface-input shrink-0">
             <div>
-              <h2 className="text-base sm:text-lg font-black text-text flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-text flex items-center gap-1.5">
                 <span>📚</span> Biblioteca de Exercícios
               </h2>
-              <p className="text-[11px] sm:text-xs text-text-muted">
-                Toque no card para ver o GIF com instruções em português
+              <p className="text-[10px] sm:text-xs text-text-muted">
+                Toque no card para prévia com GIF e instruções
               </p>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+              className="rounded-full p-1.5 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
               title="Fechar biblioteca"
             >
               <XIcon className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Search & Filter Header (Sticky) */}
-          <div className="p-3 sm:p-4 border-b border-surface-input/70 bg-surface/50 space-y-3 shrink-0">
+          {/* Search & Filter Header (Sticky e Compacto) */}
+          <div className="p-2.5 sm:p-3 border-b border-surface-input/70 bg-surface/50 space-y-2 shrink-0">
             {/* Search Input with Clear Button */}
             <div className="relative">
               <input
                 type="text"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                placeholder="🔍 Buscar por nome, músculo ou equipamento..."
-                className="w-full bg-surface-input/80 text-text placeholder:text-text-muted text-xs sm:text-sm font-semibold rounded-xl pl-3.5 pr-10 py-2.5 border border-surface-input focus:outline-hidden focus:border-primary transition-all"
+                placeholder="🔍 Buscar exercício, músculo ou equipamento..."
+                className="w-full bg-surface-input/90 text-text placeholder:text-text-muted text-xs sm:text-sm font-semibold rounded-xl pl-3.5 pr-9 py-2 border border-surface-input focus:outline-hidden focus:border-primary transition-all"
               />
               {busca && (
                 <button
                   type="button"
                   onClick={() => setBusca('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text rounded-md"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text rounded-md cursor-pointer"
                 >
                   <XIcon className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* Muscle Category Selector */}
-            <MuscleCategoryGrid
-              selectedCategory={filtroGrupo}
-              onSelectCategory={(catKey) => setFiltroGrupo(catKey || '')}
-              columns="sidebar"
-              className="py-0.5"
-            />
+            {/* Muscle Category Selector com toggle Chips/Grid */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-muted">
+                  Grupos Musculares
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setViewMode((v) => (v === 'chips' ? 'grid' : 'chips'))}
+                  className="text-[10px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
+                  title={viewMode === 'chips' ? 'Ver todos em grade' : 'Modo carrossel compacto'}
+                >
+                  {viewMode === 'chips' ? '⊞ Ver Grade' : '☰ Carrossel'}
+                </button>
+              </div>
 
-            {/* Filter Pills & Counter */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-              <div className="flex flex-wrap items-center gap-1.5">
+              <MuscleCategoryGrid
+                selectedCategory={filtroGrupo}
+                onSelectCategory={(catKey) => setFiltroGrupo(catKey || '')}
+                layout={viewMode}
+                columns="sidebar"
+                showAllOption={false}
+                className="py-0.5"
+              />
+            </div>
+
+            {/* Filter Pills & Counter em Linha Única */}
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                 {/* Equipment Dropdown */}
                 <select
                   value={filtroEquip}
                   onChange={(e) => setFiltroEquip(e.target.value)}
-                  className="bg-surface text-text text-xs font-bold rounded-lg px-2.5 py-1.5 border border-surface-input focus:outline-hidden cursor-pointer"
+                  className="bg-surface text-text text-[11px] font-bold rounded-lg px-2 py-1 border border-surface-input focus:outline-hidden cursor-pointer"
                 >
                   <option value="">Todos Equipamentos</option>
                   {EQUIPAMENTOS.map((eq) => (
@@ -175,9 +194,9 @@ export default function ExerciseLibraryDrawer({
                   <button
                     type="button"
                     onClick={() => setFiltroGrupo('')}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/15 text-primary border border-primary/30 px-2 py-1 rounded-lg cursor-pointer hover:bg-primary/25"
+                    className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/15 text-primary border border-primary/30 px-1.5 py-0.5 rounded-lg cursor-pointer hover:bg-primary/25"
                   >
-                    {filtroGrupo} <XIcon className="w-3 h-3" />
+                    {filtroGrupo} <XIcon className="w-2.5 h-2.5" />
                   </button>
                 )}
 
@@ -185,9 +204,9 @@ export default function ExerciseLibraryDrawer({
                   <button
                     type="button"
                     onClick={() => setFiltroEquip('')}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/15 text-primary border border-primary/30 px-2 py-1 rounded-lg cursor-pointer hover:bg-primary/25"
+                    className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/15 text-primary border border-primary/30 px-1.5 py-0.5 rounded-lg cursor-pointer hover:bg-primary/25"
                   >
-                    {filtroEquip} <XIcon className="w-3 h-3" />
+                    {filtroEquip} <XIcon className="w-2.5 h-2.5" />
                   </button>
                 )}
 
@@ -199,21 +218,21 @@ export default function ExerciseLibraryDrawer({
                       setFiltroEquip('')
                       setBusca('')
                     }}
-                    className="text-[11px] font-bold text-destructive hover:underline cursor-pointer ml-1"
+                    className="text-[10px] font-bold text-destructive hover:underline cursor-pointer"
                   >
-                    Limpar Filtros
+                    Limpar
                   </button>
                 )}
               </div>
 
-              <span className="text-[11px] font-black text-text-muted">
+              <span className="text-[10px] font-black text-text-muted shrink-0">
                 {exerciciosFiltrados.length} {exerciciosFiltrados.length === 1 ? 'exercício' : 'exercícios'}
               </span>
             </div>
           </div>
 
           {/* Exercise List */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 divide-y divide-surface-input/60 space-y-2">
+          <div className="flex-1 overflow-y-auto p-2.5 sm:p-3.5 space-y-1.5">
             {exerciciosFiltrados.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-2 text-text-muted">
                 <span className="text-3xl">🔍</span>
@@ -239,19 +258,19 @@ export default function ExerciseLibraryDrawer({
                 return (
                   <div
                     key={ex.id}
-                    className={`flex items-center justify-between p-2.5 sm:p-3 rounded-2xl border transition-all gap-2.5 ${
+                    className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all gap-2 ${
                       isAdded
                         ? 'bg-primary/10 border-primary/40 shadow-xs'
-                        : 'bg-surface border-surface-input hover:border-primary/40'
+                        : 'bg-surface border-surface-input/80 hover:border-primary/40'
                     }`}
                   >
                     {/* Exercise Info & Thumbnail (Tap opens Didactic Preview Modal) */}
                     <button
                       type="button"
                       onClick={() => setPreviewExercise(ex)}
-                      className="flex-1 flex items-center gap-3 text-left min-w-0 cursor-pointer active:scale-98 transition-transform"
+                      className="flex-1 flex items-center gap-2.5 text-left min-w-0 cursor-pointer active:scale-98 transition-transform"
                     >
-                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-surface-input/60 border border-surface-input overflow-hidden shrink-0 flex items-center justify-center">
+                      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-surface-input/60 border border-surface-input overflow-hidden shrink-0 flex items-center justify-center">
                         {thumb ? (
                           <img
                             src={thumb}
@@ -268,43 +287,43 @@ export default function ExerciseLibraryDrawer({
                           />
                         ) : null}
                         <div className={`img-fallback flex items-center justify-center ${thumb ? 'hidden' : ''}`}>
-                          <DumbbellIcon className="w-7 h-7 text-text-muted opacity-40" />
+                          <DumbbellIcon className="w-6 h-6 text-text-muted opacity-40" />
                         </div>
-                        <span className="absolute bottom-1 right-1 bg-black/75 px-1 py-0.5 rounded text-[9px] font-extrabold text-white">
+                        <span className="absolute bottom-0.5 right-0.5 bg-black/75 px-1 py-0.2 rounded text-[8px] font-extrabold text-white">
                           GIF
                         </span>
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                          <span className="text-[10px] font-black uppercase text-primary tracking-wider">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                          <span className="text-[9px] font-black uppercase text-primary tracking-wider">
                             {ex.grupo_muscular || 'Geral'}
                           </span>
                           {ex.equipamento && (
-                            <span className="text-[10px] font-semibold text-text-muted bg-surface-input px-1.5 py-0.2 rounded border border-surface-input">
+                            <span className="text-[9px] font-semibold text-text-muted bg-surface-input px-1.5 py-0.2 rounded border border-surface-input">
                               {ex.equipamento}
                             </span>
                           )}
                         </div>
 
-                        <p className="text-xs sm:text-sm font-bold text-text leading-snug line-clamp-2">
+                        <p className="text-xs sm:text-sm font-bold text-text leading-snug line-clamp-1">
                           {ex.nome}
                         </p>
 
                         {ex.musculo_alvo && (
-                          <p className="text-[11px] text-text-muted font-medium mt-0.5 truncate">
+                          <p className="text-[10px] text-text-muted font-medium mt-0.5 truncate">
                             🎯 {ex.musculo_alvo}
                           </p>
                         )}
                       </div>
                     </button>
 
-                    {/* Touch-Friendly Add/Remove Action Button (min 44px) */}
-                    <div className="shrink-0 flex items-center gap-1.5">
+                    {/* Touch-Friendly Add/Remove Action Button */}
+                    <div className="shrink-0 flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => handleToggle(ex)}
-                        className={`min-h-[44px] min-w-[44px] px-3.5 py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 ${
+                        className={`h-9 sm:h-10 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 ${
                           isAdded
                             ? 'bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/25'
                             : 'bg-primary text-primary-foreground hover:brightness-110'

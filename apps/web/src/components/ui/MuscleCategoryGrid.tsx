@@ -5,6 +5,7 @@ interface MuscleCategoryGridProps {
   onSelectCategory: (category: MuscleCategoryKey | null) => void
   showAllOption?: boolean
   columns?: 'sidebar' | 'full' | 'auto'
+  layout?: 'grid' | 'chips'
   className?: string
 }
 
@@ -13,9 +14,49 @@ export default function MuscleCategoryGrid({
   onSelectCategory,
   showAllOption = true,
   columns = 'sidebar',
+  layout = 'grid',
   className = '',
 }: MuscleCategoryGridProps) {
   const currentKey = selectedCategory ? selectedCategory.toUpperCase().trim() : null
+
+  if (layout === 'chips') {
+    return (
+      <div className={`flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar select-none ${className}`}>
+        {/* Chip "Todos" */}
+        <button
+          type="button"
+          onClick={() => onSelectCategory(null)}
+          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none active:scale-95 ${
+            !currentKey
+              ? 'bg-primary text-primary-foreground shadow-xs font-black'
+              : 'border border-surface-input bg-surface-card text-text-muted hover:text-text hover:border-primary/40'
+          }`}
+        >
+          <span>Todos</span>
+        </button>
+
+        {MUSCLE_CATEGORIES.map((cat) => {
+          const isActive = currentKey === cat.key
+          return (
+            <button
+              key={cat.key}
+              type="button"
+              onClick={() => onSelectCategory(isActive ? null : cat.key)}
+              title={cat.sublabel || cat.label}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none active:scale-95 ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-xs font-black'
+                  : 'border border-surface-input bg-surface-card text-text-muted hover:text-text hover:border-primary/40'
+              }`}
+            >
+              <span>{cat.label}</span>
+              {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
 
   const gridColsClass =
     columns === 'full'
