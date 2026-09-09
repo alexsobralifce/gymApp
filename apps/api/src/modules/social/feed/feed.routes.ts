@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
-import { NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
+import { AppError, NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
 
 function absolutizeMedia(url: string | null | undefined): string | null {
@@ -94,10 +94,13 @@ export async function feedRoutes(app: FastifyInstance) {
     return reply.status(200).send({ items, nextCursor })
   })
 
-  /** PATCH /social/mural/:postId — editar postagem (ex: adicionar, trocar ou remover foto) */
+  /** PATCH /social/mural/:postId — editar postagem completa (texto/legenda e foto) em até 24 horas */
   app.patch('/social/mural/:postId', { preHandler }, async (request, reply) => {
     const { postId } = z.object({ postId: z.string() }).parse(request.params)
-    const { midiaUrl } = z.object({ midiaUrl: z.string().nullable().optional() }).parse(request.body)
+    const { midiaUrl, legenda } = z.object({
+      midiaUrl: z.string().nullable().optional(),
+      legenda: z.string().max(2000).nullable().optional(),
+    }).parse(request.body)
     const aluno = await resolveAluno(request.currentUser.sub)
 
     const post = await prisma.socialPost.findUnique({ where: { id: postId } })
@@ -105,15 +108,25 @@ export async function feedRoutes(app: FastifyInstance) {
     const isRoot = request.currentUser.role === Role.ROOT
     if (!isRoot && post.aluno_id !== aluno.id) throw new ForbiddenError()
 
+    // Regra: O autor tem até 1 dia (24 horas) a partir da criação para editar a postagem
+    if (!isRoot) {
+      const horasDesdeCriacao = (Date.now() - new Date(post.criado_em).getTime()) / (1000 * 60 * 60)
+      if (horasDesdeCriacao > 24) {
+        throw new AppError('O prazo de 24 horas para edição desta postagem expirou.', 400)
+      }
+    }
+
     const updated = await prisma.socialPost.update({
       where: { id: postId },
       data: {
         ...(midiaUrl !== undefined ? { midia_url: midiaUrl } : {}),
+        ...(legenda !== undefined ? { legenda: legenda?.trim() || null } : {}),
       },
     })
     return reply.status(200).send({
       id: updated.id,
       midia_url: absolutizeMedia(updated.midia_url),
+      legenda: updated.legenda,
     })
   })
 

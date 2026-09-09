@@ -61,7 +61,7 @@ describe('Social Mural - Edição e Exclusão de Posts (PATCH/DELETE)', () => {
     await app.close()
   })
 
-  it('permite que o autor edite a foto do post (adicionar, alterar, remover)', async () => {
+  it('permite que o autor edite o texto (legenda) e a foto do post (adicionar, alterar, remover)', async () => {
     // 1. Criar post
     const post = await prisma.socialPost.create({
       data: {
@@ -73,29 +73,64 @@ describe('Social Mural - Edição e Exclusão de Posts (PATCH/DELETE)', () => {
       },
     })
 
-    // 2. Adicionar foto via PATCH /social/mural/:postId
+    // 2. Adicionar foto e legenda via PATCH /social/mural/:postId
     const patchRes1 = await app.inject({
       method: 'PATCH',
       url: `/social/mural/${post.id}`,
       headers: { authorization: `Bearer ${tokenAluno}` },
-      payload: { midiaUrl: '/uploads/foto-treino-1.jpg' },
+      payload: {
+        midiaUrl: '/uploads/foto-treino-1.jpg',
+        legenda: 'Treino de perna sensacional hoje! 🔥',
+      },
     })
 
     expect(patchRes1.statusCode).toBe(200)
     const data1 = JSON.parse(patchRes1.body)
     expect(data1.midia_url).toContain('foto-treino-1.jpg')
+    expect(data1.legenda).toBe('Treino de perna sensacional hoje! 🔥')
 
-    // 3. Remover foto passando null
+    // 3. Alterar texto e remover foto passando null
     const patchRes2 = await app.inject({
       method: 'PATCH',
       url: `/social/mural/${post.id}`,
       headers: { authorization: `Bearer ${tokenAluno}` },
-      payload: { midiaUrl: null },
+      payload: {
+        midiaUrl: null,
+        legenda: 'Novo texto após alteração!',
+      },
     })
 
     expect(patchRes2.statusCode).toBe(200)
     const data2 = JSON.parse(patchRes2.body)
     expect(data2.midia_url).toBeNull()
+    expect(data2.legenda).toBe('Novo texto após alteração!')
+  })
+
+  it('proíbe edição de postagem caso tenha passado mais de 24 horas (1 dia)', async () => {
+    // Criar post com data de 25 horas atrás
+    const dataPassada = new Date(Date.now() - 25 * 60 * 60 * 1000)
+    const postAntigo = await prisma.socialPost.create({
+      data: {
+        aluno_id: aluno.id,
+        autor_nome: usuario.nome,
+        tipo: 'TREINO_CONCLUIDO',
+        visibilidade: 'PUBLICO',
+        criado_em: dataPassada,
+      },
+    })
+
+    const patchRes = await app.inject({
+      method: 'PATCH',
+      url: `/social/mural/${postAntigo.id}`,
+      headers: { authorization: `Bearer ${tokenAluno}` },
+      payload: {
+        legenda: 'Tentando editar post de ontem',
+      },
+    })
+
+    expect(patchRes.statusCode).toBe(400)
+    const body = JSON.parse(patchRes.body)
+    expect(body.message).toContain('prazo de 24 horas')
   })
 
   it('proíbe que outro aluno edite post que não seja dele (403)', async () => {

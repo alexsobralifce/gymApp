@@ -421,6 +421,7 @@ model SocialPost {
   tipo                  PostTipo
   visibilidade          Visibilidade
   midia_url             String?
+  legenda               String?
   curtidas_count        Int              @default(0)
   comentarios_count     Int              @default(0)
   criado_em             DateTime         @default(now())

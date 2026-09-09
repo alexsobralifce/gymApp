@@ -102,6 +102,8 @@ export default function PostCard({
 
   const isAuthor = Boolean(user && (user.nome === post.autor_nome || user.role === 'ROOT'))
   const badge = tipoBadge[post.tipo] || { label: post.tipo, color: 'text-text-muted' }
+  const horasDesdeCriacao = (Date.now() - new Date(post.criado_em).getTime()) / (1000 * 60 * 60)
+  const podeEditar = isAuthor && (horasDesdeCriacao <= 24 || user?.role === 'ROOT')
 
   async function handleCurtir() {
     try {
@@ -200,7 +202,7 @@ export default function PostCard({
                   className="fixed inset-0 z-20"
                   onClick={() => setMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 z-30 w-48 rounded-xl bg-surface-card border border-surface-input p-1.5 shadow-xl animate-modal-pop space-y-1">
+                <div className="absolute right-0 top-full mt-1 z-30 w-52 rounded-xl bg-surface-card border border-surface-input p-1.5 shadow-xl animate-modal-pop space-y-1">
                   <button
                     type="button"
                     onClick={() => {
@@ -213,17 +215,27 @@ export default function PostCard({
                     <span>Compartilhar Stories</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      setEditModalOpen(true)
-                    }}
-                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
-                  >
-                    <Edit2Icon className="h-3.5 w-3.5 text-primary" />
-                    <span>Editar Foto</span>
-                  </button>
+                  {podeEditar ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        setEditModalOpen(true)
+                      }}
+                      className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
+                    >
+                      <Edit2Icon className="h-3.5 w-3.5 text-primary" />
+                      <span>Editar Post</span>
+                    </button>
+                  ) : (
+                    <div
+                      className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-text-muted/50 cursor-not-allowed text-left select-none"
+                      title="O prazo de 24 horas para editar esta postagem expirou"
+                    >
+                      <Edit2Icon className="h-3.5 w-3.5 opacity-40" />
+                      <span>Editar indisponível (+24h)</span>
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -254,9 +266,20 @@ export default function PostCard({
         </div>
       )}
 
-      <p className="text-sm text-text-muted leading-relaxed">
-        <strong className="text-text">{post.autor_nome}</strong> {gerarMensagemPost(post)}
-      </p>
+      {post.legenda ? (
+        <div className="space-y-1">
+          <p className="text-sm text-text leading-relaxed whitespace-pre-line font-medium">
+            {post.legenda}
+          </p>
+          <p className="text-xs text-text-muted">
+            <strong className="text-text-muted">{post.autor_nome}</strong> {gerarMensagemPost(post)}
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-text-muted leading-relaxed">
+          <strong className="text-text">{post.autor_nome}</strong> {gerarMensagemPost(post)}
+        </p>
+      )}
 
       {resolveMediaUrl(post.midia_url) && (
         <div className="overflow-hidden rounded-xl border border-surface-input">

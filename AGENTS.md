@@ -87,7 +87,7 @@ apps/api/src/
 
 - **RF10 - Análise Científica & Mensagens Motivacionais**: Sistema de rotação circular de mensagens científicas baseadas em pesquisas (Sports Medicine, JAMA, The Lancet). Workers enviam push notifications com título, resumo e link para estudo.
 
-- **RF11 - Feed Social, Edição de Posts & Notificações**: Feed interativo com paginação por cursor composto (`data+id`). Compartilhamento automático de início/fim de treino, recordes e conquistas. Curtidas e comentários (280 chars). Edição completa de posts pelo autor (`PATCH /social/mural/:postId` para adicionar/trocar/remover foto) e exclusão com cascateamento de likes e comentários (`DELETE /social/mural/:postId`). Badge de atividade recente via polling de 30s. Fanout de posts para amigos via worker BullMQ.
+- **RF11 - Feed Social, Edição de Posts & Notificações**: Feed interativo com paginação por cursor composto (`data+id`). Compartilhamento automático de início/fim de treino, recordes e conquistas. Curtidas e comentários (280 chars). Edição completa de posts pelo autor (`PATCH /social/mural/:postId` para alterar texto/legenda e foto) com janela máxima de 24 horas (1 dia) após a publicação; após esse prazo, a edição é bloqueada tanto no backend quanto no frontend. Exclusão com cascateamento de likes e comentários (`DELETE /social/mural/:postId`). Badge de atividade recente via polling de 30s. Fanout de posts para amigos via worker BullMQ.
 
 - **RF29 - Compartilhamento Multi-Redes & Integração Instagram/Meta Graph API**:
   - **Story Card 9:16 (1080x1920)**: Gerador Canvas em alta resolução com foto do usuário ou fundo neon futurista, logotipo oficial ENDORFINAPP (ECG + Raio), avatar circular do aluno com borda neon, badge de data e horário de execução (`09:15 → 10:02`), grid com tempo de treino, carga total levantada (volume kg), séries concluídas, estimativa de calorias e FC média.
@@ -283,7 +283,7 @@ ConviteStatus:      PENDENTE | USADO | EXPIRADO | REVOGADO
 
 ### Modelos Sociais (`social_*`)
 - **SocialFriendship (`social_friendships`)**: `id, aluno_id, amigo_id, status (FriendshipStatus), criado_em` — `@@unique([aluno_id, amigo_id])`, índice `[amigo_id, status]`
-- **SocialPost (`social_posts`)**: `id, aluno_id, treino_id?, clube_id?, autor_nome, autor_foto_url?, grupo_muscular_resumo?, academia_nome?, tipo (PostTipo), visibilidade (Visibilidade), midia_url?, curtidas_count, comentarios_count, criado_em` — índices `[aluno_id, criado_em]`, `[clube_id, criado_em]`, `[visibilidade, criado_em]`, unique `[treino_id, aluno_id, tipo]`
+- **SocialPost (`social_posts`)**: `id, aluno_id, treino_id?, clube_id?, autor_nome, autor_foto_url?, grupo_muscular_resumo?, academia_nome?, tipo (PostTipo), visibilidade (Visibilidade), midia_url?, legenda?, curtidas_count, comentarios_count, criado_em` — índices `[aluno_id, criado_em]`, `[clube_id, criado_em]`, `[visibilidade, criado_em]`, unique `[treino_id, aluno_id, tipo]`
 - **SocialLike (`social_likes`)**: `id, post_id, aluno_id` — `@@unique([post_id, aluno_id])`, índice `[post_id]`
 - **SocialComment (`social_comments`)**: `id, post_id, aluno_id, autor_nome, texto (VarChar 280), criado_em` — índice `[post_id, criado_em]`
 - **SocialClub (`social_clubs`)**: `id, academia_id? (unique), nome, tipo (ClubTipo: ACADEMIA|TEMATICO), criado_em`

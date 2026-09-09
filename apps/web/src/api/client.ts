@@ -662,8 +662,8 @@ export const api = {
   adicionarFotoPost: (postId: string, midiaUrl: string) =>
     api.patch(`/social/mural/${postId}/foto`, { midiaUrl }),
 
-  editarPost: (postId: string, data: { midiaUrl?: string | null }) =>
-    api.patch<{ id: string; midia_url: string | null }>(`/social/mural/${postId}`, data),
+  editarPost: (postId: string, data: { midiaUrl?: string | null; legenda?: string | null }) =>
+    api.patch<{ id: string; midia_url: string | null; legenda: string | null }>(`/social/mural/${postId}`, data),
 
   excluirPost: (postId: string) =>
     api.delete(`/social/mural/${postId}`),

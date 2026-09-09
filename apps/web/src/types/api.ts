@@ -399,6 +399,7 @@ export interface SocialPost {
   tipo: PostTipo
   visibilidade: Visibilidade
   midia_url?: string | null
+  legenda?: string | null
   curtidas_count: number
   comentarios_count: number
   criado_em: string
