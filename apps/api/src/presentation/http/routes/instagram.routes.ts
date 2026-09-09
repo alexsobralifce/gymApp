@@ -128,8 +128,10 @@ export async function instagramRoutes(app: FastifyInstance) {
       },
     })
 
+    const configurado = Boolean(process.env.META_APP_ID || env.META_APP_ID)
+
     if (!usuario || !usuario.instagram_token || !usuario.instagram_user_id) {
-      return reply.status(200).send({ conectado: false })
+      return reply.status(200).send({ conectado: false, configurado })
     }
 
     // Se o token estiver expirando em menos de 7 dias, renova em background
@@ -153,6 +155,7 @@ export async function instagramRoutes(app: FastifyInstance) {
 
     return reply.status(200).send({
       conectado: true,
+      configurado: true,
       expiraEm: usuario.instagram_token_expira?.toISOString(),
     })
   })

@@ -8,7 +8,7 @@ interface ConectarInstagramBannerProps {
 }
 
 export default function ConectarInstagramBanner({ className = '' }: ConectarInstagramBannerProps) {
-  const [status, setStatus] = useState<{ conectado: boolean; username?: string } | null>(null)
+  const [status, setStatus] = useState<{ conectado: boolean; configurado?: boolean; username?: string } | null>(null)
   const [dispensado, setDispensado] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -29,6 +29,7 @@ export default function ConectarInstagramBanner({ className = '' }: ConectarInst
 
   if (loading || dispensado) return null
   if (status?.conectado) return null
+  if (status?.configurado === false) return null
 
   function handleDispensar() {
     setDispensado(true)

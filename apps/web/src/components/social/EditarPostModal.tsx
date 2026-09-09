@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { XIcon, CameraIcon, TrashIcon, CheckIcon } from '../../components/icons/Icon'
+import { XIcon, CameraIcon, TrashIcon, CheckIcon, InstagramIcon } from '../../components/icons/Icon'
 import { api } from '../../api/client'
 import { resolveMediaUrl } from '../../lib/media'
 import type { SocialPost } from '../../types/api'
@@ -9,6 +9,7 @@ interface EditarPostModalProps {
   open: boolean
   onClose: () => void
   onSaved: (atualizacao: { midia_url: string | null }) => void
+  onShareAfterSave?: () => void
 }
 
 export default function EditarPostModal({
@@ -16,6 +17,7 @@ export default function EditarPostModal({
   open,
   onClose,
   onSaved,
+  onShareAfterSave,
 }: EditarPostModalProps) {
   const [fotoPreview, setFotoPreview] = useState<string | null>(resolveMediaUrl(post.midia_url))
   const [novaFotoArquivo, setNovaFotoArquivo] = useState<File | null>(null)
@@ -56,7 +58,7 @@ export default function EditarPostModal({
     }
   }
 
-  async function handleSalvar() {
+  async function handleSalvar(compartilhar: boolean = false) {
     setSalvando(true)
     setErro(null)
 
@@ -76,6 +78,9 @@ export default function EditarPostModal({
 
       onSaved({ midia_url: midiaUrlFinal })
       onClose()
+      if (compartilhar) {
+        onShareAfterSave?.()
+      }
     } catch (err: any) {
       setErro(err?.message || 'Erro ao salvar alterações da postagem.')
     } finally {
@@ -174,30 +179,44 @@ export default function EditarPostModal({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 pt-3 border-t border-surface-input">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={salvando}
-            className="flex-1 rounded-xl border border-surface-input bg-surface py-3 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSalvar}
-            disabled={salvando}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
-          >
-            {salvando ? (
-              <span>Salvando...</span>
-            ) : (
-              <>
-                <CheckIcon className="h-4 w-4" />
-                <span>Salvar Alterações</span>
-              </>
-            )}
-          </button>
+        <div className="space-y-2 pt-3 border-t border-surface-input">
+          {fotoPreview && (
+            <button
+              type="button"
+              onClick={() => handleSalvar(true)}
+              disabled={salvando}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-500 via-pink-600 to-purple-600 py-2.5 text-xs font-bold text-white shadow-md shadow-pink-500/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            >
+              <InstagramIcon className="h-4 w-4" />
+              <span>{salvando ? 'Salvando...' : 'Salvar e Compartilhar no Instagram'}</span>
+            </button>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={salvando}
+              className="flex-1 rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSalvar(false)}
+              disabled={salvando}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl gradient-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            >
+              {salvando ? (
+                <span>Salvando...</span>
+              ) : (
+                <>
+                  <CheckIcon className="h-4 w-4" />
+                  <span>Salvar Foto</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

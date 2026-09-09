@@ -676,7 +676,7 @@ export const api = {
 
   // ─── Social — Instagram ────────────────────────────
   obterStatusInstagram: () =>
-    api.get<{ conectado: boolean; username?: string; expiraEm?: string }>('/auth/instagram/status'),
+    api.get<{ conectado: boolean; configurado?: boolean; username?: string; expiraEm?: string }>('/auth/instagram/status'),
 
   desconectarInstagram: () =>
     api.delete<{ message: string }>('/auth/instagram'),

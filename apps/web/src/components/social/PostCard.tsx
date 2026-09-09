@@ -2,10 +2,10 @@ import { useState } from 'react'
 import {
   HeartIcon,
   MessageCircleIcon,
-  Share2Icon,
   MoreVerticalIcon,
   Edit2Icon,
   TrashIcon,
+  InstagramIcon,
 } from '../../components/icons/Icon'
 import type { SocialPost, SocialComment } from '../../types/api'
 import { api } from '../../api/client'
@@ -200,7 +200,19 @@ export default function PostCard({
                   className="fixed inset-0 z-20"
                   onClick={() => setMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 z-30 w-44 rounded-xl bg-surface-card border border-surface-input p-1.5 shadow-xl animate-modal-pop space-y-1">
+                <div className="absolute right-0 top-full mt-1 z-30 w-48 rounded-xl bg-surface-card border border-surface-input p-1.5 shadow-xl animate-modal-pop space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      setShareModalOpen(true)
+                    }}
+                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
+                  >
+                    <InstagramIcon className="h-3.5 w-3.5 text-pink-500" />
+                    <span>Compartilhar Stories</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -280,10 +292,12 @@ export default function PostCard({
           <button
             type="button"
             onClick={() => setShareModalOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
-            title="Compartilhar treino no Instagram, Facebook, etc."
+            className="group flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
+            title="Compartilhar treino no Instagram Stories, WhatsApp, Facebook, etc."
           >
-            <Share2Icon className="h-4 w-4 text-primary" />
+            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-tr from-yellow-500/20 via-pink-500/20 to-purple-500/20 text-pink-400 group-hover:from-yellow-500 group-hover:via-pink-500 group-hover:to-purple-500 group-hover:text-white transition-all shadow-sm">
+              <InstagramIcon className="h-3 w-3" />
+            </div>
             <span>Compartilhar</span>
           </button>
         </div>
@@ -350,6 +364,9 @@ export default function PostCard({
         onClose={() => setEditModalOpen(false)}
         onSaved={(atualizacao) => {
           onPostUpdated?.(post.id, atualizacao)
+        }}
+        onShareAfterSave={() => {
+          setShareModalOpen(true)
         }}
       />
 
