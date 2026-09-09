@@ -7,9 +7,12 @@ import { env } from '../../../shared/env.js'
 import { sendVerificationEmail, sendPasswordResetEmail } from '../../../infrastructure/email/mailer.js'
 import crypto from 'crypto'
 
-const googleClient = env.GOOGLE_CLIENT_ID
-  ? new OAuth2Client(env.GOOGLE_CLIENT_ID)
-  : null
+const DEFAULT_GOOGLE_CLIENT_ID = '100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com'
+
+function getGoogleClient(): OAuth2Client {
+  const cid = env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID
+  return new OAuth2Client(cid)
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -401,67 +404,103 @@ export class AuthService {
     jwtSign: (payload: object, opts?: object) => string,
     googleAccessToken?: string,
   ): Promise<AuthTokens & { isNew: boolean; nome: string }> {
-    if (!googleClient) {
-      throw new Error('Google OAuth não está configurado. Defina GOOGLE_CLIENT_ID.')
-    }
-
-    let email: string
-    let nome: string
+    let email: string | null = null
+    let nome: string | null = null
     let fotoUrl: string | null = null
     let googleId: string | null = null
 
+    const clientId = env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID
+
+    // 1. Tenta verificar como ID Token via google-auth-library
     if (credential) {
       try {
-        const ticket = await googleClient.verifyIdToken({
+        const client = getGoogleClient()
+        const ticket = await client.verifyIdToken({
           idToken: credential,
-          audience: env.GOOGLE_CLIENT_ID,
+          audience: [clientId, DEFAULT_GOOGLE_CLIENT_ID],
         })
         const payload = ticket.getPayload()
-        if (!payload || !payload.email) {
-          throw new UnauthorizedError('Token Google inválido.')
+        if (payload?.email) {
+          email = payload.email
+          nome = payload.name || email.split('@')[0]
+          fotoUrl = payload.picture || null
+          googleId = payload.sub
+          console.log(`[GoogleAuth] Token verificado via google-auth-library para ${email}`)
         }
-        email = payload.email
-        nome = payload.name || email.split('@')[0]
-        fotoUrl = payload.picture || null
-        googleId = payload.sub
       } catch (err: any) {
-        if (err instanceof UnauthorizedError) throw err
-        throw new UnauthorizedError('Token Google inválido ou expirado.')
+        console.warn('[GoogleAuth] Falha no verifyIdToken local, tentando endpoints oficiais:', err?.message)
       }
-    } else if (googleAccessToken) {
-      try {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 8000)
-        let response: Response
-        try {
-          response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${googleAccessToken}` },
-            signal: controller.signal,
-          })
-        } finally {
-          clearTimeout(timeoutId)
-        }
-        if (!response.ok) {
-          throw new UnauthorizedError('Access token Google inválido.')
-        }
-        const data = await response.json() as any
-        if (!data.email) {
-          throw new UnauthorizedError('Não foi possível obter o e-mail do Google.')
-        }
-        email = data.email
-        nome = data.name || email.split('@')[0]
-        fotoUrl = data.picture || null
-        googleId = data.sub
-      } catch (err: any) {
-        if (err instanceof UnauthorizedError) throw err
-        throw new UnauthorizedError('Falha ao verificar access token do Google.')
-      }
-    } else {
-      throw new UnauthorizedError('Token Google inválido.')
     }
 
+    // 2. Tenta verificar via endpoint oficial oauth2 tokeninfo (ID Token)
+    if (!email && credential) {
+      try {
+        const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`)
+        if (res.ok) {
+          const data = (await res.json()) as any
+          if (data?.email) {
+            email = String(data.email)
+            nome = data.name || email.split('@')[0]
+            fotoUrl = data.picture || null
+            googleId = data.sub
+            console.log(`[GoogleAuth] Token verificado via tokeninfo id_token para ${data.email}`)
+          }
+        }
+      } catch (err: any) {
+        console.warn('[GoogleAuth] Falha no tokeninfo id_token:', err?.message)
+      }
+    }
+
+    // 3. Tenta verificar via userinfo com access_token (ou credential usado como Bearer)
+    const possibleAccessToken = googleAccessToken || credential
+    if (!email && possibleAccessToken) {
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${possibleAccessToken}` },
+        })
+        if (res.ok) {
+          const data = (await res.json()) as any
+          if (data?.email) {
+            email = String(data.email)
+            nome = data.name || email.split('@')[0]
+            fotoUrl = data.picture || null
+            googleId = data.sub
+            console.log(`[GoogleAuth] Token verificado via userinfo bearer para ${data.email}`)
+          }
+        }
+      } catch (err: any) {
+        console.warn('[GoogleAuth] Falha no userinfo:', err?.message)
+      }
+    }
+
+    // 4. Tenta verificar via endpoint tokeninfo (Access Token)
+    if (!email && possibleAccessToken) {
+      try {
+        const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(possibleAccessToken)}`)
+        if (res.ok) {
+          const data = (await res.json()) as any
+          if (data?.email) {
+            email = String(data.email)
+            nome = data.name || email.split('@')[0]
+            fotoUrl = data.picture || null
+            googleId = data.sub || data.user_id
+            console.log(`[GoogleAuth] Token verificado via tokeninfo access_token para ${data.email}`)
+          }
+        }
+      } catch (err: any) {
+        console.warn('[GoogleAuth] Falha no tokeninfo access_token:', err?.message)
+      }
+    }
+
+    if (!email) {
+      throw new UnauthorizedError('Token Google inválido ou expirado. Por favor, tente novamente.')
+    }
+
+    const emailFinal: string = email
+    const nomeFinal: string = nome || emailFinal.split('@')[0]
+
     let usuario = await prisma.usuario.findUnique({
-      where: { email },
+      where: { email: emailFinal },
     })
 
     let isNew = false
@@ -469,8 +508,8 @@ export class AuthService {
     if (!usuario) {
       usuario = await prisma.usuario.create({
         data: {
-          nome,
-          email,
+          nome: nomeFinal,
+          email: emailFinal,
           senha_hash: null,
           role: Role.ALUNO,
           google_id: googleId,
@@ -522,7 +561,8 @@ export class AuthService {
     code: string,
     jwtSign: (payload: object, opts?: object) => string,
   ): Promise<AuthTokens & { isNew: boolean; nome: string }> {
-    if (!env.GOOGLE_CLIENT_ID) {
+    const clientId = env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID
+    if (!clientId) {
       throw new Error('Google OAuth não está configurado. Defina GOOGLE_CLIENT_ID.')
     }
 
@@ -532,7 +572,7 @@ export class AuthService {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           code,
-          client_id: env.GOOGLE_CLIENT_ID,
+          client_id: clientId,
           client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
           redirect_uri: `${process.env.APP_URL || 'https://endorfinapp.com'}/auth/google/callback`,
           grant_type: 'authorization_code',

@@ -33,7 +33,7 @@ const envSchema = z.object({
   SENDGRID_API_KEY: z.string().optional().default(''),
   RESEND_API_KEY: z.string().optional().default(''),
 
-  GOOGLE_CLIENT_ID: z.string().optional().default(''),
+  GOOGLE_CLIENT_ID: z.string().optional().default('100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com'),
 
   GOOGLE_PLAY_PACKAGE_NAME: z.string().optional().default('com.endorfinapp.app'),
   GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL: z.string().optional().default(''),
