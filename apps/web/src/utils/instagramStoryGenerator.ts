@@ -257,6 +257,16 @@ export async function gerarStoryImage(
   data: StoryData,
   fotoSrc?: string | null
 ): Promise<Blob> {
+  console.log('[ENDORFINAPP:POST_STORY] Gerando card 9:16 Canvas. Dados:', {
+    treinoNome: data.treinoNome,
+    duracao: data.duracaoFormatada,
+    calorias: data.calorias,
+    volumeKg: data.volumeKg,
+    series: data.seriesConcluidas,
+    data: data.data,
+    temFoto: !!fotoSrc,
+  })
+
   const width = 1080
   const height = 1920
 
@@ -663,26 +673,33 @@ export async function compartilharStoryCard(
   titulo: string = 'Treino Concluído com Endorfinapp'
 ): Promise<{ compartilhado: boolean; baixado: boolean }> {
   const file = new File([blob], 'treino-endorfinapp.png', { type: 'image/png' })
+  const isMobile = isMobileDeviceCheck()
+  const canShareFiles = !!(navigator.canShare && navigator.canShare({ files: [file] }))
+
+  console.log('[ENDORFINAPP:POST_STORY] compartilharStoryCard. Dispositivo móvel:', isMobile, '| WebShare com arquivos suportado:', canShareFiles)
 
   // No celular (iOS/Android), usa Web Share API para abrir diretamente o menu com o app do Instagram
-  if (isMobileDeviceCheck() && navigator.canShare && navigator.canShare({ files: [file] })) {
+  if (isMobile && canShareFiles) {
     try {
+      console.log('[ENDORFINAPP:POST_STORY] Disparando Web Share API nativa com o card de treino 9:16...')
       await navigator.share({
         files: [file],
         title: titulo,
         text: 'Treino de hoje pago com o @endorfinapp! 💪⚡🔥 #Endorfinapp #TreinoConcluido',
       })
+      console.log('[ENDORFINAPP:POST_STORY] Web Share concluído com sucesso pelo usuário')
       return { compartilhado: true, baixado: false }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        // Usuário cancelou o compartilhamento
+        console.log('[ENDORFINAPP:POST_STORY] Compartilhamento cancelado pelo usuário')
         return { compartilhado: false, baixado: false }
       }
-      console.warn('Falha no Web Share API, recorrendo a download:', err)
+      console.warn('[ENDORFINAPP:POST_STORY] Falha no Web Share API, recorrendo a download:', err)
     }
   }
 
   // No computador ou se Web Share falhar: Download automático do card em alta resolução
+  console.log('[ENDORFINAPP:POST_STORY] Efetuando download automático do card PNG 9:16...')
   baixarBlobComoArquivo(blob, 'treino-endorfinapp.png')
   return { compartilhado: false, baixado: true }
 }

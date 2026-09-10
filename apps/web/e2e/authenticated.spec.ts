@@ -42,6 +42,7 @@ test.describe('E2E autenticado', () => {
         localStorage.setItem('accessToken', args.accessToken)
         localStorage.setItem('refreshToken', args.refreshToken)
         localStorage.setItem('gymapp_user', JSON.stringify(args.user))
+        localStorage.setItem('gymapp_welcome_seen', 'true')
         localStorage.setItem('gymapp_onboarding_seen', 'true')
         localStorage.setItem('gymapp_onboarding_permissions_done', 'true')
         localStorage.setItem('gymapp_first_workout_done', 'true')
@@ -68,6 +69,12 @@ test.describe('E2E autenticado', () => {
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 })
     const token = await page.evaluate(() => localStorage.getItem('accessToken'))
     expect(token).toBeTruthy()
+
+    // Dispensa popups de onboarding para não interceptar cliques em testes subsequentes
+    await page.evaluate(() => {
+      localStorage.setItem('gymapp_welcome_seen', 'true')
+      localStorage.setItem('gymapp_onboarding_seen', 'true')
+    })
   })
 
   test('2. Meta semanal — stepper muda para 5, salva e persiste no reload (UX-003)', async ({ page }) => {

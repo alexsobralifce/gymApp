@@ -19,15 +19,21 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
   const [fotoFile, setFotoFile] = useState<File | null>(null)
   const [storyPreviewUrl, setStoryPreviewUrl] = useState<string | null>(null)
   const [gerandoStory, setGerandoStory] = useState(false)
-  
+  const [cameraModalOpen, setCameraModalOpen] = useState(false)
+
   // Mural GymApp State
   const [uploadingMural, setUploadingMural] = useState(false)
   const [muralProgress, setMuralProgress] = useState(0)
   const [muralPublicado, setMuralPublicado] = useState(false)
-  
+
   // Feedback Status
   const [feedbackMsg, setFeedbackMsg] = useState<{ tipo: 'success' | 'info' | 'error'; texto: string } | null>(null)
+  
+  // Refs para inputs de câmera nativa e galeria
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   // Atualiza a prévia do Story quando a foto muda
   useEffect(() => {
@@ -56,9 +62,11 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
     }
   }, [storyData, fotoPreview])
 
+  // Processa seleção / captura de arquivo
   function handleSelectFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     if (!f) return
+    console.log('[ENDORFINAPP:POST_STORY] Foto selecionada/capturada:', { nome: f.name, tipo: f.type, tamanho: f.size })
     setFotoFile(f)
     setFeedbackMsg(null)
     const reader = new FileReader()
@@ -67,18 +75,80 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
   }
 
   function handleRemoverFoto() {
+    console.log('[ENDORFINAPP:POST_STORY] Foto removida pelo usuário, restaurando fundo padrão')
     setFotoPreview(null)
     setFotoFile(null)
     setFeedbackMsg(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+  }
+
+  // Abrir Câmera ao vivo (WebRTC / getUserMedia fallback para desktop/web)
+  async function abrirCameraAoVivo() {
+    console.log('[ENDORFINAPP:POST_STORY] Solicitando acesso à câmera ao vivo (getUserMedia)...')
+    try {
+      setFeedbackMsg(null)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1920 } },
+        audio: false,
+      })
+      console.log('[ENDORFINAPP:POST_STORY] Câmera ao vivo ativada com sucesso!')
+      streamRef.current = stream
+      setCameraModalOpen(true)
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch(console.error)
+        }
+      }, 100)
+    } catch (err) {
+      console.warn('[ENDORFINAPP:POST_STORY] Câmera via WebRTC indisponível, acionando input de câmera nativa do dispositivo:', err)
+      cameraInputRef.current?.click()
+    }
+  }
+
+  function fecharCameraAoVivo() {
+    console.log('[ENDORFINAPP:POST_STORY] Fechando modal de câmera ao vivo')
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+    }
+    setCameraModalOpen(false)
+  }
+
+  function capturarFotoAoVivo() {
+    console.log('[ENDORFINAPP:POST_STORY] Capturando foto da câmera ao vivo...')
+    if (!videoRef.current) return
+    const video = videoRef.current
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth || 1080
+    canvas.height = video.videoHeight || 1920
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const dataUrl = canvas.toDataURL('image/png')
+    setFotoPreview(dataUrl)
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], `foto-treino-${Date.now()}.png`, { type: 'image/png' })
+        setFotoFile(file)
+        console.log('[ENDORFINAPP:POST_STORY] Foto capturada convertida em File PNG de', blob.size, 'bytes')
+      }
+    }, 'image/png')
+
+    fecharCameraAoVivo()
+    setFeedbackMsg({ tipo: 'success', texto: 'Foto capturada com sucesso!' })
   }
 
   async function handleCompartilharInstagram() {
+    console.log('[ENDORFINAPP:POST_STORY] handleCompartilharInstagram acionado com storyData:', storyData)
     try {
       setGerandoStory(true)
       const blob = await gerarStoryImage(storyData, fotoPreview)
       const res = await compartilharStoryCard(blob, `Treino - ${storyData.treinoNome}`)
-      
+
       if (res.compartilhado) {
         setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado! Selecione o Instagram nos seus apps.' })
       } else if (res.baixado) {
@@ -88,7 +158,7 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
         })
       }
     } catch (err) {
-      console.error(err)
+      console.error('[ENDORFINAPP:POST_STORY] Erro em handleCompartilharInstagram:', err)
       setFeedbackMsg({ tipo: 'error', texto: 'Não foi possível gerar a imagem.' })
     } finally {
       setGerandoStory(false)
@@ -96,13 +166,14 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
   }
 
   async function handleBaixarStory() {
+    console.log('[ENDORFINAPP:POST_STORY] handleBaixarStory acionado')
     try {
       setGerandoStory(true)
       const blob = await gerarStoryImage(storyData, fotoPreview)
       baixarBlobComoArquivo(blob, `treino-endorfinapp-${Date.now()}.png`)
       setFeedbackMsg({ tipo: 'success', texto: 'Imagem salva em alta resolução!' })
     } catch (err) {
-      console.error(err)
+      console.error('[ENDORFINAPP:POST_STORY] Erro ao baixar imagem do story:', err)
       setFeedbackMsg({ tipo: 'error', texto: 'Erro ao baixar a imagem.' })
     } finally {
       setGerandoStory(false)
@@ -110,6 +181,7 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
   }
 
   async function handlePublicarMural() {
+    console.log('[ENDORFINAPP:POST_STORY] handlePublicarMural acionado. PostId:', postId, '| FotoFile:', fotoFile?.name)
     if (!fotoFile || !postId) return
     setUploadingMural(true)
     setMuralProgress(0)
@@ -165,11 +237,21 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
           <span>📸</span> Poste seu Treino
         </h3>
         <p className="text-xs text-text-muted">
-          Compartilhe sua conquista no Instagram Stories ou no mural
+          Tire uma foto, incorpore dados do treino e compartilhe no Instagram Stories
         </p>
       </div>
 
-      {/* Input de Arquivo Escondido */}
+      {/* Input de Câmera Direta (Nativa Mobile) */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        onChange={handleSelectFoto}
+        className="hidden"
+      />
+
+      {/* Input de Galeria Escondido */}
       <input
         ref={fileInputRef}
         type="file"
@@ -178,7 +260,35 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
         className="hidden"
       />
 
-      {/* Área de Visualização e Escolha de Foto */}
+      {/* Resumo de Dados do Treino no Card */}
+      <div className="rounded-2xl bg-surface p-3 border border-surface-input text-xs space-y-2">
+        <div className="flex items-center justify-between font-bold text-text border-b border-surface-input pb-1.5">
+          <span className="truncate">{storyData.treinoNome}</span>
+          <span className="text-primary text-[10px] shrink-0 font-extrabold">{storyData.data}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold text-text-muted">
+          <div className="flex items-center gap-1.5">
+            <span>⏱️</span> <span>{storyData.duracaoFormatada}</span>
+          </div>
+          {storyData.calorias && (
+            <div className="flex items-center gap-1.5 text-amber-500">
+              <span>🔥</span> <span>{storyData.calorias} kcal</span>
+            </div>
+          )}
+          {storyData.volumeKg && (
+            <div className="flex items-center gap-1.5 text-emerald-500">
+              <span>🏋️</span> <span>{storyData.volumeKg.toLocaleString('pt-BR')} kg</span>
+            </div>
+          )}
+          {storyData.seriesConcluidas && (
+            <div className="flex items-center gap-1.5 text-purple-400">
+              <span>⚡</span> <span>{storyData.seriesConcluidas} séries</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Área de Visualização do Card e Fotos */}
       <div className="relative flex flex-col items-center">
         {storyPreviewUrl ? (
           <div className="relative group w-44 aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 bg-black">
@@ -202,15 +312,29 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
           </div>
         )}
 
-        {/* Botão de Adicionar / Trocar Foto */}
-        <div className="mt-3 flex items-center gap-2">
+        {/* Botões de Ação para Foto: Câmera & Galeria */}
+        <div className="mt-3 flex items-center gap-2 flex-wrap justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                cameraInputRef.current?.click()
+              } else {
+                abrirCameraAoVivo()
+              }
+            }}
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <CameraIcon className="h-4 w-4" />
+            {fotoPreview ? 'Tirar Outra Foto' : 'Tirar Foto no Treino'}
+          </button>
+
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-xs font-bold text-text border border-surface-input hover:border-primary transition-all cursor-pointer"
+            className="flex items-center gap-1 rounded-xl bg-surface px-3 py-2 text-xs font-semibold text-text-muted border border-surface-input hover:text-text hover:border-primary transition-all cursor-pointer"
           >
-            <CameraIcon className="h-4 w-4 text-primary" />
-            {fotoPreview ? 'Trocar Minha Foto' : 'Adicionar Minha Foto'}
+            <span>🖼️</span> Galeria
           </button>
 
           {fotoPreview && (
@@ -294,6 +418,53 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
           }`}
         >
           {feedbackMsg.texto}
+        </div>
+      )}
+
+      {/* Modal de Câmera ao Vivo WebRTC */}
+      {cameraModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-sm bg-surface-card border border-surface-input rounded-3xl p-5 space-y-4 shadow-2xl text-center">
+            <div className="flex items-center justify-between border-b border-surface-input pb-2">
+              <h4 className="text-sm font-bold text-text flex items-center gap-2">
+                <CameraIcon className="h-4 w-4 text-primary" /> Tirar Foto do Treino
+              </h4>
+              <button
+                type="button"
+                onClick={fecharCameraAoVivo}
+                className="p-1 rounded-full text-text-muted hover:text-text hover:bg-surface-input"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-black border border-surface-input">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover transform -scale-x-100"
+              />
+            </div>
+
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={fecharCameraAoVivo}
+                className="flex-1 py-3 rounded-xl border border-surface-input bg-surface text-xs font-semibold text-text-muted"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={capturarFotoAoVivo}
+                className="flex-1 py-3 rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110"
+              >
+                📸 Tirar Foto
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

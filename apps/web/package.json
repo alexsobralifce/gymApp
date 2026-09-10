@@ -11,6 +11,7 @@
     "test:e2e": "playwright test",
     "test:e2e:full": "E2E_FULL=1 playwright test",
     "test:e2e:auth": "E2E_FULL=1 playwright test e2e/authenticated.spec.ts",
+    "test:e2e:instagram": "E2E_FULL=1 playwright test e2e/instagram-photo-mobile.spec.ts",
     "preview": "vite preview",
     "start": "npx serve -s dist -l $PORT"
   },
