@@ -936,6 +936,11 @@ export default function AppShell() {
                     key={t.to}
                     to={t.to}
                     end={t.end}
+                    onClick={() => {
+                      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                        try { navigator.vibrate(8) } catch {}
+                      }
+                    }}
                     className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 min-w-11 min-h-11 cursor-pointer group"
                   >
                     <div className="relative">
@@ -960,7 +965,12 @@ export default function AppShell() {
               {/* Tab: Mais */}
               <button
                 type="button"
-                onClick={() => setMoreSheetOpen(true)}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                    try { navigator.vibrate(8) } catch {}
+                  }
+                  setMoreSheetOpen(true)
+                }}
                 className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 min-w-11 min-h-11 cursor-pointer group ${
                   moreSheetOpen ? 'text-primary font-bold' : 'text-text-muted hover:text-text'
                 }`}
