@@ -5,7 +5,13 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { translateToPt } from './translate-utils.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const prisma = new PrismaClient()
 const BASE = 'https://www.gifdotreino.com'
@@ -52,16 +58,21 @@ function mapToGrupoMuscular(folder: string): string | null {
 }
 
 function inferEquipamento(nome: string, folder: string): string | null {
-  if (/faixa|elástic/i.test(nome)) return 'Elásticos'
-  if (/barra/i.test(nome) && !/halter/i.test(nome)) return 'Barra'
-  if (/halter/i.test(nome)) return 'Halteres'
-  if (/cabo|polia/i.test(nome)) return 'Polia'
-  if (/máquina|alavanca/i.test(nome)) return 'Máquina'
-  if (/kettlebell/i.test(nome)) return 'Kettlebell'
-  if (/bola|pilates/i.test(nome)) return 'Bola de Pilates'
+  const n = nome.toLowerCase()
+  if (/faixa|elástic|elastico/i.test(n)) return 'Elásticos'
+  if (/kettlebell/i.test(n)) return 'Kettlebell'
+  if (/halter/i.test(n)) return 'Halteres'
+  if (/anilha/i.test(n)) return 'Halteres'
+  if (/cabo|polia|cross/i.test(n)) return 'Polia'
+  if (/smith/i.test(n)) return 'Máquina'
+  if (/barra|landmine|zercher|jefferson|trap bar|w bar/i.test(n)) return 'Barra'
+  if (/máquina|maquina|alavanca|articulad|hack|ergométrica|airbike|esteira|bicicleta|eliptic|leg press|extensora|flexora|adutora|abdutora|peck deck/i.test(n)) return 'Máquina'
+  if (/bola|pilates/i.test(n)) return 'Bola de Pilates'
   if (['Calistenia', 'Crossfit', 'Funcional e HIT', 'Mobilidade'].includes(folder))
     return 'Peso Corporal'
-  return null
+  if (/livre|solo|chão|ponte|afundo|avanço|sissy|flexão|prancha|crunch|abdominal|elevação de pernas|salto|burpee|chin.?up|pull.?up|barra fixa/i.test(n))
+    return 'Peso Corporal'
+  return 'Peso Corporal'
 }
 
 function inferMusculoAlvo(nome: string): string | null {
@@ -369,6 +380,12 @@ async function main() {
     console.log(`   Erros:        ${erros.length}`)
     console.log('   (use --verbose para ver detalhes)')
   }
+
+  // Exportar snapshot canônico atualizado
+  const todosExercicios = await prisma.exercicio.findMany({ orderBy: { nome: 'asc' } })
+  const snapshotPath = path.resolve(__dirname, 'data/gifdotreino-exercicios.json')
+  fs.writeFileSync(snapshotPath, JSON.stringify(todosExercicios, null, 2), 'utf-8')
+  console.log(`💾 Snapshot canônico salvo em: ${snapshotPath}`)
   console.log('═══════════════════════════════════')
 }
 

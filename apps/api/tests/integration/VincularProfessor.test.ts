@@ -38,13 +38,20 @@ beforeAll(async () => {
 
   const ts = Date.now()
 
+  // Garantir usuário root
+  await prisma.usuario.upsert({
+    where: { email: 'root@gymapp.com' },
+    update: { senha_hash: await import('bcryptjs').then((b) => b.default.hash('Root@12345', 10)), role: 'ROOT', ativo: true, email_verified: true },
+    create: { nome: 'Root Admin', email: 'root@gymapp.com', senha_hash: await import('bcryptjs').then((b) => b.default.hash('Root@12345', 10)), role: 'ROOT', ativo: true, email_verified: true }
+  })
+
   const rootLogin = await app.inject({
     method: 'POST', url: '/auth/login',
     payload: { email: 'root@gymapp.com', senha: 'Root@12345' },
   })
   rootToken = JSON.parse(rootLogin.body).accessToken
 
-  academiaToken = await registerAndLogin('Academia TopUp', `acad-v-${ts}@t.com`, 'Abc12345', 'ACADEMIA')
+  academiaToken = await registerAndLogin('Academia TopUp', `acad-v-${ts}@t.com`, 'Abc@12345', 'ACADEMIA')
 
   const cnpj = `${ts}${String(Math.random()).slice(2, 6)}`.slice(0, 14)
   const resCreate = await app.inject({
@@ -63,7 +70,7 @@ beforeAll(async () => {
     throw new Error(`Root approval failed: ${approvalRes.statusCode} ${approvalRes.body}`)
   }
 
-  professorToken = await registerAndLogin('Prof Test', `prof-v-${ts}@t.com`, 'Abc12345', 'PROFESSOR')
+  professorToken = await registerAndLogin('Prof Test', `prof-v-${ts}@t.com`, 'Abc@12345', 'PROFESSOR')
 })
 
 describe.skipIf(!dbOk)('UC-09 — Professor vincular a academia', () => {

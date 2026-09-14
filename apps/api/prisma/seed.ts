@@ -1,6 +1,11 @@
 import { PrismaClient, Role, AcademiaStatus, VinculoStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import { exerciseDB } from './exercises-data.js'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const prisma = new PrismaClient()
 
@@ -107,30 +112,41 @@ async function main() {
 
   console.log(`✅ ${mensagens.length} mensagens motivacionais inseridas`)
 
-  // ─── Exercícios (ExerciseDB) ──────────────────────────────────────────────
-  console.log('📚 Inserindo exercícios do ExerciseDB...')
-  let exerciciosCount = 0
+  // ─── Exercícios (GifDoTreino - 100% PT-BR) ──────────────────────────────
+  console.log('📚 Sincronizando catálogo de exercícios (GifDoTreino)...')
+  const jsonPath = path.resolve(__dirname, 'data/gifdotreino-exercicios.json')
+  let exerciciosData: any[] = []
 
-  for (const ex of exerciseDB) {
-    const existingExercise = await prisma.exercicio.findFirst({
-      where: { nome: ex.name },
+  if (fs.existsSync(jsonPath)) {
+    exerciciosData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'))
+  }
+
+  let exerciciosCount = 0
+  for (const ex of exerciciosData) {
+    const existing = await prisma.exercicio.findFirst({
+      where: { nome: ex.nome },
     })
 
-    if (!existingExercise) {
+    if (!existing) {
       await prisma.exercicio.create({
         data: {
-          nome: ex.name,
-          grupo_muscular: ex.bodyPart,
-          equipamento: ex.equipment,
-          dica: ex.instructions.join(' '),
-          imagem_url: ex.gifUrl || null,
+          nome: ex.nome,
+          grupo_muscular: ex.grupo_muscular,
+          equipamento: ex.equipamento,
+          musculo_alvo: ex.musculo_alvo,
+          musculos_secundarios: ex.musculos_secundarios || [],
+          imagem_url: ex.imagem_url,
+          gif_url: ex.gif_url,
+          descricao_pt: ex.descricao_pt,
+          passos_pt: ex.passos_pt || [],
+          dica: ex.dica,
         },
       })
       exerciciosCount++
     }
   }
 
-  console.log(`✅ ${exerciciosCount} exercícios inseridos (${exerciseDB.length} disponíveis)`)
+  console.log(`✅ ${exerciciosCount} novos exercícios inseridos de ${exerciciosData.length} do GifDoTreino`)
 
   // ─── Academias e Professores ──────────────────────────────────────────────
   console.log('🏋️ Criando academias e professores...')
