@@ -14,6 +14,7 @@ import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
+import Planos from './pages/planos/Planos'
 import GoogleCallback from './pages/auth/GoogleCallback'
 import AlunoDashboard from './pages/aluno/Dashboard'
 import AlunoTreinoInicio from './pages/aluno/TreinoInicio'
@@ -99,6 +100,7 @@ export default function App() {
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+      <Route path="/planos" element={<Planos />} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
       {!user && <Route index element={<Landing />} />}

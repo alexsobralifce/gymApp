@@ -16,7 +16,7 @@ const PUBLIC = resolve(__dirname, '..', 'public');
 const CAPACITOR = resolve(__dirname, '..', 'capacitor-assets');
 
 // ── Constantes ──────────────────────────────────────────────────────────────
-const BLACK = { r: 10, g: 10, b: 10, alpha: 1 }; // #0A0A0A
+const BLACK = { r: 11, g: 18, b: 32, alpha: 1 }; // #0B1220 (navy — alinhado ao manifest/tema)
 const GREEN = '#76FF03';
 const SAFE_ZONE_SCALE = 0.6; // mark scaled to 60% of canvas for maskable / adaptive safe zone
 
@@ -176,7 +176,7 @@ async function main() {
   // Resumo
   // ============================================================
   console.log('\n─── Concluído ──────────────────────────────────────');
-  console.log(`  Verde: ${GREEN}  |  Preto: #0A0A0A  |  Safe zone: ${Math.round(SAFE_ZONE_SCALE * 100)}%`);
+  console.log(`  Verde: ${GREEN}  |  Fundo: #0B1220  |  Safe zone: ${Math.round(SAFE_ZONE_SCALE * 100)}%`);
   console.log(`  PWA:      ${PUBLIC}/icon-{180,192,512,maskable-512}.png`);
   console.log(`  Android:  ${CAPACITOR}/android/{mipmap-*,ic_launcher_*}.png`);
   console.log(`  iOS:      ${CAPACITOR}/ios/AppIcon.appiconset/`);

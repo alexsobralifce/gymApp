@@ -7,7 +7,21 @@ interface EndorfinappIconProps {
   glow?: boolean
   withBackground?: boolean
   color?: string
+  /** Decorativo: usado junto do logotipo textual — oculto para leitores de tela. */
+  decorative?: boolean
 }
+
+/**
+ * viewBox apertado ao desenho (o símbolo ocupa x 10..180 / y 10..110 no espaço
+ * original 220x120). Antes era "0 0 220 120", o que deixava o símbolo ~7%
+ * à esquerda do centro com sobra à direita.
+ */
+const VIEW_BOX = '4 4 180 112'
+const VIEW_W = 180
+const VIEW_H = 112
+
+/** Abaixo disso o glow (blur) vira borrão e prejudica a legibilidade. */
+const GLOW_MIN_SIZE = 40
 
 export function EndorfinappIcon({
   size = 40,
@@ -16,26 +30,39 @@ export function EndorfinappIcon({
   glow = true,
   withBackground = false,
   color,
+  decorative = false,
 }: EndorfinappIconProps) {
   const reactId = useId()
   const glowFilterId = `ecg-glow-${reactId.replace(/:/g, '')}`
-  const activeColor = color || 'var(--color-primary, #FF4D4D)'
+
+  // Marca adaptativa (A): azul no app. O verde neon (#76FF03) fica reservado
+  // ao ícone de loja/PWA (fundo escuro), fora deste componente.
+  const activeColor = color || 'var(--color-primary, #3B82F6)'
+
+  // Glow só em tamanhos que suportam o blur (números < 40 desligam; strings mantêm).
+  const enableGlow = glow && (typeof size !== 'number' || size >= GLOW_MIN_SIZE)
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 220 120"
+      viewBox={VIEW_BOX}
       width={size}
-      height={typeof size === 'number' ? Math.round(size * (120 / 220)) : size}
+      height={typeof size === 'number' ? Math.round((size * VIEW_H) / VIEW_W) : size}
       className={className}
-      style={{ display: 'inline-block', verticalAlign: 'middle', overflow: 'visible', ...style }}
-      role="img"
-      aria-label="ENDORFINAPP Icon"
+      style={{
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        overflow: enableGlow ? 'visible' : undefined,
+        ...style,
+      }}
+      role={decorative ? 'presentation' : 'img'}
+      aria-hidden={decorative || undefined}
+      aria-label={decorative ? undefined : 'ENDORFINAPP'}
     >
       {withBackground && (
-        <rect width="220" height="120" rx="16" fill="var(--color-surface-card, #1C1C1C)" />
+        <rect x="4" y="4" width="180" height="112" rx="16" fill="var(--color-surface-card, #111C33)" />
       )}
-      {glow && (
+      {enableGlow && (
         <defs>
           <filter id={glowFilterId} x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="3.5" result="blur" />
@@ -49,7 +76,7 @@ export function EndorfinappIcon({
           </filter>
         </defs>
       )}
-      <g filter={glow ? `url(#${glowFilterId})` : undefined} fill={activeColor} stroke={activeColor}>
+      <g filter={enableGlow ? `url(#${glowFilterId})` : undefined} fill={activeColor} stroke={activeColor}>
         {/* Linha de batimento cardíaco (ECG) */}
         <path
           d="M 10 60 H 48 L 56 46 L 66 74 L 76 26 L 90 94 L 102 42 L 112 70 L 120 60 H 132"

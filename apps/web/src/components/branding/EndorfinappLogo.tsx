@@ -13,6 +13,8 @@ interface EndorfinappLogoProps {
   style?: CSSProperties
   glow?: boolean
   withBackground?: boolean
+  /** Sobrescreve a cor do símbolo (padrão: var(--color-primary)). */
+  color?: string
   onBackground?: boolean
 }
 
@@ -25,6 +27,7 @@ export function EndorfinappLogo({
   style,
   glow = true,
   withBackground = false,
+  color,
   onBackground = false,
 }: EndorfinappLogoProps) {
   if (variant === 'icon') {
@@ -33,6 +36,7 @@ export function EndorfinappLogo({
         size={iconSize ?? size}
         glow={glow}
         withBackground={withBackground}
+        color={color}
         className={className}
         style={style}
       />
@@ -63,7 +67,7 @@ export function EndorfinappLogo({
           ...style,
         }}
       >
-        <EndorfinappIcon size={iconSize ?? 32} glow={glow} withBackground={withBackground} />
+        <EndorfinappIcon size={iconSize ?? 32} glow={glow} withBackground={withBackground} color={color} decorative />
         <EndorfinappWordmark
           size={typeof size === 'number' ? size : '1.15rem'}
           showSlogan={showSlogan}
@@ -91,7 +95,7 @@ export function EndorfinappLogo({
         ...style,
       }}
     >
-      <EndorfinappIcon size={finalIconSize} glow={glow} withBackground={withBackground} />
+      <EndorfinappIcon size={finalIconSize} glow={glow} withBackground={withBackground} color={color} decorative />
       <EndorfinappWordmark
         size={finalFontSize}
         showSlogan={showSlogan}
