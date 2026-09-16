@@ -23,6 +23,13 @@ const FORBIDDEN_ENGLISH_NAME_PATTERNS = [
   /\bdumbbell\b/i,
   /\bkneeling\b/i,
   /\bstraight legs\b/i,
+  /\bwall sit\b/i,
+  /\bsuperman\b/i,
+  /\bv-up\b/i,
+  /\bmedicine ball\b/i,
+  /\b(navy|nave) seal\b/i,
+  /\bhands? bike\b/i,
+  /\banilha press\b/i,
   /\bcircular toe touch\b/i,
 ]
 
