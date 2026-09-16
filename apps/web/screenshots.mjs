@@ -47,7 +47,7 @@ async function main() {
   const telas = [
     ['1-dashboard', '/'],
     ['2-meus-treinos', '/meus-treinos'],
-    ['3-treino-ia', '/treino/ia'],
+    ['3-biblioteca-planos', '/biblioteca-planos'],
     ['4-medidas', '/medidas'],
     ['5-evolucao', '/evolucao'],
     ['6-feed', '/feed'],

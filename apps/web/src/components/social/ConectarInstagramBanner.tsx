@@ -87,7 +87,7 @@ export default function ConectarInstagramBanner({ className = '' }: ConectarInst
         <button
           type="button"
           onClick={handleDispensar}
-          className="rounded-full p-1 text-text-muted hover:text-text transition-colors cursor-pointer shrink-0"
+          className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shrink-0"
           title="Fechar"
         >
           <XIcon className="h-4 w-4" />

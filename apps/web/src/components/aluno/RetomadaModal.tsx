@@ -51,7 +51,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
 
   function handleAtualizarObjetivo() {
     onDismiss()
-    navigate('/treino/ia')
+    navigate('/treino/novo')
   }
 
   async function handleSemanaLeve() {

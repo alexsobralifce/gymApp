@@ -9,7 +9,6 @@ interface PremiumFeature {
 }
 
 const PREMIUM_BENEFITS: PremiumFeature[] = [
-  { emoji: '✨', title: 'Treino por IA', description: 'Prescrição inteligente baseada nos seus objetivos' },
   { emoji: '📚', title: 'Biblioteca de Planos', description: '30+ planos científicos prontos para adotar' },
   { emoji: '📊', title: 'Evolução Avançada', description: 'Correlações, gráficos e insights científicos' },
   { emoji: '🏛️', title: 'Clubes e Leaderboard', description: 'Ganhe XP e compita com sua comunidade' },

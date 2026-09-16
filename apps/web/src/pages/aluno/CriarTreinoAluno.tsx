@@ -252,15 +252,6 @@ export default function AlunoCriarTreino() {
         </div>
 
         <div className="flex items-center gap-2">
-          {!isEdit && (
-            <button
-              type="button"
-              onClick={() => navigate('/treino/ia')}
-              className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-            >
-              ✨ Gerar com IA
-            </button>
-          )}
           <button
             type="button"
             id="btn-ajuda-treino-aluno"

@@ -200,13 +200,13 @@ export default function AlunoMeusTreinos() {
         title="Nenhum treino ativo"
         description={
           hasProfessor
-            ? "Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Monte seus próprios treinos ou use prescrição por IA!"
-            : "No modo autogestão, você monta seus próprios treinos. Comece agora ou use a prescrição inteligente!"
+            ? "Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Monte seus próprios treinos ou use um plano da Biblioteca!"
+            : "No modo autogestão, você monta seus próprios treinos. Comece agora ou use um plano pronto da Biblioteca!"
         }
         actionLabel="Criar Treino"
         onAction={() => navigate('/treino/novo')}
-        secondaryActionLabel="Prescrever com IA"
-        onSecondaryAction={() => navigate('/treino/ia')}
+        secondaryActionLabel="Biblioteca de Planos"
+        onSecondaryAction={() => navigate('/biblioteca-planos')}
       />
     )
   }

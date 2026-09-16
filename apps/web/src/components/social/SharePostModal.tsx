@@ -162,7 +162,7 @@ export default function SharePostModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+            className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
           >
             <XIcon className="h-5 w-5" />
           </button>

@@ -546,15 +546,15 @@ export default function AlunoDashboard() {
 
           <button
             type="button"
-            onClick={() => navigate('/treino/ia')}
+            onClick={() => navigate('/meus-treinos')}
             className="flex items-center gap-3 p-3 rounded-2xl bg-surface-card border border-surface-input hover:border-primary/40 active:scale-95 transition-all text-left cursor-pointer group"
           >
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
-              ✨
+              🏋️
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-text truncate">Treino IA</p>
-              <p className="text-xs text-text-muted truncate">Gerador IA</p>
+              <p className="text-xs font-bold text-text truncate">Meus Treinos</p>
+              <p className="text-xs text-text-muted truncate">Fichas ativas</p>
             </div>
           </button>
 

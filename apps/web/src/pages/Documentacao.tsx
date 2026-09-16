@@ -59,12 +59,6 @@ const CONTEUDO_ALUNO: DocSection[] = [
         passos: ['Menu → "Meus Treinos"', 'Toque em "Criar Treino"', 'Dê um nome ao treino', 'Adicione exercícios com o botão +', 'Defina séries e repetições', 'Salve o treino'],
       },
       {
-        titulo: 'Treino por IA (5 passos)',
-        descricao: 'Assistente monta seu treino automaticamente. Você define objetivo, nível, frequência, grupos musculares e restrições. A IA gera o plano ideal e substitui exercícios incompatíveis. Limite: 7 por mês.',
-        rota: '/treino/ia',
-        passos: ['① Objetivo: hipertrofia, força, emagrecimento ou saúde', '② Nível + quantos dias/semana', '③ Grupos musculares (ou atalhos: Full Body, Push/Pull/Legs)', '④ Restrições: joelho, lombar, ombro, punho, costas', '⑤ Resultado — adote com 1 clique'],
-      },
-      {
         titulo: 'Biblioteca de Planos',
         descricao: 'Planos prontos modelados por objetivo, nível e sexo. Filtre, escolha e adote com 1 clique — os treinos são criados automaticamente.',
         rota: '/biblioteca-planos',

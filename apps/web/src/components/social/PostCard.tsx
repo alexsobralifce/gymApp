@@ -15,6 +15,7 @@ import { useAuthStore } from '../../stores/auth'
 import EditarPostModal from './EditarPostModal'
 import SharePostModal from './SharePostModal'
 import ConfirmModal from '../ui/ConfirmModal'
+import { useToast } from '../ui/Toast'
 
 function formatHora(dataStr: string): string {
   try {
@@ -99,6 +100,7 @@ export default function PostCard({
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
+  const { showToast, ToastComponent } = useToast()
 
   const isAuthor = Boolean(user && (user.nome === post.autor_nome || user.role === 'ROOT'))
   const badge = tipoBadge[post.tipo] || { label: post.tipo, color: 'text-text-muted' }
@@ -154,7 +156,7 @@ export default function PostCard({
       onPostDeleted?.(post.id)
       setDeleteConfirmOpen(false)
     } catch (err: any) {
-      alert(err?.message || 'Erro ao excluir postagem.')
+      showToast(err?.message || 'Erro ao excluir postagem.', 'error')
     } finally {
       setExcluindo(false)
     }
@@ -190,7 +192,7 @@ export default function PostCard({
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded-full p-1 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
+              className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
               title="Opções da postagem"
             >
               <MoreVerticalIcon className="h-4 w-4" />
@@ -411,6 +413,8 @@ export default function PostCard({
         onConfirm={handleExcluirPost}
         onCancel={() => setDeleteConfirmOpen(false)}
       />
+
+      {ToastComponent}
     </div>
   )
 }

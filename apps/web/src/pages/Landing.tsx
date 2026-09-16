@@ -1,21 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Dumbbell, Users, Shield, Clock, TrendingUp, BrainCircuit,
+  Dumbbell, Users, Shield, TrendingUp,
   Target, Heart, Sparkles, MessageCircle, BookOpen, ChevronDown,
   Menu, X, Check, ArrowRight, UserPlus, ClipboardList, Trophy,
 } from 'lucide-react'
 import EndorfinappLogo from '../components/branding/EndorfinappLogo'
 import DemoTreino from '../components/landing/DemoTreino'
 
-const NAV_LINKS = ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Funciona']
+const NAV_LINKS = ['Funcionalidades', 'Ciencia', 'Rede Social', 'Como Funciona']
 
 const FEATURES = [
-  {
-    icon: BrainCircuit,
-    title: 'Prescrição por IA',
-    desc: 'Escolha grupos musculares, nível, objetivo e tempo. O sistema monta 3 exercícios por grupo, ajustando séries e repetições.',
-  },
   {
     icon: BookOpen,
     title: 'Biblioteca de Planos',
@@ -57,10 +52,6 @@ const FAQS = [
   {
     q: 'Preciso de academia ou professor para usar?',
     a: 'Não. A ENDORFINAPP tem modo autogestão — você cria, edita e executa seus treinos sozinho. Professores e academias são opcionais para quem quer acompanhamento.',
-  },
-  {
-    q: 'Como a IA monta o treino?',
-    a: 'Você escolhe grupos musculares, nível (iniciante/intermediário/avançado), objetivo (hipertrofia/força/emagrecimento/saúde) e duração. O sistema aplica regras de volume e seleciona 3 exercícios por grupo da biblioteca com +900 movimentos.',
   },
   {
     q: 'Os exercícios tem demonstração?',
@@ -179,7 +170,7 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 mb-6">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-semibold text-primary tracking-wide uppercase">
-                Treino com IA · Rede Social Fitness
+                Execução Guiada · Rede Social Fitness
               </span>
             </div>
 
@@ -251,7 +242,7 @@ export default function Landing() {
               TUDO EM UM SÓ LUGAR
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
-              Monte treinos com IA, execute com GIFs, acompanhe sua evolução e interaja na comunidade.
+              Monte seus treinos, execute com GIFs, acompanhe sua evolução e interaja na comunidade.
             </p>
           </div>
 
@@ -270,75 +261,6 @@ export default function Landing() {
                 </div>
               )
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── IA HIGHLIGHT ─── */}
-      <section id="ia" className="py-20 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 mb-4">
-                <BrainCircuit className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-semibold text-primary uppercase tracking-wide">Inteligencia Artificial</span>
-              </div>
-
-              <h2 className="text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.05 }}>
-                PRESCRIÇÃO EM{' '}
-                <span className="text-primary">MINUTOS</span>
-              </h2>
-
-              <p className="mt-4 text-muted-foreground leading-relaxed text-sm">
-                Responda 5 perguntas simples e receba uma ficha completa com 3 exercícios por grupo muscular. Nada de caixa-preta — o sistema aplica princípios de treinamento reconhecidos.
-              </p>
-
-              <ul className="mt-6 space-y-3">
-                {[
-                  { icon: Target, text: 'Objetivo: hipertrofia, força, emagrecimento ou saúde — cada um com faixa de repetições própria' },
-                  { icon: TrendingUp, text: 'Nível: iniciante (máquinas), intermediário (livre) ou avançado (alta carga) — séries ajustadas' },
-                  { icon: Clock, text: 'Duração: você define quanto tempo tem (30 a 90 min) — o volume se adapta automaticamente' },
-                  { icon: Shield, text: 'Restrições articulares: ombro, joelho, lombar — exercícios incompatíveis são evitados' },
-                ].map(({ icon: Icon, text }) => (
-                  <li key={text} className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    {text}
-                  </li>
-                ))}
-              </ul>
-
-              <p className="mt-6 text-xs text-muted-foreground italic">
-                Não é LLM — é um motor determinístico com regras de volume, seleção de exercícios e orçamento por tempo. Você sempre sabe o que esperar.
-              </p>
-            </div>
-
-            <div className="relative flex justify-center">
-              <div className="relative w-full">
-                <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full scale-75 translate-y-4" />
-                <div className="relative z-10 bg-card border border-border rounded-2xl p-5 shadow-xl">
-                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
-                    <div>
-                      <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">HIPERTROFIA_INTERMEDIARIO_4X</span>
-                    </div>
-                    <span className="text-xs font-bold text-accent bg-accent/10 px-2 py-0.5 rounded">Match 100</span>
-                  </div>
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-bold text-foreground">Push — Peito + Ombro + Triceps</h4>
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-bold text-primary uppercase">Peito (3 exercícios)</p>
-                      <p className="text-xs text-muted-foreground">Supino Reto, Crucifixo, Peck Deck — 3x8-12</p>
-                      <p className="text-xs font-bold text-primary uppercase mt-2">Ombro (3 exercícios)</p>
-                      <p className="text-xs text-muted-foreground">Desenvolvimento, Elevacao Lateral, Frontal — 3x10-12</p>
-                      <p className="text-xs font-bold text-primary uppercase mt-2">Triceps (3 exercícios)</p>
-                      <p className="text-xs text-muted-foreground">Pushdown, Testa, Dip — 3x10-12</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -481,7 +403,7 @@ export default function Landing() {
                 color: 'bg-primary/10 text-primary border-primary/30',
                 steps: [
                   'Cadastro rapido (wizard de 3 passos)',
-                  'Crie treinos ou use a IA',
+                  'Crie seus próprios treinos',
                   'Receba fichas do professor',
                   'Execute com GIFs e registre séries',
                   'Poste conquistas no Feed Social',
@@ -605,12 +527,12 @@ export default function Landing() {
                 <EndorfinappLogo variant="horizontal" size={28} showSlogan={true} />
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
-                Treino inteligente com IA, execução guiada por GIF e rede social fitness. Sozinho, com professor ou academia.
+                Treino inteligente, execução guiada por GIF e rede social fitness. Sozinho, com professor ou academia.
               </p>
             </div>
 
             {[
-              { title: 'Produto', links: ['Funcionalidades', 'IA', 'Ciencia', 'Rede Social', 'Como Funciona'] },
+              { title: 'Produto', links: ['Funcionalidades', 'Ciencia', 'Rede Social', 'Como Funciona'] },
               { title: 'Para Quem', links: ['Aluno Autogestão', 'Professor', 'Academia', 'Personal Trainer'] },
               { title: 'Links', links: [
                 { label: 'Entrar', href: '/login' },

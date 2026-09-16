@@ -433,7 +433,7 @@ export default function AcademiaCriarTreino() {
                                 type="button"
                                 onClick={() => moverExercicio(idx, 'sobe')}
                                 disabled={idx === 0}
-                                className="p-1 text-text-muted hover:text-primary disabled:opacity-30"
+                                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-primary disabled:opacity-30"
                               >
                                 ▲
                               </button>
@@ -441,14 +441,14 @@ export default function AcademiaCriarTreino() {
                                 type="button"
                                 onClick={() => moverExercicio(idx, 'desce')}
                                 disabled={idx === ficha.exercicios.length - 1}
-                                className="p-1 text-text-muted hover:text-primary disabled:opacity-30"
+                                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-primary disabled:opacity-30"
                               >
                                 ▼
                               </button>
                               <button
                                 type="button"
                                 onClick={() => removerExercicio(idx)}
-                                className="p-1 text-destructive hover:text-red-500 ml-1"
+                                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-destructive hover:text-red-500"
                               >
                                 🗑️
                               </button>

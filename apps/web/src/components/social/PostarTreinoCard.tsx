@@ -432,7 +432,7 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
               <button
                 type="button"
                 onClick={fecharCameraAoVivo}
-                className="p-1 rounded-full text-text-muted hover:text-text hover:bg-surface-input"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-input"
               >
                 <XIcon className="h-5 w-5" />
               </button>

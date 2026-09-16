@@ -2,31 +2,6 @@ import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, Corre
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
-/** Resultado da prescrição por IA (`POST /treinos/ia/gerar`). */
-export interface GerarTreinoIAResult {
-  tipo_tarefa: string
-  alunoId: string
-  planoId?: string
-  planoIds?: string[]
-  grupo_treino?: string
-  nome_treino?: string
-  score_match?: number
-  justificativa_match?: string
-  grupos_solicitados?: string[]
-  split_preferido?: string | null
-  resumo_prescricao?: string
-  observacoes?: string[]
-  sessoes?: Array<{
-    id?: string
-    nome?: string
-    dia_label?: string
-    ordem?: number
-    exercicios?: Array<Record<string, unknown>>
-  }>
-  /** UX-007: explicações das adaptações de feedback aplicadas na geração. */
-  adaptacoes?: string[]
-}
-
 const API_BASE = getApiBaseUrl()
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -739,17 +714,6 @@ export const api = {
   criarSemanaRetorno: (treinoId: string) =>
     api.post<Treino>(`/treinos/${treinoId}/semana-retorno`),
 
-  // ─── Prescrição IA ─────────────────────────────────
-  gerarTreinoIA: (data: {
-    objetivo: string
-    nivel: string
-    diasPorSemana: number
-    tempoMinutos?: number
-    restricoes?: string[]
-    gruposMusculares?: string[]
-    splitPreferido?: string
-  }) => api.post<GerarTreinoIAResult>('/treinos/ia/gerar', data),
-
   // ─── Avaliação do Sistema ──────────────────────────
   enviarAvaliacaoSistema: (data: { nota: number; respostas: Record<string, number>; mensagem?: string }) =>
     api.post<{ id: string }>('/avaliacoes/sistema', data),
@@ -761,24 +725,6 @@ export const api = {
   getNoticias: (limit = 50, offset = 0) => api.get<any[]>(`/noticias?limit=${limit}&offset=${offset}`),
   refreshNoticias: () =>
     api.post<{ success: boolean; message: string; inseridas: number; total: number }>('/noticias/refresh', {}),
-
-  gerarESalvarTreinoIA: (data: {
-    planoId?: string
-    planoIds?: string[]
-    objetivo?: string
-    nivel?: string
-    diasPorSemana?: number
-    tempoMinutos?: number
-    gruposMusculares?: string[]
-    splitPreferido?: string
-    restricoes?: string[]
-    nome?: string
-  }) =>
-    api.post<{
-      plano: { id: string; nome: string; codigo?: string }
-      planos?: Array<{ id: string; nome: string }>
-      treinosCriadosCount: number
-    }>('/treinos/ia/gerar-e-salvar', data),
 
   // ─── UX-013: Histórico de desempenho por exercício ────────────────
   getHistoricoExercicio: (exercicioId: string, periodo: PeriodoHistorico = '90d') =>

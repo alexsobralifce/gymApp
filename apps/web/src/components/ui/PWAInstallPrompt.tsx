@@ -7,11 +7,11 @@ export function PWAInstallPrompt() {
   if (!shouldShowPrompt) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-slide-up">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 safe-bottom animate-slide-up">
       <div className="bg-surface-card border border-surface-input shadow-2xl rounded-2xl p-4 flex flex-col gap-3 relative">
-        <button 
+        <button
           onClick={dismissPrompt}
-          className="absolute top-3 right-3 text-text-muted hover:text-text transition-colors"
+          className="absolute top-1.5 right-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text transition-colors"
           aria-label="Fechar"
         >
           <XIcon className="h-5 w-5" />
