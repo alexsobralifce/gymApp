@@ -64,8 +64,9 @@ fi
 
 echo ""
 echo "⚠️  Isso vai rodar contra o banco de PRODUÇÃO:"
-echo "   - Renomeia 14 exercícios cujo nome está em inglês (Wall Sit, Pull Up, Superman, etc.)"
-echo "   - Corrige 21 descrições com o texto corrompido 'desenvolvimentoão' -> 'pressão'"
+echo "   - Renomeia exercícios cujo nome está em inglês/mutilado (Wall Sit, Pull Up,"
+echo "     Superman, Smithdeadlift, Smithsquat, Maquina de Alavancadeadlift, etc.)"
+echo "   - Corrige descrições com o texto corrompido 'desenvolvimentoão' -> 'pressão'"
 echo "   - É idempotente: seguro rodar mais de uma vez"
 read -r -p "Confirma que quer aplicar em produção agora? [y/N] " resposta
 if [[ ! "$resposta" =~ ^[Yy]$ ]]; then

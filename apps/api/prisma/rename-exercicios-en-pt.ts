@@ -33,6 +33,29 @@ const RENAMES: Array<{ de: string; para: string }> = [
   { de: 'Wall Sit', para: 'Agachamento Isométrico na Parede' },
   { de: 'Wall Sit com Inclinação de Tronco', para: 'Agachamento Isométrico na Parede com Inclinação de Tronco' },
   { de: 'Superman', para: 'Super-Homem' },
+
+  // ── Lote 2: nomes mutilados (palavras coladas/em inglês vindas do sync) ──
+  // Ex.: "Smithdeadlift" (equipamento + termo em inglês colados) — corrigido
+  // para o padrão didático PT-BR usado no restante da base.
+  { de: 'Smithdeadlift', para: 'Levantamento Terra no Smith' },
+  { de: 'Smithsquat', para: 'Agachamento no Smith' },
+  { de: 'Maquina de Alavancadeadlift', para: 'Levantamento Terra na Máquina de Alavanca' },
+  { de: 'Unilateral squat (pistol) male', para: 'Agachamento Unilateral Pistol' },
+  { de: 'Superman Flexao de Braco', para: 'Super-Homem com Flexão de Braço' },
+  { de: 'Semi squat Salto', para: 'Agachamento Parcial com Salto' },
+  // "squatting" = agachado → qualifica o nome para não colidir com a
+  // "Rosca na Polia" já existente (id ds-0868) e mantém a fidelidade ao original.
+  { de: 'Na Polia squatting Rosca', para: 'Rosca na Polia Agachado' },
+  { de: 'Peso Corporal squatting Remada', para: 'Remada com Peso Corporal' },
+  { de: 'Com Barra squat Salto Passo Posterior Avanco', para: 'Agachamento com Barra + Avanço' },
+
+  // ── Lote 3: resíduos que ainda falhavam no validador do domínio ──
+  // (ExercicioLinguagemDidatica.test.ts). Casos em minúsculas que escaparam
+  // das regras do lote 1, um nome com "v-up" e o termo "Navy Seal" (inglês).
+  { de: 'Hands bike', para: 'Bike de Braço' },
+  { de: 'Com Elastico v-up', para: 'Abdominal em V com Elástico' },
+  { de: 'Band Alternado v-up', para: 'Abdominal em V Alternado com Elástico' },
+  { de: 'Burpee Navy Seal', para: 'Burpee Fuzileiro Naval' },
 ]
 
 async function renomearExercicios() {
