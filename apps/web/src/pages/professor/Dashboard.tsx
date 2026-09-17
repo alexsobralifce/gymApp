@@ -9,9 +9,11 @@ import { UsersIcon, DumbbellIcon, ActivityIcon, Building2Icon, ChartLineIcon, Pl
 
 export default function ProfessorDashboard() {
   const [dados, setDados] = useState<ProfessorDashboard[]>([])
+  const [limiteAlunos, setLimiteAlunos] = useState<{ usados: number; limite: number | null } | null>(null)
   const [vinculos, setVinculos] = useState<Vinculo[]>([])
   const [academiaId, setAcademiaId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [removendoId, setRemovendoId] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -31,6 +33,24 @@ export default function ProfessorDashboard() {
       .then(setDados)
       .finally(() => setLoading(false))
   }, [academiaId])
+
+  useEffect(() => {
+    api.getLimiteAlunos().then(setLimiteAlunos).catch(() => {})
+  }, [dados.length])
+
+  async function handleRemoverAluno(alunoId: string, nome: string) {
+    if (!window.confirm(`Remover ${nome} da sua lista de alunos?`)) return
+    setRemovendoId(alunoId)
+    try {
+      await api.removerAluno(alunoId)
+      setDados((prev) => prev.filter((a) => a.id !== alunoId))
+      setLimiteAlunos((prev) => (prev ? { ...prev, usados: Math.max(0, prev.usados - 1) } : prev))
+    } catch {
+      // silent — usuário pode tentar de novo
+    } finally {
+      setRemovendoId(null)
+    }
+  }
 
   const totalAlunos = dados.length
   const totalTreinos = dados.reduce((acc, a) => acc + a.treinos.length, 0)
@@ -60,7 +80,12 @@ export default function ProfessorDashboard() {
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
           <UsersIcon className="h-5 w-5 text-blue-400 mx-auto mb-2" />
-          <p className="text-xl font-bold text-text">{totalAlunos}</p>
+          <p className="text-xl font-bold text-text">
+            {totalAlunos}
+            {limiteAlunos?.limite != null && (
+              <span className="text-sm font-medium text-text-muted"> / {limiteAlunos.limite}</span>
+            )}
+          </p>
           <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Alunos</p>
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
@@ -74,6 +99,13 @@ export default function ProfessorDashboard() {
           <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Ativos</p>
         </div>
       </div>
+
+      {limiteAlunos?.limite != null && limiteAlunos.usados >= limiteAlunos.limite && (
+        <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-xs text-accent font-medium">
+          Você atingiu o limite de {limiteAlunos.limite} alunos do seu plano. Remova um aluno ou faça upgrade em{' '}
+          <button onClick={() => navigate('/planos')} className="underline font-bold cursor-pointer">Planos</button>.
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-4">
@@ -144,6 +176,13 @@ export default function ProfessorDashboard() {
                   >
                     <DumbbellIcon className="h-3.5 w-3.5 inline mr-1.5" />
                     Montar Treino
+                  </button>
+                  <button
+                    onClick={() => handleRemoverAluno(aluno.id, aluno.usuario.nome)}
+                    disabled={removendoId === aluno.id}
+                    className="rounded-xl border border-destructive/30 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
+                  >
+                    {removendoId === aluno.id ? '...' : 'Remover'}
                   </button>
                 </div>
               </div>

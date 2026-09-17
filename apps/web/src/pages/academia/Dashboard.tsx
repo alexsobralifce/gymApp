@@ -108,7 +108,12 @@ export default function AcademiaDashboard() {
                 <UsersIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-extrabold text-text">{data.totalProfessores}</p>
+                <p className="text-2xl font-extrabold text-text">
+                  {data.totalProfessores}
+                  {data.maxProfessores != null && (
+                    <span className="text-base font-medium text-text-muted"> / {data.maxProfessores}</span>
+                  )}
+                </p>
                 <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Professores</p>
               </div>
             </div>
@@ -128,7 +133,12 @@ export default function AcademiaDashboard() {
                 <UsersIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-extrabold text-text">{data.totalAlunos}</p>
+                <p className="text-2xl font-extrabold text-text">
+                  {data.totalAlunos}
+                  {data.limiteAlunos?.limite != null && (
+                    <span className="text-base font-medium text-text-muted"> / {data.limiteAlunos.limite}</span>
+                  )}
+                </p>
                 <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Alunos</p>
               </div>
             </div>

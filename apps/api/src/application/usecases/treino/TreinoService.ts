@@ -770,6 +770,9 @@ export async function dashboardProfessor(professorId: string, academiaId?: strin
           finalizado_em: true,
           atualizado_em: true,
           is_template: true,
+          avaliacao_dificuldade: true,
+          nota_avaliacao: true,
+          feedback_comentario: true,
         },
       },
     },
@@ -1029,6 +1032,7 @@ export async function obterHistoricoExecucoesDetalhado(alunoId: string, mes?: st
         serieNumero: number
         cargaKg: number
         repeticoes: number
+        rpe: number | null
         registradoEm: Date
       }>
     }> = {}
@@ -1046,6 +1050,7 @@ export async function obterHistoricoExecucoesDetalhado(alunoId: string, mes?: st
         serieNumero: e.serie_numero,
         cargaKg: e.carga_kg,
         repeticoes: e.repeticoes,
+        rpe: e.rpe,
         registradoEm: e.registrado_em,
       })
     }
@@ -1061,6 +1066,9 @@ export async function obterHistoricoExecucoesDetalhado(alunoId: string, mes?: st
       dataConclusao: h.timestamp.toISOString(),
       duracaoSegundos: h.duracao_segundos,
       duracaoMinutos,
+      notaAvaliacao: h.nota_avaliacao,
+      feedbackComentario: h.feedback_comentario,
+      caloriasQueimadas: h.calorias_queimadas,
       exercicios: Object.values(exerciciosMap),
     }
   })

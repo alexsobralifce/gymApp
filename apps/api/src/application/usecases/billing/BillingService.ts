@@ -5,10 +5,40 @@ import { getMercadoPagoGateway } from '../../../infrastructure/payments/MercadoP
 import { AppError, BadRequestError, NotFoundError, UnauthorizedError } from '../../../domain/errors/AppError.js'
 import { sincronizarPatrocinioPorProfessor, sincronizarPatrocinioPorAcademia } from './PatrocinioService.js'
 
+/** Reavalia os efeitos de uma mudança de status de assinatura sobre o tenant: patrocínio dos
+ *  alunos vinculados e, no caso de Academia, o teto de professores (`max_professores`), que
+ *  passa a refletir `professores_inclusos` da assinatura própria/manual vigente. Nunca reduz
+ *  `max_professores` automaticamente (evita expulsar professor já ativo por atraso de
+ *  pagamento) — só sobe quando há assinatura válida com um valor maior. */
 async function ressincronizarAlunosPatrocinados(tenantTipo: TenantTipo | null, tenantId: string | null) {
   if (!tenantId) return
-  if (tenantTipo === 'PROFESSOR') await sincronizarPatrocinioPorProfessor(tenantId)
-  else if (tenantTipo === 'ACADEMIA') await sincronizarPatrocinioPorAcademia(tenantId)
+  if (tenantTipo === 'PROFESSOR') {
+    await sincronizarPatrocinioPorProfessor(tenantId)
+    return
+  }
+  if (tenantTipo !== 'ACADEMIA') return
+
+  await sincronizarPatrocinioPorAcademia(tenantId)
+
+  const assinaturaValida = await prisma.assinatura.findFirst({
+    where: {
+      tenant_tipo: 'ACADEMIA',
+      tenant_id: tenantId,
+      origem: { in: ['PROPRIA', 'MANUAL'] },
+      status: { in: ['ATIVA', 'EM_CARENCIA'] },
+    },
+    orderBy: { criado_em: 'desc' },
+    include: { plano: { select: { professores_inclusos: true } } },
+  })
+  if (!assinaturaValida) return
+
+  const academia = await prisma.academia.findUnique({ where: { id: tenantId }, select: { max_professores: true } })
+  if (academia && assinaturaValida.plano.professores_inclusos > academia.max_professores) {
+    await prisma.academia.update({
+      where: { id: tenantId },
+      data: { max_professores: assinaturaValida.plano.professores_inclusos },
+    })
+  }
 }
 
 // Cobrança "através de pessoa física" — ver docs/planning/integracao-mercado-pago.md.

@@ -338,6 +338,10 @@ export const api = {
   getDashboard: (academiaId?: string) =>
     api.get<ProfessorDashboard[]>(`/professores/dashboard${academiaId ? `?academiaId=${academiaId}` : ''}`),
 
+  getLimiteAlunos: () => api.get<{ usados: number; limite: number | null }>('/professores/limite-alunos'),
+
+  removerAluno: (alunoId: string) => api.delete(`/professores/alunos/${alunoId}`),
+
   vincularAcademia: (academiaId: string) =>
     api.post<{ jaVinculado?: boolean; status?: string }>(`/professores/vincular/${academiaId}`),
 

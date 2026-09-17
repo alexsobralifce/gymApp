@@ -4,6 +4,7 @@ import { Role, AcademiaStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { sincronizarPatrocinioAluno } from '../../../application/usecases/billing/PatrocinioService.js'
+import { assertProfessorPodeReceberAluno, obterLimiteEUsoAcademia } from '../../../application/usecases/billing/LimiteAlunosService.js'
 import {
   cadastrarAcademia,
   autorizarProfessorPrimeiraEtapa,
@@ -19,13 +20,13 @@ export async function academiaRoutes(app: FastifyInstance) {
     const academiaId = request.currentUser.tenantId!
     const academia = await prisma.academia.findUnique({
       where: { id: academiaId },
-      select: { nome: true, cnpj: true, status: true, usuario: { select: { email: true, telefone: true } } },
+      select: { nome: true, cnpj: true, status: true, max_professores: true, usuario: { select: { email: true, telefone: true } } },
     })
     if (!academia) throw new NotFoundError('Academia')
 
-    const [totalProfessores, totalAlunos, professoresPendentes] = await Promise.all([
+    const [totalProfessores, limiteAlunos, professoresPendentes] = await Promise.all([
       prisma.professorAcademia.count({ where: { academia_id: academiaId, status: 'ATIVO' } }),
-      prisma.aluno.count({ where: { academia_id: academiaId } }),
+      obterLimiteEUsoAcademia(academiaId),
       prisma.professorAcademia.count({ where: { academia_id: academiaId, status: 'PENDENTE_ACADEMIA' } }),
     ])
 
@@ -36,7 +37,9 @@ export async function academiaRoutes(app: FastifyInstance) {
       telefone: academia.usuario.telefone,
       status: academia.status,
       totalProfessores,
-      totalAlunos,
+      maxProfessores: academia.max_professores,
+      totalAlunos: limiteAlunos.usados,
+      limiteAlunos,
       professoresPendentes,
     })
   })
@@ -148,6 +151,7 @@ export async function academiaRoutes(app: FastifyInstance) {
       if (!professorVinculo) {
         throw new NotFoundError('Professor não está ativo nesta academia')
       }
+      await assertProfessorPodeReceberAluno(professorId, aluno.professor_id ?? null)
     }
 
     const updated = await prisma.aluno.update({

@@ -227,7 +227,9 @@ export interface AcademiaDashboard {
   telefone?: string | null
   status: string
   totalProfessores: number
+  maxProfessores?: number
   totalAlunos: number
+  limiteAlunos?: { usados: number; limite: number | null }
   professoresPendentes: number
 }
 
@@ -313,6 +315,7 @@ export interface ProfessorDashboard {
     status: TreinoStatus
     dias_semana: number[]
     is_template?: boolean
+    avaliacao_dificuldade?: string | null
     nota_avaliacao?: number | null
     feedback_comentario?: string | null
     iniciado_em?: string | null

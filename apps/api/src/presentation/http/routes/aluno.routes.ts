@@ -13,6 +13,7 @@ import {
 } from '../../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
 import { exportarDados, gerarCSV, gerarRelatorioHTML } from '../../../application/usecases/aluno/ExportacaoService.js'
 import { sincronizarPatrocinioAluno } from '../../../application/usecases/billing/PatrocinioService.js'
+import { assertProfessorPodeReceberAluno, assertAcademiaPodeReceberAluno } from '../../../application/usecases/billing/LimiteAlunosService.js'
 import { absolutizeMedia } from '../../../shared/media.js'
 
 function calcularIMC(pesoKg: number, alturaCm: number): number | null {
@@ -150,6 +151,9 @@ export async function alunoRoutes(app: FastifyInstance) {
     if (!academia) throw new NotFoundError('Academia não encontrada')
     if (academia.status !== AcademiaStatus.ATIVO) throw new NotFoundError('Academia não está ativa')
     const aluno = await resolveAluno(request.currentUser.sub)
+
+    await assertAcademiaPodeReceberAluno(academiaId, aluno.academia_id ?? null)
+
     const updated = await prisma.aluno.update({
       where: { id: aluno.id },
       data: { academia_id: academiaId },
@@ -200,6 +204,7 @@ export async function alunoRoutes(app: FastifyInstance) {
     if (professorId !== null) {
       const professor = await prisma.professor.findUnique({ where: { id: professorId } })
       if (!professor) throw new NotFoundError('Professor não encontrado')
+      await assertProfessorPodeReceberAluno(professorId, aluno.professor_id ?? null)
     }
 
     const updated = await prisma.aluno.update({

@@ -69,6 +69,16 @@ export class LimiteProfessoresExcedidoError extends AppError {
   }
 }
 
+export class LimiteAlunosExcedidoError extends AppError {
+  constructor(limite: number) {
+    super(
+      `Limite de alunos do plano atingido (${limite}). Remova um aluno ou faça upgrade do plano.`,
+      422,
+      'LIMITE_ALUNOS_EXCEDIDO',
+    )
+  }
+}
+
 export class TenantAccessError extends AppError {
   constructor() {
     super('Acesso a recurso de outro tenant negado', 403, 'TENANT_ACCESS_DENIED')

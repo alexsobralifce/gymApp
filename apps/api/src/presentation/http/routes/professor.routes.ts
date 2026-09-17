@@ -6,6 +6,7 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { obterCorrelacoes } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
 import { sincronizarPatrocinioAluno, sincronizarPatrocinioPorProfessor } from '../../../application/usecases/billing/PatrocinioService.js'
+import { assertProfessorPodeReceberAluno, assertAcademiaPodeReceberAluno, obterLimiteEUsoProfessor } from '../../../application/usecases/billing/LimiteAlunosService.js'
 
 async function resolveProfessor(usuarioId: string) {
   return prisma.professor.upsert({
@@ -181,6 +182,16 @@ export async function professorRoutes(app: FastifyInstance) {
       if (!vinculo) throw new TenantAccessError()
     }
 
+    const alunoExistente = await prisma.aluno.findUnique({
+      where: { usuario_id: usuarioId! },
+      select: { professor_id: true, academia_id: true },
+    })
+
+    await assertProfessorPodeReceberAluno(professor.id, alunoExistente?.professor_id ?? null)
+    if (body.academiaId) {
+      await assertAcademiaPodeReceberAluno(body.academiaId, alunoExistente?.academia_id ?? null)
+    }
+
     const aluno = await prisma.aluno.upsert({
       where: { usuario_id: usuarioId! },
       create: {
@@ -214,12 +225,37 @@ export async function professorRoutes(app: FastifyInstance) {
     return reply.status(200).send(aluno)
   })
 
+  /** DELETE /professores/alunos/:alunoId — remove um aluno específico da própria lista
+   *  (o aluno continua com a conta normalmente, só perde o vínculo com este professor). */
+  app.delete('/alunos/:alunoId', { preHandler }, async (request, reply) => {
+    const { alunoId } = z.object({ alunoId: z.string() }).parse(request.params)
+    const professor = await resolveProfessor(request.currentUser.sub)
+
+    const aluno = await prisma.aluno.findFirst({ where: { id: alunoId, professor_id: professor.id } })
+    if (!aluno) throw new NotFoundError('Aluno não encontrado na sua lista')
+
+    await prisma.aluno.update({ where: { id: alunoId }, data: { professor_id: null } })
+
+    await sincronizarPatrocinioAluno(alunoId).catch((err) => {
+      request.log.warn({ err }, '[Billing] Erro ao sincronizar patrocínio do aluno')
+    })
+
+    return reply.status(204).send()
+  })
+
   /** GET /professores/dashboard — UC-14 */
   app.get('/dashboard', { preHandler }, async (request, reply) => {
     const professor = await resolveProfessor(request.currentUser.sub)
     const { academiaId } = z.object({ academiaId: z.string().optional() }).parse(request.query)
     const data = await dashboardProfessor(professor.id, academiaId)
     return reply.status(200).send(data)
+  })
+
+  /** GET /professores/limite-alunos — quantos alunos o professor tem vs. a faixa do plano */
+  app.get('/limite-alunos', { preHandler }, async (request, reply) => {
+    const professor = await resolveProfessor(request.currentUser.sub)
+    const limite = await obterLimiteEUsoProfessor(professor.id)
+    return reply.status(200).send(limite)
   })
 
   /** GET /professores/alunos/:alunoId/correlacoes — UC-16 + UC-32 */
