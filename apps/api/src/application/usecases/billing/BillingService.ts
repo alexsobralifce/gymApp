@@ -1,4 +1,4 @@
-import { AssinaturaStatus, CobrancaStatus, Role, TenantTipo } from '@prisma/client'
+import { AssinaturaStatus, CobrancaStatus, Prisma, Role, TenantTipo } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { env } from '../../../shared/env.js'
 import { getMercadoPagoGateway } from '../../../infrastructure/payments/MercadoPagoGateway.js'
@@ -322,6 +322,108 @@ export async function listarFaturas(usuarioId: string) {
     where: { assinatura: { usuario_id: usuarioId } },
     orderBy: { criado_em: 'desc' },
   })
+}
+
+// ─── Painel financeiro (ROOT) ────────────────────────────────────────────────
+
+export async function obterResumoFinanceiro() {
+  const [porStatus, porOrigem, ativas, faturasPendentes, faturasVencidas] = await Promise.all([
+    prisma.assinatura.groupBy({ by: ['status'], _count: { _all: true } }),
+    prisma.assinatura.groupBy({ by: ['origem'], _count: { _all: true }, where: { status: 'ATIVA' } }),
+    prisma.assinatura.findMany({
+      where: { status: 'ATIVA', origem: 'PROPRIA' },
+      select: { valor_mensal_cents: true, plano: { select: { codigo: true, papel_alvo: true } } },
+    }),
+    prisma.cobranca.count({ where: { status: 'PENDENTE' } }),
+    prisma.cobranca.count({ where: { status: 'VENCIDA' } }),
+  ])
+
+  const mrrCents = ativas.reduce((soma, a) => soma + (a.valor_mensal_cents ?? 0), 0)
+
+  const mrrPorPapel = ativas.reduce<Record<string, number>>((acc, a) => {
+    const papel = a.plano.papel_alvo
+    acc[papel] = (acc[papel] ?? 0) + (a.valor_mensal_cents ?? 0)
+    return acc
+  }, {})
+
+  return {
+    mrrCents,
+    mrrPorPapel,
+    assinantesPagantes: ativas.length,
+    porStatus: Object.fromEntries(porStatus.map((s) => [s.status, s._count._all])),
+    porOrigem: Object.fromEntries(porOrigem.map((o) => [o.origem, o._count._all])),
+    faturasPendentes,
+    faturasVencidas,
+  }
+}
+
+export interface ListarAssinaturasFiltro {
+  page: number
+  limit: number
+  status?: string
+  search?: string
+}
+
+export async function listarAssinaturasAdmin(filtro: ListarAssinaturasFiltro) {
+  const where: Prisma.AssinaturaWhereInput = {}
+  if (filtro.status) where.status = filtro.status as never
+  if (filtro.search) {
+    where.usuario = {
+      OR: [
+        { nome: { contains: filtro.search, mode: 'insensitive' } },
+        { email: { contains: filtro.search, mode: 'insensitive' } },
+      ],
+    }
+  }
+
+  const skip = (filtro.page - 1) * filtro.limit
+  const [items, total] = await Promise.all([
+    prisma.assinatura.findMany({
+      where,
+      include: {
+        usuario: { select: { id: true, nome: true, email: true, role: true } },
+        plano: { select: { codigo: true, nome: true } },
+      },
+      orderBy: { criado_em: 'desc' },
+      skip,
+      take: filtro.limit,
+    }),
+    prisma.assinatura.count({ where }),
+  ])
+
+  return { items, total, page: filtro.page, limit: filtro.limit, totalPages: Math.ceil(total / filtro.limit) }
+}
+
+export interface ListarFaturasFiltro {
+  page: number
+  limit: number
+  status?: string
+}
+
+export async function listarFaturasAdmin(filtro: ListarFaturasFiltro) {
+  const where: Prisma.CobrancaWhereInput = {}
+  if (filtro.status) where.status = filtro.status as never
+
+  const skip = (filtro.page - 1) * filtro.limit
+  const [items, total] = await Promise.all([
+    prisma.cobranca.findMany({
+      where,
+      include: {
+        assinatura: {
+          select: {
+            usuario: { select: { nome: true, email: true } },
+            plano: { select: { codigo: true, nome: true } },
+          },
+        },
+      },
+      orderBy: { criado_em: 'desc' },
+      skip,
+      take: filtro.limit,
+    }),
+    prisma.cobranca.count({ where }),
+  ])
+
+  return { items, total, page: filtro.page, limit: filtro.limit, totalPages: Math.ceil(total / filtro.limit) }
 }
 
 export async function cancelarAssinaturaAtual(usuarioId: string) {

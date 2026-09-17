@@ -14,7 +14,13 @@ import {
   aprovacaoVinculoProfessor,
   alterarStatusAcademia,
 } from '../../../application/usecases/academia/AcademiaService.js'
-import { liberarPremiumManual, revogarPremiumManual } from '../../../application/usecases/billing/BillingService.js'
+import {
+  liberarPremiumManual,
+  revogarPremiumManual,
+  obterResumoFinanceiro,
+  listarAssinaturasAdmin,
+  listarFaturasAdmin,
+} from '../../../application/usecases/billing/BillingService.js'
 
 const execAsync = promisify(exec)
 
@@ -936,6 +942,35 @@ export async function rootRoutes(app: FastifyInstance) {
   app.post('/premium/revogar', { preHandler }, async (request, reply) => {
     const body = z.object({ usuarioId: z.string().min(1) }).parse(request.body)
     const result = await revogarPremiumManual(body.usuarioId)
+    return reply.status(200).send(result)
+  })
+
+  /** GET /root/billing/resumo — MRR, assinantes ativos, faturas pendentes/vencidas */
+  app.get('/billing/resumo', { preHandler }, async (_request, reply) => {
+    const resumo = await obterResumoFinanceiro()
+    return reply.status(200).send(resumo)
+  })
+
+  /** GET /root/billing/assinaturas — lista paginada de assinaturas (busca por nome/email) */
+  app.get('/billing/assinaturas', { preHandler }, async (request, reply) => {
+    const query = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      status: z.string().optional(),
+      search: z.string().optional(),
+    }).parse(request.query)
+    const result = await listarAssinaturasAdmin(query)
+    return reply.status(200).send(result)
+  })
+
+  /** GET /root/billing/faturas — lista paginada de cobranças */
+  app.get('/billing/faturas', { preHandler }, async (request, reply) => {
+    const query = z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      status: z.string().optional(),
+    }).parse(request.query)
+    const result = await listarFaturasAdmin(query)
     return reply.status(200).send(result)
   })
 }

@@ -15,6 +15,7 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
 import Planos from './pages/planos/Planos'
+import Checkout from './pages/billing/Checkout'
 import GoogleCallback from './pages/auth/GoogleCallback'
 import AlunoDashboard from './pages/aluno/Dashboard'
 import AlunoTreinoInicio from './pages/aluno/TreinoInicio'
@@ -36,6 +37,7 @@ import RootVinculos from './pages/root/Vinculos'
 import RootUsuarios from './pages/root/Usuarios'
 import RootSocial from './pages/root/Social'
 import RootAvaliacoesSistema from './pages/root/AvaliacoesSistema'
+import RootFinanceiro from './pages/root/Financeiro'
 import AcademiaDashboard from './pages/academia/Dashboard'
 import AcademiaProfessores from './pages/academia/Professores'
 import AcademiaAlunos from './pages/academia/Alunos'
@@ -104,6 +106,12 @@ export default function App() {
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
       {!user && <Route index element={<Landing />} />}
+
+      {user && (
+        <Route element={<AppShell />}>
+          <Route path="billing/checkout" element={<Checkout />} />
+        </Route>
+      )}
 
       {user?.role === 'ALUNO' && (
         <>
@@ -186,6 +194,7 @@ export default function App() {
           <Route path="vinculos" element={<RootVinculos />} />
           <Route path="documentacao" element={<Documentacao />} />
           <Route path="usuarios" element={<RootUsuarios />} />
+          <Route path="financeiro" element={<RootFinanceiro />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="avaliacoes-sistema" element={<RootAvaliacoesSistema />} />
           <Route path="social" element={<RootSocial />} />
