@@ -115,10 +115,10 @@ export default function Planos() {
               A partir de R$ 0,60 por aluno ativo/mês
             </span>
             <span className="glass rounded-full px-3 py-1.5 font-semibold text-text">
-              15 dias grátis no Personal
+              15 dias grátis em todos os planos
             </span>
             <span className="glass rounded-full px-3 py-1.5 font-semibold text-text">
-              30 dias grátis na Academia
+              Pagamento seguro via Mercado Pago
             </span>
           </div>
         </div>
@@ -256,11 +256,15 @@ export default function Planos() {
               Já tenho conta
             </Link>
           </div>
+          <p className="mt-4 text-xs text-text-muted">
+            Toda cobrança é processada com segurança pelo Mercado Pago. Você autoriza o cartão no
+            cadastro e só é cobrado automaticamente após os 15 dias de teste, caso não cancele antes.
+          </p>
         </section>
 
         <footer className="mt-12 flex items-center justify-center gap-2 border-t border-border pt-6 text-xs text-text-muted">
           <Building2Icon className="h-4 w-4" />
-          <span>ENDORFINAPP — A Química do Crescimento</span>
+          <span>ENDORFINAPP — A Química do Crescimento · Pagamentos via Mercado Pago</span>
         </footer>
       </main>
     </div>

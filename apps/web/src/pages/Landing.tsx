@@ -95,6 +95,9 @@ export default function Landing() {
                   {link}
                 </a>
               ))}
+              <Link to="/planos" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
+                Planos
+              </Link>
             </nav>
 
             <div className="hidden md:flex items-center gap-3">
@@ -139,6 +142,13 @@ export default function Landing() {
                 {link}
               </a>
             ))}
+            <Link
+              to="/planos"
+              className="block py-3 text-sm text-muted-foreground hover:text-foreground border-b border-border last:border-0"
+              onClick={() => setMobileOpen(false)}
+            >
+              Planos
+            </Link>
             <div className="mt-4 flex gap-2">
               <Link
                 to="/login"
@@ -557,6 +567,7 @@ export default function Landing() {
               { title: 'Produto', links: ['Funcionalidades', 'Ciencia', 'Rede Social', 'Como Funciona'] },
               { title: 'Para Quem', links: ['Aluno Autogestão', 'Professor', 'Academia', 'Personal Trainer'] },
               { title: 'Links', links: [
+                { label: 'Planos', href: '/planos' },
                 { label: 'Entrar', href: '/login' },
                 { label: 'Criar Conta', href: '/register' },
                 { label: 'Termos de Uso', href: '/politica-privacidade' },
