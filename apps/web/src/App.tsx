@@ -16,6 +16,7 @@ import Register from './pages/auth/Register'
 import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
 import Planos from './pages/planos/Planos'
 import Checkout from './pages/billing/Checkout'
+import OnboardingPlano from './pages/auth/OnboardingPlano'
 import GoogleCallback from './pages/auth/GoogleCallback'
 import AlunoDashboard from './pages/aluno/Dashboard'
 import AlunoTreinoInicio from './pages/aluno/TreinoInicio'
@@ -111,6 +112,8 @@ export default function App() {
           <Route path="billing/checkout" element={<Checkout />} />
         </Route>
       )}
+
+      {user && <Route path="onboarding/plano" element={<OnboardingPlano />} />}
 
       {user?.role === 'ALUNO' && (
         <>

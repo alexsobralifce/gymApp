@@ -5,7 +5,6 @@ import { useAuthStore } from '../../stores/auth'
 import { api } from '../../api/client'
 import type { Academia } from '../../types/api'
 import { EndorfinappLogo } from '../../components/branding'
-import TrialCartaoStep from '../../components/billing/TrialCartaoStep'
 import StepIndicator from './StepIndicator'
 import Step1Basics from './Step1Basics'
 import Step2Profile from './Step2Profile'
@@ -59,7 +58,6 @@ export default function RegisterWizard() {
   const [isResending, setIsResending] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelMessage, setCancelMessage] = useState<string | null>(null)
-  const [showBilling, setShowBilling] = useState(false)
 
   const { register, login, loading, error } = useAuthStore()
   const navigate = useNavigate()
@@ -162,8 +160,11 @@ export default function RegisterWizard() {
 
     // Aluno e Professor já têm tenant pra assinar agora (Academia cadastra nome/CNPJ
     // no próprio dashboard antes — o passo de plano+cartão dela acontece lá).
+    // É uma navegação pra rota própria (não um estado local aqui) porque /register expulsa
+    // o usuário pra "/" assim que o login completa — um passo mostrado dentro do próprio
+    // wizard seria desmontado antes de aparecer.
     if (isAluno || role === 'PROFESSOR') {
-      setShowBilling(true)
+      navigate('/onboarding/plano')
       return
     }
 
@@ -287,24 +288,20 @@ export default function RegisterWizard() {
 
         <div className="text-center">
           <h1 className="text-xl font-bold text-text">
-            {isVerifyingEmail ? 'Verificação de Conta' : showBilling ? 'Quase lá!' : 'Crie sua Conta Grátis'}
+            {isVerifyingEmail ? 'Verificação de Conta' : 'Crie sua Conta Grátis'}
           </h1>
           <p className="text-xs text-text-muted mt-0.5">
-            {isVerifyingEmail
-              ? 'Ative seu e-mail para começar'
-              : showBilling
-              ? 'Só falta autorizar seu cartão pra liberar o teste grátis'
-              : 'Comece a treinar com inteligência hoje'}
+            {isVerifyingEmail ? 'Ative seu e-mail para começar' : 'Comece a treinar com inteligência hoje'}
           </p>
         </div>
 
-        {cancelMessage && !isVerifyingEmail && !showBilling && (
+        {cancelMessage && !isVerifyingEmail && (
           <p className="rounded bg-success/15 border border-success/30 p-2.5 text-xs text-success text-center">
             {cancelMessage}
           </p>
         )}
 
-        {error && !googleRedirectError && !isVerifyingEmail && !showBilling && (
+        {error && !googleRedirectError && !isVerifyingEmail && (
           <div className="space-y-2">
             <p className="rounded bg-destructive/10 border border-destructive/30 p-2.5 text-xs text-destructive text-center font-medium">
               {error}
@@ -325,7 +322,7 @@ export default function RegisterWizard() {
           </div>
         )}
 
-        {googleRedirectError && !isVerifyingEmail && !showBilling && (
+        {googleRedirectError && !isVerifyingEmail && (
           <p className="rounded bg-destructive/10 border border-destructive/30 p-2.5 text-xs text-destructive text-center">
             {googleRedirectError === 'cancelado'
               ? 'Cadastro com Google cancelado.'
@@ -335,10 +332,8 @@ export default function RegisterWizard() {
           </p>
         )}
 
-        {/* ─── ETAPA DE PLANO + CARTÃO (obrigatória, pós-verificação) ─── */}
-        {showBilling ? (
-          <TrialCartaoStep role={role} onConcluido={() => navigate('/welcome')} />
-        ) : isVerifyingEmail ? (
+        {/* ─── ETAPA DE VERIFICAÇÃO DE E-MAIL (4 DÍGITOS) ─── */}
+        {isVerifyingEmail ? (
           <div className="space-y-4 text-center py-1">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
               <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
