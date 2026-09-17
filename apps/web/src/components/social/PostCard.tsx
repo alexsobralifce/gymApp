@@ -93,6 +93,7 @@ export default function PostCard({
   const [curtiu, setCurtiu] = useState(post.curtiu || false)
   const [curtidasCount, setCurtidasCount] = useState(post.curtidas_count)
   const [curtidoEm, setCurtidoEm] = useState<string | null>(post.curtido_em ? formatHora(post.curtido_em) : null)
+  const [midiaErro, setMidiaErro] = useState(false)
 
   // Estados dos modais de ação
   const [menuOpen, setMenuOpen] = useState(false)
@@ -283,14 +284,15 @@ export default function PostCard({
         </p>
       )}
 
-      {resolveMediaUrl(post.midia_url) && (
-        <div className="overflow-hidden rounded-xl border border-surface-input">
+      {resolveMediaUrl(post.midia_url) && !midiaErro && (
+        <div className="overflow-hidden rounded-xl border border-surface-input bg-surface-input/40 flex items-center justify-center">
           <img
             src={resolveMediaUrl(post.midia_url)!}
             alt="Foto do treino"
-            className="w-full h-auto object-cover"
-            style={{ maxHeight: 'min(65vw, 340px)', aspectRatio: '4/3' }}
+            className="max-w-full w-auto h-auto object-contain"
+            style={{ maxHeight: 'min(80vw, 420px)' }}
             loading="lazy"
+            onError={() => setMidiaErro(true)}
           />
         </div>
       )}
