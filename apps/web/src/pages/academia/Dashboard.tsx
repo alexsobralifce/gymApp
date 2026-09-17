@@ -5,6 +5,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import { Building2Icon, UsersIcon, UserPlusIcon } from '../../components/icons/Icon'
+import TrialCartaoStep from '../../components/billing/TrialCartaoStep'
 
 function formatCNPJ(value: string) {
   return value
@@ -24,6 +25,7 @@ export default function AcademiaDashboard() {
   const [nome, setNome] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [showBilling, setShowBilling] = useState(false)
 
   useEffect(() => {
     api.getDashboardAcademia()
@@ -42,6 +44,7 @@ export default function AcademiaDashboard() {
       setFeedback(`Academia "${a.nome}" cadastrada! Aguardando aprovacao do Root.`)
       setCadastrada(true)
       setData({ nome: a.nome, cnpj: a.cnpj, email: null, telefone: null, status: a.status, totalProfessores: 0, totalAlunos: 0, professoresPendentes: 0 })
+      setShowBilling(true)
     } catch (err: any) {
       setFeedback(err.message || 'Erro ao cadastrar. Verifique o CNPJ (14 digitos).')
     }
@@ -51,6 +54,14 @@ export default function AcademiaDashboard() {
     return (
       <div className="p-4 md:p-6 flex items-center justify-center min-h-[50vh]">
         <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (showBilling) {
+    return (
+      <div className="px-4 py-6 max-w-md mx-auto w-full">
+        <TrialCartaoStep role="ACADEMIA" onConcluido={() => setShowBilling(false)} />
       </div>
     )
   }
