@@ -17,6 +17,28 @@ import type { SocialPost, ClubeDetalhe, MembroClube } from '../../types/api'
 import { getInitials } from '../../lib/initials'
 import { resolveMediaUrl } from '../../lib/media'
 
+function AvatarMembro({ nome, fotoUrl }: { nome: string; fotoUrl: string | null }) {
+  const [imgOk, setImgOk] = useState(true)
+  const src = resolveMediaUrl(fotoUrl)
+
+  if (src && imgOk) {
+    return (
+      <img
+        src={src}
+        alt=""
+        onError={() => setImgOk(false)}
+        className="h-8 w-8 rounded-full object-cover border border-surface-input shrink-0"
+      />
+    )
+  }
+
+  return (
+    <div className="h-8 w-8 rounded-full bg-surface-input flex items-center justify-center text-xs font-bold text-text-muted shrink-0">
+      {getInitials(nome)}
+    </div>
+  )
+}
+
 export default function ClubeFeed() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -244,13 +266,7 @@ export default function ClubeFeed() {
                       key={m.alunoId}
                       className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-input/50 transition-colors"
                     >
-                      {resolveMediaUrl(m.fotoUrl) ? (
-                        <img src={resolveMediaUrl(m.fotoUrl)!} alt="" className="h-8 w-8 rounded-full object-cover border border-surface-input shrink-0" />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-surface-input flex items-center justify-center text-xs font-bold text-text-muted shrink-0">
-                          {getInitials(m.nome)}
-                        </div>
-                      )}
+                      <AvatarMembro nome={m.nome} fotoUrl={m.fotoUrl} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <p className="text-sm font-medium text-text truncate">{m.nome}</p>
@@ -304,13 +320,7 @@ export default function ClubeFeed() {
             <div className="flex-1 overflow-y-auto p-2">
               {membros.map((m) => (
                 <div key={m.alunoId} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-input/50 transition-colors">
-                  {resolveMediaUrl(m.fotoUrl) ? (
-                    <img src={resolveMediaUrl(m.fotoUrl)!} alt="" className="h-8 w-8 rounded-full object-cover border border-surface-input shrink-0" />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-surface-input flex items-center justify-center text-xs font-bold text-text-muted shrink-0">
-                      {getInitials(m.nome)}
-                    </div>
-                  )}
+                  <AvatarMembro nome={m.nome} fotoUrl={m.fotoUrl} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-medium text-text truncate">{m.nome}</p>

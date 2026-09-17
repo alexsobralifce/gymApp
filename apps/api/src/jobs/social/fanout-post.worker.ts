@@ -3,14 +3,7 @@ import { PostTipo, Visibilidade } from '@prisma/client'
 import { prisma } from '../../infrastructure/database/prisma.js'
 import { socialNotifyQueue } from './queues.js'
 import { buildJobId } from './job-id.js'
-import { env } from '../../shared/env.js'
-
-function absolutizeMedia(url: string | null | undefined): string | null {
-  if (!url) return null
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
-  if (url.startsWith('/')) return `${env.API_BASE_URL}${url}`
-  return `${env.API_BASE_URL}/${url}`
-}
+import { absolutizeMedia } from '../../shared/media.js'
 
 interface FanoutPayload {
   treinoId: string

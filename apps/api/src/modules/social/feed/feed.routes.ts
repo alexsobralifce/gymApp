@@ -3,14 +3,7 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { AppError, NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
-import { env } from '../../../shared/env.js'
-
-function absolutizeMedia(url: string | null | undefined): string | null {
-  if (!url) return null
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
-  if (url.startsWith('/')) return `${env.API_BASE_URL}${url}`
-  return `${env.API_BASE_URL}/${url}`
-}
+import { absolutizeMedia } from '../../../shared/media.js'
 
 async function resolveAluno(usuarioId: string) {
   return prisma.aluno.upsert({

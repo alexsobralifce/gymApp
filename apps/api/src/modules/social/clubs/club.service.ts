@@ -1,6 +1,7 @@
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../domain/errors/AppError.js'
 import { ClubMemberRole } from '@prisma/client'
+import { absolutizeMedia } from '../../../shared/media.js'
 
 const MAX_CLUBES_CRIADOS = 5
 
@@ -151,7 +152,7 @@ export class ClubService {
       return {
         alunoId: m.aluno_id,
         nome: a?.usuario.nome ?? '',
-        fotoUrl: a?.usuario.foto_url ?? null,
+        fotoUrl: absolutizeMedia(a?.usuario.foto_url),
         xpSemana: m.xp_semana,
         role: m.role,
         seguindo: amigoIds.has(m.aluno_id),

@@ -94,6 +94,7 @@ export default function PostCard({
   const [curtidasCount, setCurtidasCount] = useState(post.curtidas_count)
   const [curtidoEm, setCurtidoEm] = useState<string | null>(post.curtido_em ? formatHora(post.curtido_em) : null)
   const [midiaErro, setMidiaErro] = useState(false)
+  const [avatarErro, setAvatarErro] = useState(false)
 
   // Estados dos modais de ação
   const [menuOpen, setMenuOpen] = useState(false)
@@ -167,10 +168,11 @@ export default function PostCard({
     <div className="relative rounded-2xl bg-surface-card border border-surface-input p-4 animate-fade-in space-y-3">
       {/* Header */}
       <div className="flex items-center gap-3">
-        {resolveMediaUrl(post.autor_foto_url) ? (
+        {resolveMediaUrl(post.autor_foto_url) && !avatarErro ? (
           <img
             src={resolveMediaUrl(post.autor_foto_url)!}
             alt={post.autor_nome}
+            onError={() => setAvatarErro(true)}
             className="h-10 w-10 shrink-0 rounded-full object-cover border border-surface-input"
           />
         ) : (

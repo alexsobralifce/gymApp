@@ -12,16 +12,7 @@ import {
   PartialPreferenciasNotificacaoSchema,
 } from '../../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
 import { exportarDados, gerarCSV, gerarRelatorioHTML } from '../../../application/usecases/aluno/ExportacaoService.js'
-import { env } from '../../../shared/env.js'
-
-function absolutizeMedia(url: string | null | undefined): string | null {
-  if (url == null) return null
-  const s = String(url).trim()
-  if (!s || s === 'undefined' || s === 'null') return null
-  if (s.startsWith('http://') || s.startsWith('https://')) return s
-  if (s.startsWith('/')) return `${env.API_BASE_URL}${s}`
-  return `${env.API_BASE_URL}/${s}`
-}
+import { absolutizeMedia } from '../../../shared/media.js'
 
 function calcularIMC(pesoKg: number, alturaCm: number): number | null {
   if (!pesoKg || !alturaCm || alturaCm <= 0) return null

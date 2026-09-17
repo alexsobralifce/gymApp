@@ -4,6 +4,7 @@ import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { ClubService } from './club.service.js'
+import { absolutizeMedia } from '../../../shared/media.js'
 
 async function resolveAluno(usuarioId: string) {
   return prisma.aluno.upsert({
@@ -90,7 +91,7 @@ export async function clubRoutes(app: FastifyInstance) {
       return {
         alunoId: m.aluno_id,
         nome: a?.usuario.nome ?? '',
-        fotoUrl: a?.usuario.foto_url,
+        fotoUrl: absolutizeMedia(a?.usuario.foto_url),
         xpSemana: m.xp_semana,
       }
     })

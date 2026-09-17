@@ -34,6 +34,7 @@ export default function DadosAluno() {
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [fotoUrl, setFotoUrl] = useState<string | null>(null)
+  const [fotoErro, setFotoErro] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const [salvandoPessoais, setSalvandoPessoais] = useState(false)
@@ -122,6 +123,7 @@ export default function DadosAluno() {
         setNome(usuarioNome)
         setTelefone(formatPhone(usuarioTel))
         setFotoUrl(resolveMediaUrl(user?.fotoUrl) || null)
+        setFotoErro(false)
 
         if (pData.peso_kg) setPesoKg(String(pData.peso_kg))
         if (pData.altura_cm) setAlturaCm(String(pData.altura_cm))
@@ -157,6 +159,7 @@ export default function DadosAluno() {
       formData.append('file', file)
       const { fotoUrl: url } = await api.uploadAvatar(formData)
       setFotoUrl(resolveMediaUrl(url) || url)
+      setFotoErro(false)
       await fetchUser()
     } catch {
       // silent
@@ -337,10 +340,11 @@ export default function DadosAluno() {
               onClick={() => avatarInputRef.current?.click()}
               className="relative group cursor-pointer"
             >
-              {fotoUrl ? (
+              {fotoUrl && !fotoErro ? (
                 <img
                   src={fotoUrl}
                   alt="Avatar"
+                  onError={() => setFotoErro(true)}
                   className="h-20 w-20 rounded-full object-cover border-2 border-surface-input group-hover:border-primary transition-colors"
                 />
               ) : (

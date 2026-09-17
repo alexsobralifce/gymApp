@@ -4,9 +4,9 @@ import { Role, TreinoAtor, TreinoStatus, PostTipo, Visibilidade } from '@prisma/
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, TenantAccessError, ValidationError } from '../../../domain/errors/AppError.js'
 import { eventBus } from '../../../shared/events/event-bus.js'
-import { env } from '../../../shared/env.js'
 import { socialNotifyQueue } from '../../../jobs/social/queues.js'
 import { gerarLegendaTreinoConcluido } from '../../../modules/social/legenda.js'
+import { absolutizeMedia } from '../../../shared/media.js'
 import {
   criarTreino,
   criarTreinoAutogestao,
@@ -55,14 +55,6 @@ export async function treinoRoutes(app: FastifyInstance) {
       create: { usuario_id: usuarioId },
       update: {},
     })
-  }
-
-  function absolutizeMedia(url: string | null | undefined): string | null {
-    if (!url) return null
-    if (url.startsWith('http://') || url.startsWith('https://')) return url
-    const base = env.API_BASE_URL
-    if (url.startsWith('/')) return `${base}${url}`
-    return `${base}/${url}`
   }
 
   /** Cria post social diretamente no banco (não depende do worker BullMQ).

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ForbiddenError } from '../../../domain/errors/AppError.js'
+import { absolutizeMedia } from '../../../shared/media.js'
 
 async function resolveAluno(usuarioId: string) {
   return prisma.aluno.upsert({
@@ -123,7 +124,7 @@ export async function friendshipRoutes(app: FastifyInstance) {
     const result = amigos.map((a) => ({
       id: a.id,
       nome: a.usuario.nome,
-      fotoUrl: a.usuario.foto_url,
+      fotoUrl: absolutizeMedia(a.usuario.foto_url),
     }))
 
     return reply.status(200).send(result)
@@ -150,7 +151,7 @@ export async function friendshipRoutes(app: FastifyInstance) {
       return {
         id: p.id,
         nome: s?.usuario.nome ?? 'Usuário',
-        foto_url: s?.usuario.foto_url ?? null,
+        foto_url: absolutizeMedia(s?.usuario.foto_url),
         criado_em: p.criado_em,
       }
     })
