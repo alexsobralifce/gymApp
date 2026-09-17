@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, HeartPulse, Download } from 'lucide-react'
+import { Bell, Download } from 'lucide-react'
 import { api, baixarExportacao, obterRelatorioHTML } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import type { PerfilAluno, Academia } from '../../types/api'
@@ -776,14 +776,6 @@ export default function DadosAluno() {
           >
             <Bell className="h-4 w-4 text-text-muted" />
             Preferências de Notificação
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/wearables')}
-            className="flex items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer md:col-span-2"
-          >
-            <HeartPulse className="h-4 w-4 text-text-muted" />
-            Wearables & Saúde
           </button>
         </div>
       </div>

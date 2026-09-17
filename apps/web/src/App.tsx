@@ -46,7 +46,6 @@ import AcademiaTreinos from './pages/academia/Treinos'
 import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
 import AlunoCriarTreino from './pages/aluno/CriarTreinoAluno'
 import AlunoDados from './pages/aluno/DadosAluno'
-import AlunoWearables from './pages/aluno/Wearables'
 import BibliotecaPlanos from './pages/aluno/BibliotecaPlanos'
 import AlunoMural from './pages/aluno/Mural'
 import AlunoAmizades from './pages/aluno/Amizades'
@@ -126,7 +125,6 @@ export default function App() {
           {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
           {/* <Route path="biblioteca-planos" element={<PremiumWrapper feature="PLANOS" featureName="Biblioteca de Planos"><BibliotecaPlanos /></PremiumWrapper>} /> */}
           <Route path="dados" element={<AlunoDados />} />
-          <Route path="wearables" element={<AlunoWearables />} />
           <Route path="treino/novo" element={<AlunoCriarTreino />} />
           <Route path="treino/:id/editar" element={<AlunoCriarTreino />} />
           <Route path="treino/:id/inicio" element={<AlunoTreinoInicio />} />
@@ -170,7 +168,6 @@ export default function App() {
           <Route path="academias" element={<ProfessorAcademias />} />
           <Route path="alunos/vincular" element={<ProfessorVincularAluno />} />
           <Route path="fichas" element={<ProfessorFichas />} />
-          <Route path="wearables" element={<AlunoWearables />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
           {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
           {/* <Route path="avaliacoes" element={<PremiumWrapper feature="AVALIACOES" featureName="Avaliações Físicas"><Avaliacoes /></PremiumWrapper>} /> */}
@@ -215,7 +212,6 @@ export default function App() {
           <Route path="exercicios/:exercicioId/historico" element={<HistoricoExercicio />} />
           <Route path="medidas" element={<AlunoMedidas />} />
           <Route path="evolucao" element={<AlunoEvolucao />} />
-          <Route path="wearables" element={<AlunoWearables />} />
           <Route path="feed" element={<AlunoMural />} />
           <Route path="amizades" element={<AlunoAmizades />} />
           <Route path="clubes" element={<AlunoClubes />} />

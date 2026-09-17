@@ -730,15 +730,6 @@ export const api = {
   getHistoricoExercicio: (exercicioId: string, periodo: PeriodoHistorico = '90d') =>
     api.get<HistoricoExercicioResponse>(`/alunos/exercicios/${exercicioId}/historico?periodo=${periodo}`),
 
-  // ─── Wearables & Saúde (UX-012) ─────────────────────
-  healthSync: (data: HealthSyncPayload) =>
-    api.post<MedidaCorporal>('/alunos/health-sync', data),
-
-  // ─── Wearables — Strava ──────────────────────────────
-  getStravaStatus: () => api.get<StravaStatus>('/integrations/strava/status'),
-  getStravaAuthorizeUrl: () => api.get<{ authorizeUrl: string }>('/integrations/strava/authorize'),
-  syncStrava: () => api.post<StravaSyncResult>('/integrations/strava/sync', {}),
-  disconnectStrava: () => api.delete<{ message: string }>('/integrations/strava'),
 }
 
 // ─── UX-013: Tipos do histórico por exercício ────────────────────────────────
@@ -764,44 +755,6 @@ export interface HistoricoExercicioResponse {
     sessoesCount: number
     estimativa1RMAtual: number | null
   }
-}
-
-// ─── UX-012: Wearables & Saúde ──────────────────────────
-/**
- * Payload aceito por `POST /alunos/health-sync` (UC-Health):
- * - heartRateAvg: FC média do dia (null se não houver leitura)
- * - activeCalories: calorias ativas do dia (obrigatório — 0 se desconhecido)
- * - steps: passos do dia (opcional)
- * - data: ISO datetime — o backend agrupa por dia (UTC)
- */
-export interface HealthSyncPayload {
-  heartRateAvg: number | null
-  activeCalories: number
-  steps?: number
-  data: string
-}
-
-export interface StravaStatus {
-  conectado: boolean
-  atletaId: string | null
-  ultimaSincronizacaoEm: string | null
-  caloriasHoje: number
-  configurado: boolean
-}
-
-export interface StravaAtividade {
-  nome: string
-  tipo: string
-  calorias: number | null
-  duracaoSegundos: number
-  inicioEm: string
-}
-
-export interface StravaSyncResult {
-  success: boolean
-  synced: number
-  total: number
-  ultimaAtividade: StravaAtividade | null
 }
 
 // ─── UX-017: Exportação de dados (LGPD — portabilidade) ────────────────────

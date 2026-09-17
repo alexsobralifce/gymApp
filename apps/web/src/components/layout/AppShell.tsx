@@ -38,7 +38,6 @@ import {
   MoreHorizontalIcon,
   PhoneIcon,
   StarIcon,
-  HeartIcon,
 } from '../icons/Icon'
 import AcademySidebar from '../social/AcademySidebar'
 import { PWASidebarButton } from '../ui/PWASidebarButton'
@@ -155,7 +154,6 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/amizades', label: 'Amigos', icon: <UserSearchIcon className="h-5 w-5" /> },
         { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/evolucao', label: 'Evolução', icon: <ChartLineIcon className="h-5 w-5" /> },
-        { to: '/wearables', label: 'Wearables', icon: <HeartIcon className="h-5 w-5" /> },
         { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
         { to: '/parceiros', label: 'Parceiros', icon: <StarIcon className="h-5 w-5" /> },
         { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
@@ -184,7 +182,6 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/alunos/vincular', label: 'Vincular Aluno', icon: <UserPlusIcon className="h-5 w-5" /> },
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },
-        { to: '/wearables', label: 'Wearables', icon: <HeartIcon className="h-5 w-5" /> },
         { to: '/exercicios/criar', label: 'Exercícios', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/academias', label: 'Academias', icon: <Building2Icon className="h-5 w-5" /> },
         { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
@@ -222,7 +219,6 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
           ],
         },
         { to: '/vinculos', label: 'Vínculos Pendentes', icon: <LinkIcon className="h-5 w-5" /> },
-        { to: '/wearables', label: 'Wearables', icon: <HeartIcon className="h-5 w-5" /> },
         { to: '/usuarios', label: 'Gerenciar Plataforma', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/financeiro', label: 'Financeiro', icon: <WalletIcon className="h-5 w-5" /> },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
@@ -282,7 +278,6 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/treinos/criar', label: 'Criar para Aluno', icon: '➕', desc: 'Prescrever ficha' },
       { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: '⭐', desc: 'Feedbacks recebidos' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos & Laudos' },
-      { to: '/wearables', label: 'Wearables', icon: '❤️', desc: 'Strava & saúde' },
       { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
       { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia do sistema' },
       { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados da conta' },
@@ -295,7 +290,6 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/meus-treinos', label: 'Meus Treinos', icon: '🏋️', desc: 'Treinos pessoais' },
       { to: '/treino/novo', label: 'Criar Meu Treino', icon: '📝', desc: 'Treino próprio' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos e laudos' },
-      { to: '/wearables', label: 'Wearables', icon: '❤️', desc: 'Strava & saúde' },
       { to: '/exercicios/criar', label: 'Exercícios', icon: '📖', desc: 'Biblioteca & Gifs' },
       { to: '/academias', label: 'Academias', icon: '🏢', desc: 'Vínculos de trabalho' },
       { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
@@ -316,7 +310,6 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
     { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
     { to: '/amizades', label: 'Amigos', icon: '👥', desc: 'Rede social fitness' },
     { to: '/medidas', label: 'Minhas Medidas', icon: '📏', desc: 'Peso e dobras' },
-    { to: '/wearables', label: 'Wearables', icon: '❤️', desc: 'Strava & saúde' },
     { to: '/clubes', label: 'Clubes', icon: '🏆', desc: 'Ranking & XP' },
     { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados & Restrições' },
   ]

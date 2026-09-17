@@ -1,95 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useTrainingStore } from '../../stores/training'
 import { useAuthStore } from '../../stores/auth'
-import { TrophyIcon, TimerIcon, LinkIcon } from '../../components/icons/Icon'
-import { Flame } from 'lucide-react'
-import { api, type StravaAtividade, type StravaStatus } from '../../api/client'
+import { TrophyIcon, TimerIcon } from '../../components/icons/Icon'
+import { api } from '../../api/client'
 import { useEffect, useState, useMemo } from 'react'
 import PostarTreinoCard from '../../components/social/PostarTreinoCard'
 import SistemaAvaliacaoModal from '../../components/avaliacao/SistemaAvaliacaoModal'
 import { resolveMediaUrl } from '../../lib/media'
-
-function StravaCaloriasCard({ navigate }: { navigate: (to: string) => void }) {
-  const [status, setStatus] = useState<StravaStatus | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [sincronizando, setSincronizando] = useState(false)
-  const [atividade, setAtividade] = useState<StravaAtividade | null>(null)
-  const [erro, setErro] = useState<string | null>(null)
-
-  useEffect(() => {
-    api.getStravaStatus()
-      .then(setStatus)
-      .catch(() => setStatus(null))
-      .finally(() => setLoading(false))
-  }, [])
-
-  async function handleBuscarCalorias() {
-    setSincronizando(true)
-    setErro(null)
-    try {
-      const resultado = await api.syncStrava()
-      if (resultado.ultimaAtividade) {
-        setAtividade(resultado.ultimaAtividade)
-      } else {
-        setErro('Nenhuma atividade encontrada no Strava ainda. Sincronize seu relógio no app do Strava e tente de novo.')
-      }
-    } catch {
-      setErro('Não foi possível buscar as calorias do Strava agora.')
-    } finally {
-      setSincronizando(false)
-    }
-  }
-
-  if (loading || !status?.configurado) return null
-
-  return (
-    <div className="w-full max-w-sm rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <Flame className="h-5 w-5 text-[#FC4C02]" />
-        <h2 className="text-xs font-bold text-text uppercase tracking-wider">Gasto calórico real</h2>
-      </div>
-
-      {!status.conectado ? (
-        <>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Conecte seu relógio ao Strava para ver o gasto calórico real dos seus treinos.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/wearables')}
-            className="w-full rounded-xl py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#FC4C02' }}
-          >
-            <LinkIcon className="h-4 w-4" />
-            Conectar Strava
-          </button>
-        </>
-      ) : atividade ? (
-        <div className="rounded-xl bg-surface border border-surface-input p-3 space-y-1">
-          <p className="text-sm text-text">
-            Segundo seu relógio: <strong className="text-text">{atividade.calorias ?? '—'} kcal</strong>
-          </p>
-          <p className="text-xs text-text-muted truncate">{atividade.nome}</p>
-        </div>
-      ) : (
-        <>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Já sincronizou seu relógio com o app do Strava? Busque o gasto calórico real deste treino.
-          </p>
-          <button
-            type="button"
-            onClick={handleBuscarCalorias}
-            disabled={sincronizando}
-            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
-          >
-            {sincronizando ? 'Buscando...' : 'Buscar calorias do meu relógio'}
-          </button>
-          {erro && <p className="text-xs text-destructive leading-relaxed">{erro}</p>}
-        </>
-      )}
-    </div>
-  )
-}
 
 const CONQUISTAS = [
   { msg: 'Cada repetição conta! Continue assim e os resultados virão.', emoji: '🏆' },
@@ -187,9 +104,6 @@ export default function AlunoTreinoConclusao() {
 
         {/* Card de Postagem / Instagram Stories com Foto */}
         <PostarTreinoCard postId={postId} storyData={storyData} />
-
-        {/* Gasto calórico real via Strava */}
-        <StravaCaloriasCard navigate={navigate} />
 
         {/* Botões de Navegação */}
         <div className="w-full max-w-sm space-y-2 pt-2">

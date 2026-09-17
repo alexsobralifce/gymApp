@@ -12,7 +12,6 @@ const ROTAS_VALIDAS = [
   '/medidas',
   '/notificacoes/preferencias',
   '/privacidade',
-  '/wearables',
   '/documentacao',
 ]
 
@@ -28,7 +27,6 @@ const TOPICOS_OBRIGATORIOS = [
   'tema',
   'retomada',
   'privacidade',
-  'wearables',
   'fallback',
 ]
 

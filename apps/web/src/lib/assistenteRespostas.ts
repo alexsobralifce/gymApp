@@ -161,13 +161,6 @@ export const assistenteRespostas: AssistenteResposta[] = [
       'Na tela "Privacidade" você controla quem vê seus posts, se pode ser encontrado por e-mail e se participa do feed social. A exportação dos seus dados fica na tela "Meus Dados" (Meu Perfil). Seus dados são seus.',
     acao: { label: 'Abrir Privacidade', rota: '/privacidade' },
   },
-  {
-    id: 'wearables',
-    chaves: ['wearables', 'wearable', 'apple health', 'google fit', 'smartwatch', 'relogio', 'garmin', 'pulseira'],
-    resposta:
-      'A integração com Apple Health, Google Fit e outros dispositivos fica na tela "Wearables". Lá você conecta seu relógio ou app de saúde para acompanhar dados de atividade. A conexão é opcional e totalmente controlada por você.',
-    acao: { label: 'Abrir Wearables', rota: '/wearables' },
-  },
   FALLBACK_ASSISTENTE,
 ]
 
