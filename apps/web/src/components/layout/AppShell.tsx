@@ -223,6 +223,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/financeiro', label: 'Financeiro', icon: <WalletIcon className="h-5 w-5" /> },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: <StarIcon className="h-5 w-5" /> },
+        { to: '/feed', label: 'Feed Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },

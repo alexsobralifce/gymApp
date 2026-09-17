@@ -21,7 +21,7 @@ async function resolveAluno(usuarioId: string) {
 }
 
 export async function feedRoutes(app: FastifyInstance) {
-  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
+  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO, Role.ROOT)]
 
   /** GET /social/mural — feed com cursor pagination */
   app.get('/social/mural', { preHandler }, async (request, reply) => {
