@@ -1,5 +1,7 @@
 # Plano Academia — Limites de Professores e Alunos (Pequena / Média / Grande / Rede)
 
+> ✅ **ATIVO (2026-09-16, atualizado):** Academia volta a ter plano pago por faixa, cobrado **via pessoa física** (o dono da academia paga com CPF, sem CNPJ/NFS-e obrigatórios agora). Ver `docs/planning/integracao-mercado-pago.md`.
+>
 > Objetivo: um plano de academia em que o **próprio gestor cadastra e gerencia os limites** de professores e alunos, com faixas para academia **pequena, média e grande** (e rede).
 > Complementa `planos-monetizacao-academia-personal.md` (§4.2) e `implementacao-tecnica-planos-billing.md` (§2.2).
 > Data: 2026-09-16 · **Sem IA** na modelagem.

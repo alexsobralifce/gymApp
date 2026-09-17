@@ -5,8 +5,7 @@ import BatchActionBar from '../../components/ui/BatchActionBar'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
-// DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
-// import PremiumManagerButton from '../../components/root/PremiumManagerButton'
+import PremiumManagerButton from '../../components/root/PremiumManagerButton'
 
 type Tab = 'academias' | 'professores' | 'alunos'
 
@@ -17,7 +16,7 @@ interface AcademiaItem {
   status: string
   max_professores: number
   usuario_id: string
-  usuario: { id: string; email: string; nome: string; admin?: boolean }
+  usuario: { id: string; email: string; nome: string; admin?: boolean; premium_manual_em?: string | null }
   _count: { professores: number; alunos: number }
 }
 
@@ -25,7 +24,7 @@ interface ProfessorItem {
   id: string
   cref: string | null
   usuario_id: string
-  usuario: { id: string; email: string; nome: string; admin?: boolean }
+  usuario: { id: string; email: string; nome: string; admin?: boolean; premium_manual_em?: string | null }
   academias: Array<{ id: string; academia: { id: string; nome: string } }>
   _count: { alunos: number }
 }
@@ -302,6 +301,7 @@ export default function RootUsuarios() {
                 onToggleSelect={toggleSelect}
                 onEdit={setEditAcademia}
                 onDelete={(a) => setDeleteConfirm({ type: 'academias', id: a.id, nome: a.nome })}
+                onPremiumToggle={loadData}
               />
               <Pagination page={academias.page} totalPages={academias.totalPages} onChange={setPage} />
             </>
@@ -329,6 +329,7 @@ export default function RootUsuarios() {
                 onToggleSelect={toggleSelect}
                 onEdit={setEditProfessor}
                 onDelete={(p) => setDeleteConfirm({ type: 'professores', id: p.id, nome: p.usuario.nome })}
+                onPremiumToggle={loadData}
               />
               <Pagination page={professores.page} totalPages={professores.totalPages} onChange={setPage} />
             </>
@@ -356,6 +357,7 @@ export default function RootUsuarios() {
                 onToggleSelect={toggleSelect}
                 onEdit={setEditAluno}
                 onDelete={(a) => setDeleteConfirm({ type: 'alunos', id: a.id, nome: a.usuario.nome })}
+                onPremiumToggle={loadData}
               />
               <Pagination page={alunos.page} totalPages={alunos.totalPages} onChange={setPage} />
             </>
@@ -507,12 +509,14 @@ function AcademiasTab({
   onToggleSelect,
   onEdit,
   onDelete,
+  onPremiumToggle,
 }: {
   academias: AcademiaItem[]
   selectedIds: string[]
   onToggleSelect: (id: string) => void
   onEdit: (a: AcademiaItem) => void
   onDelete: (a: AcademiaItem) => void
+  onPremiumToggle: () => void
 }) {
   if (academias.length === 0) return <p className="text-text-muted">Nenhuma academia encontrada.</p>
 
@@ -541,6 +545,12 @@ function AcademiasTab({
           </div>
           <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+            <PremiumManagerButton
+              usuarioId={a.usuario.id}
+              usuarioNome={a.usuario.nome}
+              temPremium={!!a.usuario.premium_manual_em}
+              onToggle={onPremiumToggle}
+            />
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
             <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
           </div>
@@ -556,12 +566,14 @@ function ProfessoresTab({
   onToggleSelect,
   onEdit,
   onDelete,
+  onPremiumToggle,
 }: {
   professores: ProfessorItem[]
   selectedIds: string[]
   onToggleSelect: (id: string) => void
   onEdit: (p: ProfessorItem) => void
   onDelete: (p: ProfessorItem) => void
+  onPremiumToggle: () => void
 }) {
   if (professores.length === 0) return <p className="text-text-muted">Nenhum professor encontrado.</p>
 
@@ -587,12 +599,24 @@ function ProfessoresTab({
             </div>
             <div className="flex flex-wrap gap-1.5 justify-end sm:hidden sm:self-start ml-3">
               <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+              <PremiumManagerButton
+                usuarioId={p.usuario.id}
+                usuarioNome={p.usuario.nome}
+                temPremium={!!p.usuario.premium_manual_em}
+                onToggle={onPremiumToggle}
+              />
               <AdminToggleButton usuarioId={p.usuario.id} isAdmin={!!p.usuario.admin} />
               <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
             </div>
           </div>
             <div className="hidden sm:flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-start">
               <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+              <PremiumManagerButton
+                usuarioId={p.usuario.id}
+                usuarioNome={p.usuario.nome}
+                temPremium={!!p.usuario.premium_manual_em}
+                onToggle={onPremiumToggle}
+              />
               <AdminToggleButton usuarioId={p.usuario.id} isAdmin={!!p.usuario.admin} />
               <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
             </div>
@@ -617,12 +641,14 @@ function AlunosTab({
   onToggleSelect,
   onEdit,
   onDelete,
+  onPremiumToggle,
 }: {
   alunos: AlunoItem[]
   selectedIds: string[]
   onToggleSelect: (id: string) => void
   onEdit: (a: AlunoItem) => void
   onDelete: (a: AlunoItem) => void
+  onPremiumToggle: () => void
 }) {
   if (alunos.length === 0) return <p className="text-text-muted">Nenhum aluno encontrado.</p>
 
@@ -653,13 +679,12 @@ function AlunosTab({
           </div>
           <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
             <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
-            {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
-            {/* <PremiumManagerButton
+            <PremiumManagerButton
               usuarioId={a.usuario.id}
               usuarioNome={a.usuario.nome}
               temPremium={!!a.usuario.premium_manual_em}
-              onToggle={() => {}}
-            /> */}
+              onToggle={onPremiumToggle}
+            />
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
             <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
           </div>

@@ -43,6 +43,20 @@ const envSchema = z.object({
   META_APP_ID: z.string().optional().default(''),
   META_APP_SECRET: z.string().optional().default(''),
   INSTAGRAM_REDIRECT_URI: z.string().optional().default(''),
+
+  // Billing (Mercado Pago) — ver docs/planning/integracao-mercado-pago.md
+  // NUNCA usar z.coerce.boolean() aqui: Boolean("false") === true em JS, então
+  // "BILLING_ENABLED=false" no .env viraria `true` silenciosamente.
+  BILLING_ENABLED: z
+    .enum(['true', 'false'])
+    .optional()
+    .default('false')
+    .transform((v) => v === 'true'),
+  BILLING_PROVIDER: z.string().optional().default('mercadopago'),
+  MP_ACCESS_TOKEN: z.string().optional().default(''),
+  MP_PUBLIC_KEY: z.string().optional().default(''),
+  MP_WEBHOOK_SECRET: z.string().optional().default(''),
+  MP_ENV: z.enum(['sandbox', 'production']).optional().default('sandbox'),
 })
 
 const parsed = envSchema.safeParse(process.env)

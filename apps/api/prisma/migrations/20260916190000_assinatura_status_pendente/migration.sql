@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "AssinaturaStatus" ADD VALUE IF NOT EXISTS 'PENDENTE' BEFORE 'ATIVA';

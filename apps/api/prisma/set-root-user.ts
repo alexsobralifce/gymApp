@@ -61,9 +61,13 @@ export async function setRootUser(emailToPromote = 'alexandresobral2004@gmail.co
   return created
 }
 
+// Contas ROOT do time — todas com acesso total, incluindo liberar isenção de cobrança
+// para outros usuários (ver liberarPremiumManual em BillingService.ts).
+const ROOT_EMAILS = ['alexandresobral2004@gmail.com', 'alexandre.rocha@ifce.edu.br']
+
 // Executa se chamado diretamente via CLI (ex: npx tsx prisma/set-root-user.ts)
 if (process.argv[1] && process.argv[1].endsWith('set-root-user.ts')) {
-  setRootUser()
+  Promise.all(ROOT_EMAILS.map((email) => setRootUser(email)))
     .catch((err) => {
       console.error('❌ Erro ao configurar usuário ROOT:', err)
       process.exit(1)

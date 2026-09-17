@@ -29,6 +29,7 @@ import { uploadRoutes } from './modules/social/upload/upload.routes.js'
 import { noticiasRoutes } from './presentation/http/routes/noticias.routes.js'
 import { instagramRoutes } from './presentation/http/routes/instagram.routes.js'
 import { healthRoutes } from './presentation/http/routes/health.routes.js'
+import { billingRoutes, billingWebhookRoutes } from './presentation/http/routes/billing.routes.js'
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // import { assinaturaRoutes, conviteRoutes, rootPremiumRoutes } from './presentation/http/routes/assinatura.routes.js'
 
@@ -181,6 +182,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(uploadRoutes)
   await app.register(instagramRoutes)
   await app.register(noticiasRoutes, { prefix: '/noticias' })
+  await app.register(billingRoutes, { prefix: '/billing' })
+  await app.register(billingWebhookRoutes, { prefix: '/webhooks/billing' })
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
   // await app.register(assinaturaRoutes, { prefix: '/assinaturas' })
   // await app.register(conviteRoutes, { prefix: '/convites' })

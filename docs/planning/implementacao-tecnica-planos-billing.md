@@ -1,5 +1,7 @@
 # Implementação Técnica — Planos por Faixa de Alunos + Billing B2B
 
+> ✅ **ATIVO (2026-09-16, atualizado):** o schema de faixas/metering deste documento volta a valer para Personal e Academia, com um ajuste: a cobrança roda **via pessoa física** (dono/professor paga com CPF, sem CNPJ/NFS-e obrigatórios agora) e o gateway é **Mercado Pago** (não Asaas) para todos os papéis. Ver `docs/planning/integracao-mercado-pago.md` para o desenho de gateway atualizado — o restante (faixas, `UsoMensal`, entitlements) continua válido.
+>
 > Complementa `docs/planning/planos-monetizacao-academia-personal.md`.
 > Objetivo: transformar o motor de assinaturas (hoje **desligado**) em cobrança **por faixa de alunos ativos**, com metering, entitlements e checkout B2B (PIX/boleto/cartão + NFS-e).
 > Data: 2026-09-16

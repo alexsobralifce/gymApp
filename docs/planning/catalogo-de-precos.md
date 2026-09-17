@@ -1,5 +1,7 @@
 # Catálogo de Preços — ENDORFINAPP
 
+> ✅ **ATIVO (2026-09-16, atualizado):** Personal e Academia (§1 e §2) voltam ao escopo — cobrados via **Mercado Pago como pessoa física** (o dono/professor paga com seu CPF, sem exigir CNPJ/NFS-e da parte deles nem da nossa). Ver `docs/planning/integracao-mercado-pago.md` para o desenho de cobrança atualizado (faixas mantidas, gateway único).
+>
 > Documento de **preços** (sem implementação). Consolida os valores calculados em
 > `planos-monetizacao-academia-personal.md`, `plano-academia-limites-professores-alunos.md` (§7)
 > e `implementacao-tecnica-planos-billing.md`.

@@ -46,6 +46,7 @@ model Usuario {
   instagram_token          String?
   instagram_token_expira   DateTime?
   facebook_page_id         String?
+  metodosPagamento         PagamentoMetodo[]
 
   @@map("usuarios")
 }
@@ -691,6 +692,7 @@ enum RiscoCardiaco {
 /// ─── Módulo de Assinaturas (B2C/B2B) ───────────────────────────────────────
 
 enum AssinaturaStatus {
+  PENDENTE // checkout iniciado, aguardando confirmação do gateway (assinatura de cartão "pending" ou 1ª cobrança Pix/boleto ainda não paga)
   ATIVA
   EM_CARENCIA
   EXPIRADA
@@ -707,7 +709,29 @@ enum AssinaturaOrigem {
 enum Loja {
   GOOGLE_PLAY
   APPLE_STORE
+  WEB_MERCADOPAGO
   MANUAL
+}
+
+/// A quem (perfil) uma Assinatura B2B pertence: professor.id | academia.id | aluno.id
+enum TenantTipo {
+  PROFESSOR
+  ACADEMIA
+  ALUNO
+}
+
+enum CobrancaStatus {
+  PENDENTE
+  PAGA
+  VENCIDA
+  ESTORNADA
+  CANCELADA
+}
+
+enum MetodoPagamentoTipo {
+  CARTAO
+  PIX
+  BOLETO
 }
 
 enum ConviteStatus {
@@ -726,11 +750,20 @@ model PlanoAssinatura {
   papel_alvo             Role
   preco_mensal_cents     Int
   moeda                  String        @default("BRL")
-  google_play_product_id String        @unique
+  google_play_product_id String?       @unique
   trial_dias             Int           @default(15)
-  limite_alunos          Int?
+  limite_alunos          Int?          // legado — mantido como fallback; faixa é a fonte de verdade a partir daqui
   ativo                  Boolean       @default(true)
   criado_em              DateTime      @default(now())
+  // ── faixas por quantidade de alunos ativos (30d) — Personal/Academia ──
+  faixa_min_alunos            Int      @default(0)
+  faixa_max_alunos            Int?     // null = ilimitado
+  professores_inclusos        Int      @default(1)
+  unidades_inclusas           Int      @default(1)
+  preco_aluno_excedente_cents Int?     // cobrança linear por aluno acima do teto (alternativa a auto-upgrade de faixa)
+  recursos                    Json     @default("{}") // flags de feature: relatorios, white_label, multiunidade...
+  gateway_product_id          String?  // preapproval_plan_id do Mercado Pago, quando aplicável
+  ordem                        Int     @default(0) // ordenação de exibição em /planos
   assinaturas            Assinatura[]
 
   @@map("planos_assinatura")
@@ -756,17 +789,32 @@ model Assinatura {
   patrocinada_por_usuario_id String?
   criado_em                DateTime          @default(now())
   atualizado_em            DateTime          @updatedAt
+  // ── Mercado Pago / B2B por faixa (payer sempre pessoa física — ver docs/planning/integracao-mercado-pago.md) ──
+  tenant_tipo              TenantTipo?
+  tenant_id                String?           // professor.id | academia.id | aluno.id
+  faixa_alunos_inclusos    Int?
+  faixa_alunos_max         Int?
+  valor_mensal_cents       Int?              // preço congelado no ciclo vigente
+  alunos_excedentes        Int               @default(0)
+  metodo_pagamento_id      String?
+  gateway_customer_id      String?           // customer_id do Mercado Pago
+  gateway_subscription_id  String?           @unique // preapproval_id (cartão recorrente)
+  proxima_cobranca_em      DateTime?
+  congelamento_ate         DateTime?         // faixa congelada (plano anual)
   usuario                  Usuario           @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   plano                    PlanoAssinatura   @relation(fields: [plano_id], references: [id])
+  metodoPagamento          PagamentoMetodo?  @relation(fields: [metodo_pagamento_id], references: [id])
   eventos                  AssinaturaEvento[]
+  cobrancas                Cobranca[]
 
   @@index([usuario_id])
   @@index([patrocinada_por_usuario_id, status])
   @@index([status, expires_at])
+  @@index([tenant_tipo, tenant_id])
   @@map("assinaturas")
 }
 
-/// Log imutável de eventos recebidos do webhook (RTDN) ou manuais
+/// Log imutável de eventos recebidos do webhook (RTDN/Mercado Pago) ou manuais
 model AssinaturaEvento {
   id                String      @id @default(cuid())
   assinatura_id     String?
@@ -776,11 +824,82 @@ model AssinaturaEvento {
   processado        Boolean     @default(false)
   erro              String?
   recebido_em       DateTime    @default(now())
+  gateway           String?
+  evento_externo_id String?     @unique // id da notificação do gateway — dedupe de reentrega
   assinatura        Assinatura? @relation(fields: [assinatura_id], references: [id], onDelete: Cascade)
 
   @@index([purchase_token])
   @@index([assinatura_id, recebido_em])
   @@map("assinatura_eventos")
+}
+
+/// Snapshot mensal de uso por tenant (base da faixa e da fatura) — Personal/Academia
+model UsoMensal {
+  id                  String     @id @default(cuid())
+  tenant_tipo         TenantTipo
+  tenant_id           String
+  competencia         String                // "2026-09"
+  alunos_ativos       Int        @default(0)
+  alunos_vinculados   Int        @default(0)
+  professores_ativos  Int        @default(0)
+  unidades            Int        @default(1)
+  storage_bytes       BigInt     @default(0)
+  faixa_plano_codigo  String?
+  valor_cents         Int        @default(0)
+  calculado_em        DateTime   @default(now())
+
+  @@unique([tenant_tipo, tenant_id, competencia])
+  @@index([competencia])
+  @@map("uso_mensal")
+}
+
+/// Fatura/cobrança de um ciclo (histórico exibido em /billing/faturas)
+model Cobranca {
+  id                String         @id @default(cuid())
+  assinatura_id     String
+  competencia       String
+  valor_cents       Int
+  status            CobrancaStatus @default(PENDENTE)
+  vencimento        DateTime
+  pago_em           DateTime?
+  gateway           String?        @default("mercadopago")
+  gateway_charge_id String?        @unique // payment_id do Mercado Pago
+  mp_preapproval_id String?
+  pix_copia_cola    String?        @db.Text
+  pix_qr_base64     String?        @db.Text
+  boleto_url        String?
+  linha_digitavel   String?
+  // ── fiscal, opcional — só se o assinante pedir nota (fluxo futuro, ver §9 do doc de integração) ──
+  nfse_numero       String?
+  nfse_url          String?
+  cliente_cnpj      String?
+  tentativas        Int            @default(0)
+  criado_em         DateTime       @default(now())
+  atualizado_em     DateTime       @updatedAt
+  assinatura        Assinatura     @relation(fields: [assinatura_id], references: [id], onDelete: Cascade)
+
+  @@index([assinatura_id, competencia])
+  @@index([status, vencimento])
+  @@map("cobrancas")
+}
+
+/// Método de pagamento tokenizado (nunca guardar PAN)
+model PagamentoMetodo {
+  id                  String               @id @default(cuid())
+  usuario_id          String
+  gateway             String               @default("mercadopago")
+  gateway_customer_id String?
+  tipo                MetodoPagamentoTipo  @default(CARTAO)
+  cartao_ultimos4     String?
+  cartao_bandeira     String?
+  token               String?              // card_id do Mercado Pago — nunca o número do cartão
+  padrao              Boolean              @default(true)
+  criado_em           DateTime             @default(now())
+  usuario             Usuario              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  assinaturas         Assinatura[]
+
+  @@index([usuario_id])
+  @@map("pagamentos_metodo")
 }
 
 /// Convite de professor para aluno (uso único, 7 dias)

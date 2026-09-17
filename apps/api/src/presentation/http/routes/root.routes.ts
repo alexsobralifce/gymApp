@@ -14,6 +14,7 @@ import {
   aprovacaoVinculoProfessor,
   alterarStatusAcademia,
 } from '../../../application/usecases/academia/AcademiaService.js'
+import { liberarPremiumManual, revogarPremiumManual } from '../../../application/usecases/billing/BillingService.js'
 
 const execAsync = promisify(exec)
 
@@ -265,7 +266,7 @@ export async function rootRoutes(app: FastifyInstance) {
         prisma.academia.findMany({
           where,
           include: {
-            usuario: { select: { id: true, email: true, nome: true } },
+            usuario: { select: { id: true, email: true, nome: true, admin: true, premium_manual_em: true } },
             _count: { select: { professores: true, alunos: true } },
           },
           orderBy: { criado_em: 'desc' },
@@ -280,7 +281,7 @@ export async function rootRoutes(app: FastifyInstance) {
     const academias = await prisma.academia.findMany({
       where,
       include: {
-        usuario: { select: { id: true, email: true, nome: true } },
+        usuario: { select: { id: true, email: true, nome: true, admin: true, premium_manual_em: true } },
         _count: { select: { professores: true, alunos: true } },
       },
       orderBy: { criado_em: 'desc' },
@@ -381,7 +382,7 @@ export async function rootRoutes(app: FastifyInstance) {
         prisma.professor.findMany({
           where,
           include: {
-            usuario: { select: { id: true, email: true, nome: true } },
+            usuario: { select: { id: true, email: true, nome: true, admin: true, premium_manual_em: true } },
             academias: {
               include: { academia: { select: { id: true, nome: true } } },
             },
@@ -399,7 +400,7 @@ export async function rootRoutes(app: FastifyInstance) {
     const professores = await prisma.professor.findMany({
       where,
       include: {
-        usuario: { select: { id: true, email: true, nome: true } },
+        usuario: { select: { id: true, email: true, nome: true, admin: true, premium_manual_em: true } },
         academias: {
           include: { academia: { select: { id: true, nome: true } } },
         },
@@ -922,5 +923,19 @@ export async function rootRoutes(app: FastifyInstance) {
         aluno: { nome: a.aluno.usuario.nome, email: a.aluno.usuario.email },
       })),
     })
+  })
+
+  /** POST /root/premium/liberar — isenta um usuário de cobrança (testador, cortesia etc.) */
+  app.post('/premium/liberar', { preHandler }, async (request, reply) => {
+    const body = z.object({ usuarioId: z.string().min(1), nota: z.string().optional() }).parse(request.body)
+    const result = await liberarPremiumManual(request.currentUser.sub, body.usuarioId, body.nota)
+    return reply.status(200).send(result)
+  })
+
+  /** POST /root/premium/revogar — volta a cobrar o usuário normalmente */
+  app.post('/premium/revogar', { preHandler }, async (request, reply) => {
+    const body = z.object({ usuarioId: z.string().min(1) }).parse(request.body)
+    const result = await revogarPremiumManual(body.usuarioId)
+    return reply.status(200).send(result)
   })
 }

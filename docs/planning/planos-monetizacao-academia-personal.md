@@ -1,5 +1,7 @@
 # Planos por Quantidade de Alunos — Academias e Personal Trainers (ENDORFINAPP)
 
+> ✅ **ATIVO (2026-09-16, atualizado):** Academia e Personal voltam ao escopo de cobrança, mas **via pessoa física** (o dono da academia/o personal paga com CPF, sem CNPJ/NFS-e por enquanto) — ver `docs/planning/integracao-mercado-pago.md`. A pesquisa de mercado e as faixas deste documento continuam valendo como base de preço.
+>
 > Avaliação de infraestrutura (Railway) + modelo de monetização atual + pesquisa de mercado + proposta de tiers.
 > Data: 2026-09-16 · Autor: Commander (sessão autônoma)
 

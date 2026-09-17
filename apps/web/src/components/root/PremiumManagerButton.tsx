@@ -1,4 +1,3 @@
-/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 import { useState } from 'react'
 import { api } from '../../api/client'
 import { CrownIcon, XIcon } from '../icons/Icon'
@@ -113,4 +112,3 @@ export default function PremiumManagerButton({ usuarioId, usuarioNome, temPremiu
     </>
   )
 }
-*/
