@@ -6,6 +6,7 @@ import { NotFoundError, TenantAccessError, ValidationError } from '../../../doma
 import { eventBus } from '../../../shared/events/event-bus.js'
 import { env } from '../../../shared/env.js'
 import { socialNotifyQueue } from '../../../jobs/social/queues.js'
+import { gerarLegendaTreinoConcluido } from '../../../modules/social/legenda.js'
 import {
   criarTreino,
   criarTreinoAutogestao,
@@ -65,8 +66,21 @@ export async function treinoRoutes(app: FastifyInstance) {
   }
 
   /** Cria post social diretamente no banco (não depende do worker BullMQ).
-   *  Idempotente: se já existe um post do mesmo tipo para este treino, retorna o existente. */
-  async function criarPostTreino(treinoId: string, alunoId: string, tipo: PostTipo) {
+   *  Idempotente: se já existe um post do mesmo tipo para este treino, retorna o existente.
+   *  Quando `dadosConclusao` é informado (treino concluído), a legenda é sempre preenchida
+   *  com nome do treino, tempo total, data, local e calorias — mesmo que o aluno nunca
+   *  anexe uma foto ao post. */
+  async function criarPostTreino(
+    treinoId: string,
+    alunoId: string,
+    tipo: PostTipo,
+    dadosConclusao?: {
+      nomeTreino: string
+      duracaoSegundos: number | null
+      caloriasQueimadas: number | null
+      finalizadoEm: Date
+    },
+  ) {
     const aluno = await prisma.aluno.findUnique({
       where: { id: alunoId },
       include: {
@@ -82,6 +96,16 @@ export async function treinoRoutes(app: FastifyInstance) {
     })
     if (existente) return existente
 
+    const legenda = dadosConclusao
+      ? gerarLegendaTreinoConcluido({
+          nomeTreino: dadosConclusao.nomeTreino,
+          duracaoSegundos: dadosConclusao.duracaoSegundos,
+          caloriasQueimadas: dadosConclusao.caloriasQueimadas,
+          finalizadoEm: dadosConclusao.finalizadoEm,
+          academiaNome: aluno.academia?.nome ?? null,
+        })
+      : null
+
     const post = await prisma.socialPost.create({
       data: {
         aluno_id: alunoId,
@@ -91,6 +115,7 @@ export async function treinoRoutes(app: FastifyInstance) {
         academia_nome: aluno.academia?.nome ?? null,
         tipo,
         visibilidade: aluno.visibilidade_padrao,
+        legenda,
       },
     })
 
@@ -265,7 +290,9 @@ export async function treinoRoutes(app: FastifyInstance) {
 
     // Só dispara eventos sociais se foi um início REAL (não uma retomada)
     if (!jaEmExecucao) {
-      criarPostTreino(id, aluno.id, 'TREINO_INICIADO').catch(() => {})
+      criarPostTreino(id, aluno.id, 'TREINO_INICIADO').catch((err) => {
+        request.log.warn({ err }, '[Social] Erro ao criar post de treino iniciado')
+      })
       try {
         eventBus.emit({ type: 'treino.iniciado', payload: { treinoId: id, alunoId: aluno.id, gruposMusculares: [], timestamp: new Date().toISOString() } })
       } catch (err) {
@@ -379,8 +406,19 @@ export async function treinoRoutes(app: FastifyInstance) {
       feedbackComentario || undefined,
     )
 
-    // Criar post social TREINO_CONCLUIDO diretamente (síncrono, sem depender do BullMQ)
-    criarPostTreino(id, aluno.id, 'TREINO_CONCLUIDO').catch(() => {})
+    // Criar post social TREINO_CONCLUIDO diretamente (síncrono, sem depender do BullMQ).
+    // Aguardado (com log em caso de falha) para eliminar a corrida com o frontend, que
+    // busca esse post logo em seguida na tela de conclusão.
+    try {
+      await criarPostTreino(id, aluno.id, 'TREINO_CONCLUIDO', {
+        nomeTreino: treino.nome,
+        duracaoSegundos: treino.duracaoSegundos,
+        caloriasQueimadas: treino.caloriasQueimadas,
+        finalizadoEm: treino.finalizadoEm,
+      })
+    } catch (err) {
+      request.log.error({ err }, '[Social] Erro ao criar post de treino concluído')
+    }
 
     // Emitir evento para badges / leaderboard / fanout adicional
     try {

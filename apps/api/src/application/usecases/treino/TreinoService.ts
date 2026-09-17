@@ -598,7 +598,18 @@ export async function finalizarTreino(
     ).catch(() => {})
   }
 
-  return { ...treinoAtualizado, primeiroTreino }
+  // Campos extras devolvidos separadamente: o registro do treino é reciclado
+  // (CONCLUIDO → ACEITO) dentro da transação, então finalizado_em/duração não
+  // sobrevivem em treinoAtualizado — quem chama (ex: post social) precisa deles.
+  // treinoAtualizado nunca é null aqui: o id já foi validado acima e acabou de
+  // ser atualizado na mesma transação.
+  return {
+    ...treinoAtualizado!,
+    primeiroTreino,
+    duracaoSegundos,
+    caloriasQueimadas: calcCalorias,
+    finalizadoEm,
+  }
 }
 
 // ─── Clonar Treino ─────────────────────────────────────────────────────────────
