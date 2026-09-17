@@ -733,6 +733,12 @@ export const api = {
   // ─── Wearables & Saúde (UX-012) ─────────────────────
   healthSync: (data: HealthSyncPayload) =>
     api.post<MedidaCorporal>('/alunos/health-sync', data),
+
+  // ─── Wearables — Strava ──────────────────────────────
+  getStravaStatus: () => api.get<StravaStatus>('/integrations/strava/status'),
+  getStravaAuthorizeUrl: () => api.get<{ authorizeUrl: string }>('/integrations/strava/authorize'),
+  syncStrava: () => api.post<StravaSyncResult>('/integrations/strava/sync', {}),
+  disconnectStrava: () => api.delete<{ message: string }>('/integrations/strava'),
 }
 
 // ─── UX-013: Tipos do histórico por exercício ────────────────────────────────
@@ -773,6 +779,29 @@ export interface HealthSyncPayload {
   activeCalories: number
   steps?: number
   data: string
+}
+
+export interface StravaStatus {
+  conectado: boolean
+  atletaId: string | null
+  ultimaSincronizacaoEm: string | null
+  caloriasHoje: number
+  configurado: boolean
+}
+
+export interface StravaAtividade {
+  nome: string
+  tipo: string
+  calorias: number | null
+  duracaoSegundos: number
+  inicioEm: string
+}
+
+export interface StravaSyncResult {
+  success: boolean
+  synced: number
+  total: number
+  ultimaAtividade: StravaAtividade | null
 }
 
 // ─── UX-017: Exportação de dados (LGPD — portabilidade) ────────────────────

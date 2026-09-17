@@ -35,6 +35,11 @@ const envSchema = z.object({
 
   GOOGLE_CLIENT_ID: z.string().optional().default('100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com'),
 
+  // Wearables — integração Strava (gasto calórico de treinos de força/cardio)
+  STRAVA_CLIENT_ID: z.string().optional().default(''),
+  STRAVA_CLIENT_SECRET: z.string().optional().default(''),
+  STRAVA_CALLBACK_URL: z.string().optional().default(''),
+
   GOOGLE_PLAY_PACKAGE_NAME: z.string().optional().default('com.endorfinapp.app'),
   GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL: z.string().optional().default(''),
   GOOGLE_PLAY_SERVICE_ACCOUNT_KEY: z.string().optional().default(''),

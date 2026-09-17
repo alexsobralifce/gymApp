@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Activity, Apple, ChevronDown, HeartPulse, RefreshCw, Smartphone } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Activity, Apple, ChevronDown, Flame, HeartPulse, RefreshCw, Smartphone, Unlink } from 'lucide-react'
 import { useToast } from '../../components/ui/Toast'
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
-import type { HealthSyncPayload } from '../../api/client'
+import { api, type HealthSyncPayload, type StravaStatus } from '../../api/client'
 import {
   getUltimaSync,
   registrarSyncManual,
@@ -82,6 +82,114 @@ function Toggle({
   )
 }
 
+function StravaCard({
+  status,
+  loading,
+  conectando,
+  sincronizando,
+  onConectar,
+  onSincronizar,
+  onDesconectar,
+}: {
+  status: StravaStatus | null
+  loading: boolean
+  conectando: boolean
+  sincronizando: boolean
+  onConectar: () => void
+  onSincronizar: () => void
+  onDesconectar: () => void
+}) {
+  const conectado = Boolean(status?.conectado)
+
+  return (
+    <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-4">
+      <div className="flex items-center gap-2 border-b border-surface-input pb-3">
+        <Flame className="h-5 w-5 text-[#FC4C02]" />
+        <h2 className="text-sm font-bold text-text uppercase tracking-wider">Strava</h2>
+      </div>
+
+      {loading ? (
+        <SkeletonCard />
+      ) : !status?.configurado ? (
+        <p className="text-xs text-text-muted leading-relaxed">
+          Integração com Strava ainda não configurada neste servidor.
+        </p>
+      ) : (
+        <>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Conecte sua conta Strava para capturar automaticamente o gasto calórico dos seus treinos.
+            Funciona com qualquer relógio cujo app sincroniza com o Strava — Garmin, Apple Watch, Polar,
+            Coros, Suunto, Wahoo, Huawei Health e Amazfit/Zepp (ative em Perfil &gt; Compartilhamento de
+            dados &gt; Strava no app do seu relógio).
+          </p>
+
+          <div className="rounded-xl bg-surface border border-surface-input p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-text">Conta Strava</p>
+                {conectado && status?.ultimaSincronizacaoEm && (
+                  <p className="text-xs text-text-muted">
+                    Última sincronização: {formatarData(new Date(status.ultimaSincronizacaoEm).getTime())}
+                  </p>
+                )}
+              </div>
+              <span
+                className={`shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border ${
+                  conectado
+                    ? 'bg-success/10 text-success border-success/20'
+                    : 'bg-surface-input text-text-muted border-transparent'
+                }`}
+              >
+                {conectado ? 'Conectado' : 'Não conectado'}
+              </span>
+            </div>
+
+            {conectado && (
+              <p className="text-xs text-text-muted">
+                Calorias sincronizadas hoje via Strava: <strong className="text-text">{status.caloriasHoje} kcal</strong>
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              {conectado ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={onSincronizar}
+                    disabled={sincronizando}
+                    className="flex-1 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
+                  >
+                    {sincronizando ? 'Sincronizando...' : 'Sincronizar atividades'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onDesconectar}
+                    aria-label="Desconectar Strava"
+                    title="Desconectar Strava"
+                    className="rounded-xl border border-surface-input px-3 py-2.5 text-text-muted hover:text-destructive hover:border-destructive/30 transition-colors cursor-pointer"
+                  >
+                    <Unlink className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onConectar}
+                  disabled={conectando}
+                  className="w-full rounded-xl py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
+                  style={{ backgroundColor: '#FC4C02' }}
+                >
+                  {conectando ? 'Abrindo Strava...' : 'Conectar com Strava'}
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function formatarData(ts: number): string {
   return new Date(ts).toLocaleString('pt-BR', {
     day: '2-digit',
@@ -94,6 +202,7 @@ function formatarData(ts: number): string {
 
 export default function Wearables() {
   const { showToast, ToastComponent } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [loading, setLoading] = useState(true)
   const [conectados, setConectados] = useState<Record<ProviderId, boolean>>({
@@ -111,6 +220,24 @@ export default function Wearables() {
   const [sincronizando, setSincronizando] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
 
+  // Strava
+  const [stravaStatus, setStravaStatus] = useState<StravaStatus | null>(null)
+  const [stravaLoading, setStravaLoading] = useState(true)
+  const [stravaConectando, setStravaConectando] = useState(false)
+  const [stravaSincronizando, setStravaSincronizando] = useState(false)
+
+  async function carregarStravaStatus() {
+    setStravaLoading(true)
+    try {
+      const status = await api.getStravaStatus()
+      setStravaStatus(status)
+    } catch {
+      setStravaStatus(null)
+    } finally {
+      setStravaLoading(false)
+    }
+  }
+
   useEffect(() => {
     setConectados({
       apple_health: localStorage.getItem(localKey('apple_health')) === '1',
@@ -118,7 +245,61 @@ export default function Wearables() {
     })
     setUltimaSync(getUltimaSync())
     setLoading(false)
+    carregarStravaStatus()
   }, [])
+
+  useEffect(() => {
+    const stravaParam = searchParams.get('strava')
+    if (!stravaParam) return
+    if (stravaParam === 'connected') {
+      showToast('Strava conectado com sucesso!', 'success')
+      carregarStravaStatus()
+    } else if (stravaParam === 'error') {
+      showToast('Não foi possível conectar ao Strava. Tente novamente.', 'error')
+    }
+    searchParams.delete('strava')
+    setSearchParams(searchParams, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  async function handleConectarStrava() {
+    setStravaConectando(true)
+    try {
+      const { authorizeUrl } = await api.getStravaAuthorizeUrl()
+      window.location.href = authorizeUrl
+    } catch {
+      showToast('Erro ao iniciar conexão com o Strava.', 'error')
+      setStravaConectando(false)
+    }
+  }
+
+  async function handleSincronizarStrava() {
+    setStravaSincronizando(true)
+    try {
+      const resultado = await api.syncStrava()
+      showToast(
+        resultado.synced > 0
+          ? `${resultado.synced} atividade(s) nova(s) sincronizada(s)!`
+          : 'Nenhuma atividade nova encontrada.',
+        'success',
+      )
+      await carregarStravaStatus()
+    } catch {
+      showToast('Erro ao sincronizar com o Strava.', 'error')
+    } finally {
+      setStravaSincronizando(false)
+    }
+  }
+
+  async function handleDesconectarStrava() {
+    try {
+      await api.disconnectStrava()
+      showToast('Strava desconectado.', 'success')
+      await carregarStravaStatus()
+    } catch {
+      showToast('Erro ao desconectar o Strava.', 'error')
+    }
+  }
 
   function toggleConectado(id: ProviderId) {
     const novo = !conectados[id]
@@ -174,7 +355,7 @@ export default function Wearables() {
     )
   }
 
-  const temAlgumConectado = conectados.apple_health || conectados.google_fit
+  const temAlgumConectado = conectados.apple_health || conectados.google_fit || Boolean(stravaStatus?.conectado)
 
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6 pb-24">
@@ -195,6 +376,17 @@ export default function Wearables() {
           </p>
         </div>
       )}
+
+      {/* Strava */}
+      <StravaCard
+        status={stravaStatus}
+        loading={stravaLoading}
+        conectando={stravaConectando}
+        sincronizando={stravaSincronizando}
+        onConectar={handleConectarStrava}
+        onSincronizar={handleSincronizarStrava}
+        onDesconectar={handleDesconectarStrava}
+      />
 
       {/* Conectar dispositivo */}
       <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-4">

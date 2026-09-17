@@ -170,6 +170,7 @@ export default function App() {
           <Route path="academias" element={<ProfessorAcademias />} />
           <Route path="alunos/vincular" element={<ProfessorVincularAluno />} />
           <Route path="fichas" element={<ProfessorFichas />} />
+          <Route path="wearables" element={<AlunoWearables />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
           {/* DESATIVADO: cobrança — acesso livre. Reativar: descomentar. */}
           {/* <Route path="avaliacoes" element={<PremiumWrapper feature="AVALIACOES" featureName="Avaliações Físicas"><Avaliacoes /></PremiumWrapper>} /> */}
@@ -214,6 +215,7 @@ export default function App() {
           <Route path="exercicios/:exercicioId/historico" element={<HistoricoExercicio />} />
           <Route path="medidas" element={<AlunoMedidas />} />
           <Route path="evolucao" element={<AlunoEvolucao />} />
+          <Route path="wearables" element={<AlunoWearables />} />
           <Route path="feed" element={<AlunoMural />} />
           <Route path="amizades" element={<AlunoAmizades />} />
           <Route path="clubes" element={<AlunoClubes />} />
