@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Role, AcademiaStatus } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
+import { sincronizarPatrocinioAluno } from '../../../application/usecases/billing/PatrocinioService.js'
 import {
   cadastrarAcademia,
   autorizarProfessorPrimeiraEtapa,
@@ -152,6 +153,10 @@ export async function academiaRoutes(app: FastifyInstance) {
     const updated = await prisma.aluno.update({
       where: { id: alunoId },
       data: { professor_id: professorId },
+    })
+
+    await sincronizarPatrocinioAluno(alunoId).catch((err) => {
+      request.log.warn({ err }, '[Billing] Erro ao sincronizar patrocínio do aluno')
     })
 
     return reply.status(200).send(updated)

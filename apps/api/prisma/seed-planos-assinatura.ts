@@ -28,6 +28,9 @@ const planos = [
     ativo: true,
   },
   {
+    // Desativado (2026-09-17): todo novo cadastro passa por trial de 15 dias com cartão —
+    // não existe mais opção de ficar de graça pra sempre. Quem já estava no PT_FREE continua
+    // com a assinatura ativa (grandfather); `ativo: false` só impede novas seleções deste plano.
     codigo: 'PT_FREE',
     nome: 'Personal Free',
     descricao: 'Até 3 alunos ativos — treinos, execução e perfil',
@@ -44,7 +47,7 @@ const planos = [
     preco_aluno_excedente_cents: null,
     recursos: {},
     ordem: 10,
-    ativo: true,
+    ativo: false,
   },
   {
     codigo: 'PT_STARTER',

@@ -5,6 +5,7 @@ import { dashboardProfessor, obterEvolucaoMensal, obterHistoricoExecucoesDetalha
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { obterCorrelacoes } from '../../../application/usecases/correlacao/CorrelacaoService.js'
 import { NotFoundError, TenantAccessError } from '../../../domain/errors/AppError.js'
+import { sincronizarPatrocinioAluno, sincronizarPatrocinioPorProfessor } from '../../../application/usecases/billing/PatrocinioService.js'
 
 async function resolveProfessor(usuarioId: string) {
   return prisma.professor.upsert({
@@ -99,6 +100,11 @@ export async function professorRoutes(app: FastifyInstance) {
     const { academiaId } = z.object({ academiaId: z.string() }).parse(request.params)
     const professor = await resolveProfessor(request.currentUser.sub)
 
+    const alunosAfetados = await prisma.aluno.findMany({
+      where: { professor_id: professor.id, academia_id: academiaId },
+      select: { id: true },
+    })
+
     await prisma.$transaction([
       prisma.professorAcademia.deleteMany({
         where: { professor_id: professor.id, academia_id: academiaId },
@@ -108,6 +114,13 @@ export async function professorRoutes(app: FastifyInstance) {
         data: { professor_id: null },
       }),
     ])
+
+    for (const a of alunosAfetados) {
+      await sincronizarPatrocinioAluno(a.id).catch((err) => {
+        request.log.warn({ err }, '[Billing] Erro ao sincronizar patrocínio do aluno')
+      })
+    }
+
     return reply.status(204).send()
   })
 
@@ -176,6 +189,10 @@ export async function professorRoutes(app: FastifyInstance) {
         academia_id: body.academiaId,
       },
       update: { professor_id: professor.id, academia_id: body.academiaId || undefined },
+    })
+
+    await sincronizarPatrocinioAluno(aluno.id).catch((err) => {
+      request.log.warn({ err }, '[Billing] Erro ao sincronizar patrocínio do aluno')
     })
 
     const usuario = await prisma.usuario.findUnique({

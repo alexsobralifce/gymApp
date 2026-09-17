@@ -12,6 +12,7 @@ import {
   PartialPreferenciasNotificacaoSchema,
 } from '../../../application/usecases/notificacoes/NotificacaoPreferencesService.js'
 import { exportarDados, gerarCSV, gerarRelatorioHTML } from '../../../application/usecases/aluno/ExportacaoService.js'
+import { sincronizarPatrocinioAluno } from '../../../application/usecases/billing/PatrocinioService.js'
 import { absolutizeMedia } from '../../../shared/media.js'
 
 function calcularIMC(pesoKg: number, alturaCm: number): number | null {
@@ -167,6 +168,10 @@ export async function alunoRoutes(app: FastifyInstance) {
       // best-effort
     }
 
+    await sincronizarPatrocinioAluno(aluno.id).catch((err) => {
+      request.log.warn({ err }, '[Billing] Erro ao sincronizar patrocínio do aluno')
+    })
+
     return reply.status(200).send(updated)
   })
 
@@ -175,10 +180,15 @@ export async function alunoRoutes(app: FastifyInstance) {
     const aluno = await resolveAluno(request.currentUser.sub)
     if (!aluno.academia_id) return reply.status(200).send({ message: 'Aluno já sem academia.' })
 
-    const updated = await prisma.aluno.update({
+    await prisma.aluno.update({
       where: { id: aluno.id },
       data: { academia_id: null },
     })
+
+    await sincronizarPatrocinioAluno(aluno.id).catch((err) => {
+      request.log.warn({ err }, '[Billing] Erro ao sincronizar patrocínio do aluno')
+    })
+
     return reply.status(204).send()
   })
 
@@ -200,6 +210,10 @@ export async function alunoRoutes(app: FastifyInstance) {
         academia: { select: { id: true, nome: true } },
         usuario: { select: { nome: true, email: true, telefone: true } },
       },
+    })
+
+    await sincronizarPatrocinioAluno(aluno.id).catch((err) => {
+      request.log.warn({ err }, '[Billing] Erro ao sincronizar patrocínio do aluno')
     })
 
     return reply.status(200).send(updated)

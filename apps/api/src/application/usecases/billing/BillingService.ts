@@ -3,6 +3,13 @@ import { prisma } from '../../../infrastructure/database/prisma.js'
 import { env } from '../../../shared/env.js'
 import { getMercadoPagoGateway } from '../../../infrastructure/payments/MercadoPagoGateway.js'
 import { AppError, BadRequestError, NotFoundError, UnauthorizedError } from '../../../domain/errors/AppError.js'
+import { sincronizarPatrocinioPorProfessor, sincronizarPatrocinioPorAcademia } from './PatrocinioService.js'
+
+async function ressincronizarAlunosPatrocinados(tenantTipo: TenantTipo | null, tenantId: string | null) {
+  if (!tenantId) return
+  if (tenantTipo === 'PROFESSOR') await sincronizarPatrocinioPorProfessor(tenantId)
+  else if (tenantTipo === 'ACADEMIA') await sincronizarPatrocinioPorAcademia(tenantId)
+}
 
 // Cobrança "através de pessoa física" — ver docs/planning/integracao-mercado-pago.md.
 // O payer é sempre o Usuario dono da conta (aluno, professor ou gestor da academia);
@@ -32,12 +39,24 @@ async function resolveTenant(
   role: Role,
 ): Promise<{ tenantTipo: TenantTipo; tenantId: string | null }> {
   if (role === 'PROFESSOR') {
-    const professor = await prisma.professor.findUnique({ where: { usuario_id: usuarioId } })
-    return { tenantTipo: 'PROFESSOR', tenantId: professor?.id ?? null }
+    // upsert (não findUnique): o checkout pode acontecer antes de qualquer outra rota criar o
+    // perfil Professor (ex.: trial automático logo após o cadastro) — sem isso, tenant_id fica
+    // nulo pra sempre nessa assinatura, quebrando patrocínio/faixa/painel admin por tenant.
+    const professor = await prisma.professor.upsert({
+      where: { usuario_id: usuarioId },
+      create: { usuario_id: usuarioId },
+      update: {},
+    })
+    return { tenantTipo: 'PROFESSOR', tenantId: professor.id }
   }
   if (role === 'ACADEMIA') {
+    // Academia exige nome/cnpj reais — não dá pra upsert com placeholder. Se o perfil ainda não
+    // existe, falha alto e claro em vez de gravar tenant_id nulo silenciosamente.
     const academia = await prisma.academia.findUnique({ where: { usuario_id: usuarioId } })
-    return { tenantTipo: 'ACADEMIA', tenantId: academia?.id ?? null }
+    if (!academia) {
+      throw new BadRequestError('Crie o perfil da academia (nome e CNPJ) antes de assinar um plano')
+    }
+    return { tenantTipo: 'ACADEMIA', tenantId: academia.id }
   }
   return { tenantTipo: 'ALUNO', tenantId: null }
 }
@@ -99,6 +118,7 @@ export async function iniciarCheckout(usuarioId: string, input: IniciarCheckoutI
         inicio_em: new Date(),
       },
     })
+    await ressincronizarAlunosPatrocinados(tenantTipo, tenantId)
     return { assinaturaId: assinatura.id, status: assinatura.status }
   }
 
@@ -128,6 +148,7 @@ export async function iniciarCheckout(usuarioId: string, input: IniciarCheckoutI
         inicio_em: new Date(),
       },
     })
+    await ressincronizarAlunosPatrocinados(tenantTipo, tenantId)
     return { assinaturaId: assinatura.id, status: assinatura.status as AssinaturaStatus }
   }
 
@@ -183,6 +204,10 @@ export async function iniciarCheckout(usuarioId: string, input: IniciarCheckoutI
           proxima_cobranca_em: inicioCobranca ?? null,
         },
       })
+
+      if (novoStatus === 'ATIVA') {
+        await ressincronizarAlunosPatrocinados(tenantTipo, tenantId)
+      }
 
       return { assinaturaId: assinatura.id, status: novoStatus, initPoint: resultado.initPoint, trialFimEm: inicioCobranca }
     }
@@ -297,6 +322,7 @@ export async function liberarPremiumManual(rootUsuarioId: string, alvoUsuarioId:
         inicio_em: new Date(),
       },
     })
+    await ressincronizarAlunosPatrocinados(tenantTipo, tenantId)
   }
 
   return { ok: true }
@@ -304,6 +330,8 @@ export async function liberarPremiumManual(rootUsuarioId: string, alvoUsuarioId:
 
 /** Revoga a isenção de cobrança concedida por liberarPremiumManual. */
 export async function revogarPremiumManual(alvoUsuarioId: string) {
+  const alvo = await prisma.usuario.findUnique({ where: { id: alvoUsuarioId } })
+
   await prisma.usuario.update({
     where: { id: alvoUsuarioId },
     data: { premium_manual_em: null, premium_manual_por: null, premium_manual_nota: null },
@@ -313,6 +341,11 @@ export async function revogarPremiumManual(alvoUsuarioId: string) {
     where: { usuario_id: alvoUsuarioId, origem: 'MANUAL', status: { in: ['ATIVA', 'PENDENTE', 'EM_CARENCIA'] } },
     data: { status: 'REVOGADA', cancelada_em: new Date() },
   })
+
+  if (alvo) {
+    const { tenantTipo, tenantId } = await resolveTenant(alvoUsuarioId, alvo.role)
+    await ressincronizarAlunosPatrocinados(tenantTipo, tenantId)
+  }
 
   return { ok: true }
 }
@@ -444,6 +477,8 @@ export async function cancelarAssinaturaAtual(usuarioId: string) {
     data: { status: 'CANCELADA', cancelada_em: new Date(), auto_renovating: false },
   })
 
+  await ressincronizarAlunosPatrocinados(assinatura.tenant_tipo, assinatura.tenant_id)
+
   return { ok: true }
 }
 
@@ -517,6 +552,7 @@ async function processarPayment(gateway: ReturnType<typeof getMercadoPagoGateway
         proxima_cobranca_em: addDays(new Date(), 30),
       },
     })
+    await ressincronizarAlunosPatrocinados(assinatura.tenant_tipo, assinatura.tenant_id)
   }
 }
 
@@ -538,6 +574,10 @@ async function processarPreapproval(gateway: ReturnType<typeof getMercadoPagoGat
       cancelada_em: status === 'CANCELADA' ? new Date() : null,
     },
   })
+
+  if (status !== 'ATIVA' && status !== 'EM_CARENCIA') {
+    await ressincronizarAlunosPatrocinados(assinatura.tenant_tipo, assinatura.tenant_id)
+  }
 }
 
 export interface WebhookRequest {
