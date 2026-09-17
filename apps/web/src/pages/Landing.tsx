@@ -226,6 +226,17 @@ export default function Landing() {
                 Rede social fitness integrada
               </span>
             </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-primary" />
+                15 dias grátis para conhecer e usar o sistema
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-primary" />
+                Cobrança segura via Mercado Pago
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -514,6 +525,17 @@ export default function Landing() {
             >
               Já Tenho Conta
             </Link>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-primary" />
+              15 dias grátis, sem custo, para testar o sistema
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-primary" />
+              Toda cobrança é feita de forma segura pelo Mercado Pago
+            </span>
           </div>
         </div>
       </section>
