@@ -8,17 +8,21 @@ import {
   baixarBlobComoArquivo,
   type StoryData,
 } from '../../utils/instagramStoryGenerator'
+import { gerarCardTreinoFoto, type CardTreinoFotoData } from '../../utils/cardTreinoFotoGenerator'
 
 interface PostarTreinoCardProps {
   postId?: string | null
   storyData: StoryData
+  /** Card com foto (aluno e professor) usado na prévia e na publicação no mural */
+  cardTreino?: CardTreinoFotoData | null
 }
 
-export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCardProps) {
+export default function PostarTreinoCard({ postId, storyData, cardTreino }: PostarTreinoCardProps) {
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [fotoFile, setFotoFile] = useState<File | null>(null)
   const [storyPreviewUrl, setStoryPreviewUrl] = useState<string | null>(null)
   const [gerandoStory, setGerandoStory] = useState(false)
+  const [cardPreviewUrl, setCardPreviewUrl] = useState<string | null>(null)
   const [cameraModalOpen, setCameraModalOpen] = useState(false)
 
   // Mural GymApp State
@@ -61,6 +65,31 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
       active = false
     }
   }, [storyData, fotoPreview])
+
+  // Prévia do card do mural (foto + dados do treino + professor) quando há foto e vínculo
+  useEffect(() => {
+    if (!cardTreino || !fotoPreview) {
+      setCardPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+      return
+    }
+    let active = true
+    gerarCardTreinoFoto(cardTreino, fotoPreview)
+      .then((blob) => {
+        if (!active) return
+        const url = URL.createObjectURL(blob)
+        setCardPreviewUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev)
+          return url
+        })
+      })
+      .catch((err) => console.error('Erro ao gerar prévia do card do mural:', err))
+    return () => {
+      active = false
+    }
+  }, [cardTreino, fotoPreview])
 
   // Processa seleção / captura de arquivo
   function handleSelectFoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -165,6 +194,33 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
     }
   }
 
+  // Salva ou compartilha o mesmo card do mural (foto + dados + professor); vale para aluno e professor
+  async function handleCompartilharCard() {
+    if (!cardTreino) return
+    try {
+      setGerandoStory(true)
+      const blob = await gerarCardTreinoFoto(cardTreino, fotoPreview)
+      const nome = `treino-endorfinapp-${Date.now()}.jpg`
+      const file = new File([blob], nome, { type: 'image/jpeg' })
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: `Treino - ${storyData.treinoNome}` })
+          setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado!' })
+          return
+        } catch (err: any) {
+          if (err?.name === 'AbortError') return
+        }
+      }
+      baixarBlobComoArquivo(blob, nome)
+      setFeedbackMsg({ tipo: 'success', texto: 'Card salvo em alta resolução!' })
+    } catch (err) {
+      console.error('Erro ao gerar o card do treino:', err)
+      setFeedbackMsg({ tipo: 'error', texto: 'Não foi possível gerar o card.' })
+    } finally {
+      setGerandoStory(false)
+    }
+  }
+
   async function handleBaixarStory() {
     console.log('[ENDORFINAPP:POST_STORY] handleBaixarStory acionado')
     try {
@@ -189,7 +245,13 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
 
     try {
       const formData = new FormData()
-      formData.append('file', fotoFile)
+      if (cardTreino) {
+        // Posta a foto completa com as informações do treino na base (não a foto crua)
+        const cardBlob = await gerarCardTreinoFoto(cardTreino, fotoPreview)
+        formData.append('file', new File([cardBlob], `card-treino-${Date.now()}.jpg`, { type: 'image/jpeg' }))
+      } else {
+        formData.append('file', fotoFile)
+      }
 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
@@ -312,6 +374,19 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
           </div>
         )}
 
+        {cardPreviewUrl && (
+          <div className="mt-4 w-full flex flex-col items-center gap-1.5" data-testid="card-mural-preview">
+            <img
+              src={cardPreviewUrl}
+              alt="Prévia do card do mural"
+              className="w-44 aspect-[4/5] rounded-2xl object-cover border-2 border-primary/30 shadow-xl"
+            />
+            <span className="text-[10px] font-bold text-text-muted">
+              Card que será postado no mural, com seu professor
+            </span>
+          </div>
+        )}
+
         {/* Botões de Ação para Foto: Câmera & Galeria */}
         <div className="mt-3 flex items-center gap-2 flex-wrap justify-center">
           <button
@@ -389,10 +464,22 @@ export default function PostarTreinoCard({ postId, storyData }: PostarTreinoCard
                 onClick={handlePublicarMural}
                 className="w-full rounded-xl border border-primary/30 bg-primary/10 py-2.5 text-xs font-bold text-primary hover:bg-primary/20 active:scale-[0.98] transition-all cursor-pointer"
               >
-                🌐 Publicar Foto no Mural GymApp
+                {cardTreino ? '🌐 Postar Treino no Mural' : '🌐 Publicar Foto no Mural GymApp'}
               </button>
             )}
           </div>
+        )}
+
+        {/* 2b. Salvar/compartilhar o card com foto (aluno e professor) */}
+        {cardTreino && fotoFile && (
+          <button
+            type="button"
+            onClick={handleCompartilharCard}
+            disabled={gerandoStory}
+            className="w-full rounded-xl border border-primary/30 bg-primary/10 py-2.5 text-xs font-bold text-primary hover:bg-primary/20 active:scale-[0.98] disabled:opacity-50 transition-all cursor-pointer"
+          >
+            📤 Compartilhar / Salvar Card do Treino
+          </button>
         )}
 
         {/* 3. Salvar Imagem na Galeria */}

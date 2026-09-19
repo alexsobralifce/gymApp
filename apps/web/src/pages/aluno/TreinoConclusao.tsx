@@ -7,6 +7,13 @@ import { useEffect, useState, useMemo } from 'react'
 import PostarTreinoCard from '../../components/social/PostarTreinoCard'
 import SistemaAvaliacaoModal from '../../components/avaliacao/SistemaAvaliacaoModal'
 import { resolveMediaUrl } from '../../lib/media'
+import {
+  formatarDataCard,
+  mesesDaSemana,
+  montarDiasDaSemana,
+  nomeProfessorNoCard,
+  type CardTreinoFotoData,
+} from '../../utils/cardTreinoFotoGenerator'
 
 const CONQUISTAS = [
   { msg: 'Cada repetição conta! Continue assim e os resultados virão.', emoji: '🏆' },
@@ -22,11 +29,31 @@ export default function AlunoTreinoConclusao() {
   const { treinoAtual, timerFinalizado, primeiroTreino, execucoes } = useTrainingStore()
   const [postId, setPostId] = useState<string | null>(null)
   const [avaliacaoOpen, setAvaliacaoOpen] = useState(false)
+  const [professorNome, setProfessorNome] = useState<string | null>(null)
+  const [datasTreinadas, setDatasTreinadas] = useState<string[]>([])
 
   useEffect(() => {
     api.getMeuUltimoPostTreino()
       .then((res) => setPostId(res.postId))
       .catch(() => {})
+  }, [])
+
+  // Card com foto para aluno e professor: nome do professor (vinculado ou o próprio) + dias treinados na semana
+  useEffect(() => {
+    let ativo = true
+    api.getPerfilAluno()
+      .then((perfil) => {
+        if (ativo) setProfessorNome(perfil.professor?.usuario?.nome ?? null)
+      })
+      .catch(() => {})
+    Promise.all(mesesDaSemana(new Date()).map((mes) => api.getHistoricoDias(mes)))
+      .then((meses) => {
+        if (ativo) setDatasTreinadas(meses.flat().filter((d) => d.treinos.length > 0).map((d) => d.data))
+      })
+      .catch(() => {})
+    return () => {
+      ativo = false
+    }
   }, [])
 
   useEffect(() => {
@@ -78,6 +105,17 @@ export default function AlunoTreinoConclusao() {
     }
   }, [treinoAtual, duracao, volumeKg, execucoes.length, timerFinalizado, user])
 
+  const cardTreino = useMemo<CardTreinoFotoData>(() => {
+    const agora = new Date()
+    return {
+      treinoNome: storyData.treinoNome,
+      duracaoFormatada: duracao,
+      data: formatarDataCard(agora),
+      professorNome: nomeProfessorNoCard(user?.role, user?.nome, professorNome),
+      ...montarDiasDaSemana(agora, datasTreinadas),
+    }
+  }, [user?.role, user?.nome, professorNome, storyData.treinoNome, duracao, datasTreinadas])
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-surface px-4 py-8 sm:py-12 safe-top safe-bottom">
       <div className="flex flex-col items-center max-w-md w-full animate-modal-pop space-y-6">
@@ -103,7 +141,7 @@ export default function AlunoTreinoConclusao() {
         </div>
 
         {/* Card de Postagem / Instagram Stories com Foto */}
-        <PostarTreinoCard postId={postId} storyData={storyData} />
+        <PostarTreinoCard postId={postId} storyData={storyData} cardTreino={cardTreino} />
 
         {/* Botões de Navegação */}
         <div className="w-full max-w-sm space-y-2 pt-2">
