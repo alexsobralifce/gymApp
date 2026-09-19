@@ -177,13 +177,20 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
           children: [
             { to: '/meus-treinos', label: 'Meus Treinos', icon: <ClipboardListIcon className="h-4 w-4" /> },
             { to: '/treino/novo', label: 'Criar Meu Treino', icon: <PlusIcon className="h-4 w-4" /> },
+            { to: '/biblioteca-planos', label: 'Biblioteca de Planos', icon: <BookOpenIcon className="h-4 w-4" /> },
           ],
         },
+        { to: '/feed', label: 'Feed Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
+        { to: '/amizades', label: 'Amigos', icon: <UserSearchIcon className="h-5 w-5" /> },
+        { to: '/medidas', label: 'Medidas', icon: <RulerIcon className="h-5 w-5" /> },
+        { to: '/evolucao', label: 'Evolução', icon: <ChartLineIcon className="h-5 w-5" /> },
+        { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/alunos/vincular', label: 'Vincular Aluno', icon: <UserPlusIcon className="h-5 w-5" /> },
         { to: '/fichas', label: 'Fichas', icon: <TicketIcon className="h-5 w-5" /> },
         { to: '/exercicios/criar', label: 'Exercícios', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/academias', label: 'Academias', icon: <Building2Icon className="h-5 w-5" /> },
+        { to: '/parceiros', label: 'Parceiros', icon: <StarIcon className="h-5 w-5" /> },
         { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
@@ -289,6 +296,12 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/treinos/criar', label: 'Criar Treino', icon: '➕', desc: 'Ficha para aluno' },
       { to: '/meus-treinos', label: 'Meus Treinos', icon: '🏋️', desc: 'Treinos pessoais' },
       { to: '/treino/novo', label: 'Criar Meu Treino', icon: '📝', desc: 'Treino próprio' },
+      { to: '/feed', label: 'Feed Social', icon: '💬', desc: 'Mural e curtidas' },
+      { to: '/amizades', label: 'Amigos', icon: '👥', desc: 'Rede social fitness' },
+      { to: '/evolucao', label: 'Evolução', icon: '📈', desc: 'Progresso e cargas' },
+      { to: '/medidas', label: 'Minhas Medidas', icon: '📏', desc: 'Peso e dobras' },
+      { to: '/clubes', label: 'Clubes', icon: '🏆', desc: 'Ranking & XP' },
+      { to: '/biblioteca-planos', label: 'Biblioteca Planos', icon: '📚', desc: '30+ fichas curadas' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos e laudos' },
       { to: '/exercicios/criar', label: 'Exercícios', icon: '📖', desc: 'Biblioteca & Gifs' },
       { to: '/academias', label: 'Academias', icon: '🏢', desc: 'Vínculos de trabalho' },
@@ -520,7 +533,7 @@ export default function AppShell() {
             </NavLink>
           )
         )}
-        {role === 'ALUNO' && <AvaliarAppNavButton onClick={handleAvaliarApp} />}
+        {(role === 'ALUNO' || role === 'PROFESSOR') && <AvaliarAppNavButton onClick={handleAvaliarApp} />}
       </nav>
 
       <div className="border-t border-border p-3 space-y-1">
@@ -572,7 +585,7 @@ export default function AppShell() {
                 </NavLink>
               )
             )}
-            {role === 'ALUNO' && <AvaliarAppNavButton onClick={handleAvaliarApp} />}
+            {(role === 'ALUNO' || role === 'PROFESSOR') && <AvaliarAppNavButton onClick={handleAvaliarApp} />}
           </nav>
           <div className="border-t border-border p-3 shrink-0">
             <button
@@ -772,7 +785,7 @@ export default function AppShell() {
 
         <div className="flex flex-1 min-h-0">
           <main className={`flex-1 min-w-0 ${hideNav ? '' : 'pb-20 md:pb-0'}`}>
-            {user?.role === 'ALUNO' && !hideNav && <IncompleteWorkoutBanner />}
+            {(user?.role === 'ALUNO' || user?.role === 'PROFESSOR') && !hideNav && <IncompleteWorkoutBanner />}
             <Outlet />
           </main>
           {/* Academy sidebar — right panel desktop (oculta em execução) */}
@@ -841,7 +854,7 @@ export default function AppShell() {
                 </button>
               )}
 
-              {role === 'ALUNO' && (
+              {(role === 'ALUNO' || role === 'PROFESSOR') && (
                 <button
                   type="button"
                   onClick={() => {

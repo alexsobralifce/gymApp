@@ -14,7 +14,7 @@ async function resolveAluno(usuarioId: string) {
 }
 
 export async function friendshipRoutes(app: FastifyInstance) {
-  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
+  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)]
 
   /** POST /social/amizades/solicitar — envia solicitação por email */
   app.post('/social/amizades/solicitar', { preHandler }, async (request, reply) => {
@@ -26,7 +26,7 @@ export async function friendshipRoutes(app: FastifyInstance) {
       include: { aluno: true },
     })
 
-    if (!target || target.role !== Role.ALUNO || !target.aluno?.permite_busca_email) {
+    if (!target || (target.role !== Role.ALUNO && target.role !== Role.PROFESSOR) || !target.aluno?.permite_busca_email) {
       return reply.status(200).send({ message: 'Solicitação enviada se o e-mail corresponder a um usuário válido.' })
     }
 

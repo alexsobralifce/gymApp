@@ -5,12 +5,13 @@ import { prisma } from '../../src/infrastructure/database/prisma.js'
 import { Role } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 
-describe('Social Mural - professor posta o próprio treino', () => {
+describe('Social - professor com a mesma liberdade de um aluno', () => {
   let app: FastifyInstance
   let professor: any
   let alunoDoProfessor: any
   let tokenProfessor: string
   let outroAluno: any
+  let outroUsuarioId: string
   let postProfessorId: string
   let postOutroId: string
   const sufixo = Date.now()
@@ -47,6 +48,7 @@ describe('Social Mural - professor posta o próprio treino', () => {
       include: { aluno: true },
     })
     outroAluno = outro.aluno
+    outroUsuarioId = outro.id
 
     const postProf = await prisma.socialPost.create({
       data: {
@@ -70,6 +72,8 @@ describe('Social Mural - professor posta o próprio treino', () => {
   })
 
   afterAll(async () => {
+    await prisma.socialLike.deleteMany({ where: { post_id: { in: [postProfessorId, postOutroId] } } })
+    await prisma.socialComment.deleteMany({ where: { post_id: { in: [postProfessorId, postOutroId] } } })
     await prisma.socialPost.deleteMany({ where: { id: { in: [postProfessorId, postOutroId] } } })
     await prisma.aluno.deleteMany({ where: { id: { in: [alunoDoProfessor.id, outroAluno.id] } } })
     await prisma.professor.deleteMany({ where: { usuario_id: professor.id } })
@@ -128,10 +132,44 @@ describe('Social Mural - professor posta o próprio treino', () => {
     expect(res.statusCode).not.toBe(403)
   })
 
-  it('escopo: professor continua sem acesso ao feed e às interações do mural', async () => {
+  it('professor vê o feed, curte e comenta como um aluno', async () => {
     const feed = await app.inject({ method: 'GET', url: '/social/mural', headers: auth() })
-    expect(feed.statusCode).toBe(403)
+    expect(feed.statusCode).toBe(200)
+    const ids = JSON.parse(feed.body).items.map((p: any) => p.id)
+    expect(ids).toContain(postProfessorId) // o próprio post
+    expect(ids).toContain(postOutroId) // post PUBLICO de outro autor
+
     const curtir = await app.inject({ method: 'POST', url: `/social/mural/${postOutroId}/curtir`, headers: auth() })
-    expect(curtir.statusCode).toBe(403)
+    expect(curtir.statusCode).toBeLessThan(300)
+    const comentar = await app.inject({
+      method: 'POST',
+      url: `/social/mural/${postOutroId}/comentar`,
+      headers: auth(),
+      payload: { texto: 'Bom treino!' },
+    })
+    expect(comentar.statusCode).toBeLessThan(300)
+  })
+
+  it('professor acessa amizades e clubes como um aluno', async () => {
+    const amigos = await app.inject({ method: 'GET', url: '/social/amizades', headers: auth() })
+    expect(amigos.statusCode).toBe(200)
+    const clubes = await app.inject({ method: 'GET', url: '/social/clubes', headers: auth() })
+    expect(clubes.statusCode).toBe(200)
+  })
+
+  it('professor pode ser encontrado por e-mail e receber pedido de amizade de um aluno', async () => {
+    const tokenOutro = app.jwt.sign({ sub: outroUsuarioId, email: `outro-mural-${sufixo}@teste.com`, role: Role.ALUNO })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/social/amizades/solicitar',
+      headers: { authorization: `Bearer ${tokenOutro}` },
+      payload: { email: professor.email },
+    })
+    expect(res.statusCode).toBe(200)
+    const amizade = await prisma.socialFriendship.findFirst({
+      where: { aluno_id: outroAluno.id, amigo_id: alunoDoProfessor.id },
+    })
+    expect(amizade?.status).toBe('PENDENTE')
+    await prisma.socialFriendship.deleteMany({ where: { aluno_id: outroAluno.id } })
   })
 })

@@ -15,7 +15,7 @@ async function resolveAluno(usuarioId: string) {
 }
 
 export async function clubRoutes(app: FastifyInstance) {
-  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
+  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)]
 
   /** GET /social/clubes — listar meus clubes e disponíveis */
   app.get('/social/clubes', { preHandler }, async (request, reply) => {

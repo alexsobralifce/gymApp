@@ -14,10 +14,8 @@ async function resolveAluno(usuarioId: string) {
 }
 
 export async function feedRoutes(app: FastifyInstance) {
-  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO, Role.ROOT)]
-  // Operações do próprio autor sobre o seu post (foto, edição, exclusão, último post):
-  // o professor também posta o treino concluído. A checagem de dono continua por aluno_id.
-  const preHandlerAutor = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ROOT)]
+  // Professor tem a mesma liberdade social de um aluno (perfil de aluno próprio via resolveAluno)
+  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ROOT)]
 
   /** GET /social/mural — feed com cursor pagination */
   app.get('/social/mural', { preHandler }, async (request, reply) => {
@@ -91,7 +89,7 @@ export async function feedRoutes(app: FastifyInstance) {
   })
 
   /** PATCH /social/mural/:postId — editar postagem completa (texto/legenda e foto) em até 24 horas */
-  app.patch('/social/mural/:postId', { preHandler: preHandlerAutor }, async (request, reply) => {
+  app.patch('/social/mural/:postId', { preHandler }, async (request, reply) => {
     const { postId } = z.object({ postId: z.string() }).parse(request.params)
     const { midiaUrl, legenda } = z.object({
       midiaUrl: z.string().nullable().optional(),
@@ -127,7 +125,7 @@ export async function feedRoutes(app: FastifyInstance) {
   })
 
   /** DELETE /social/mural/:postId — excluir postagem e suas dependências */
-  app.delete('/social/mural/:postId', { preHandler: preHandlerAutor }, async (request, reply) => {
+  app.delete('/social/mural/:postId', { preHandler }, async (request, reply) => {
     const { postId } = z.object({ postId: z.string() }).parse(request.params)
     const aluno = await resolveAluno(request.currentUser.sub)
 
@@ -147,7 +145,7 @@ export async function feedRoutes(app: FastifyInstance) {
   })
 
   /** PATCH /social/mural/:postId/foto — aluno adiciona foto ao próprio post (compatibilidade retroativa) */
-  app.patch('/social/mural/:postId/foto', { preHandler: preHandlerAutor }, async (request, reply) => {
+  app.patch('/social/mural/:postId/foto', { preHandler }, async (request, reply) => {
     const { postId } = z.object({ postId: z.string() }).parse(request.params)
     const { midiaUrl } = z.object({ midiaUrl: z.string() }).parse(request.body)
     const aluno = await resolveAluno(request.currentUser.sub)
@@ -161,7 +159,7 @@ export async function feedRoutes(app: FastifyInstance) {
   })
 
   /** GET /social/mural/meu-ultimo-post — último post de treino do aluno nas últimas 2h */
-  app.get('/social/mural/meu-ultimo-post', { preHandler: preHandlerAutor }, async (request, reply) => {
+  app.get('/social/mural/meu-ultimo-post', { preHandler }, async (request, reply) => {
     const aluno = await resolveAluno(request.currentUser.sub)
     const desde = new Date(Date.now() - 2 * 60 * 60 * 1000)
 

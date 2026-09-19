@@ -26,7 +26,7 @@ import {
 
 export async function treinoRoutes(app: FastifyInstance) {
   const prehandlerProfessor = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ROOT)]
-  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO, Role.ROOT)]
+  const prehandlerAluno = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ROOT)]
   const prehandlerAlunoProfessor = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ROOT)]
 
   async function resolveAlunoSelf(usuarioId: string, role: Role) {

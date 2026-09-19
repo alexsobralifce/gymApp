@@ -180,7 +180,7 @@ export async function instagramRoutes(app: FastifyInstance) {
   /**
    * POST /social/instagram/publicar — Publica foto diretamente no feed do Instagram
    */
-  app.post('/social/instagram/publicar', { preHandler: [app.authenticate, app.requireRole(Role.ALUNO)] }, async (request, reply) => {
+  app.post('/social/instagram/publicar', { preHandler: [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)] }, async (request, reply) => {
     const { imagemUrl, caption } = z.object({
       imagemUrl: z.string().min(1),
       caption: z.string().optional(),

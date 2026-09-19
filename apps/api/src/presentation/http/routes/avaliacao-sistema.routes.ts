@@ -19,7 +19,7 @@ export async function avaliacaoSistemaRoutes(app: FastifyInstance) {
   /** POST /avaliacoes/sistema — avaliação pós-treino do sistema (role ALUNO) */
   app.post(
     '/avaliacoes/sistema',
-    { preHandler: [app.authenticate, app.requireRole(Role.ALUNO)] },
+    { preHandler: [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)] },
     async (request, reply) => {
       const parsed = avaliacaoSistemaSchema.safeParse(request.body)
       if (!parsed.success) {
