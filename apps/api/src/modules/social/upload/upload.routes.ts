@@ -36,7 +36,8 @@ function safeFilename(name: string): boolean {
 }
 
 export async function uploadRoutes(app: FastifyInstance) {
-  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO)]
+  // Aluno e professor (que também treina e posta o card do treino concluído)
+  const preHandler = [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR)]
 
   app.post('/social/upload/foto', { preHandler }, async (request, reply) => {
     await resolveAluno(request.currentUser.sub)
