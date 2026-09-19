@@ -2,26 +2,20 @@ import { useState, useRef, useEffect } from 'react'
 import { api } from '../../api/client'
 import { getApiBaseUrl } from '../../lib/media'
 import { CheckIcon, XIcon, CameraIcon } from '../icons/Icon'
-import {
-  gerarStoryImage,
-  compartilharStoryCard,
-  baixarBlobComoArquivo,
-  type StoryData,
-} from '../../utils/instagramStoryGenerator'
+import { baixarBlobComoArquivo, type StoryData } from '../../utils/instagramStoryGenerator'
 import { gerarCardTreinoFoto, type CardTreinoFotoData } from '../../utils/cardTreinoFotoGenerator'
 
 interface PostarTreinoCardProps {
   postId?: string | null
   storyData: StoryData
-  /** Card com foto (aluno e professor) usado na prévia e na publicação no mural */
-  cardTreino?: CardTreinoFotoData | null
+  /** Card único (aluno e professor): prévia, Instagram, mural e salvar */
+  cardTreino: CardTreinoFotoData
 }
 
 export default function PostarTreinoCard({ postId, storyData, cardTreino }: PostarTreinoCardProps) {
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [fotoFile, setFotoFile] = useState<File | null>(null)
-  const [storyPreviewUrl, setStoryPreviewUrl] = useState<string | null>(null)
-  const [gerandoStory, setGerandoStory] = useState(false)
+  const [gerandoCard, setGerandoCard] = useState(false)
   const [cardPreviewUrl, setCardPreviewUrl] = useState<string | null>(null)
   const [cameraModalOpen, setCameraModalOpen] = useState(false)
 
@@ -39,43 +33,10 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
-  // Atualiza a prévia do Story quando a foto muda
+  // Prévia do card único (foto opcional + dados do treino + professor)
   useEffect(() => {
     let active = true
-    async function atualizarPreview() {
-      try {
-        setGerandoStory(true)
-        const blob = await gerarStoryImage(storyData, fotoPreview)
-        if (active) {
-          const url = URL.createObjectURL(blob)
-          setStoryPreviewUrl((prev) => {
-            if (prev) URL.revokeObjectURL(prev)
-            return url
-          })
-        }
-      } catch (err) {
-        console.error('Erro ao gerar preview do story:', err)
-      } finally {
-        if (active) setGerandoStory(false)
-      }
-    }
-
-    atualizarPreview()
-    return () => {
-      active = false
-    }
-  }, [storyData, fotoPreview])
-
-  // Prévia do card do mural (foto + dados do treino + professor) quando há foto e vínculo
-  useEffect(() => {
-    if (!cardTreino || !fotoPreview) {
-      setCardPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev)
-        return null
-      })
-      return
-    }
-    let active = true
+    setGerandoCard(true)
     gerarCardTreinoFoto(cardTreino, fotoPreview)
       .then((blob) => {
         if (!active) return
@@ -85,7 +46,10 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
           return url
         })
       })
-      .catch((err) => console.error('Erro ao gerar prévia do card do mural:', err))
+      .catch((err) => console.error('Erro ao gerar prévia do card:', err))
+      .finally(() => {
+        if (active) setGerandoCard(false)
+      })
     return () => {
       active = false
     }
@@ -171,68 +135,51 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
     setFeedbackMsg({ tipo: 'success', texto: 'Foto capturada com sucesso!' })
   }
 
+  // Compartilha o card (folha nativa no celular: Instagram, WhatsApp...) ou salva o arquivo no computador
   async function handleCompartilharInstagram() {
-    console.log('[ENDORFINAPP:POST_STORY] handleCompartilharInstagram acionado com storyData:', storyData)
     try {
-      setGerandoStory(true)
-      const blob = await gerarStoryImage(storyData, fotoPreview)
-      const res = await compartilharStoryCard(blob, `Treino - ${storyData.treinoNome}`)
-
-      if (res.compartilhado) {
-        setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado! Selecione o Instagram nos seus apps.' })
-      } else if (res.baixado) {
-        setFeedbackMsg({
-          tipo: 'info',
-          texto: 'Card 9:16 salvo em Downloads! Como Stories são postados pelo celular, envie a imagem para o seu celular ou use o Instagram Web.',
-        })
-      }
-    } catch (err) {
-      console.error('[ENDORFINAPP:POST_STORY] Erro em handleCompartilharInstagram:', err)
-      setFeedbackMsg({ tipo: 'error', texto: 'Não foi possível gerar a imagem.' })
-    } finally {
-      setGerandoStory(false)
-    }
-  }
-
-  // Salva ou compartilha o mesmo card do mural (foto + dados + professor); vale para aluno e professor
-  async function handleCompartilharCard() {
-    if (!cardTreino) return
-    try {
-      setGerandoStory(true)
+      setGerandoCard(true)
       const blob = await gerarCardTreinoFoto(cardTreino, fotoPreview)
       const nome = `treino-endorfinapp-${Date.now()}.jpg`
       const file = new File([blob], nome, { type: 'image/jpeg' })
-      if (navigator.canShare?.({ files: [file] })) {
+      const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent)
+      if (mobile && navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: `Treino - ${storyData.treinoNome}` })
-          setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado!' })
+          await navigator.share({
+            files: [file],
+            title: `Treino - ${storyData.treinoNome}`,
+            text: 'Treino concluído com o @endorfinapp! 💪 #Endorfinapp',
+          })
+          setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado! Selecione o Instagram nos seus apps.' })
           return
         } catch (err: any) {
           if (err?.name === 'AbortError') return
         }
       }
       baixarBlobComoArquivo(blob, nome)
-      setFeedbackMsg({ tipo: 'success', texto: 'Card salvo em alta resolução!' })
+      setFeedbackMsg({
+        tipo: 'info',
+        texto: 'Card salvo em Downloads! Envie a imagem para o seu celular ou use o Instagram Web.',
+      })
     } catch (err) {
-      console.error('Erro ao gerar o card do treino:', err)
-      setFeedbackMsg({ tipo: 'error', texto: 'Não foi possível gerar o card.' })
+      console.error('Erro ao compartilhar o card do treino:', err)
+      setFeedbackMsg({ tipo: 'error', texto: 'Não foi possível gerar a imagem.' })
     } finally {
-      setGerandoStory(false)
+      setGerandoCard(false)
     }
   }
 
   async function handleBaixarStory() {
-    console.log('[ENDORFINAPP:POST_STORY] handleBaixarStory acionado')
     try {
-      setGerandoStory(true)
-      const blob = await gerarStoryImage(storyData, fotoPreview)
-      baixarBlobComoArquivo(blob, `treino-endorfinapp-${Date.now()}.png`)
+      setGerandoCard(true)
+      const blob = await gerarCardTreinoFoto(cardTreino, fotoPreview)
+      baixarBlobComoArquivo(blob, `treino-endorfinapp-${Date.now()}.jpg`)
       setFeedbackMsg({ tipo: 'success', texto: 'Imagem salva em alta resolução!' })
     } catch (err) {
-      console.error('[ENDORFINAPP:POST_STORY] Erro ao baixar imagem do story:', err)
+      console.error('Erro ao baixar o card do treino:', err)
       setFeedbackMsg({ tipo: 'error', texto: 'Erro ao baixar a imagem.' })
     } finally {
-      setGerandoStory(false)
+      setGerandoCard(false)
     }
   }
 
@@ -245,13 +192,9 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
 
     try {
       const formData = new FormData()
-      if (cardTreino) {
-        // Posta a foto completa com as informações do treino na base (não a foto crua)
-        const cardBlob = await gerarCardTreinoFoto(cardTreino, fotoPreview)
-        formData.append('file', new File([cardBlob], `card-treino-${Date.now()}.jpg`, { type: 'image/jpeg' }))
-      } else {
-        formData.append('file', fotoFile)
-      }
+      // Posta o card completo (foto + informações do treino na base), não a foto crua
+      const cardBlob = await gerarCardTreinoFoto(cardTreino, fotoPreview)
+      formData.append('file', new File([cardBlob], `card-treino-${Date.now()}.jpg`, { type: 'image/jpeg' }))
 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
@@ -299,7 +242,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
           <span>📸</span> Poste seu Treino
         </h3>
         <p className="text-xs text-text-muted">
-          Tire uma foto, incorpore dados do treino e compartilhe no Instagram Stories
+          Tire uma foto e compartilhe seu treino concluído
         </p>
       </div>
 
@@ -352,38 +295,21 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
 
       {/* Área de Visualização do Card e Fotos */}
       <div className="relative flex flex-col items-center">
-        {storyPreviewUrl ? (
-          <div className="relative group w-44 aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 bg-black">
-            <img
-              src={storyPreviewUrl}
-              alt="Prévia do Story"
-              className="w-full h-full object-cover"
-            />
-            {gerandoStory && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            )}
-            <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md rounded-lg py-1 px-2 text-[10px] text-center font-bold text-white">
-              Prévia do Story 9:16
+        {cardPreviewUrl ? (
+          <div className="flex flex-col items-center gap-1.5" data-testid="card-preview">
+            <div className="relative w-52 aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 bg-black">
+              <img src={cardPreviewUrl} alt="Prévia do card do treino" className="w-full h-full object-cover" />
+              {gerandoCard && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              )}
             </div>
+            <span className="text-[10px] font-bold text-text-muted">Este é o card que será compartilhado</span>
           </div>
         ) : (
-          <div className="w-44 aspect-[9/16] rounded-2xl bg-surface-input flex items-center justify-center border border-dashed border-border">
+          <div className="w-52 aspect-[4/5] rounded-2xl bg-surface-input flex items-center justify-center border border-dashed border-border">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          </div>
-        )}
-
-        {cardPreviewUrl && (
-          <div className="mt-4 w-full flex flex-col items-center gap-1.5" data-testid="card-mural-preview">
-            <img
-              src={cardPreviewUrl}
-              alt="Prévia do card do mural"
-              className="w-44 aspect-[4/5] rounded-2xl object-cover border-2 border-primary/30 shadow-xl"
-            />
-            <span className="text-[10px] font-bold text-text-muted">
-              Card que será postado no mural, com seu professor
-            </span>
           </div>
         )}
 
@@ -431,7 +357,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
         <button
           type="button"
           onClick={handleCompartilharInstagram}
-          disabled={gerandoStory}
+          disabled={gerandoCard}
           className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 py-3.5 text-xs font-black text-white shadow-lg shadow-pink-500/25 hover:brightness-110 active:scale-[0.98] disabled:opacity-50 transition-all cursor-pointer"
         >
           <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -464,32 +390,20 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
                 onClick={handlePublicarMural}
                 className="w-full rounded-xl border border-primary/30 bg-primary/10 py-2.5 text-xs font-bold text-primary hover:bg-primary/20 active:scale-[0.98] transition-all cursor-pointer"
               >
-                {cardTreino ? '🌐 Postar Treino no Mural' : '🌐 Publicar Foto no Mural GymApp'}
+                🌐 Postar Treino no Mural
               </button>
             )}
           </div>
-        )}
-
-        {/* 2b. Salvar/compartilhar o card com foto (aluno e professor) */}
-        {cardTreino && fotoFile && (
-          <button
-            type="button"
-            onClick={handleCompartilharCard}
-            disabled={gerandoStory}
-            className="w-full rounded-xl border border-primary/30 bg-primary/10 py-2.5 text-xs font-bold text-primary hover:bg-primary/20 active:scale-[0.98] disabled:opacity-50 transition-all cursor-pointer"
-          >
-            📤 Compartilhar / Salvar Card do Treino
-          </button>
         )}
 
         {/* 3. Salvar Imagem na Galeria */}
         <button
           type="button"
           onClick={handleBaixarStory}
-          disabled={gerandoStory}
+          disabled={gerandoCard}
           className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-bold text-text-muted hover:text-text hover:bg-surface-input/50 active:scale-[0.98] transition-all cursor-pointer"
         >
-          💾 Salvar Imagem na Galeria (1080x1920)
+          💾 Salvar Imagem na Galeria (1080x1350)
         </button>
       </div>
 
