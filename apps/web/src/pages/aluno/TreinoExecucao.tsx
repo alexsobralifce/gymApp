@@ -11,7 +11,7 @@ import { useIncompleteWorkoutReminder } from '../../hooks/useIncompleteWorkoutRe
 import { useToast } from '../../components/ui/Toast'
 import type { UltimaCarga, PerfilAluno, Exercicio, TreinoExercicio } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
-import { calcularCaloriasKeytel, calcularIdade } from '../../lib/health'
+import { calcularGastoCalorico, MET_MUSCULACAO_LEVE_MODERADO, MET_MUSCULACAO_VIGOROSO } from '../../lib/gastoCalorico'
 import { api } from '../../api/client'
 import { WorkoutMethodBadge } from '../../components/ui/WorkoutMethodBadge'
 
@@ -268,10 +268,7 @@ export default function AlunoTreinoExecucao() {
     }
   }
 
-  // ─── Heart Rate & Calorie State ────────────────────
-  const [bpm] = useState<number>(65)
-  const [caloriasAcumuladas, setCaloriasAcumuladas] = useState<number>(0)
-  const [historicoBpm] = useState<number[]>([65])
+  // ─── Gasto calórico (METs — Compêndio de Ainsworth; sem frequência cardíaca) ───
   const [perfilAluno, setPerfilAluno] = useState<PerfilAluno | null>(null)
 
   useEffect(() => {
@@ -282,21 +279,12 @@ export default function AlunoTreinoExecucao() {
       .catch(() => {})
   }, [])
 
-  // Recalcula calorias acumuladas a cada segundo do cronômetro para exibição em tempo real contínua
-  useEffect(() => {
-    if (timer <= 0) return
-    const avgSessaoBpm = Math.round(historicoBpm.reduce((a, b) => a + b, 0) / (historicoBpm.length || 1))
-    const idade = perfilAluno ? calcularIdade(perfilAluno.data_nascimento) : 30
-    const cals = calcularCaloriasKeytel({
-      bpm: avgSessaoBpm,
-      pesoKg: perfilAluno?.peso_kg || 75,
-      idade,
-      sexo: perfilAluno?.sexo,
-      duracaoSegundos: timer,
-    })
-    setCaloriasAcumuladas(cals)
-  }, [timer, historicoBpm, perfilAluno])
-
+  // Faixa estimada mostrada no modal; o valor final depende da intensidade escolhida e é calculado no servidor.
+  const caloriasFaixa = useMemo(() => {
+    const min = calcularGastoCalorico({ met: MET_MUSCULACAO_LEVE_MODERADO, pesoKg: perfilAluno?.peso_kg, duracaoSegundos: timer })
+    const max = calcularGastoCalorico({ met: MET_MUSCULACAO_VIGOROSO, pesoKg: perfilAluno?.peso_kg, duracaoSegundos: timer })
+    return min != null && max != null ? { min, max } : null
+  }, [timer, perfilAluno])
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -531,17 +519,7 @@ export default function AlunoTreinoExecucao() {
     setAvaliando(true)
     allowLeaveRef.current = true
     try {
-      const avgBpm = historicoBpm.length > 0
-        ? Math.round(historicoBpm.reduce((a, b) => a + b, 0) / historicoBpm.length)
-        : (bpm && bpm > 0 ? bpm : undefined)
-      const maxBpm = (historicoBpm.length > 0 || (bpm && bpm > 0))
-        ? Math.max(...historicoBpm, bpm || 0)
-        : undefined
-
       await finalizarTreino(avaliacao, {
-        caloriasQueimadas: caloriasAcumuladas > 0 ? caloriasAcumuladas : undefined,
-        frequenciaCardiacaMedia: avgBpm && avgBpm > 0 ? avgBpm : undefined,
-        frequenciaCardiacaMaxima: maxBpm && maxBpm > 0 ? maxBpm : undefined,
         notaAvaliacao: notaEstrelas >= 1 && notaEstrelas <= 5 ? notaEstrelas : 5,
         feedbackComentario: feedbackComentario.trim() || undefined,
       })
@@ -1226,20 +1204,18 @@ export default function AlunoTreinoExecucao() {
             <h2 className="text-xl font-black text-text text-center mb-0.5">Como foi o treino?</h2>
             <p className="text-xs text-text-muted text-center mb-4">Avalie e envie feedback para acompanhar seu progresso</p>
 
-            {/* Resumo Fisiológico de Calorias e FC */}
-            <div className="mb-4 p-3 rounded-2xl bg-surface border border-emerald-500/30 grid grid-cols-2 gap-2 text-center">
-              <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <span className="text-[10px] text-emerald-400 uppercase font-mono font-bold block">🔥 Calorias</span>
-                <span className="text-base font-black text-text font-mono">{caloriasAcumuladas} <span className="text-xs font-normal text-text-muted">kcal</span></span>
-              </div>
-
-              <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20">
-                <span className="text-[10px] text-red-400 uppercase font-mono font-bold block">❤️ FC Média / Máx</span>
-                <span className="text-base font-black text-text font-mono">
-                  {Math.round(historicoBpm.reduce((a, b) => a + b, 0) / (historicoBpm.length || 1))}
-                  <span className="text-xs font-normal text-text-muted"> / {Math.max(...historicoBpm, bpm)}</span>
-                </span>
-              </div>
+            {/* Gasto calórico estimado por METs */}
+            <div className="mb-4 p-3 rounded-2xl bg-surface border border-emerald-500/30 text-center">
+              <span className="text-[10px] text-emerald-400 uppercase font-mono font-bold block">🔥 Gasto calórico estimado</span>
+              <span className="text-base font-black text-text font-mono">
+                {caloriasFaixa ? `${caloriasFaixa.min} – ${caloriasFaixa.max}` : '—'}{' '}
+                <span className="text-xs font-normal text-text-muted">kcal</span>
+              </span>
+              <p className="mt-1 text-[10px] leading-snug text-text-muted">
+                {caloriasFaixa
+                  ? 'Estimativa por METs (Compêndio de Atividades Físicas). O valor final depende da intensidade que você escolher abaixo.'
+                  : 'Informe seu peso no perfil para ver o gasto calórico estimado.'}
+              </p>
             </div>
 
             {/* Avaliação em Estrelas (1 a 5) */}

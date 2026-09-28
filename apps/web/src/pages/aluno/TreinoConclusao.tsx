@@ -26,7 +26,7 @@ const CONQUISTAS = [
 export default function AlunoTreinoConclusao() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const { treinoAtual, timerFinalizado, primeiroTreino, execucoes } = useTrainingStore()
+  const { treinoAtual, timerFinalizado, primeiroTreino, execucoes, caloriasQueimadas } = useTrainingStore()
   const [postId, setPostId] = useState<string | null>(null)
   const [avaliacaoOpen, setAvaliacaoOpen] = useState(false)
   const [professorNome, setProfessorNome] = useState<string | null>(null)
@@ -87,34 +87,31 @@ export default function AlunoTreinoConclusao() {
       horaInicio = inicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     }
 
-    // Estimativa de calorias: ~7 kcal por minuto de treino de força
-    const minutos = Math.max(1, Math.round(timerFinalizado / 60))
-    const caloriasEstimadas = Math.round(minutos * 7.5)
-
     return {
       treinoNome: treinoAtual?.nome || 'Treino do Dia',
       duracaoFormatada: duracao,
       volumeKg: volumeKg > 0 ? Math.round(volumeKg) : undefined,
       seriesConcluidas: execucoes.length > 0 ? execucoes.length : undefined,
-      calorias: caloriasEstimadas,
+      calorias: caloriasQueimadas ?? undefined,
       data: agora.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase(),
       horaInicio,
       horaFim,
       fotoUsuario: resolveMediaUrl(user?.fotoUrl),
       alunoNome: user?.nome,
     }
-  }, [treinoAtual, duracao, volumeKg, execucoes.length, timerFinalizado, user])
+  }, [treinoAtual, duracao, volumeKg, execucoes.length, timerFinalizado, user, caloriasQueimadas])
 
   const cardTreino = useMemo<CardTreinoFotoData>(() => {
     const agora = new Date()
     return {
       treinoNome: storyData.treinoNome,
       duracaoFormatada: duracao,
+      calorias: caloriasQueimadas,
       data: formatarDataCard(agora),
       professorNome: nomeProfessorNoCard(user?.role, user?.nome, professorNome),
       ...montarDiasDaSemana(agora, datasTreinadas),
     }
-  }, [user?.role, user?.nome, professorNome, storyData.treinoNome, duracao, datasTreinadas])
+  }, [user?.role, user?.nome, professorNome, storyData.treinoNome, duracao, caloriasQueimadas, datasTreinadas])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-surface px-4 py-8 sm:py-12 safe-top safe-bottom">

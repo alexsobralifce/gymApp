@@ -252,11 +252,8 @@ export const api = {
       avaliacao?: string
       notaAvaliacao?: number
       feedbackComentario?: string
-      caloriasQueimadas?: number
-      frequenciaCardiacaMedia?: number
-      frequenciaCardiacaMaxima?: number
     }
-  ) => api.post<Treino & { primeiroTreino?: boolean }>(`/treinos/${id}/finalizar`, data || {}),
+  ) => api.post<Treino & { primeiroTreino?: boolean; caloriasQueimadas?: number | null }>(`/treinos/${id}/finalizar`, data || {}),
 
   criarTreinoAutogestao: (data: {
     nome: string

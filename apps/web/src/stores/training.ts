@@ -49,6 +49,8 @@ interface TrainingState {
   loading: boolean
   error: string | null
   primeiroTreino: boolean
+  /** Gasto calórico estimado por METs, calculado no servidor ao finalizar */
+  caloriasQueimadas: number | null
   pendingSyncCount: number
   syncingPending: boolean
 
@@ -62,9 +64,6 @@ interface TrainingState {
   finalizarTreino: (
     avaliacao?: string,
     metrics?: {
-      caloriasQueimadas?: number
-      frequenciaCardiacaMedia?: number
-      frequenciaCardiacaMaxima?: number
       notaAvaliacao?: number
       feedbackComentario?: string
     }
@@ -106,6 +105,7 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
   loading: false,
   error: null,
   primeiroTreino: false,
+  caloriasQueimadas: null,
   pendingSyncCount: pendingQueueCount(),
   syncingPending: false,
 
@@ -258,11 +258,8 @@ export const useTrainingStore = create<TrainingState>((set, get) => ({
         avaliacao,
         notaAvaliacao: metrics?.notaAvaliacao,
         feedbackComentario: metrics?.feedbackComentario,
-        caloriasQueimadas: metrics?.caloriasQueimadas,
-        frequenciaCardiacaMedia: metrics?.frequenciaCardiacaMedia,
-        frequenciaCardiacaMaxima: metrics?.frequenciaCardiacaMaxima,
       })
-      set({ primeiroTreino: res.primeiroTreino ?? false })
+      set({ primeiroTreino: res.primeiroTreino ?? false, caloriasQueimadas: res.caloriasQueimadas ?? null })
       // UX-015: north-star — treino concluído (duração + séries da sessão)
       track('workout_completed', {
         durationMin: Math.round(timer / 60),

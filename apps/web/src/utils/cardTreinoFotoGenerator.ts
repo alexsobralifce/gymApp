@@ -8,6 +8,8 @@
 export interface CardTreinoFotoData {
   treinoNome: string
   duracaoFormatada: string
+  /** Gasto calórico estimado (METs). Sem valor, some do card. */
+  calorias?: number | null
   /** Data já formatada, ex.: "19 set 2026" */
   data: string
   /** Professor do aluno (ou o próprio professor). Sem nome, o bloco do professor some do rodapé. */
@@ -166,7 +168,8 @@ export async function gerarCardTreinoFoto(
 
   ctx.fillStyle = 'rgba(255,255,255,0.8)'
   ctx.font = `500 34px ${FONTE}`
-  ctx.fillText(`${data.data}   ·   ${data.duracaoFormatada}`, W / 2, H - 325)
+  const kcal = data.calorias && data.calorias > 0 ? `   ·   ~${Math.round(data.calorias)} kcal` : ''
+  ctx.fillText(`${data.data}   ·   ${data.duracaoFormatada}${kcal}`, W / 2, H - 325)
 
   // 4. Dias da semana centralizados
   const r = 44

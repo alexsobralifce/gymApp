@@ -8,6 +8,7 @@ import {
 } from '../../../domain/errors/AppError.js'
 import { assertTransicaoValida } from '../../../domain/entities/TreinoStateMachine.js'
 import { sendDualPush } from '../../../infrastructure/push/sendDualPush.js'
+import { calcularGastoCalorico, metMusculacao } from '../../../shared/gastoCalorico.js'
 
 function execucoesDaSessao(iniciadoEm: Date | null | undefined) {
   if (!iniciadoEm) return {}
@@ -487,7 +488,7 @@ export async function finalizarTreino(
   treinoId: string,
   alunoId: string,
   avaliacao?: string,
-  caloriasQueimadas?: number,
+  _caloriasCliente?: number,
   frequenciaCardiacaMedia?: number,
   frequenciaCardiacaMaxima?: number,
   notaAvaliacao?: number,
@@ -514,7 +515,22 @@ export async function finalizarTreino(
     ? Math.max(0, Math.round((finalizadoEm.getTime() - treino.iniciado_em.getTime()) / 1000))
     : null
 
-  let calcCalorias = caloriasQueimadas ?? null
+  // Gasto calórico por METs (Compêndio de Ainsworth): ignora qualquer valor vindo do
+  // cliente, para que o número seja sempre reproduzível a partir de peso, tempo e intensidade.
+  let pesoKg = treino.aluno?.peso_kg ?? null
+  if (!pesoKg) {
+    const medida = await prisma.medidaCorporal.findFirst({
+      where: { aluno_id: alunoId, peso_kg: { not: null } },
+      orderBy: { data: 'desc' },
+      select: { peso_kg: true },
+    })
+    pesoKg = medida?.peso_kg ?? null
+  }
+  const calcCalorias = calcularGastoCalorico({
+    met: metMusculacao(avaliacao),
+    pesoKg,
+    duracaoSegundos,
+  })
   let calcFcMedia = frequenciaCardiacaMedia ?? null
   let calcFcMax = frequenciaCardiacaMaxima ?? null
 

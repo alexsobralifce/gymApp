@@ -14,7 +14,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gymapp_dev_password}
       POSTGRES_DB: gymapp_dev
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - gymapp_pgdata:/var/lib/postgresql/data
     healthcheck:
