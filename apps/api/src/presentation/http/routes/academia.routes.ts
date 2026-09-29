@@ -11,6 +11,7 @@ import {
   removerProfessor,
   dashboardAlunosAcademia,
 } from '../../../application/usecases/academia/AcademiaService.js'
+import { LOGO_REGRAS, salvarLogoAcademia, removerLogoAcademia } from '../../../application/usecases/academia/LogoService.js'
 
 export async function academiaRoutes(app: FastifyInstance) {
   const preHandler = [app.authenticate, app.requireRole(Role.ACADEMIA)]
@@ -20,7 +21,7 @@ export async function academiaRoutes(app: FastifyInstance) {
     const academiaId = request.currentUser.tenantId!
     const academia = await prisma.academia.findUnique({
       where: { id: academiaId },
-      select: { nome: true, cnpj: true, status: true, max_professores: true, usuario: { select: { email: true, telefone: true } } },
+      select: { nome: true, cnpj: true, status: true, max_professores: true, logo_url: true, usuario: { select: { email: true, telefone: true } } },
     })
     if (!academia) throw new NotFoundError('Academia')
 
@@ -36,6 +37,7 @@ export async function academiaRoutes(app: FastifyInstance) {
       email: academia.usuario.email,
       telefone: academia.usuario.telefone,
       status: academia.status,
+      logoUrl: academia.logo_url,
       totalProfessores,
       maxProfessores: academia.max_professores,
       totalAlunos: limiteAlunos.usados,
@@ -44,10 +46,36 @@ export async function academiaRoutes(app: FastifyInstance) {
     })
   })
 
+  /** POST /academias/logo — upload da logo (multipart, campo único). Validação em LogoService. */
+  app.post('/logo', { preHandler }, async (request, reply) => {
+    const data = await request.file()
+    if (!data) return reply.status(400).send({ message: 'Nenhum arquivo enviado.' })
+
+    const buffer = await data.toBuffer()
+    if (data.file.truncated) {
+      return reply.status(400).send({ message: 'A logo deve ter no máximo 2 MB.' })
+    }
+
+    const logoUrl = await salvarLogoAcademia(request.currentUser.tenantId!, buffer)
+    return reply.status(200).send({ logoUrl })
+  })
+
+  /** DELETE /academias/logo — remove a logo */
+  app.delete('/logo', { preHandler }, async (request, reply) => {
+    await removerLogoAcademia(request.currentUser.tenantId!)
+    return reply.status(204).send()
+  })
+
+  /** GET /academias/logo/regras — padrões exibidos na tela de upload */
+  app.get('/logo/regras', { preHandler }, async (_request, reply) => {
+    return reply.status(200).send(LOGO_REGRAS)
+  })
+
   /** GET /academias — lista academias ativas (público) */
   app.get('/', async (_request, reply) => {
     const academias = await prisma.academia.findMany({
-      where: { status: AcademiaStatus.ATIVO },
+      // Contas @gymapp.local (demo/teste) não aparecem para os usuários
+      where: { status: AcademiaStatus.ATIVO, usuario: { email: { not: { endsWith: '@gymapp.local' } } } },
       select: { id: true, nome: true, cnpj: true, status: true },
     })
     return reply.status(200).send(academias)

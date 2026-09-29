@@ -70,6 +70,8 @@ model Academia {
   status           AcademiaStatus      @default(PENDENTE)
   max_professores  Int                 @default(20)
   rejeitado_motivo String?
+  /// Logo de marketing exibida no card/story do treino dos alunos vinculados
+  logo_url         String?
   criado_em        DateTime            @default(now())
   atualizado_em    DateTime            @updatedAt
   usuario          Usuario             @relation(fields: [usuario_id], references: [id])

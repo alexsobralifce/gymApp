@@ -1,11 +1,14 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   gerarCardTreinoFoto,
   montarDiasDaSemana,
   mesesDaSemana,
   formatarDataCard,
   nomeProfessorNoCard,
+  calcularCaixaLogo,
+  LOGO_MAX_ALTURA,
+  LOGO_MAX_LARGURA,
   CARD_LARGURA,
   CARD_ALTURA,
   CARD_SITE_PADRAO,
@@ -80,6 +83,26 @@ describe('nomeProfessorNoCard', () => {
     expect(nomeProfessorNoCard('ALUNO', 'Ana Souza', null)).toBeNull()
     expect(nomeProfessorNoCard('ALUNO', 'Ana Souza', undefined)).toBeNull()
     expect(nomeProfessorNoCard(undefined, undefined, '  ')).toBeNull()
+  })
+})
+
+describe('calcularCaixaLogo', () => {
+  it('logo quadrada é limitada pela altura máxima', () => {
+    expect(calcularCaixaLogo(800, 800)).toEqual({ w: LOGO_MAX_ALTURA, h: LOGO_MAX_ALTURA })
+  })
+
+  it('logo horizontal 3:1 (máximo aceito pela API) ocupa 330×110', () => {
+    expect(calcularCaixaLogo(1200, 400)).toEqual({ w: 330, h: LOGO_MAX_ALTURA })
+  })
+
+  it('proporção extrema é limitada pela largura máxima', () => {
+    const { w, h } = calcularCaixaLogo(1200, 200)
+    expect(w).toBe(LOGO_MAX_LARGURA)
+    expect(h).toBeLessThan(LOGO_MAX_ALTURA)
+  })
+
+  it('dimensão inválida devolve caixa vazia', () => {
+    expect(calcularCaixaLogo(0, 100)).toEqual({ w: 0, h: 0 })
   })
 })
 
@@ -197,5 +220,57 @@ describe('gerarCardTreinoFoto', () => {
     expect(ctx.drawImage).toHaveBeenCalledTimes(1)
 
     global.Image = originalImage
+  })
+
+  describe('logo da academia', () => {
+    const LOGO = 'https://api.exemplo.com/uploads/logos/a_1.png'
+    const originalImage = global.Image
+
+    function mockImage(falhar: boolean) {
+      class MockImage {
+        crossOrigin = ''
+        width = 800
+        height = 800
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        set src(_v: string) {
+          setTimeout(() => (falhar ? this.onerror?.() : this.onload?.()), 0)
+        }
+      }
+      global.Image = MockImage as any
+    }
+
+    afterEach(() => {
+      global.Image = originalImage
+    })
+
+    it('desenha a logo no canto superior esquerdo, dentro da área máxima', async () => {
+      mockImage(false)
+      ctx.roundRect = vi.fn()
+      await gerarCardTreinoFoto({ ...dados, academiaLogoUrl: LOGO })
+      expect(ctx.drawImage).toHaveBeenCalledTimes(1)
+      const [, x, y, w, h] = ctx.drawImage.mock.calls[0]
+      expect(x).toBeLessThan(150)
+      expect(y).toBeLessThan(150)
+      expect(w).toBeLessThanOrEqual(LOGO_MAX_LARGURA)
+      expect(h).toBeLessThanOrEqual(LOGO_MAX_ALTURA)
+      expect(ctx.roundRect).toHaveBeenCalledTimes(1)
+    })
+
+    it('usa fillRect quando o navegador não tem roundRect', async () => {
+      mockImage(false)
+      await gerarCardTreinoFoto({ ...dados, academiaLogoUrl: LOGO })
+      expect(ctx.drawImage).toHaveBeenCalledTimes(1)
+    })
+
+    it('sem logo ou com falha ao carregar, o card sai normal', async () => {
+      await gerarCardTreinoFoto(dados)
+      expect(ctx.drawImage).not.toHaveBeenCalled()
+
+      mockImage(true)
+      const blob = await gerarCardTreinoFoto({ ...dados, academiaLogoUrl: LOGO })
+      expect(blob.type).toBe('image/jpeg')
+      expect(ctx.drawImage).not.toHaveBeenCalled()
+    })
   })
 })

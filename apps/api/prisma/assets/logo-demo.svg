@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF5F2E"/>
+      <stop offset="1" stop-color="#FFB400"/>
+    </linearGradient>
+    <linearGradient id="t" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7B2FF7"/>
+      <stop offset="1" stop-color="#F107A3"/>
+    </linearGradient>
+  </defs>
+  <rect x="20" y="60" width="280" height="280" rx="64" fill="url(#g)"/>
+  <!-- halter -->
+  <g fill="#FFFFFF">
+    <rect x="70" y="180" width="180" height="40" rx="12"/>
+    <rect x="60" y="130" width="34" height="140" rx="10"/>
+    <rect x="226" y="130" width="34" height="140" rx="10"/>
+    <rect x="34" y="155" width="26" height="90" rx="8" opacity="0.85"/>
+    <rect x="260" y="155" width="26" height="90" rx="8" opacity="0.85"/>
+  </g>
+  <text x="340" y="205" font-family="Helvetica Neue, Arial, sans-serif" font-size="128" font-weight="900" fill="url(#t)" letter-spacing="-2">IRON DEMO</text>
+  <text x="344" y="290" font-family="Helvetica Neue, Arial, sans-serif" font-size="78" font-weight="700" fill="#0EA5E9" letter-spacing="14">FITNESS</text>
+</svg>

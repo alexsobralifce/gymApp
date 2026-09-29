@@ -231,7 +231,7 @@ export async function alunoRoutes(app: FastifyInstance) {
       where: { usuario_id: request.currentUser.sub },
       include: {
         professor: { select: { id: true, usuario: { select: { nome: true, email: true, telefone: true } } } },
-        academia: { select: { id: true, nome: true } },
+        academia: { select: { id: true, nome: true, logo_url: true } },
         usuario: { select: { nome: true, email: true, telefone: true } },
       },
     })

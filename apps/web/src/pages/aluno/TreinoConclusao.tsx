@@ -30,6 +30,7 @@ export default function AlunoTreinoConclusao() {
   const [postId, setPostId] = useState<string | null>(null)
   const [avaliacaoOpen, setAvaliacaoOpen] = useState(false)
   const [professorNome, setProfessorNome] = useState<string | null>(null)
+  const [academiaLogoUrl, setAcademiaLogoUrl] = useState<string | null>(null)
   const [datasTreinadas, setDatasTreinadas] = useState<string[]>([])
 
   useEffect(() => {
@@ -43,7 +44,9 @@ export default function AlunoTreinoConclusao() {
     let ativo = true
     api.getPerfilAluno()
       .then((perfil) => {
-        if (ativo) setProfessorNome(perfil.professor?.usuario?.nome ?? null)
+        if (!ativo) return
+        setProfessorNome(perfil.professor?.usuario?.nome ?? null)
+        setAcademiaLogoUrl(resolveMediaUrl(perfil.academia?.logo_url) ?? null)
       })
       .catch(() => {})
     Promise.all(mesesDaSemana(new Date()).map((mes) => api.getHistoricoDias(mes)))
@@ -109,9 +112,10 @@ export default function AlunoTreinoConclusao() {
       calorias: caloriasQueimadas,
       data: formatarDataCard(agora),
       professorNome: nomeProfessorNoCard(user?.role, user?.nome, professorNome),
+      academiaLogoUrl,
       ...montarDiasDaSemana(agora, datasTreinadas),
     }
-  }, [user?.role, user?.nome, professorNome, storyData.treinoNome, duracao, caloriasQueimadas, datasTreinadas])
+  }, [user?.role, user?.nome, professorNome, academiaLogoUrl, storyData.treinoNome, duracao, caloriasQueimadas, datasTreinadas])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-surface px-4 py-8 sm:py-12 safe-top safe-bottom">

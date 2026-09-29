@@ -202,6 +202,11 @@ export const api = {
   updateMe: (data: { expoPushToken?: string | null; webPushSubscription?: PushSubscriptionJSON | null; nome?: string; telefone?: string | null; fotoUrl?: string | null }) =>
     api.patch<User>('/auth/me', data),
 
+  uploadLogoAcademia: (formData: FormData) =>
+    api.post<{ logoUrl: string }>('/academias/logo', formData, true),
+
+  removerLogoAcademia: () => api.delete<void>('/academias/logo'),
+
   uploadAvatar: (formData: FormData) =>
     api.post<{ fotoUrl: string }>('/auth/avatar', formData, true),
 

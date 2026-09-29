@@ -40,6 +40,10 @@ export function getAvatarsDir(): string {
   return path.join(getPublicDir(), 'uploads', 'avatars')
 }
 
+export function getLogosDir(): string {
+  return path.join(getPublicDir(), 'uploads', 'logos')
+}
+
 export function getFeedDir(year: string, month: string): string {
   return path.join(getPublicDir(), 'uploads', 'feed', year, month)
 }

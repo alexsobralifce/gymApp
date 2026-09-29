@@ -226,6 +226,7 @@ export interface AcademiaDashboard {
   email?: string | null
   telefone?: string | null
   status: string
+  logoUrl?: string | null
   totalProfessores: number
   maxProfessores?: number
   totalAlunos: number
@@ -300,7 +301,7 @@ export interface PerfilAluno {
   meta_semanal?: number
   criado_em: string
   professor?: { id?: string; usuario: { nome: string; email: string; telefone?: string | null } } | null
-  academia?: { id?: string; nome: string } | null
+  academia?: { id?: string; nome: string; logo_url?: string | null } | null
   usuario?: { nome: string; email: string; telefone?: string | null }
 }
 

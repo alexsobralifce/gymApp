@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
-import { ensureDir, getAvatarsDir, getFeedDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
+import { ensureDir, getAvatarsDir, getFeedDir, getLogosDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
 
 async function resolveAluno(usuarioId: string) {
   return prisma.aluno.upsert({
@@ -95,6 +95,25 @@ export async function uploadRoutes(app: FastifyInstance) {
         .send(buffer)
     } catch {
       return reply.status(404).send({ message: 'Foto não encontrada' })
+    }
+  })
+
+  /** GET /uploads/logos/:filename — serve logo da academia (usada no Canvas do card, precisa de CORS) */
+  app.get('/uploads/logos/:filename', async (request, reply) => {
+    const { filename } = z.object({ filename: z.string() }).parse(request.params)
+    if (!safeFilename(filename)) {
+      return reply.status(400).send({ message: 'Nome de arquivo inválido' })
+    }
+
+    try {
+      const buffer = await fs.readFile(path.join(getLogosDir(), filename))
+      return reply
+        .header('Content-Type', 'image/png')
+        .header('Cache-Control', 'public, max-age=86400')
+        .header('Cross-Origin-Resource-Policy', 'cross-origin')
+        .send(buffer)
+    } catch {
+      return reply.status(404).send({ message: 'Logo não encontrada' })
     }
   })
 

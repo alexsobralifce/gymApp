@@ -5,6 +5,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import { Building2Icon, UsersIcon, UserPlusIcon } from '../../components/icons/Icon'
+import LogoAcademiaCard from '../../components/academia/LogoAcademiaCard'
 import TrialCartaoStep from '../../components/billing/TrialCartaoStep'
 
 function formatCNPJ(value: string) {
@@ -144,6 +145,11 @@ export default function AcademiaDashboard() {
             </div>
           </div>
         </div>
+
+        <LogoAcademiaCard
+          logoUrl={data.logoUrl}
+          onChange={(logoUrl) => setData((d) => (d ? { ...d, logoUrl } : d))}
+        />
       </div>
     )
   }

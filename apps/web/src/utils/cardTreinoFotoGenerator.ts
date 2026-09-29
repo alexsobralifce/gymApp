@@ -19,6 +19,26 @@ export interface CardTreinoFotoData {
   /** Índice (0-6) do dia de hoje na semana */
   hojeIdx: number
   site?: string
+  /** Logo da academia do aluno (URL absoluta). Some do card se ausente ou se falhar ao carregar. */
+  academiaLogoUrl?: string | null
+}
+
+/** Área da logo no canto superior esquerdo (px do card 1080×1350) */
+export const LOGO_MARGEM = 56
+export const LOGO_MAX_ALTURA = 110
+export const LOGO_MAX_LARGURA = 380
+const LOGO_PADDING = 18
+
+/** Ajusta a logo à área máxima mantendo a proporção (nunca amplia além da área). */
+export function calcularCaixaLogo(
+  largura: number,
+  altura: number,
+  maxW = LOGO_MAX_LARGURA,
+  maxH = LOGO_MAX_ALTURA,
+): { w: number; h: number } {
+  if (largura <= 0 || altura <= 0) return { w: 0, h: 0 }
+  const escala = Math.min(maxW / largura, maxH / altura)
+  return { w: Math.round(largura * escala), h: Math.round(altura * escala) }
 }
 
 export const CARD_LARGURA = 1080
@@ -153,6 +173,26 @@ export async function gerarCardTreinoFoto(
   g.addColorStop(1, `rgba(${NAVY}, 0.97)`)
   ctx.fillStyle = g
   ctx.fillRect(0, H - 580, W, 580)
+
+  // 2b. Logo da academia no canto superior esquerdo, sobre uma placa translúcida
+  //     para continuar legível em qualquer foto
+  const logo = data.academiaLogoUrl ? await carregarImagem(data.academiaLogoUrl) : null
+  if (logo) {
+    const { w, h } = calcularCaixaLogo(logo.width, logo.height)
+    const px = LOGO_MARGEM
+    const py = LOGO_MARGEM
+    ctx.fillStyle = 'rgba(255,255,255,0.88)'
+    const pw = w + LOGO_PADDING * 2
+    const ph = h + LOGO_PADDING * 2
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath()
+      ctx.roundRect(px, py, pw, ph, 24)
+      ctx.fill()
+    } else {
+      ctx.fillRect(px, py, pw, ph) // Safari < 16
+    }
+    ctx.drawImage(logo, px + LOGO_PADDING, py + LOGO_PADDING, w, h)
+  }
 
   ctx.textBaseline = 'alphabetic'
   ctx.textAlign = 'center'
