@@ -6,7 +6,7 @@ Este guia explica o passo a passo para colocar a aplicação **GymApp** (monorep
 
 ## 0. Otimizações de Build (Railway Config)
 
-Dois arquivos `railway.json` foram adicionados para acelerar deploys:
+Dois arquivos `railway.json` foram adicionados para acelerar deploys. **Nota (2026-09-29):** no serviço `api` em produção o Root Directory é a raiz do repo, então `apps/api/railway.json` não é lido; watch paths, build e start valem os do painel:
 
 ### Watch Paths
 - `apps/api/railway.json` → muda algo em `apps/api/**`? **Só rebuilda a API**
@@ -55,9 +55,14 @@ No painel do seu projeto no Railway:
 1. No seu projeto do Railway, clique em **+ New** > **GitHub Repo** e selecione o repositório do **GymApp**.
 2. Uma vez criado o serviço, clique nele e vá em **Settings**:
    - Renomeie o serviço para `gymapp-api` ou `api` para melhor organização.
-   - **Root Directory**: Defina como `apps/api`.
-   - **Build Command**: `npm run build` (como definimos o root directory para `apps/api`, ele rodará o build do workspace automaticamente).
-   - **Start Command**: `bash railway-start.sh` (esse script aplica migrações, inicia o servidor e roda a sincronização de exercícios em segundo plano sem bloquear).
+   - **Root Directory**: vazio (raiz do repositório). O monorepo é buildado inteiro e o processo roda com `cwd=/app`.
+   - **Start Command** (configurado no painel, é a fonte de verdade em produção):
+     ```
+     npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma && (npx tsx apps/api/prisma/sync-gifdotreino.ts && npx tsx apps/api/prisma/translate-exercises.ts && npx tsx apps/api/prisma/seed-planos.ts) & node apps/api/dist/server.js
+     ```
+   - **Volume**: `api-volume` montado em `/app/public/uploads` (avatares, feed e logos das academias). Como o `cwd` é `/app`, `public/uploads` da API resolve para esse mount.
+   - **Atenção**: `apps/api/railway.json` e `apps/api/railway-start.sh` **não são usados** por este serviço (o Railway só lê `railway.json` na raiz do Root Directory). Mudanças de build/start devem ser feitas no painel.
+   - **Rodar scripts em produção** (ex.: seed): sempre com `cd /app`, por exemplo `railway ssh --service api -- "cd /app && npx tsx apps/api/prisma/seed-academia-demo.ts"`. Rodar de `/app/apps/api` grava arquivos fora do volume.
 
 3. Vá para a aba **Variables** e adicione as seguintes variáveis de ambiente:
    - `PORT`: (Gerada automaticamente pelo Railway).
