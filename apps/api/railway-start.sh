@@ -2,7 +2,18 @@
 set -e
 
 echo "=== Ensuring upload directories ==="
-mkdir -p public/uploads/avatars public/uploads/feed
+# O volume da Railway monta em /app/public/uploads, mas a API grava em $PWD/public/uploads
+# (PWD = apps/api). Se o volume estiver montado la, aponta public/uploads para ele.
+VOLUME_UPLOADS=/app/public/uploads
+if [ "$PWD" != "/app" ] && mountpoint -q "$VOLUME_UPLOADS" 2>/dev/null && [ ! -L public/uploads ]; then
+  echo "Volume detectado em $VOLUME_UPLOADS, linkando public/uploads"
+  mkdir -p public
+  # preserva o que estiver no disco efemero (ex.: arquivos da imagem) sem sobrescrever o volume
+  [ -d public/uploads ] && cp -an public/uploads/. "$VOLUME_UPLOADS"/ 2>/dev/null || true
+  rm -rf public/uploads
+  ln -s "$VOLUME_UPLOADS" public/uploads
+fi
+mkdir -p public/uploads/avatars public/uploads/feed public/uploads/logos
 
 echo "=== Generating Prisma Client ==="
 npx prisma generate
