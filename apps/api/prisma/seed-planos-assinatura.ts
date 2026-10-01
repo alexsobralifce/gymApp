@@ -123,7 +123,7 @@ const planos = [
     preco_aluno_excedente_cents: null,
     recursos: { avaliacao_fisica: true, relatorios: true, correlacoes: true, clubes: true, templates_ilimitados: true, importacao_alunos: true, suporte_prioritario: true, addon_professor_extra_cents: 3900 },
     ordem: 14,
-    ativo: true,
+    ativo: false,
   },
   {
     codigo: 'PT_STUDIO',
@@ -142,7 +142,7 @@ const planos = [
     preco_aluno_excedente_cents: null,
     recursos: { avaliacao_fisica: true, relatorios: true, correlacoes: true, clubes: true, templates_ilimitados: true, importacao_alunos: true, suporte_prioritario: true, white_label_basico: true, addon_professor_extra_cents: 3900 },
     ordem: 15,
-    ativo: true,
+    ativo: false,
   },
   {
     codigo: 'AC_ESSENCIAL',
