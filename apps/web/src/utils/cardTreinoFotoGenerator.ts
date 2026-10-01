@@ -25,8 +25,8 @@ export interface CardTreinoFotoData {
 
 /** Área da logo no canto superior esquerdo (px do card 1080×1350) */
 export const LOGO_MARGEM = 56
-export const LOGO_MAX_ALTURA = 110
-export const LOGO_MAX_LARGURA = 380
+export const LOGO_MAX_ALTURA = 143
+export const LOGO_MAX_LARGURA = 494
 const LOGO_PADDING = 18
 
 /** Ajusta a logo à área máxima mantendo a proporção (nunca amplia além da área). */

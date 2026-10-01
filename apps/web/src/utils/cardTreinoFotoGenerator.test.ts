@@ -91,8 +91,8 @@ describe('calcularCaixaLogo', () => {
     expect(calcularCaixaLogo(800, 800)).toEqual({ w: LOGO_MAX_ALTURA, h: LOGO_MAX_ALTURA })
   })
 
-  it('logo horizontal 3:1 (máximo aceito pela API) ocupa 330×110', () => {
-    expect(calcularCaixaLogo(1200, 400)).toEqual({ w: 330, h: LOGO_MAX_ALTURA })
+  it('logo horizontal 3:1 (máximo aceito pela API) ocupa 429×143', () => {
+    expect(calcularCaixaLogo(1200, 400)).toEqual({ w: 429, h: LOGO_MAX_ALTURA })
   })
 
   it('proporção extrema é limitada pela largura máxima', () => {
