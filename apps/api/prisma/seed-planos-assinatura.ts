@@ -28,28 +28,6 @@ const planos = [
     ativo: true,
   },
   {
-    // Desativado (2026-09-17): todo novo cadastro passa por trial de 15 dias com cartão —
-    // não existe mais opção de ficar de graça pra sempre. Quem já estava no PT_FREE continua
-    // com a assinatura ativa (grandfather); `ativo: false` só impede novas seleções deste plano.
-    codigo: 'PT_FREE',
-    nome: 'Personal Free',
-    descricao: 'Até 3 alunos ativos — treinos, execução e perfil',
-    papel_alvo: 'PROFESSOR' as const,
-    preco_mensal_cents: 0,
-    moeda: 'BRL',
-    google_play_product_id: null,
-    trial_dias: 0,
-    limite_alunos: 3,
-    faixa_min_alunos: 0,
-    faixa_max_alunos: 3,
-    professores_inclusos: 1,
-    unidades_inclusas: 1,
-    preco_aluno_excedente_cents: null,
-    recursos: {},
-    ordem: 10,
-    ativo: false,
-  },
-  {
     codigo: 'PT_STARTER',
     nome: 'Personal Starter',
     descricao: 'Até 10 alunos ativos — avaliação física e convites',
@@ -105,44 +83,6 @@ const planos = [
     recursos: { avaliacao_fisica: true, relatorios: true, correlacoes: true, clubes: true, templates_ilimitados: true, addon_professor_extra_cents: 3900 },
     ordem: 13,
     ativo: true,
-  },
-  {
-    codigo: 'PT_SCALE',
-    nome: 'Personal Scale',
-    descricao: 'Até 120 alunos ativos — importação de alunos e suporte prioritário',
-    papel_alvo: 'PROFESSOR' as const,
-    preco_mensal_cents: 24900,
-    moeda: 'BRL',
-    google_play_product_id: null,
-    trial_dias: 15,
-    limite_alunos: 120,
-    faixa_min_alunos: 61,
-    faixa_max_alunos: 120,
-    professores_inclusos: 3,
-    unidades_inclusas: 1,
-    preco_aluno_excedente_cents: null,
-    recursos: { avaliacao_fisica: true, relatorios: true, correlacoes: true, clubes: true, templates_ilimitados: true, importacao_alunos: true, suporte_prioritario: true, addon_professor_extra_cents: 3900 },
-    ordem: 14,
-    ativo: false,
-  },
-  {
-    codigo: 'PT_STUDIO',
-    nome: 'Personal Studio',
-    descricao: 'Alunos ilimitados (fair-use) — workspace com 3 professores e white-label básico',
-    papel_alvo: 'PROFESSOR' as const,
-    preco_mensal_cents: 34900,
-    moeda: 'BRL',
-    google_play_product_id: null,
-    trial_dias: 15,
-    limite_alunos: null,
-    faixa_min_alunos: 121,
-    faixa_max_alunos: null,
-    professores_inclusos: 3,
-    unidades_inclusas: 1,
-    preco_aluno_excedente_cents: null,
-    recursos: { avaliacao_fisica: true, relatorios: true, correlacoes: true, clubes: true, templates_ilimitados: true, importacao_alunos: true, suporte_prioritario: true, white_label_basico: true, addon_professor_extra_cents: 3900 },
-    ordem: 15,
-    ativo: false,
   },
   {
     codigo: 'AC_ESSENCIAL',
@@ -241,8 +181,16 @@ const planos = [
   },
 ]
 
+/** Planos retirados do catálogo. Só são removidos se nenhuma assinatura os referenciar. */
+const PLANOS_REMOVIDOS = ['PT_FREE', 'PT_SCALE', 'PT_STUDIO']
+
 async function main() {
   console.log('🌱 Seed de planos de assinatura (catálogo docs/planning/catalogo-de-precos.md)...')
+
+  const removidos = await prisma.planoAssinatura.deleteMany({
+    where: { codigo: { in: PLANOS_REMOVIDOS }, assinaturas: { none: {} } },
+  })
+  if (removidos.count > 0) console.log(`  🗑️  ${removidos.count} plano(s) retirado(s) do catálogo`)
 
   for (const plano of planos) {
     await prisma.planoAssinatura.upsert({
