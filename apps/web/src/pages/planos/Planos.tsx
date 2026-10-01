@@ -68,6 +68,13 @@ export default function Planos() {
   )
   const addons = ADDONS_POR_SEGMENTO[segmento]
 
+  /** Planos com teste grátis levam direto ao cadastro; os demais mantêm o aviso de contato. */
+  function handleSelecionar(codigo: string) {
+    const plano = planos.find((p) => p.codigo === codigo)
+    if (plano?.ctaLabel.startsWith('Testar')) navigate('/register')
+    else setPlanoSelecionado(codigo)
+  }
+
   function handleVoltar() {
     if (window.history.length > 1) window.history.back()
     else navigate('/', { replace: true })
@@ -162,7 +169,7 @@ export default function Planos() {
         {/* Planos */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {planos.map((plano) => (
-            <PlanCard key={plano.codigo} plano={plano} onSelecionar={setPlanoSelecionado} />
+            <PlanCard key={plano.codigo} plano={plano} onSelecionar={handleSelecionar} />
           ))}
         </div>
 
