@@ -254,13 +254,7 @@ describe('gerarCardTreinoFoto', () => {
       expect(y).toBeLessThan(150)
       expect(w).toBeLessThanOrEqual(LOGO_MAX_LARGURA)
       expect(h).toBeLessThanOrEqual(LOGO_MAX_ALTURA)
-      expect(ctx.roundRect).toHaveBeenCalledTimes(1)
-    })
-
-    it('usa fillRect quando o navegador não tem roundRect', async () => {
-      mockImage(false)
-      await gerarCardTreinoFoto({ ...dados, academiaLogoUrl: LOGO })
-      expect(ctx.drawImage).toHaveBeenCalledTimes(1)
+      expect(ctx.roundRect).not.toHaveBeenCalled() // sem placa branca atrás da logo
     })
 
     it('sem logo ou com falha ao carregar, o card sai normal', async () => {
