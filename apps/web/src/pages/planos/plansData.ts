@@ -29,20 +29,6 @@ export interface PlanoPublico {
 
 export const PLANOS_PERSONAL: PlanoPublico[] = [
   {
-    codigo: 'PT_FREE',
-    nome: 'Personal Free',
-    subtitulo: 'Para experimentar sem custo',
-    alunosLabel: 'Até 3 alunos ativos',
-    precoMensal: 0,
-    porAluno: 0,
-    ctaLabel: 'Começar grátis',
-    recursos: [
-      'Monte treinos por objetivo, nível e dias',
-      'Aluno executa no app com cronômetro',
-      'Histórico de cargas por aluno',
-    ],
-  },
-  {
     codigo: 'PT_STARTER',
     nome: 'Personal Starter',
     subtitulo: 'Para quem está começando a atender',
@@ -51,7 +37,9 @@ export const PLANOS_PERSONAL: PlanoPublico[] = [
     porAluno: 4.9,
     ctaLabel: 'Testar 15 dias grátis',
     recursos: [
-      'Tudo do Free',
+      'Monte treinos por objetivo, nível e dias',
+      'Aluno executa no app com cronômetro',
+      'Histórico de cargas por aluno',
       'Avaliação física do aluno',
       'Convites para vincular alunos',
       'Fichas e templates de treino',
@@ -88,36 +76,6 @@ export const PLANOS_PERSONAL: PlanoPublico[] = [
       'Templates ilimitados',
       'Sua marca no app do aluno',
       'Clonagem de treino em lote',
-    ],
-  },
-  {
-    codigo: 'PT_SCALE',
-    nome: 'Personal Scale',
-    subtitulo: 'Para grandes carteiras',
-    alunosLabel: 'Até 120 alunos ativos',
-    professoresLabel: 'Até 3 professores',
-    precoMensal: 249,
-    porAluno: 2.08,
-    ctaLabel: 'Falar com especialista',
-    recursos: [
-      'Tudo do Plus',
-      'Importação de alunos',
-      'Suporte prioritário',
-    ],
-  },
-  {
-    codigo: 'PT_STUDIO',
-    nome: 'Personal Studio',
-    subtitulo: 'Equipe e alunos sem limite',
-    alunosLabel: 'Alunos ativos ilimitados',
-    professoresLabel: 'Até 3 professores',
-    precoMensal: 349,
-    porAluno: null,
-    ctaLabel: 'Falar com especialista',
-    recursos: [
-      'Tudo do Scale',
-      'Workspace com 3 professores',
-      'Marca própria no app',
     ],
   },
 ]
