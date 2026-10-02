@@ -7,6 +7,7 @@ import {
   formatarDataCard,
   nomeProfessorNoCard,
   calcularCaixaLogo,
+  montarLinhaMetricas,
   LOGO_MAX_ALTURA,
   LOGO_MAX_LARGURA,
   CARD_LARGURA,
@@ -103,6 +104,20 @@ describe('calcularCaixaLogo', () => {
 
   it('dimensão inválida devolve caixa vazia', () => {
     expect(calcularCaixaLogo(0, 100)).toEqual({ w: 0, h: 0 })
+  })
+})
+
+describe('montarLinhaMetricas', () => {
+  const base = { treinoNome: 'A', duracaoFormatada: '58 min', data: '19 set 2026', diasTreinados: [], hojeIdx: 0 }
+
+  it('inclui volume e kcal quando presentes', () => {
+    expect(montarLinhaMetricas({ ...base, volumeKg: 4250, calorias: 312.4 })).toBe(
+      `19 set 2026   ·   58 min   ·   ${(4250).toLocaleString('pt-BR')} kg   ·   ~312 kcal`,
+    )
+  })
+
+  it('omite volume e kcal sem valor', () => {
+    expect(montarLinhaMetricas({ ...base, volumeKg: 0, calorias: null })).toBe('19 set 2026   ·   58 min')
   })
 })
 

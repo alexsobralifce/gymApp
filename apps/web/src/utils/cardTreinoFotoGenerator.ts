@@ -10,6 +10,8 @@ export interface CardTreinoFotoData {
   duracaoFormatada: string
   /** Gasto calórico estimado (METs). Sem valor, some do card. */
   calorias?: number | null
+  /** Volume total levantado em kg. Sem valor, some do card. */
+  volumeKg?: number | null
   /** Data já formatada, ex.: "19 set 2026" */
   data: string
   /** Professor do aluno (ou o próprio professor). Sem nome, o bloco do professor some do rodapé. */
@@ -27,6 +29,14 @@ export interface CardTreinoFotoData {
 export const LOGO_MARGEM = 56
 export const LOGO_MAX_ALTURA = 143
 export const LOGO_MAX_LARGURA = 494
+
+/** Linha de métricas do card: data · tempo · volume · kcal (campos sem valor somem). */
+export function montarLinhaMetricas(data: CardTreinoFotoData): string {
+  const partes = [data.data, data.duracaoFormatada]
+  if (data.volumeKg && data.volumeKg > 0) partes.push(`${Math.round(data.volumeKg).toLocaleString('pt-BR')} kg`)
+  if (data.calorias && data.calorias > 0) partes.push(`~${Math.round(data.calorias)} kcal`)
+  return partes.join('   ·   ')
+}
 
 /** Ajusta a logo à área máxima mantendo a proporção (nunca amplia além da área). */
 export function calcularCaixaLogo(
@@ -199,8 +209,7 @@ export async function gerarCardTreinoFoto(
 
   ctx.fillStyle = 'rgba(255,255,255,0.8)'
   ctx.font = `500 34px ${FONTE}`
-  const kcal = data.calorias && data.calorias > 0 ? `   ·   ~${Math.round(data.calorias)} kcal` : ''
-  ctx.fillText(`${data.data}   ·   ${data.duracaoFormatada}${kcal}`, W / 2, H - 325)
+  ctx.fillText(montarLinhaMetricas(data), W / 2, H - 325)
 
   // 4. Dias da semana centralizados
   const r = 44

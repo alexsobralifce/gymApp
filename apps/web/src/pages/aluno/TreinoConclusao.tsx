@@ -110,12 +110,13 @@ export default function AlunoTreinoConclusao() {
       treinoNome: storyData.treinoNome,
       duracaoFormatada: duracao,
       calorias: caloriasQueimadas,
+      volumeKg,
       data: formatarDataCard(agora),
       professorNome: nomeProfessorNoCard(user?.role, user?.nome, professorNome),
       academiaLogoUrl,
       ...montarDiasDaSemana(agora, datasTreinadas),
     }
-  }, [user?.role, user?.nome, professorNome, academiaLogoUrl, storyData.treinoNome, duracao, caloriasQueimadas, datasTreinadas])
+  }, [user?.role, user?.nome, professorNome, academiaLogoUrl, storyData.treinoNome, duracao, caloriasQueimadas, volumeKg, datasTreinadas])
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-start bg-surface px-4 py-8 sm:py-12 safe-top safe-bottom">
