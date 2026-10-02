@@ -6,6 +6,7 @@ import { ConflictError, NotFoundError, UnauthorizedError, ForbiddenError, BadReq
 import { env } from '../../../shared/env.js'
 import { sendVerificationEmail, sendPasswordResetEmail } from '../../../infrastructure/email/mailer.js'
 import crypto from 'crypto'
+import { registrarLogin } from '../analytics/AcessoService.js'
 
 const DEFAULT_GOOGLE_CLIENT_ID = '100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com'
 
@@ -178,6 +179,8 @@ export class AuthService {
       where: { id: usuario.id },
       data: { ultima_atividade_em: new Date() },
     })
+
+    await registrarLogin(usuario.id, usuario.role, 'senha')
 
     return AuthService.generateTokensForUser(
       { id: usuario.id, role: usuario.role, admin: usuario.admin },
@@ -550,6 +553,8 @@ export class AuthService {
       where: { id: usuario.id },
       data: { ultima_atividade_em: new Date() },
     })
+
+    await registrarLogin(usuario.id, usuario.role, 'google')
 
     return { accessToken, refreshToken, isNew, nome: usuario.nome }
   }

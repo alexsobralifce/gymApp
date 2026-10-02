@@ -14,6 +14,7 @@ import {
   aprovacaoVinculoProfessor,
   alterarStatusAcademia,
 } from '../../../application/usecases/academia/AcademiaService.js'
+import { resumoAcessos } from '../../../application/usecases/analytics/AcessoService.js'
 import {
   liberarPremiumManual,
   revogarPremiumManual,
@@ -31,6 +32,12 @@ export async function rootRoutes(app: FastifyInstance) {
   app.get('/painel', { preHandler }, async (_request, reply) => {
     const data = await painelGlobal()
     return reply.status(200).send(data)
+  })
+
+  /** GET /root/acessos?dias=30 — visitas à landing e logins */
+  app.get('/acessos', { preHandler }, async (request, reply) => {
+    const { dias } = z.object({ dias: z.coerce.number().int().min(1).max(365).default(30) }).parse(request.query)
+    return reply.status(200).send(await resumoAcessos(dias))
   })
 
   /** GET /root/vinculos — lista vínculos com paginação */

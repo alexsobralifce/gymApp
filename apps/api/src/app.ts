@@ -14,6 +14,7 @@ import { env } from './shared/env.js'
 // Routes
 import { authRoutes } from './presentation/http/routes/auth.routes.js'
 import { promocaoRoutes } from './presentation/http/routes/promocao.routes.js'
+import { analyticsRoutes } from './presentation/http/routes/analytics.routes.js'
 import { academiaRoutes } from './presentation/http/routes/academia.routes.js'
 import { professorRoutes } from './presentation/http/routes/professor.routes.js'
 import { alunoRoutes } from './presentation/http/routes/aluno.routes.js'
@@ -170,6 +171,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(authRoutes, { prefix: '/auth' })
   await app.register(rootRoutes, { prefix: '/root' })
   await app.register(academiaRoutes, { prefix: '/academias' })
+  await app.register(analyticsRoutes, { prefix: '/analytics' })
   await app.register(promocaoRoutes, { prefix: '/promocoes' })
   await app.register(professorRoutes, { prefix: '/professores' })
   await app.register(alunoRoutes, { prefix: '/alunos' })

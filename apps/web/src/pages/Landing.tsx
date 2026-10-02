@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Dumbbell, Users, Shield, TrendingUp,
@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import EndorfinappLogo from '../components/branding/EndorfinappLogo'
 import DemoTreino from '../components/landing/DemoTreino'
+import { api } from '../api/client'
+import { registrarVisitaLanding } from '../lib/visitaLanding'
 
 const NAV_LINKS = ['Funcionalidades', 'Ciencia', 'Rede Social', 'Como Funciona']
 
@@ -74,6 +76,10 @@ const FAQS = [
 export default function Landing() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+
+  useEffect(() => {
+    registrarVisitaLanding(api.registrarVisitaLanding)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>

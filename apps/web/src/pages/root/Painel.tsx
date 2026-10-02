@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../api/client'
 import type { RootPainel } from '../../types/api'
+import AcessosCard from '../../components/root/AcessosCard'
 
 interface AcademiaPaginada {
   id: string
@@ -101,6 +102,8 @@ export default function RootPainel() {
           <div className="text-xs text-text-muted">Alunos</div>
         </div>
       </div>
+
+      <AcessosCard />
 
       {/* Lista de academias com paginação */}
       <h2 className="mb-3 text-sm font-semibold text-text-muted">

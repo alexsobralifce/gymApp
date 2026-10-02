@@ -532,3 +532,20 @@ export interface PromocaoInput {
   ativo?: boolean
   ordem?: number
 }
+
+export interface DiaAcesso {
+  dia: string
+  visitas: number
+  visitantes: number
+  logins: number
+  usuarios: number
+}
+
+export interface ResumoAcessos {
+  periodoDias: number
+  periodo: { visitas: number; visitantesUnicos: number; logins: number; usuariosUnicos: number }
+  hoje: DiaAcesso
+  totalGeral: { visitas: number; logins: number }
+  loginsPorRole: { role: string | null; total: number }[]
+  serie: DiaAcesso[]
+}

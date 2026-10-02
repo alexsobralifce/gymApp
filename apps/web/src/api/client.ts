@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -473,6 +473,8 @@ export const api = {
     api.patch<Treino>(`/treinos/${id}/responder`, { acao }),
 
   // ─── Root ──────────────────────────────────────────
+  registrarVisitaLanding: (visitorId: string) => api.post<void>('/analytics/visita', { visitorId }),
+  getAcessos: (dias: number) => api.get<ResumoAcessos>(`/root/acessos?dias=${dias}`),
   getPainel: () => api.get<RootPainel>('/root/painel'),
 
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.

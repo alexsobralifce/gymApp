@@ -970,3 +970,23 @@ model PromocaoEventoLog {
   @@index([promocao_id, tipo])
   @@map("promocao_eventos")
 }
+
+enum AcessoTipo {
+  VISITA_LANDING
+  LOGIN
+}
+
+/// Contadores de acesso: visitas à landing (anônimas, sem IP) e logins de usuários
+model AcessoEvento {
+  id         String     @id @default(cuid())
+  tipo       AcessoTipo
+  /// Id aleatório gerado no navegador (visitas); sem relação com a pessoa
+  visitor_id String?
+  usuario_id String?
+  role       Role?
+  metodo     String?
+  criado_em  DateTime   @default(now())
+
+  @@index([tipo, criado_em])
+  @@map("acesso_eventos")
+}
