@@ -42,6 +42,7 @@ import RootFinanceiro from './pages/root/Financeiro'
 import AcademiaDashboard from './pages/academia/Dashboard'
 import AcademiaProfessores from './pages/academia/Professores'
 import AcademiaAlunos from './pages/academia/Alunos'
+import AcademiaPromocoes from './pages/academia/Promocoes'
 import AcademiaCriarTreino from './pages/academia/CriarTreinoAcademia'
 import AcademiaTreinos from './pages/academia/Treinos'
 import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
@@ -242,6 +243,7 @@ export default function App() {
           <Route path="documentacao" element={<Documentacao />} />
           <Route path="professores" element={<AcademiaProfessores />} />
           <Route path="alunos" element={<AcademiaAlunos />} />
+          <Route path="promocoes" element={<AcademiaPromocoes />} />
           <Route path="treinos/criar" element={<AcademiaCriarTreino />} />
           <Route path="avaliacoes" element={<Avaliacoes />} />
           <Route path="dados" element={<AlunoDados />} />

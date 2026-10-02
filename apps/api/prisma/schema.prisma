@@ -77,6 +77,7 @@ model Academia {
   usuario          Usuario             @relation(fields: [usuario_id], references: [id])
   alunos           Aluno[]
   professores      ProfessorAcademia[]
+  promocoes        Promocao[]
 
   @@map("academias")
 }
@@ -920,4 +921,52 @@ model ConviteAluno {
   @@index([token])
   @@index([professor_id, status])
   @@map("convites_aluno")
+}
+
+enum PromocaoTipo {
+  CAMPANHA
+  PLANO
+  PARCERIA
+  PRODUTO
+}
+
+enum PromocaoEvento {
+  VISUALIZACAO
+  CLIQUE
+}
+
+/// Vitrine da academia: promoções exibidas aos alunos vinculados ao abrir o app
+model Promocao {
+  id            String               @id @default(cuid())
+  academia_id   String
+  titulo        String
+  descricao     String?
+  tipo          PromocaoTipo         @default(CAMPANHA)
+  imagem_url    String?
+  cta_label     String?
+  cta_url       String?
+  preco_texto   String?
+  inicio_em     DateTime             @default(now())
+  fim_em        DateTime?
+  ativo         Boolean              @default(true)
+  ordem         Int                  @default(0)
+  criado_em     DateTime             @default(now())
+  atualizado_em DateTime             @updatedAt
+  academia      Academia             @relation(fields: [academia_id], references: [id], onDelete: Cascade)
+  eventos       PromocaoEventoLog[]
+
+  @@index([academia_id, ativo])
+  @@map("promocoes")
+}
+
+model PromocaoEventoLog {
+  id          String         @id @default(cuid())
+  promocao_id String
+  aluno_id    String
+  tipo        PromocaoEvento
+  criado_em   DateTime       @default(now())
+  promocao    Promocao       @relation(fields: [promocao_id], references: [id], onDelete: Cascade)
+
+  @@index([promocao_id, tipo])
+  @@map("promocao_eventos")
 }

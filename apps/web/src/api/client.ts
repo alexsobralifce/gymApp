@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -206,6 +206,17 @@ export const api = {
     api.post<{ logoUrl: string }>('/academias/logo', formData, true),
 
   removerLogoAcademia: () => api.delete<void>('/academias/logo'),
+
+  // ─── Vitrine de promoções ──────────────────────────────────────────────
+  listarPromocoes: () => api.get<Promocao[]>('/promocoes'),
+  criarPromocao: (body: PromocaoInput) => api.post<Promocao>('/promocoes', body),
+  atualizarPromocao: (id: string, body: Partial<PromocaoInput>) => api.put<Promocao>(`/promocoes/${id}`, body),
+  removerPromocao: (id: string) => api.delete<void>(`/promocoes/${id}`),
+  uploadImagemPromocao: (id: string, formData: FormData) =>
+    api.post<{ imagemUrl: string }>(`/promocoes/${id}/imagem`, formData, true),
+  getPromocoesAtivas: () => api.get<PromocaoVitrine[]>('/promocoes/ativas'),
+  registrarEventoPromocao: (id: string, tipo: 'VISUALIZACAO' | 'CLIQUE') =>
+    api.post<void>(`/promocoes/${id}/eventos`, { tipo }),
 
   uploadAvatar: (formData: FormData) =>
     api.post<{ fotoUrl: string }>('/auth/avatar', formData, true),

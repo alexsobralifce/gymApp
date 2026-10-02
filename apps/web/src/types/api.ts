@@ -495,3 +495,40 @@ export interface PaginatedResponse<T> {
   limit: number
   totalPages: number
 }
+
+export type PromocaoTipo = 'CAMPANHA' | 'PLANO' | 'PARCERIA' | 'PRODUTO'
+
+/** Promoção como o aluno vê na vitrine */
+export interface PromocaoVitrine {
+  id: string
+  titulo: string
+  descricao: string | null
+  tipo: PromocaoTipo
+  imagem_url: string | null
+  cta_label: string | null
+  cta_url: string | null
+  preco_texto: string | null
+}
+
+/** Promoção como a academia gerencia no painel */
+export interface Promocao extends PromocaoVitrine {
+  inicio_em: string
+  fim_em: string | null
+  ativo: boolean
+  ordem: number
+  visualizacoes?: number
+  cliques?: number
+}
+
+export interface PromocaoInput {
+  titulo: string
+  descricao?: string | null
+  tipo?: PromocaoTipo
+  ctaLabel?: string | null
+  ctaUrl?: string | null
+  precoTexto?: string | null
+  inicioEm?: string
+  fimEm?: string | null
+  ativo?: boolean
+  ordem?: number
+}

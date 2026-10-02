@@ -6,6 +6,7 @@ import { api } from '../../api/client'
 import { useThemeStore } from '../../stores/theme'
 import OnboardingPopup from '../ui/OnboardingPopup'
 import IncompleteWorkoutBanner from '../ui/IncompleteWorkoutBanner'
+import VitrinePromocoes from '../promocoes/VitrinePromocoes'
 import SistemaAvaliacaoModal from '../avaliacao/SistemaAvaliacaoModal'
 import { useIdleLogout } from '../../hooks/useIdleLogout'
 import {
@@ -208,6 +209,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/avaliacoes', label: 'Avaliação Física', icon: <RulerIcon className="h-5 w-5" /> },
         { to: '/professores', label: 'Professores', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/alunos', label: 'Alunos', icon: <UsersIcon className="h-5 w-5" /> },
+        { to: '/promocoes', label: 'Promoções', icon: <StarIcon className="h-5 w-5" /> },
         { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
@@ -312,6 +314,7 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
   if (role === 'ACADEMIA') {
     return [
       { to: '/treinos/criar', label: 'Criar Treino', icon: '➕', desc: 'Ficha padrão da academia' },
+      { to: '/promocoes', label: 'Promoções', icon: '🎁', desc: 'Vitrine para seus alunos' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Avaliações de alunos' },
       { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
       { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia da academia' },
@@ -787,6 +790,7 @@ export default function AppShell() {
           <main className={`flex-1 min-w-0 ${hideNav ? '' : 'pb-20 md:pb-0'}`}>
             {(user?.role === 'ALUNO' || user?.role === 'PROFESSOR') && !hideNav && <IncompleteWorkoutBanner />}
             <Outlet />
+            {!hideNav && <VitrinePromocoes />}
           </main>
           {/* Academy sidebar — right panel desktop (oculta em execução) */}
           {!hideNav && (
