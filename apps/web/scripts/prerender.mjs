@@ -26,7 +26,23 @@ async function servir() {
   return { server, origem: `http://127.0.0.1:${server.address().port}` }
 }
 
+// Rede de segurança: o serve.json não reescreve estas rotas para o index.html, então elas precisam
+// existir como arquivo mesmo quando o pré-render é pulado (senão dariam 404).
+async function garantirCascaNasRotas() {
+  const casca = await readFile(path.join(DIST, 'index.html'))
+  for (const rota of ROTAS.filter((r) => r !== '/')) {
+    const destino = path.join(DIST, rota, 'index.html')
+    await mkdir(path.dirname(destino), { recursive: true })
+    await writeFile(destino, casca)
+  }
+}
+
 async function main() {
+  await garantirCascaNasRotas()
+  if (process.env.PRERENDER_SKIP) {
+    console.warn('[prerender] PRERENDER_SKIP definido — usando só a casca da SPA.')
+    return
+  }
   let chromium
   try {
     ;({ chromium } = await import('@playwright/test'))
