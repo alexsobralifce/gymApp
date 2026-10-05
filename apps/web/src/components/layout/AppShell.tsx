@@ -234,6 +234,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: <StarIcon className="h-5 w-5" /> },
         { to: '/feed', label: 'Feed Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
+        { to: '/publicacoes', label: 'Publicações do Blog', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
@@ -287,6 +288,7 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/treinos/criar', label: 'Criar para Aluno', icon: '➕', desc: 'Prescrever ficha' },
       { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: '⭐', desc: 'Feedbacks recebidos' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos & Laudos' },
+      { to: '/publicacoes', label: 'Publicações do Blog', icon: '✍️', desc: 'Publicar e despublicar' },
       { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
       { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia do sistema' },
       { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados da conta' },

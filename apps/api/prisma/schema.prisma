@@ -990,3 +990,40 @@ model AcessoEvento {
   @@index([tipo, criado_em])
   @@map("acesso_eventos")
 }
+
+enum BlogTipo {
+  ORIGINAL
+  CURADORIA
+}
+
+enum BlogStatus {
+  RASCUNHO
+  PUBLICADO
+  DESPUBLICADO
+}
+
+/// Artigos do blog público. O site baixa os PUBLICADOS no build (scripts/sincronizar-blog.mjs).
+/// ORIGINAL = artigo editorial indexável; CURADORIA = "Leitura da semana" (noindex) gerada pelo robô.
+model ArtigoBlog {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  tipo          BlogTipo   @default(ORIGINAL)
+  status        BlogStatus @default(RASCUNHO)
+  titulo        String
+  descricao     String
+  categoria     String
+  autor         String     @default("Equipe ENDORFINAPP")
+  resumo        String
+  secoes        Json
+  fontes        Json
+  /// Só curadorias: { veiculo, pais, titulo, url } da matéria original
+  origem        Json?
+  cta           Json?
+  /// Data de publicação editorial (YYYY-MM-DD); definida na primeira publicação
+  publicado_em  DateTime?
+  criado_em     DateTime   @default(now())
+  atualizado_em DateTime   @updatedAt
+
+  @@index([status, tipo])
+  @@map("blog_artigos")
+}

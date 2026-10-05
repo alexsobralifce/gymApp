@@ -549,3 +549,24 @@ export interface ResumoAcessos {
   loginsPorRole: { role: string | null; total: number }[]
   serie: DiaAcesso[]
 }
+
+export type BlogTipo = 'ORIGINAL' | 'CURADORIA'
+export type BlogStatus = 'RASCUNHO' | 'PUBLICADO' | 'DESPUBLICADO'
+
+export interface ArtigoBlogAdmin {
+  id: string
+  slug: string
+  tipo: BlogTipo
+  status: BlogStatus
+  titulo: string
+  descricao: string
+  categoria: string
+  autor: string
+  resumo: string
+  secoes: Array<{ titulo: string; paragrafos?: string[]; lista?: string[] }>
+  fontes: Array<{ titulo: string; url: string }>
+  origem: { veiculo: string; pais: string; titulo: string; url: string } | null
+  publicadoEm: string | null
+  criadoEm: string
+  atualizadoEm: string
+}

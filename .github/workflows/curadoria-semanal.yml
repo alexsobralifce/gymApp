@@ -1,9 +1,8 @@
 name: Curadoria semanal do blog
 
-# Toda segunda-feira (08h em Brasília) o robô lê os feeds, escreve 2 "Leituras da semana" (curtas,
-# noindex) e as publica direto em main; o Railway faz o deploy. Travas: nota de utilidade, texto sem
-# frases copiadas e sem termos de risco (suplemento, dose, promessa). Se o push direto for bloqueado
-# (branch protegida), abre um Pull Request. Use modo "pr" para revisar antes de publicar.
+# Toda segunda-feira (08h em Brasília) o robô lê os feeds, escreve 2 "Leituras da semana" (curtas, noindex)
+# e as envia para a API do blog. O painel root (Publicações do Blog) controla publicar/despublicar, e a API
+# agenda o redeploy do site. Travas: nota de utilidade, texto sem frases copiadas, sem termos de risco.
 on:
   schedule:
     - cron: '0 11 * * 1'
@@ -13,14 +12,10 @@ on:
         description: 'Quantidade de curadorias'
         default: '2'
       modo:
-        description: 'direto (publica em main) ou pr (abre Pull Request para revisão)'
+        description: 'publicar (vai ao ar) ou rascunho (aprovar no painel root)'
         type: choice
-        options: [direto, pr]
-        default: direto
-
-permissions:
-  contents: write
-  pull-requests: write
+        options: [publicar, rascunho]
+        default: publicar
 
 jobs:
   curadoria:
@@ -33,32 +28,14 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Gerar curadorias
+      - name: Testes do robô
+        working-directory: apps/web
+        run: npx vitest run src/curadoria.test.ts
+      - name: Gerar e enviar curadorias
         working-directory: apps/web
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          BLOG_API_URL: https://api-production-3360.up.railway.app
+          BLOG_BOT_TOKEN: ${{ secrets.BLOG_BOT_TOKEN }}
+          CURADORIA_PUBLICAR: ${{ (inputs.modo || 'publicar') == 'publicar' && '1' || '0' }}
         run: node scripts/curadoria/curadoria.mjs --quantidade=${{ inputs.quantidade || 2 }}
-      - name: Validar os artigos gerados
-        working-directory: apps/web
-        run: npx vitest run src/lib/blog.test.ts src/curadoria.test.ts
-      - name: Publicar
-        env:
-          GH_TOKEN: ${{ github.token }}
-          MODO: ${{ inputs.modo || 'direto' }}
-        run: |
-          if [ -z "$(git status --porcelain apps/web/content)" ]; then echo "Nada novo."; exit 0; fi
-          git config user.name "Robô de curadoria"
-          git config user.email "curadoria@users.noreply.github.com"
-          data=$(date +%Y-%m-%d)
-          git add apps/web/content
-          git commit -m "feat(blog): leituras da semana $data"
-          if [ "$MODO" = "direto" ]; then
-            git pull --rebase origin main && git push origin HEAD:main && { echo "Publicado direto em main."; exit 0; }
-            echo "Push direto falhou (branch protegida?). Abrindo Pull Request."
-          fi
-          ramo="curadoria/$data"
-          git checkout -b "$ramo"
-          git push origin "$ramo"
-          gh pr create --base main --head "$ramo" \
-            --title "Leituras da semana $(date +%d/%m/%Y)" \
-            --body "Gerado automaticamente. Revise antes do merge (o merge publica): texto original, link da fonte correto, sem conselho médico nem promessa."

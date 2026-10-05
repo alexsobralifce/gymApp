@@ -33,6 +33,12 @@ const envSchema = z.object({
   SENDGRID_API_KEY: z.string().optional().default(''),
   RESEND_API_KEY: z.string().optional().default(''),
 
+  // Blog: o robô de curadoria envia artigos com este token; o redeploy do site usa o token de projeto do Railway.
+  BLOG_BOT_TOKEN: z.string().optional().default(''),
+  RAILWAY_PROJECT_TOKEN: z.string().optional().default(''),
+  RAILWAY_WEB_SERVICE_ID: z.string().optional().default(''),
+  RAILWAY_ENVIRONMENT_ID: z.string().optional().default(''),
+
   GOOGLE_CLIENT_ID: z.string().optional().default('100874517602-9kjnm8s42j2780albl1eime7dcpqmlpv.apps.googleusercontent.com'),
 
   GOOGLE_PLAY_PACKAGE_NAME: z.string().optional().default('com.endorfinapp.app'),

@@ -46,3 +46,13 @@ Robô de curadoria semanal, em `apps/web/scripts/curadoria/`:
   O `client_secret_*.json` da raiz está no `.gitignore`. Nunca pôr chave em `.env.example`.
 - Antes de push/redeploy em produção, confirmar com o usuário.
 - Rota nova do app precisa entrar em `apps/web/public/serve.json` (há teste que avisa).
+
+
+## Atualização: blog no banco + painel root (2026-10-05, noite)
+- Fonte da verdade dos artigos agora é o banco da API: tabela `blog_artigos` (migration `20261005180000_add_blog_artigos`).
+- Painel root: menu **Publicações do Blog** (`/publicacoes`, `pages/root/Publicacoes.tsx`): busca, filtros, ver, publicar, despublicar, excluir e "Atualizar o site agora".
+- API: `GET /blog/artigos` (público, usado pelo build), `POST /blog/bot/artigos` e `GET /blog/bot/links` (token `x-blog-bot-token` = `BLOG_BOT_TOKEN`), `/root/blog/*` (ROOT).
+- Build do site (`apps/web/scripts/sincronizar-blog.mjs`, roda antes do `vite build` só no Railway): baixa os publicados para `content/blog/*.json`; se a API estiver fora ou o banco vazio, usa os arquivos do repositório.
+- Publicar/despublicar agenda um redeploy do web (debounce de 90 s) via API do Railway: precisa de `RAILWAY_PROJECT_TOKEN` na API (token de PROJETO criado no painel do Railway). `RAILWAY_WEB_SERVICE_ID` e `RAILWAY_ENVIRONMENT_ID` já estão definidos. Sem o token, o botão "Atualizar o site agora" avisa que não está configurado.
+- Robô (`scripts/curadoria/curadoria.mjs`): com `BLOG_API_URL` + `BLOG_BOT_TOKEN` envia para a API (PUBLICADO se `CURADORIA_PUBLICAR=1`, senão RASCUNHO para aprovar no painel); sem eles grava em `content/blog/` (uso local). Workflow semanal não usa mais git; precisa do segredo `BLOG_BOT_TOKEN` no GitHub (copiar do Railway, variável do serviço `api`).
+- Depois do deploy: rodar `BLOG_API_URL=... BLOG_BOT_TOKEN=... node apps/web/scripts/curadoria/importar-originais.mjs` uma vez para levar o artigo original ao banco.

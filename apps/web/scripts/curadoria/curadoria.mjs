@@ -1,11 +1,14 @@
-// Robô semanal de curadoria: lê os feeds, escolhe as matérias mais relevantes e escreve 2 curadorias originais
-// em content/blog/. Uso: node scripts/curadoria/curadoria.mjs [--dry] [--quantidade=2]
+// Robô semanal de curadoria: lê os feeds, escolhe as matérias mais relevantes e escreve 2 curadorias originais.
+// Com BLOG_API_URL + BLOG_BOT_TOKEN envia para a API do blog (status PUBLICADO se CURADORIA_PUBLICAR=1, senão
+// RASCUNHO para aprovar no painel root); sem eles, grava em content/blog/ (uso local).
+// Uso: node scripts/curadoria/curadoria.mjs [--dry] [--quantidade=2]
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { lerRss } from './rss.mjs'
 import { rankear, escolher } from './selecao.mjs'
 import { redigir, montarArtigo, slugificar } from './redator.mjs'
+import { payloadApi, linksUsados, enviarArtigos } from './destino.mjs'
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const CONFIG = JSON.parse(readFileSync(path.join(import.meta.dirname, 'fontes.json'), 'utf8'))
@@ -21,7 +24,12 @@ async function buscarFonte(fonte) {
   return lerRss(await res.text())
 }
 
+const API = (process.env.BLOG_API_URL || '').replace(/\/+$/, '')
+const TOKEN = process.env.BLOG_BOT_TOKEN || ''
+const usarApi = Boolean(API && TOKEN)
+const status = process.env.CURADORIA_PUBLICAR === '1' ? 'PUBLICADO' : 'RASCUNHO'
 const historico = existsSync(HISTORICO) ? JSON.parse(readFileSync(HISTORICO, 'utf8')) : { usados: [] }
+const jaUsados = usarApi ? await linksUsados(API, TOKEN) : historico.usados.map((u) => u.link)
 
 const resultados = await Promise.allSettled(CONFIG.fontes.map(async (fonte) => ({ fonte, itens: await buscarFonte(fonte) })))
 const itensPorFonte = []
@@ -35,7 +43,7 @@ resultados.forEach((r, i) => {
   }
 })
 
-const ranking = rankear(itensPorFonte, CONFIG, historico.usados.map((u) => u.link))
+const ranking = rankear(itensPorFonte, CONFIG, jaUsados)
 console.log(`\n${ranking.length} candidatos relevantes. Melhores:`)
 ranking.slice(0, 8).forEach((c) => console.log(`  ${c.pontos.toFixed(1).padStart(5)}  [${c.fonte.pais}] ${c.fonte.nome}: ${c.item.titulo.slice(0, 90)}`))
 
@@ -54,6 +62,7 @@ if (!process.env.OPENAI_API_KEY) {
 const fila = [...escolher(ranking, quantidade), ...ranking]
 const tentados = new Set()
 let publicados = 0
+const paraEnviar = []
 for (const candidato of fila) {
   if (publicados >= quantidade || tentados.size >= quantidade * 4) break
   if (tentados.has(candidato.item.link)) continue
@@ -67,12 +76,22 @@ for (const candidato of fila) {
   const artigo = montarArtigo(candidato, r.gerado)
   let slug = slugificar(artigo.titulo)
   if (!slug || existsSync(path.join(DESTINO, `${slug}.json`))) slug = `${slug || 'curadoria'}-${artigo.publicadoEm}`
-  writeFileSync(path.join(DESTINO, `${slug}.json`), JSON.stringify(artigo, null, 2) + '\n')
-  historico.usados.push({ link: candidato.item.link, artigo: slug, data: artigo.publicadoEm })
+  if (usarApi) {
+    paraEnviar.push(payloadApi(artigo, slug, status))
+    console.log(`  ✓ ${slug} (${status})`)
+  } else {
+    writeFileSync(path.join(DESTINO, `${slug}.json`), JSON.stringify(artigo, null, 2) + '\n')
+    historico.usados.push({ link: candidato.item.link, artigo: slug, data: artigo.publicadoEm })
+    console.log(`  ✓ content/blog/${slug}.json`)
+  }
   publicados++
-  console.log(`  ✓ content/blog/${slug}.json`)
 }
 
-writeFileSync(HISTORICO, JSON.stringify(historico, null, 2) + '\n')
+if (usarApi && paraEnviar.length) {
+  const r = await enviarArtigos(API, TOKEN, paraEnviar)
+  console.log(`\nEnviado à API: ${r.map((x) => x.slug).join(', ')}`)
+} else if (!usarApi) {
+  writeFileSync(HISTORICO, JSON.stringify(historico, null, 2) + '\n')
+}
 console.log(`\n${publicados} de ${quantidade} curadorias geradas.`)
 if (publicados === 0) process.exit(1)

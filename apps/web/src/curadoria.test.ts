@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { montarRotas } from '../scripts/rotasPublicas.mjs'
 import { lerRss } from '../scripts/curadoria/rss.mjs'
 import { pontuar, rankear, escolher, canonicalizarLink, ehRecente } from '../scripts/curadoria/selecao.mjs'
+import { payloadApi } from '../scripts/curadoria/destino.mjs'
 import { trechosCopiados, termosDeRisco, validar, montarArtigo, slugificar, redigir } from '../scripts/curadoria/redator.mjs'
 
 const config = JSON.parse(readFileSync(resolve(__dirname, '../scripts/curadoria/fontes.json'), 'utf8'))
@@ -99,6 +100,12 @@ describe('redator', () => {
     expect(a.fontes[0].url).toBe('https://ex.com/a')
     expect(a.secoes[0].lista).toBeUndefined()
     expect(a.secoes[1].lista).toEqual(['item'])
+  })
+  it('monta o payload da API (rascunho não leva data de publicação)', () => {
+    const artigo = montarArtigo(candidato, gerado, '2026-10-12')
+    const pub = payloadApi(artigo, 'meu-slug', 'PUBLICADO')
+    expect(pub).toMatchObject({ slug: 'meu-slug', tipo: 'CURADORIA', status: 'PUBLICADO', publicadoEm: '2026-10-12', origem: { url: 'https://ex.com/a' } })
+    expect(payloadApi(artigo, 'meu-slug', 'RASCUNHO').publicadoEm).toBeNull()
   })
   it('gera slugs de URL', () => {
     expect(slugificar('Agachamento: 3 erros comuns!')).toBe('agachamento-3-erros-comuns')
