@@ -46,8 +46,17 @@ export function textoDoArtigo(a) {
   return [a.titulo, a.descricao, a.resumo, ...a.secoes.flatMap((s) => [s.titulo, ...s.paragrafos, ...s.lista])].join('\n')
 }
 
+// Termos que um texto automático não deve publicar sem revisão humana (saúde, dosagem, promessa).
+const RISCOS = /\b(suplementos?|suplementa[cç][aã]o|creatina|esteroides?|anabolizantes?|horm[oô]nios?|dosagem|doses?|garante|garantid[oa]s?|garantia|milagre|milagros[oa]s?|cura|curar|tratamento|medicamentos?|rem[eé]dios?|diagn[oó]stico|emagre[cç]a|queimar gordura r[aá]pido)\b|\b\d+\s?mg\b/i
+
+export function termosDeRisco(gerado) {
+  return [...new Set((textoDoArtigo(gerado).match(new RegExp(RISCOS.source, 'gi')) ?? []).map((t) => t.toLowerCase()))]
+}
+
 export function validar(gerado, candidato) {
   const erros = []
+  const riscos = termosDeRisco(gerado)
+  if (riscos.length) erros.push(`termos que exigem revisão humana: ${riscos.join(', ')}`)
   if (gerado.descricao.length < 100 || gerado.descricao.length > 160) erros.push(`descricao com ${gerado.descricao.length} caracteres (precisa de 100 a 160)`)
   if (gerado.titulo.trim().toLowerCase() === candidato.item.titulo.trim().toLowerCase()) erros.push('titulo igual ao original')
   if (gerado.secoes.length < 2) erros.push('menos de 2 seções')

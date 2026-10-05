@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import { montarRotas } from '../scripts/rotasPublicas.mjs'
 import { lerRss } from '../scripts/curadoria/rss.mjs'
 import { pontuar, rankear, escolher, canonicalizarLink, ehRecente } from '../scripts/curadoria/selecao.mjs'
-import { trechosCopiados, validar, montarArtigo, slugificar, redigir } from '../scripts/curadoria/redator.mjs'
+import { trechosCopiados, termosDeRisco, validar, montarArtigo, slugificar, redigir } from '../scripts/curadoria/redator.mjs'
 
 const config = JSON.parse(readFileSync(resolve(__dirname, '../scripts/curadoria/fontes.json'), 'utf8'))
 const agora = new Date('2026-10-12T12:00:00Z')
@@ -85,6 +85,12 @@ describe('redator', () => {
     expect(validar({ ...gerado, secoes: [{ titulo: 'a', paragrafos: ['curto'], lista: [] }, { titulo: 'b', paragrafos: ['curto'], lista: [] }] }, candidato).join()).toMatch(/palavras/)
     expect(validar({ ...gerado, titulo: 'ORIGINAL TITLE HERE' }, candidato)[0]).toMatch(/titulo igual/)
     expect(validar({ ...gerado, resumo: 'one two three four five six seven' }, candidato)[0]).toMatch(/copiados/)
+  })
+  it('barra termos de risco (suplemento, dose, promessa) mas não "curadoria"', () => {
+    const com = { ...gerado, resumo: 'Tome creatina, 5 mg por dia, resultado garantido.' }
+    expect(termosDeRisco(com)).toEqual(expect.arrayContaining(['creatina', '5 mg', 'garantido']))
+    expect(validar(com, candidato).join()).toMatch(/revisão humana/)
+    expect(termosDeRisco({ ...gerado, resumo: 'Uma curadoria sobre treino de força.' })).toEqual([])
   })
   it('monta o artigo com a origem e a fonte', () => {
     const a = montarArtigo(candidato, gerado, '2026-10-12')

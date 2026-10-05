@@ -1,8 +1,9 @@
 name: Curadoria semanal do blog
 
-# Toda segunda-feira (08h em Brasília) o robô lê os feeds de curadoria, escreve 2 curadorias originais
-# e abre um Pull Request. Publicar = fazer o merge (o Railway faz o deploy e o workflow
-# "Avisar buscadores" avisa o IndexNow e o Search Console).
+# Toda segunda-feira (08h em Brasília) o robô lê os feeds, escreve 2 "Leituras da semana" (curtas,
+# noindex) e as publica direto em main; o Railway faz o deploy. Travas: nota de utilidade, texto sem
+# frases copiadas e sem termos de risco (suplemento, dose, promessa). Se o push direto for bloqueado
+# (branch protegida), abre um Pull Request. Use modo "pr" para revisar antes de publicar.
 on:
   schedule:
     - cron: '0 11 * * 1'
@@ -11,6 +12,11 @@ on:
       quantidade:
         description: 'Quantidade de curadorias'
         default: '2'
+      modo:
+        description: 'direto (publica em main) ou pr (abre Pull Request para revisão)'
+        type: choice
+        options: [direto, pr]
+        default: direto
 
 permissions:
   contents: write
@@ -35,21 +41,24 @@ jobs:
       - name: Validar os artigos gerados
         working-directory: apps/web
         run: npx vitest run src/lib/blog.test.ts src/curadoria.test.ts
-      - name: Abrir Pull Request
+      - name: Publicar
         env:
           GH_TOKEN: ${{ github.token }}
+          MODO: ${{ inputs.modo || 'direto' }}
         run: |
           if [ -z "$(git status --porcelain apps/web/content)" ]; then echo "Nada novo."; exit 0; fi
-          ramo="curadoria/$(date +%Y-%m-%d)"
           git config user.name "Robô de curadoria"
           git config user.email "curadoria@users.noreply.github.com"
-          git checkout -b "$ramo"
+          data=$(date +%Y-%m-%d)
           git add apps/web/content
-          git commit -m "feat(blog): curadorias da semana $(date +%Y-%m-%d)"
+          git commit -m "feat(blog): leituras da semana $data"
+          if [ "$MODO" = "direto" ]; then
+            git pull --rebase origin main && git push origin HEAD:main && { echo "Publicado direto em main."; exit 0; }
+            echo "Push direto falhou (branch protegida?). Abrindo Pull Request."
+          fi
+          ramo="curadoria/$data"
+          git checkout -b "$ramo"
           git push origin "$ramo"
           gh pr create --base main --head "$ramo" \
-            --title "Curadorias da semana $(date +%d/%m/%Y)" \
-            --body "Gerado automaticamente. **Revise antes de fazer o merge** (o merge publica no site):
-          - são "Leituras da semana" curtas (noindex, fora do sitemap): texto original, sem frases copiadas da fonte;
-          - o link para a matéria original está correto;
-          - não há conselho médico nem promessa de resultado."
+            --title "Leituras da semana $(date +%d/%m/%Y)" \
+            --body "Gerado automaticamente. Revise antes do merge (o merge publica): texto original, link da fonte correto, sem conselho médico nem promessa."
