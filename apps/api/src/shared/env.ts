@@ -39,6 +39,8 @@ const envSchema = z.object({
   CURADORIA_MODELO: z.string().optional().default('gpt-5.4-mini'),
   CURADORIA_UTILIDADE_MIN: z.coerce.number().int().min(1).max(5).optional().default(3),
   // Mesmo cuidado do BILLING_ENABLED: nunca z.coerce.boolean() ("false" viraria true).
+  // Segredo que o GitHub Actions envia (x-curadoria-token) para disparar a curadoria semanal.
+  CURADORIA_TOKEN: z.string().optional().default(''),
   CURADORIA_AGENDADA: z.enum(['true', 'false']).optional().default('false').transform((v) => v === 'true'),
   RAILWAY_PROJECT_TOKEN: z.string().optional().default(''),
   RAILWAY_WEB_SERVICE_ID: z.string().optional().default(''),

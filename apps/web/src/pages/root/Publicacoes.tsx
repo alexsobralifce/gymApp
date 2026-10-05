@@ -150,17 +150,20 @@ function Guia() {
 
         <h2 className={h}>Robô de curadoria</h2>
         <ol className={lista}>
-          <li>Roda sozinho toda segunda-feira às 8h (Brasília), 2 leituras, publicando direto.</li>
+          <li>Roda sozinho toda segunda-feira, 2 leituras, publicando direto. O GitHub Actions dispara às 8h (principal); se ele falhar, a própria API tenta às 10h (reserva). Se a semana já foi atendida, o reserva pula, então nunca duplica.</li>
           <li>Para rodar na hora: use o quadro “Robô de curadoria” acima. Em <strong>Rascunho</strong> você lê (botão “Ver”) e publica; em <strong>Publicar direto</strong> vai ao ar.</li>
           <li>Clique na execução do histórico para ver o que foi gerado, o que foi descartado (e por quê) e se algum site falhou.</li>
           <li>Travas automáticas: nota de utilidade, texto sem frases copiadas, e bloqueio de termos de risco (suplemento, dose, promessa).</li>
-          <li>Para desligar o envio semanal: variável <code>CURADORIA_AGENDADA=false</code> no Railway (serviço api).</li>
+          <li>Para rodar pelo GitHub: <em>Actions → Curadoria semanal do blog → Run workflow</em>. Para desligar só a reserva da API: <code>CURADORIA_AGENDADA=false</code> no Railway.</li>
         </ol>
 
         <h2 className={h}>Onde ficam as chaves (só os nomes; nunca cole valores no código)</h2>
         <ul className={bullets}>
           <li>
-            <strong>Railway, serviço api</strong> (Variables): <code>OPENAI_API_KEY</code> (escreve os textos), <code>CURADORIA_AGENDADA</code> (<code>true</code> liga a execução semanal),
+            <strong>GitHub</strong> (Settings → Secrets → Actions): <code>CURADORIA_TOKEN</code>, o mesmo valor da variável de mesmo nome no Railway (api). Só serve para o GitHub pedir à API que rode.
+          </li>
+          <li>
+            <strong>Railway, serviço api</strong> (Variables): <code>OPENAI_API_KEY</code> (escreve os textos), <code>CURADORIA_TOKEN</code>, <code>CURADORIA_AGENDADA</code> (<code>true</code> liga a reserva semanal da API),
             {' '}<code>CURADORIA_MODELO</code> e <code>CURADORIA_UTILIDADE_MIN</code> (opcionais), <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
             {' '}<code>RAILWAY_WEB_SERVICE_ID</code> (ID do <em>serviço</em> web, não de um deploy) e <code>RAILWAY_ENVIRONMENT_ID</code>.
           </li>
@@ -174,6 +177,7 @@ function Guia() {
           <li><strong>Erro 500 ao atualizar o site (“Not Authorized” no log):</strong> o <code>RAILWAY_WEB_SERVICE_ID</code> está errado ou o token não é do ambiente production.</li>
           <li><strong>Publiquei e o site não mudou:</strong> o deploy leva cerca de 3 minutos; confira o serviço web no Railway (Deployments).</li>
           <li><strong>Robô com erro da OpenAI:</strong> chave inválida, sem crédito ou modelo indisponível (<code>CURADORIA_MODELO</code>).</li>
+          <li><strong>GitHub vermelho (401 / segredo ausente):</strong> o <code>CURADORIA_TOKEN</code> do GitHub é diferente do da API ou não existe. A reserva da API cobre a semana.</li>
           <li><strong>Robô gerou 0:</strong> normal em semanas sem matéria útil; veja os motivos no histórico.</li>
           <li><strong>Execução presa em “Executando”:</strong> some sozinha após 20 minutos (marcada como interrompida).</li>
         </ul>

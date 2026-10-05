@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto'
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { BlogStatus, BlogTipo, CuradoriaOrigem, Role } from '@prisma/client'
@@ -8,9 +9,29 @@ import {
   removerArtigo,
   republicarSite,
 } from '../../../application/usecases/blog/BlogService.js'
-import { iniciarCuradoria, listarExecucoes } from '../../../application/usecases/blog/curadoria/CuradoriaService.js'
+import { env } from '../../../shared/env.js'
+import { UnauthorizedError } from '../../../domain/errors/AppError.js'
+import { dispararSemanal, iniciarCuradoria, listarExecucoes } from '../../../application/usecases/blog/curadoria/CuradoriaService.js'
+
+/** Compara o segredo do agendador em tempo constante. Sem CURADORIA_TOKEN configurado, ninguém entra. */
+export function tokenDoAgendadorValido(recebido: string | undefined, esperado = env.CURADORIA_TOKEN): boolean {
+  if (!esperado || !recebido) return false
+  const a = Buffer.from(recebido)
+  const b = Buffer.from(esperado)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
 
 export async function blogRoutes(app: FastifyInstance) {
+  /** POST /blog/curadoria/agendada — chamado pelo GitHub Actions toda segunda (header x-curadoria-token) */
+  app.post('/curadoria/agendada', async (request, reply) => {
+    if (!tokenDoAgendadorValido(request.headers['x-curadoria-token'] as string | undefined)) throw new UnauthorizedError('Token inválido')
+    const { modo, quantidade } = z
+      .object({ modo: z.enum(['rascunho', 'publicar']).default('publicar'), quantidade: z.number().int().min(1).max(4).default(2) })
+      .parse(request.body ?? {})
+    const r = await dispararSemanal({ publicar: modo === 'publicar', quantidade })
+    return reply.status(r.executando ? 202 : 200).send(r)
+  })
+
   /** GET /blog/artigos — artigos publicados, lidos pelo build do site (público, sem dados pessoais) */
   app.get('/artigos', async (_request, reply) => {
     reply.header('Cache-Control', 'public, max-age=60')

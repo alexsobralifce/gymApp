@@ -570,9 +570,10 @@ async function scheduleRecurringJobs() {
     removeOnComplete: true,
   })
 
-  // Curadoria do blog: segundas, 08h (Brasília). O handler ignora se CURADORIA_AGENDADA != true.
+  // Curadoria do blog (RESERVA): segundas, 10h (Brasília), 2h depois do GitHub Actions. O handler pula se a
+  // semana já foi atendida e ignora tudo se CURADORIA_AGENDADA != true.
   await curadoriaQueue?.add('curadoria-semanal', {}, {
-    repeat: { pattern: '0 8 * * 1', tz: 'America/Sao_Paulo' },
+    repeat: { pattern: '0 10 * * 1', tz: 'America/Sao_Paulo' },
     removeOnComplete: true,
   })
 

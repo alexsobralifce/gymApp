@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest'
+import { jaRodouNaSemana } from '../../src/application/usecases/blog/curadoria/CuradoriaService.js'
+import { tokenDoAgendadorValido } from '../../src/presentation/http/routes/blog.routes.js'
 import { lerRss } from '../../src/application/usecases/blog/curadoria/rss.js'
 import { pontuar, rankear, escolher, canonicalizarLink, ehRecente, type Candidato } from '../../src/application/usecases/blog/curadoria/selecao.js'
 import { CONFIG_CURADORIA, type FonteFeed } from '../../src/application/usecases/blog/curadoria/fontes.js'
@@ -126,5 +128,27 @@ describe('redator', () => {
     const generico = cliente({ ...gerado, utilidade: 2, motivo: 'genérico' })
     expect(await redigir(candidato, { cliente: generico, utilidadeMinima: 3 })).toMatchObject({ ok: false, motivo: expect.stringContaining('utilidade 2/5') })
     expect((await redigir(candidato, { cliente: generico, utilidadeMinima: 2 })).ok).toBe(true)
+  })
+})
+
+describe('agendamento semanal (GitHub + reserva)', () => {
+  const agora = new Date('2026-10-12T13:00:00Z')
+  const dias = (n: number) => new Date(agora.getTime() - n * 86_400_000)
+
+  it('pula se já houve execução com textos nos últimos 5 dias, ou uma em andamento', () => {
+    expect(jaRodouNaSemana([{ status: 'OK' as never, geradas: 2, iniciado_em: dias(1) }], agora)).toBe(true)
+    expect(jaRodouNaSemana([{ status: 'EXECUTANDO' as never, geradas: 0, iniciado_em: dias(0) }], agora)).toBe(true)
+  })
+  it('roda se a última execução é antiga, falhou ou não gerou nada', () => {
+    expect(jaRodouNaSemana([], agora)).toBe(false)
+    expect(jaRodouNaSemana([{ status: 'OK' as never, geradas: 2, iniciado_em: dias(7) }], agora)).toBe(false)
+    expect(jaRodouNaSemana([{ status: 'ERRO' as never, geradas: 0, iniciado_em: dias(1) }], agora)).toBe(false)
+    expect(jaRodouNaSemana([{ status: 'OK' as never, geradas: 0, iniciado_em: dias(1) }], agora)).toBe(false)
+  })
+  it('só aceita o token exato do agendador e nunca quando não configurado', () => {
+    expect(tokenDoAgendadorValido('segredo', 'segredo')).toBe(true)
+    expect(tokenDoAgendadorValido('outro!!', 'segredo')).toBe(false)
+    expect(tokenDoAgendadorValido('segredo', '')).toBe(false)
+    expect(tokenDoAgendadorValido(undefined, 'segredo')).toBe(false)
   })
 })

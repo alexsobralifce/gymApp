@@ -136,13 +136,45 @@ export async function listarExecucoes(limite = 10) {
   }))
 }
 
-/** Chamado pelo agendamento semanal (BullMQ): só roda se CURADORIA_AGENDADA=true. */
+const JANELA_SEMANAL_MS = 5 * 24 * 60 * 60 * 1000
+
+/**
+ * Evita rodar duas vezes na mesma semana quando há dois agendadores (GitHub + reserva da API):
+ * pula se já há execução em andamento ou uma concluída com textos gerados nos últimos 5 dias.
+ */
+export function jaRodouNaSemana(
+  execucoes: Array<{ status: CuradoriaStatus; geradas: number; iniciado_em: Date }>,
+  agora = new Date(),
+): boolean {
+  return execucoes.some(
+    (e) =>
+      agora.getTime() - e.iniciado_em.getTime() < JANELA_SEMANAL_MS &&
+      (e.status === CuradoriaStatus.EXECUTANDO || (e.status === CuradoriaStatus.OK && e.geradas > 0)),
+  )
+}
+
+export type ResultadoAgendada = { executando: true; id: string } | { executando: false; motivo: string }
+
+/** Disparo semanal (GitHub Actions ou reserva interna): roda em segundo plano, a menos que já tenha rodado. */
+export async function dispararSemanal(p: Pick<ParametrosCuradoria, 'publicar' | 'quantidade'>): Promise<ResultadoAgendada> {
+  await encerrarTravadas()
+  const recentes = await prisma.curadoriaExecucao.findMany({
+    where: { iniciado_em: { gt: new Date(Date.now() - JANELA_SEMANAL_MS) } },
+    select: { status: true, geradas: true, iniciado_em: true },
+  })
+  if (jaRodouNaSemana(recentes)) return { executando: false, motivo: 'A curadoria desta semana já foi executada.' }
+  const params: ParametrosCuradoria = { ...p, origem: CuradoriaOrigem.AGENDADA }
+  const id = await criarExecucao(params)
+  void processarExecucao(id, params)
+  return { executando: true, id }
+}
+
+/** Reserva interna (BullMQ, segunda 10h): só roda se CURADORIA_AGENDADA=true e o GitHub não rodou antes. */
 export async function executarAgendada(): Promise<void> {
   if (!env.CURADORIA_AGENDADA) {
     console.log('[Curadoria] agendamento desligado (CURADORIA_AGENDADA!=true)')
     return
   }
-  const p: ParametrosCuradoria = { publicar: true, quantidade: 2, origem: CuradoriaOrigem.AGENDADA }
-  const id = await criarExecucao(p)
-  await processarExecucao(id, p)
+  const r = await dispararSemanal({ publicar: true, quantidade: 2 })
+  console.log(r.executando ? `[Curadoria] reserva interna iniciou a execução ${r.id}` : `[Curadoria] reserva interna pulou: ${r.motivo}`)
 }

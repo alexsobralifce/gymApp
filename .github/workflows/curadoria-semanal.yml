@@ -1,0 +1,38 @@
+name: Curadoria semanal do blog
+
+# Agendador PRINCIPAL. O robô roda dentro da API (Railway); este workflow só pede para ele começar.
+# Toda segunda às 08h (Brasília) a API escreve 2 "Leituras da semana". Se este workflow falhar, a própria
+# API tenta de novo às 10h (reserva) e pula se a semana já foi atendida. Acompanhe no painel root
+# (Publicações do Blog > Robô de curadoria).
+on:
+  schedule:
+    - cron: '0 11 * * 1'
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'publicar (vai ao ar) ou rascunho (aprovar no painel root)'
+        type: choice
+        options: [publicar, rascunho]
+        default: publicar
+      quantidade:
+        description: 'Quantidade de leituras (1 a 4)'
+        default: '2'
+
+jobs:
+  disparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Pedir à API para rodar a curadoria
+        env:
+          CURADORIA_TOKEN: ${{ secrets.CURADORIA_TOKEN }}
+          MODO: ${{ inputs.modo || 'publicar' }}
+          QUANTIDADE: ${{ inputs.quantidade || '2' }}
+        run: |
+          if [ -z "$CURADORIA_TOKEN" ]; then echo "Segredo CURADORIA_TOKEN não configurado no GitHub."; exit 1; fi
+          resposta=$(curl --fail-with-body --silent --show-error --retry 3 --retry-delay 10 --max-time 60 \
+            -X POST "https://api-production-3360.up.railway.app/blog/curadoria/agendada" \
+            -H "Content-Type: application/json" \
+            -H "x-curadoria-token: $CURADORIA_TOKEN" \
+            -d "{\"modo\":\"$MODO\",\"quantidade\":$QUANTIDADE}")
+          echo "Resposta da API: $resposta"
