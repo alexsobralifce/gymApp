@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSeo } from '../lib/seo'
 import { Link } from 'react-router-dom'
 import {
   Dumbbell, Users, Shield, TrendingUp,
@@ -74,6 +75,11 @@ const FAQS = [
 ]
 
 export default function Landing() {
+  useSeo({
+    title: 'ENDORFINAPP — App de treino para personal, academia e aluno',
+    description: 'Monte treinos, acompanhe a evolução e gerencie alunos em um só app. Execução guiada, biblioteca de planos e rede social fitness. Teste grátis.',
+    path: '/',
+  })
   const [mobileOpen, setMobileOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 

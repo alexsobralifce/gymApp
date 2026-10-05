@@ -1,14 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useSeo } from '../lib/seo'
 import { ChevronLeftIcon } from '../components/icons/Icon'
 import { EndorfinappLogo } from '../components/branding/EndorfinappLogo'
 
 export default function PoliticaPrivacidade() {
   const navigate = useNavigate()
 
-  useEffect(() => {
-    document.title = 'Política de Privacidade | ENDORFINAPP'
-  }, [])
+  useSeo({
+    title: 'Política de Privacidade | ENDORFINAPP',
+    description: 'Como o ENDORFINAPP coleta, usa e protege seus dados, em conformidade com a LGPD.',
+    path: '/politica-privacidade',
+  })
 
   function handleVoltar() {
     if (window.history.length > 1) {

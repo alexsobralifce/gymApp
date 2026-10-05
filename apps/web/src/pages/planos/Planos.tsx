@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useSeo } from '../../lib/seo'
 import { Link, useNavigate } from 'react-router-dom'
 import { EndorfinappLogo } from '../../components/branding/EndorfinappLogo'
 import {
@@ -58,9 +59,11 @@ export default function Planos() {
   const [segmento, setSegmento] = useState<SegmentoPublico>('PERSONAL')
   const [planoSelecionado, setPlanoSelecionado] = useState<string | null>(null)
 
-  useEffect(() => {
-    document.title = 'Planos e Preços | ENDORFINAPP'
-  }, [])
+  useSeo({
+    title: 'Planos e Preços para Personal e Academia | ENDORFINAPP',
+    description: 'Compare os planos do ENDORFINAPP para personal trainers e academias: gestão de alunos, treinos, evolução e teste grátis.',
+    path: '/planos',
+  })
 
   const planos = useMemo(
     () => (segmento === 'PERSONAL' ? PLANOS_PERSONAL : PLANOS_ACADEMIA),

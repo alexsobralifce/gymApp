@@ -9,7 +9,7 @@
     ]
   },
   "deploy": {
-    "startCommand": "npx serve -s dist -l $PORT",
+    "startCommand": "npx serve dist -l $PORT",
     "restartPolicyType": "ALWAYS"
   }
 }

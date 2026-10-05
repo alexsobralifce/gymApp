@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSeo } from '../../lib/seo'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth'
 import { api } from '../../api/client'
@@ -9,6 +10,7 @@ import { EndorfinappLogo } from '../../components/branding'
 import { debugLog } from '../../lib/debug'
 
 export default function Login() {
+  useSeo({ title: 'Entrar | ENDORFINAPP', description: 'Acesse sua conta no ENDORFINAPP.', noindex: true })
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [notVerified, setNotVerified] = useState(false)
