@@ -1018,6 +1018,9 @@ model ArtigoBlog {
   fontes        Json
   /// Só curadorias: { veiculo, pais, titulo, url } da matéria original
   origem        Json?
+  /// Imagem de capa: caminho do site ("/blog-img/x.webp") ou URL absoluta (uploads da API)
+  imagem_url    String?
+  imagem_alt    String?
   cta           Json?
   /// Data de publicação editorial (YYYY-MM-DD); definida na primeira publicação
   publicado_em  DateTime?

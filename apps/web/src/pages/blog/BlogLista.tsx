@@ -10,13 +10,20 @@ function Secao({ titulo, artigos }: { titulo: string; artigos: Artigo[] }) {
       <h2 id={`sec-${titulo}`} className="text-lg font-bold mb-4">{titulo}</h2>
       <ul className="space-y-5">
         {artigos.map((a) => (
-          <li key={a.slug} className="rounded-xl border border-border bg-surface-card p-5">
+          <li key={a.slug} className="overflow-hidden rounded-xl border border-border bg-surface-card">
+            {a.imagem && (
+              <Link to={`/blog/${a.slug}`} tabIndex={-1} aria-hidden="true">
+                <img src={a.imagem.url} alt="" width={1200} height={800} loading="lazy" className="aspect-[3/2] w-full object-cover" />
+              </Link>
+            )}
+            <div className="p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1.5">{a.tipo === 'curadoria' ? `${a.origem?.veiculo ?? 'Curadoria'}` : a.categoria}</p>
             <h3 className="text-xl font-bold mb-1.5">
               <Link to={`/blog/${a.slug}`} className="hover:text-primary">{a.titulo}</Link>
             </h3>
             <p className="text-sm text-muted-foreground mb-2">{a.resumo}</p>
             <p className="text-xs text-muted-foreground">Atualizado em {formatarData(a.atualizadoEm)}</p>
+            </div>
           </li>
         ))}
       </ul>

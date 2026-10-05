@@ -11,6 +11,7 @@ import {
 } from '../../../application/usecases/blog/BlogService.js'
 import { env } from '../../../shared/env.js'
 import { UnauthorizedError } from '../../../domain/errors/AppError.js'
+import { enviarImagemDoArtigo, gerarImagemDoArtigo, removerImagemDoArtigo } from '../../../application/usecases/blog/BlogImagemService.js'
 import { dispararSemanal, iniciarCuradoria, listarExecucoes } from '../../../application/usecases/blog/curadoria/CuradoriaService.js'
 
 /** Compara o segredo do agendador em tempo constante. Sem CURADORIA_TOKEN configurado, ninguém entra. */
@@ -54,6 +55,29 @@ export async function blogAdminRoutes(app: FastifyInstance) {
     const { status } = z.object({ status: z.nativeEnum(BlogStatus) }).parse(request.body)
     const { mudou, ...artigo } = await alterarStatusArtigo(id, status)
     return reply.status(200).send({ id: artigo.id, status: artigo.status, mudou })
+  })
+
+  /** POST /root/blog/artigos/:id/imagem — envia a imagem de capa (multipart, campo único; alt opcional em ?alt=) */
+  app.post('/artigos/:id/imagem', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    const { alt } = z.object({ alt: z.string().max(200).optional() }).parse(request.query)
+    const data = await request.file()
+    if (!data) return reply.status(400).send({ message: 'Nenhum arquivo enviado.' })
+    const buffer = await data.toBuffer()
+    if (data.file.truncated) return reply.status(400).send({ message: 'A imagem deve ter no máximo 5 MB.' })
+    return reply.status(200).send({ imagemUrl: await enviarImagemDoArtigo(id, buffer, alt) })
+  })
+
+  /** POST /root/blog/artigos/:id/imagem/gerar — gera a capa com IA a partir do título e do resumo */
+  app.post('/artigos/:id/imagem/gerar', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    return reply.status(200).send({ imagemUrl: await gerarImagemDoArtigo(id) })
+  })
+
+  app.delete('/artigos/:id/imagem', { preHandler }, async (request, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(request.params)
+    await removerImagemDoArtigo(id)
+    return reply.status(204).send()
   })
 
   app.delete('/artigos/:id', { preHandler }, async (request, reply) => {

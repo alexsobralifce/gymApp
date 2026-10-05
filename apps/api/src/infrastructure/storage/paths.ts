@@ -44,6 +44,10 @@ export function getLogosDir(): string {
   return path.join(getPublicDir(), 'uploads', 'logos')
 }
 
+export function getBlogDir(): string {
+  return path.join(getPublicDir(), 'uploads', 'blog')
+}
+
 export function getPromocoesDir(): string {
   return path.join(getPublicDir(), 'uploads', 'promocoes')
 }

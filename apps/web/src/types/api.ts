@@ -563,7 +563,7 @@ export interface ExecucaoCuradoria {
   relatorio: {
     fontes: Array<{ nome: string; itens: number; erro?: string }>
     candidatos: number
-    geradas: Array<{ slug: string; titulo: string; veiculo: string; status: BlogStatus }>
+    geradas: Array<{ slug: string; titulo: string; veiculo: string; status: BlogStatus; imagem?: boolean; erroImagem?: string }>
     descartadas: Array<{ titulo: string; motivo: string }>
   } | null
   erro: string | null
@@ -584,6 +584,8 @@ export interface ArtigoBlogAdmin {
   secoes: Array<{ titulo: string; paragrafos?: string[]; lista?: string[] }>
   fontes: Array<{ titulo: string; url: string }>
   origem: { veiculo: string; pais: string; titulo: string; url: string } | null
+  imagemUrl: string | null
+  imagemAlt: string | null
   publicadoEm: string | null
   criadoEm: string
   atualizadoEm: string

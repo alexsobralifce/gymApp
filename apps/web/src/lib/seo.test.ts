@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { urlCanonica } from './seo'
+import { urlCanonica, urlAbsoluta } from './seo'
 
 describe('urlCanonica', () => {
   it('sem domínio configurado não gera canonical', () => {
@@ -10,5 +10,15 @@ describe('urlCanonica', () => {
   })
   it('concatena o caminho', () => {
     expect(urlCanonica('/planos', 'https://exemplo.com')).toBe('https://exemplo.com/planos')
+  })
+})
+
+describe('urlAbsoluta', () => {
+  it('mantém URL absoluta e completa caminho do site', () => {
+    expect(urlAbsoluta('https://api.x/uploads/a.webp', 'https://exemplo.com')).toBe('https://api.x/uploads/a.webp')
+    expect(urlAbsoluta('/blog-img/a.webp', 'https://exemplo.com')).toBe('https://exemplo.com/blog-img/a.webp')
+  })
+  it('sem domínio configurado não gera URL para caminho relativo', () => {
+    expect(urlAbsoluta('/blog-img/a.webp', '')).toBeNull()
   })
 })

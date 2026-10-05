@@ -18,7 +18,11 @@
         "Dores e lesões: ombro, joelho, lombar e qualquer restrição médica.",
         "Rotina: quantos dias por semana e quanto tempo por sessão o aluno realmente consegue treinar.",
         "Equipamentos disponíveis: academia completa, pouco material ou treino em casa."
-      ]
+      ],
+      "imagem": {
+        "url": "/blog-img/personal-conversa-aluno.webp",
+        "alt": "Personal trainer conversando com um aluno e anotando seus objetivos em um tablet na academia"
+      }
     },
     {
       "titulo": "2. Defina a frequência semanal",
@@ -79,5 +83,9 @@
   "cta": {
     "texto": "Conhecer o app para personal trainer",
     "href": "/app-para-personal-trainer"
+  },
+  "imagem": {
+    "url": "/blog-img/ficha-de-treino-tablet.webp",
+    "alt": "Personal trainer sorrindo e mostrando a ficha de treino em um tablet enquanto um aluno treina ao fundo"
   }
 }

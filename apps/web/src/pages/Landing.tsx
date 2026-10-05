@@ -111,6 +111,11 @@ export default function Landing() {
               <Link to="/planos" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
                 Planos
               </Link>
+              {ARTIGOS.length > 0 && (
+                <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
+                  Blog
+                </Link>
+              )}
             </nav>
 
             <div className="hidden md:flex items-center gap-3">
@@ -162,6 +167,15 @@ export default function Landing() {
             >
               Planos
             </Link>
+            {ARTIGOS.length > 0 && (
+              <Link
+                to="/blog"
+                className="block py-3 text-sm text-muted-foreground hover:text-foreground border-b border-border last:border-0"
+                onClick={() => setMobileOpen(false)}
+              >
+                Blog
+              </Link>
+            )}
             <div className="mt-4 flex gap-2">
               <Link
                 to="/login"
@@ -489,6 +503,39 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ─── BLOG ─── */}
+      {ARTIGOS.length > 0 && (
+        <section className="py-20 border-t border-border" aria-labelledby="blog-landing">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-10">
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">Blog</span>
+              <h2 id="blog-landing" className="mt-3 text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 800, lineHeight: 1.05 }}>
+                APRENDA A TREINAR MELHOR
+              </h2>
+            </div>
+            <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {[...ARTIGOS.filter((a) => a.tipo !== 'curadoria'), ...ARTIGOS.filter((a) => a.tipo === 'curadoria')].slice(0, 3).map((a) => (
+                <li key={a.slug} className="overflow-hidden rounded-xl border border-border bg-background hover:border-primary/30 transition-all duration-300">
+                  <Link to={`/blog/${a.slug}`} className="block">
+                    {a.imagem && <img src={a.imagem.url} alt={a.imagem.alt} width={1200} height={800} loading="lazy" className="aspect-[3/2] w-full object-cover" />}
+                    <div className="p-5">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1.5">{a.tipo === 'curadoria' ? 'Leitura da semana' : a.categoria}</p>
+                      <h3 className="text-base font-bold text-foreground mb-1.5">{a.titulo}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-3">{a.resumo}</p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 text-center">
+              <Link to="/blog" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                Ver todos os artigos <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── FAQ ─── */}
       <section className="py-20">

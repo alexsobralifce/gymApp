@@ -115,7 +115,7 @@ function RoboCuradoria({ aoConcluir, avisar }: { aoConcluir: () => void; avisar:
               {aberta === e.id && (
                 <div className="mt-2 space-y-2 border-t border-surface-input pt-2 text-text-muted">
                   {e.erro && <p className="text-destructive">Erro: {e.erro}</p>}
-                  {e.relatorio?.geradas.map((g) => <p key={g.slug}>✓ {g.titulo} <span>({g.veiculo}, {g.status === 'PUBLICADO' ? 'publicado' : 'rascunho'})</span></p>)}
+                  {e.relatorio?.geradas.map((g) => <p key={g.slug}>✓ {g.titulo} <span>({g.veiculo}, {g.status === 'PUBLICADO' ? 'publicado' : 'rascunho'}{g.imagem === false ? `, sem imagem${g.erroImagem ? `: ${g.erroImagem}` : ''}` : ''})</span></p>)}
                   {e.relatorio?.descartadas.map((d) => <p key={d.titulo}>✗ {d.titulo.slice(0, 80)}: {d.motivo.slice(0, 160)}</p>)}
                   {e.relatorio && (
                     <p>
@@ -152,6 +152,7 @@ function Guia() {
         <ol className={lista}>
           <li>Roda sozinho toda segunda-feira, 2 leituras, publicando direto. O GitHub Actions dispara às 8h (principal); se ele falhar, a própria API tenta às 10h (reserva). Se a semana já foi atendida, o reserva pula, então nunca duplica.</li>
           <li>Para rodar na hora: use o quadro “Robô de curadoria” acima. Em <strong>Rascunho</strong> você lê (botão “Ver”) e publica; em <strong>Publicar direto</strong> vai ao ar.</li>
+          <li>Cada texto sai com uma imagem de capa gerada por IA a partir do tema. Em cada item da lista você pode <strong>gerar outra</strong>, <strong>enviar a sua</strong> (PNG, JPG ou WebP, até 5 MB) ou <strong>remover</strong>. Troque por uma foto sua nos Artigos importantes.</li>
           <li>Clique na execução do histórico para ver o que foi gerado, o que foi descartado (e por quê) e se algum site falhou.</li>
           <li>Travas automáticas: nota de utilidade, texto sem frases copiadas, e bloqueio de termos de risco (suplemento, dose, promessa).</li>
           <li>Para rodar pelo GitHub: <em>Actions → Curadoria semanal do blog → Run workflow</em>. Para desligar só a reserva da API: <code>CURADORIA_AGENDADA=false</code> no Railway.</li>
@@ -164,7 +165,7 @@ function Guia() {
           </li>
           <li>
             <strong>Railway, serviço api</strong> (Variables): <code>OPENAI_API_KEY</code> (escreve os textos), <code>CURADORIA_TOKEN</code>, <code>CURADORIA_AGENDADA</code> (<code>true</code> liga a reserva semanal da API),
-            {' '}<code>CURADORIA_MODELO</code> e <code>CURADORIA_UTILIDADE_MIN</code> (opcionais), <code>INDEXNOW_KEY</code> (chave do IndexNow, igual ao nome do arquivo .txt em apps/web/public) e <code>SITE_URL</code> (opcional), <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
+            {' '}<code>CURADORIA_MODELO</code>, <code>CURADORIA_UTILIDADE_MIN</code>, <code>CURADORIA_MODELO_IMAGEM</code> e <code>CURADORIA_IMAGEM_QUALIDADE</code> (opcionais), <code>INDEXNOW_KEY</code> (chave do IndexNow, igual ao nome do arquivo .txt em apps/web/public) e <code>SITE_URL</code> (opcional), <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
             {' '}<code>RAILWAY_WEB_SERVICE_ID</code> (ID do <em>serviço</em> web, não de um deploy) e <code>RAILWAY_ENVIRONMENT_ID</code>.
           </li>
           <li><strong>Railway, serviço web</strong>: <code>VITE_API_URL</code> (o build baixa os artigos por ela) e <code>VITE_SITE_URL</code>.</li>
@@ -271,6 +272,21 @@ export default function RootPublicacoes() {
     }
   }
 
+  async function imagem(artigo: ArtigoBlogAdmin, acao: 'gerar' | 'enviar' | 'remover', arquivo?: File) {
+    setOcupado(artigo.id)
+    try {
+      if (acao === 'gerar') await api.gerarImagemArtigoBlog(artigo.id)
+      else if (acao === 'enviar' && arquivo) await api.enviarImagemArtigoBlog(artigo.id, arquivo)
+      else if (acao === 'remover') await api.removerImagemArtigoBlog(artigo.id)
+      await carregar()
+      showToast(acao === 'remover' ? 'Imagem removida.' : 'Imagem atualizada.' + (artigo.status === 'PUBLICADO' ? ' O site é atualizado em alguns minutos.' : ''))
+    } catch (e) {
+      showToast(e instanceof Error && e.message ? e.message : 'Não foi possível alterar a imagem.', 'error')
+    } finally {
+      setOcupado(null)
+    }
+  }
+
   async function confirmar() {
     if (!acao) return
     const { tipo, artigo } = acao
@@ -360,11 +376,40 @@ export default function RootPublicacoes() {
                 <span className="rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">{TIPO_ROTULO[a.tipo]}</span>
                 {a.origem && <span className="text-xs text-text-muted">{a.origem.veiculo} ({a.origem.pais})</span>}
               </div>
+              <div className="flex gap-3">
+                {a.imagemUrl ? (
+                  <img src={a.imagemUrl} alt={a.imagemAlt ?? ''} width={96} height={64} loading="lazy" className="h-16 w-24 shrink-0 rounded-lg object-cover" />
+                ) : (
+                  <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg bg-surface text-[10px] text-text-muted">sem imagem</div>
+                )}
+                <div className="min-w-0">
               <h2 className="font-semibold text-text">{a.titulo}</h2>
               <p className="mt-0.5 text-xs text-text-muted">
                 /blog/{a.slug} · {a.categoria} · publicado em {data(a.publicadoEm)} · atualizado em {data(a.atualizadoEm)}
               </p>
+                </div>
+              </div>
               <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" disabled={ocupado === a.id} onClick={() => imagem(a, 'gerar')} className="rounded-lg border border-surface-input px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface disabled:opacity-50 cursor-pointer">
+                  {ocupado === a.id ? 'Aguarde...' : a.imagemUrl ? 'Nova imagem (IA)' : 'Gerar imagem (IA)'}
+                </button>
+                <label className="rounded-lg border border-surface-input px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface cursor-pointer">
+                  Enviar imagem
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    disabled={ocupado === a.id}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      e.target.value = ''
+                      if (f) imagem(a, 'enviar', f)
+                    }}
+                  />
+                </label>
+                {a.imagemUrl && (
+                  <button type="button" disabled={ocupado === a.id} onClick={() => imagem(a, 'remover')} className="rounded-lg border border-surface-input px-3 py-1.5 text-xs font-semibold text-text-muted hover:bg-surface disabled:opacity-50 cursor-pointer">Remover imagem</button>
+                )}
                 <button type="button" onClick={() => setVisualizando(a)} className="rounded-lg border border-surface-input px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface cursor-pointer">Ver</button>
                 {a.status === 'PUBLICADO' ? (
                   <>

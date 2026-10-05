@@ -38,6 +38,9 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional().default(''),
   CURADORIA_MODELO: z.string().optional().default('gpt-5.4-mini'),
   CURADORIA_UTILIDADE_MIN: z.coerce.number().int().min(1).max(5).optional().default(3),
+  // Imagens de capa geradas por IA para as Leituras da semana.
+  CURADORIA_MODELO_IMAGEM: z.string().optional().default('gpt-image-1-mini'),
+  CURADORIA_IMAGEM_QUALIDADE: z.enum(['low', 'medium', 'high']).optional().default('medium'),
   // Mesmo cuidado do BILLING_ENABLED: nunca z.coerce.boolean() ("false" viraria true).
   // IndexNow: chave pública (arquivo <chave>.txt na raiz do site) e endereço do site para avisar os buscadores.
   INDEXNOW_KEY: z.string().optional().default(''),

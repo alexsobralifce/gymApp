@@ -15,17 +15,17 @@ export default function LayoutPublico({ children, atual }: { children: ReactNode
   return (
     <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <header className="border-b border-border bg-background/90 pt-[env(safe-area-inset-top,0px)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
           <Link to="/" aria-label="ENDORFINAPP, página inicial">
-            <EndorfinappLogo variant="horizontal" size={26} showSlogan={false} />
+            <EndorfinappLogo variant="horizontal" size={20} showSlogan={false} />
           </Link>
-          <nav className="flex items-center gap-2 sm:gap-3 shrink-0" aria-label="Principal">
+          <nav className="flex items-center gap-1 sm:gap-3 shrink-0" aria-label="Principal">
             {ARTIGOS.length > 0 && (
               <Link to="/blog" className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground">Blog</Link>
             )}
             <Link to="/planos" className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground">Planos</Link>
-            <Link to="/login" className="px-2 text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">Entrar</Link>
-            <Link to="/register" className="px-3 sm:px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:brightness-110 whitespace-nowrap">
+            <Link to="/login" className="px-1 text-xs max-[340px]:hidden sm:text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">Entrar</Link>
+            <Link to="/register" className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:brightness-110 whitespace-nowrap">
               Criar conta
             </Link>
           </nav>

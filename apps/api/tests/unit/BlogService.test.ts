@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { BlogStatus, BlogTipo, type ArtigoBlog } from '@prisma/client'
 import { paraArquivo } from '../../src/application/usecases/blog/BlogService.js'
 import { payloadIndexNow } from '../../src/infrastructure/seo/avisoBuscadores.js'
+import { promptDaImagem } from '../../src/application/usecases/blog/BlogImagemService.js'
 import { criarAgendador } from '../../src/infrastructure/hosting/railwayRebuild.js'
 
 const base: ArtigoBlog = {
@@ -18,6 +19,8 @@ const base: ArtigoBlog = {
   fontes: [{ titulo: 'F', url: 'https://ex.com' }],
   origem: null,
   cta: null,
+  imagem_url: null,
+  imagem_alt: null,
   publicado_em: new Date('2026-10-01T12:00:00Z'),
   criado_em: new Date('2026-09-30T12:00:00Z'),
   atualizado_em: new Date('2026-10-05T12:00:00Z'),
@@ -66,5 +69,19 @@ describe('payloadIndexNow', () => {
       keyLocation: 'https://exemplo.com/abc.txt',
       urlList: ['https://exemplo.com', 'https://exemplo.com/blog/guia'],
     })
+  })
+})
+
+describe('imagem do artigo', () => {
+  it('paraArquivo inclui a imagem de capa quando existe', () => {
+    const r = paraArquivo({ ...base, imagem_url: '/blog-img/x.webp', imagem_alt: 'Alt' } as never) as { imagem?: { url: string; alt: string } }
+    expect(r.imagem).toEqual({ url: '/blog-img/x.webp', alt: 'Alt' })
+    expect((paraArquivo(base) as { imagem?: unknown }).imagem).toBeUndefined()
+  })
+  it('o prompt da imagem proíbe texto e marcas e cita o tema', () => {
+    const p = promptDaImagem('Agachamento cossaco', 'Exercício de mobilidade para pernas')
+    expect(p).toMatch(/NO text/)
+    expect(p).toMatch(/NO logos/)
+    expect(p).toContain('Agachamento cossaco')
   })
 })

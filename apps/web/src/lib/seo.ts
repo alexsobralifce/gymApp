@@ -10,6 +10,8 @@ interface SeoOptions {
   noindex?: boolean
   /** Dados estruturados (schema.org) da página, injetados como JSON-LD. */
   jsonLd?: Record<string, unknown>
+  /** Imagem de compartilhamento (og:image): caminho do site ou URL absoluta. */
+  image?: string
 }
 
 export function urlCanonica(path: string, base = SITE_URL): string | null {
@@ -27,13 +29,24 @@ function definirMeta(seletor: string, atributo: 'name' | 'property', chave: stri
 }
 
 /** Atualiza title, description, canonical, Open Graph e robots da página pública atual. */
-export function useSeo({ title, description, path, noindex, jsonLd }: SeoOptions) {
+export function urlAbsoluta(url: string, base = SITE_URL): string | null {
+  if (/^https?:\/\//i.test(url)) return url
+  return base ? `${base}${url.startsWith('/') ? url : `/${url}`}` : null
+}
+
+export function useSeo({ title, description, path, noindex, jsonLd, image }: SeoOptions) {
   useEffect(() => {
     document.title = title
     definirMeta('meta[name="description"]', 'name', 'description', description)
     definirMeta('meta[property="og:title"]', 'property', 'og:title', title)
     definirMeta('meta[property="og:description"]', 'property', 'og:description', description)
     definirMeta('meta[name="robots"]', 'name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow')
+
+    const img = image ? urlAbsoluta(image) : null
+    if (img) {
+      definirMeta('meta[property="og:image"]', 'property', 'og:image', img)
+      definirMeta('meta[name="twitter:image"]', 'name', 'twitter:image', img)
+    }
 
     const url = path ? urlCanonica(path) : null
     if (url) {
@@ -46,7 +59,7 @@ export function useSeo({ title, description, path, noindex, jsonLd }: SeoOptions
       link.href = url
       definirMeta('meta[property="og:url"]', 'property', 'og:url', url)
     }
-  }, [title, description, path, noindex])
+  }, [title, description, path, noindex, image])
 
   const jsonLdTexto = jsonLd ? JSON.stringify(jsonLd) : null
   useEffect(() => {

@@ -3,6 +3,7 @@ import { prisma } from '../../../../infrastructure/database/prisma.js'
 import { env } from '../../../../shared/env.js'
 import { ConflictError, BadRequestError } from '../../../../domain/errors/AppError.js'
 import { linksJaCuradorados, receberArtigos } from '../BlogService.js'
+import { gerarImagemNova } from '../BlogImagemService.js'
 import { CONFIG_CURADORIA, type FonteFeed } from './fontes.js'
 import { lerRss, type ItemRss } from './rss.js'
 import { rankear, escolher } from './selecao.js'
@@ -20,7 +21,7 @@ export interface ParametrosCuradoria {
 export interface RelatorioCuradoria {
   fontes: Array<{ nome: string; itens: number; erro?: string }>
   candidatos: number
-  geradas: Array<{ slug: string; titulo: string; veiculo: string; status: BlogStatus }>
+  geradas: Array<{ slug: string; titulo: string; veiculo: string; status: BlogStatus; imagem: boolean; erroImagem?: string }>
   descartadas: Array<{ titulo: string; motivo: string }>
 }
 
@@ -93,8 +94,16 @@ export async function processarExecucao(id: string, p: ParametrosCuradoria, clie
       }
       const artigo = montarArtigo(candidato, r.gerado, hoje)
       const slug = await slugLivre(slugificar(artigo.titulo), hoje)
-      await receberArtigos([{ slug, tipo: BlogTipo.CURADORIA, status, ...artigo }])
-      relatorio.geradas.push({ slug, titulo: artigo.titulo, veiculo: candidato.fonte.nome, status })
+      // a imagem é complemento: se falhar, o texto segue sem ela (dá para gerar depois pelo painel)
+      let imagem: { imagemUrl: string; imagemAlt: string } | null = null
+      let erroImagem: string | undefined
+      try {
+        imagem = await gerarImagemNova(slug, artigo.titulo, artigo.resumo)
+      } catch (e) {
+        erroImagem = (e as Error).message.slice(0, 200)
+      }
+      await receberArtigos([{ slug, tipo: BlogTipo.CURADORIA, status, ...artigo, ...imagem }])
+      relatorio.geradas.push({ slug, titulo: artigo.titulo, veiculo: candidato.fonte.nome, status, imagem: Boolean(imagem), ...(erroImagem && { erroImagem }) })
     }
 
     await prisma.curadoriaExecucao.update({

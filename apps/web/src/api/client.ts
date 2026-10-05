@@ -479,6 +479,13 @@ export const api = {
   getArtigosBlog: () => api.get<ArtigoBlogAdmin[]>('/root/blog/artigos'),
   alterarStatusArtigoBlog: (id: string, status: BlogStatus) =>
     api.patch<{ id: string; status: BlogStatus; mudou: boolean }>(`/root/blog/artigos/${id}/status`, { status }),
+  gerarImagemArtigoBlog: (id: string) => api.post<{ imagemUrl: string }>(`/root/blog/artigos/${id}/imagem/gerar`),
+  enviarImagemArtigoBlog: (id: string, arquivo: File) => {
+    const form = new FormData()
+    form.append('file', arquivo)
+    return api.post<{ imagemUrl: string }>(`/root/blog/artigos/${id}/imagem`, form, true)
+  },
+  removerImagemArtigoBlog: (id: string) => api.delete<void>(`/root/blog/artigos/${id}/imagem`),
   removerArtigoBlog: (id: string) => api.delete<void>(`/root/blog/artigos/${id}`),
   executarCuradoria: (modo: 'rascunho' | 'publicar', quantidade: number) =>
     api.post<{ id: string }>('/root/blog/curadoria/executar', { modo, quantidade }),

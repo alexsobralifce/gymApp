@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import LayoutPublico from '../../components/seo/LayoutPublico'
-import { useSeo } from '../../lib/seo'
+import { useSeo, urlAbsoluta } from '../../lib/seo'
 import { ARTIGOS, buscarArtigo, formatarData, type Artigo } from '../../lib/blog'
 
 const SITE = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/+$/, '') ?? ''
@@ -16,6 +16,7 @@ function dadosEstruturados(a: Artigo) {
     inLanguage: 'pt-BR',
     author: { '@type': 'Organization', name: a.autor },
     publisher: { '@type': 'Organization', name: 'ENDORFINAPP' },
+    ...(a.imagem && urlAbsoluta(a.imagem.url) && { image: urlAbsoluta(a.imagem.url) }),
     ...(a.origem && { citation: a.origem.url, isBasedOn: a.origem.url }),
     ...(SITE && { mainEntityOfPage: `${SITE}/blog/${a.slug}` }),
   }
@@ -45,6 +46,7 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
     description: artigo.descricao,
     path: `/blog/${artigo.slug}`,
     noindex: artigo.tipo === 'curadoria',
+    image: artigo.imagem?.url,
     jsonLd: artigo.tipo === 'curadoria' ? undefined : dadosEstruturados(artigo),
   })
   const relacionados = ARTIGOS.filter((a) => a.slug !== artigo.slug).slice(0, 3)
@@ -72,11 +74,24 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
               </p>
             </aside>
           )}
+          {artigo.imagem && (
+            <img
+              src={artigo.imagem.url}
+              alt={artigo.imagem.alt}
+              width={1200}
+              height={800}
+              fetchPriority="high"
+              className="mb-8 aspect-[3/2] w-full rounded-xl object-cover"
+            />
+          )}
           <p className="text-lg mb-8">{artigo.resumo}</p>
 
           {artigo.secoes.map((s) => (
             <section key={s.titulo} className="mb-8">
               <h2 className="text-2xl font-bold mb-3">{s.titulo}</h2>
+              {s.imagem && (
+                <img src={s.imagem.url} alt={s.imagem.alt} width={1200} height={800} loading="lazy" className="mb-4 aspect-[3/2] w-full rounded-xl object-cover" />
+              )}
               {s.paragrafos?.map((p) => (
                 <p key={p} className="mb-3 leading-relaxed text-foreground/90"><TextoComCitacoes texto={p} /></p>
               ))}

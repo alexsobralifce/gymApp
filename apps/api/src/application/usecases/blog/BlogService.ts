@@ -18,6 +18,8 @@ export interface ArtigoEntrada {
   origem?: unknown
   cta?: unknown
   publicadoEm?: string | null
+  imagemUrl?: string | null
+  imagemAlt?: string | null
 }
 
 /** Formato dos arquivos content/blog/<slug>.json lidos pelo site no build. */
@@ -38,6 +40,7 @@ export function paraArquivo(a: ArtigoBlog) {
     ...(a.origem ? { origem: a.origem } : {}),
     fontes: a.fontes,
     ...(a.cta ? { cta: a.cta } : {}),
+    ...(a.imagem_url ? { imagem: { url: a.imagem_url, alt: a.imagem_alt ?? a.titulo } } : {}),
   }
 }
 
@@ -68,6 +71,8 @@ export async function listarArtigosAdmin(filtros: { tipo?: BlogTipo; status?: Bl
     secoes: a.secoes,
     fontes: a.fontes,
     origem: a.origem,
+    imagemUrl: a.imagem_url,
+    imagemAlt: a.imagem_alt,
     publicadoEm: a.publicado_em,
     criadoEm: a.criado_em,
     atualizadoEm: a.atualizado_em,
@@ -119,6 +124,8 @@ export async function receberArtigos(entradas: ArtigoEntrada[]) {
       fontes: e.fontes as Prisma.InputJsonValue,
       origem: (e.origem ?? Prisma.DbNull) as Prisma.InputJsonValue,
       cta: (e.cta ?? Prisma.DbNull) as Prisma.InputJsonValue,
+      imagem_url: e.imagemUrl ?? null,
+      imagem_alt: e.imagemAlt ?? null,
       publicado_em: e.status === BlogStatus.PUBLICADO ? (e.publicadoEm ? new Date(`${e.publicadoEm}T12:00:00Z`) : new Date()) : null,
     }
     const existente = await prisma.artigoBlog.findUnique({ where: { slug: e.slug } })

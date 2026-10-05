@@ -1,5 +1,11 @@
+export interface ImagemArtigo {
+  url: string
+  alt: string
+}
+
 export interface SecaoArtigo {
   titulo: string
+  imagem?: ImagemArtigo
   paragrafos?: string[]
   lista?: string[]
 }
@@ -13,6 +19,8 @@ export interface Artigo {
   publicadoEm: string
   atualizadoEm: string
   tipo?: 'curadoria'
+  /** Capa do artigo: caminho do site ("/blog-img/x.webp") ou URL absoluta */
+  imagem?: ImagemArtigo
   /** Matéria de terceiros comentada (curadoria): sempre com link para o original. */
   origem?: { veiculo: string; pais: string; titulo: string; url: string }
   resumo: string
