@@ -23,7 +23,7 @@
     {
       "titulo": "2. Defina a frequência semanal",
       "paragrafos": [
-        "A Organização Mundial da Saúde recomenda que adultos façam atividades de fortalecimento muscular que envolvam os principais grupos musculares em 2 ou mais dias por semana. Para iniciantes, o posicionamento do Colégio Americano de Medicina do Esporte (ACSM) sugere de 2 a 3 dias por semana, com treinos que trabalhem o corpo inteiro.",
+        "A Organização Mundial da Saúde recomenda que adultos façam atividades de fortalecimento muscular que envolvam os principais grupos musculares em 2 ou mais dias por semana [1]. Para iniciantes, o posicionamento do Colégio Americano de Medicina do Esporte (ACSM) sugere de 2 a 3 dias por semana, com treinos que trabalhem o corpo inteiro [2].",
         "Na prática, a melhor frequência é a que o aluno consegue manter. Uma ficha de 5 dias que ele só cumpre 2 vezes rende menos que uma de 3 dias cumprida sempre."
       ]
     },
@@ -41,21 +41,21 @@
     {
       "titulo": "4. Selecione e ordene os exercícios",
       "paragrafos": [
-        "Priorize exercícios que envolvem várias articulações, como agachamento, remada e supino, e depois complemente com exercícios para grupos menores. O ACSM recomenda realizar os exercícios de grandes grupos musculares antes dos de pequenos grupos, para que o aluno os execute com mais energia.",
+        "Priorize exercícios que envolvem várias articulações, como agachamento, remada e supino, e depois complemente com exercícios para grupos menores. O ACSM recomenda realizar os exercícios de grandes grupos musculares antes dos de pequenos grupos, para que o aluno os execute com mais energia [2].",
         "Considere as restrições do aluno: se há dor no ombro, por exemplo, substitua movimentos que a agravam por alternativas mais confortáveis. Para iniciantes, máquinas costumam facilitar a aprendizagem do movimento."
       ]
     },
     {
       "titulo": "5. Defina séries, repetições e carga",
       "paragrafos": [
-        "Para iniciantes, o ACSM sugere trabalhar com cerca de 8 a 12 repetições por série e carga que permita completar as repetições com boa técnica. Comece com poucas séries por exercício e aumente conforme o aluno se adapta.",
+        "Para iniciantes, o ACSM sugere trabalhar com cerca de 8 a 12 repetições por série e carga que permita completar as repetições com boa técnica [2]. Comece com poucas séries por exercício e aumente conforme o aluno se adapta.",
         "A carga sugerida na ficha é um ponto de partida. Nas primeiras semanas, ajuste conforme a execução real do aluno."
       ]
     },
     {
       "titulo": "6. Planeje a progressão e revise",
       "paragrafos": [
-        "A ficha precisa evoluir. Uma regra prática, descrita no posicionamento do ACSM, é aumentar a carga em cerca de 2% a 10% quando o aluno consegue fazer 1 a 2 repetições além da meta com a carga atual.",
+        "A ficha precisa evoluir. Uma regra prática, descrita no posicionamento do ACSM, é aumentar a carga em cerca de 2% a 10% quando o aluno consegue fazer 1 a 2 repetições além da meta com a carga atual [2].",
         "Combine revisões periódicas, por exemplo a cada 4 a 8 semanas, olhando o que o aluno registrou: cargas, repetições, faltas e como se sentiu. Trocar a ficha sem olhar esses dados é chute."
       ]
     },
@@ -76,5 +76,8 @@
       "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/"
     }
   ],
-  "cta": { "texto": "Conhecer o app para personal trainer", "href": "/app-para-personal-trainer" }
+  "cta": {
+    "texto": "Conhecer o app para personal trainer",
+    "href": "/app-para-personal-trainer"
+  }
 }

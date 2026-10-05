@@ -20,6 +20,24 @@ function dadosEstruturados(a: Artigo) {
   }
 }
 
+/** Troca marcadores [n] por links numerados para a lista de fontes. */
+function TextoComCitacoes({ texto }: { texto: string }) {
+  return (
+    <>
+      {texto.split(/(\[\d+\])/).map((parte, i) => {
+        const m = parte.match(/^\[(\d+)\]$/)
+        return m ? (
+          <sup key={i}>
+            <a href={`#fonte-${m[1]}`} className="text-primary hover:underline" aria-label={`Fonte ${m[1]}`}>[{m[1]}]</a>
+          </sup>
+        ) : (
+          parte
+        )
+      })}
+    </>
+  )
+}
+
 function Conteudo({ artigo }: { artigo: Artigo }) {
   useSeo({
     title: `${artigo.titulo} | ENDORFINAPP`,
@@ -46,7 +64,7 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
             <section key={s.titulo} className="mb-8">
               <h2 className="text-2xl font-bold mb-3">{s.titulo}</h2>
               {s.paragrafos?.map((p) => (
-                <p key={p} className="mb-3 leading-relaxed text-foreground/90">{p}</p>
+                <p key={p} className="mb-3 leading-relaxed text-foreground/90"><TextoComCitacoes texto={p} /></p>
               ))}
               {s.lista && (
                 <ul className="list-disc pl-5 space-y-1.5 mb-3 text-foreground/90">
@@ -66,13 +84,13 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
 
           <section aria-labelledby="fontes" className="border-t border-border pt-6">
             <h2 id="fontes" className="text-lg font-bold mb-2">Fontes consultadas</h2>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-              {artigo.fontes.map((f) => (
-                <li key={f.url}>
+            <ol className="list-decimal pl-5 space-y-1 text-sm text-muted-foreground">
+              {artigo.fontes.map((f, i) => (
+                <li key={f.url} id={`fonte-${i + 1}`}>
                   <a href={f.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">{f.titulo}</a>
                 </li>
               ))}
-            </ul>
+            </ol>
             <p className="text-xs text-muted-foreground mt-4">
               Este conteúdo é informativo e não substitui a orientação de um profissional de educação física ou de saúde.
             </p>
