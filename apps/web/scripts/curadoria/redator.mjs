@@ -1,7 +1,7 @@
 // Pede à OpenAI uma curadoria ORIGINAL (não uma cópia) a partir do título e do trecho público do feed.
 import { z } from 'zod'
 
-export const MODELO = process.env.CURADORIA_MODELO || 'gpt-4.1'
+export const MODELO = process.env.CURADORIA_MODELO || 'gpt-5.4-mini'
 
 export const ArtigoGerado = z.object({
   relevante: z.boolean(),

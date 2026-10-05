@@ -18,7 +18,7 @@ Robô de curadoria semanal, em `apps/web/scripts/curadoria/`:
 - `fontes.json`: 10 feeds (BR/EUA/UK), janela de 14 dias, palavras positivas/negativas.
 - `rss.mjs`, `selecao.mjs`: parser RSS e ranking (funções puras, testadas em `src/curadoria.test.ts`).
 - `redator.mjs`: **agora usa a OpenAI** (Chat Completions + saída JSON estrita, via `fetch`, sem SDK).
-  Modelo padrão `gpt-4.1` (troque com a variável `CURADORIA_MODELO`). Travas: descrição 100–160 caracteres,
+  Modelo padrão `gpt-5.4-mini` (troque com a variável `CURADORIA_MODELO`). Travas: descrição 100–160 caracteres,
   título diferente, sem 7 palavras copiadas do original, `relevante=false` descarta.
 - `curadoria.mjs`: orquestra. `--dry` só lista os candidatos (não precisa de chave). Sem `--dry`, exige `OPENAI_API_KEY`.
 - Workflow `.github/workflows/curadoria-semanal.yml`: segunda 08h (Brasília), abre um **Pull Request**
@@ -26,7 +26,7 @@ Robô de curadoria semanal, em `apps/web/scripts/curadoria/`:
 - `BlogArtigo` mostra o aviso "Curadoria" com link da matéria original e `citation` no JSON-LD.
 
 ## Pendências (em ordem)
-1. **Chave da OpenAI inválida**: `OPENAI_API_KEY` do serviço `api` no Railway retorna HTTP 401
+1. (RESOLVIDO em 2026-10-05: chave nova válida no Railway e no GitHub; teste real gerou 1 artigo fraco, ver item de qualidade) **Chave da OpenAI inválida**: `OPENAI_API_KEY` do serviço `api` no Railway retorna HTTP 401
    ("Incorrect API key"). Gerar uma chave nova em platform.openai.com, atualizar no Railway e criar o
    segredo `OPENAI_API_KEY` no GitHub (Settings > Secrets and variables > Actions). O robô nunca rodou de verdade.
 2. Testar de ponta a ponta: `cd apps/web && OPENAI_API_KEY=... node scripts/curadoria/curadoria.mjs --quantidade=1`
