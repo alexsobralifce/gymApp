@@ -1,6 +1,11 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": [
+    "!/googledca*"
+  ],
   "rewrites": [
-    { "source": "!{planos,register,politica-privacidade,assets/**,*.*}", "destination": "/index.html" }
+    {
+      "source": "!{planos,register,politica-privacidade,assets/**,*.*}",
+      "destination": "/index.html"
+    }
   ]
 }
