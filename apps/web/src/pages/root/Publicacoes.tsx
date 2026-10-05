@@ -204,6 +204,8 @@ export default function RootPublicacoes() {
   const [acao, setAcao] = useState<Acao | null>(null)
   const [visualizando, setVisualizando] = useState<ArtigoBlogAdmin | null>(null)
   const [publicandoSite, setPublicandoSite] = useState(false)
+  // slug -> a página já existe no site? (o blog é montado no deploy, então publicar não é instantâneo)
+  const [noAr, setNoAr] = useState<Record<string, boolean>>({})
   const { showToast, ToastComponent } = useToast()
 
   async function carregar() {
@@ -225,6 +227,34 @@ export default function RootPublicacoes() {
     const porFiltro = artigos.filter((a) => (!filtroTipo || a.tipo === filtroTipo) && (!filtroStatus || a.status === filtroStatus))
     return filtrarPorTexto(porFiltro, busca, (a) => [a.titulo, a.slug, a.categoria, a.origem?.veiculo])
   }, [artigos, busca, filtroTipo, filtroStatus])
+
+  const slugsPublicados = useMemo(() => artigos.filter((a) => a.status === 'PUBLICADO').map((a) => a.slug), [artigos])
+  const aguardando = slugsPublicados.some((s) => noAr[s] === false)
+
+  async function verificarSite(slugs: string[]) {
+    const entradas = await Promise.all(
+      slugs.map(async (s) => {
+        try {
+          const r = await fetch(`/blog/${s}`, { method: 'HEAD', cache: 'no-store' })
+          return [s, r.ok] as const
+        } catch {
+          return [s, false] as const
+        }
+      }),
+    )
+    setNoAr((prev) => ({ ...prev, ...Object.fromEntries(entradas) }))
+  }
+
+  useEffect(() => {
+    if (slugsPublicados.length) verificarSite(slugsPublicados)
+  }, [slugsPublicados])
+
+  // enquanto algum publicado ainda não está no site, confere de novo a cada 20 s
+  useEffect(() => {
+    if (!aguardando) return
+    const t = setInterval(() => verificarSite(slugsPublicados.filter((s) => noAr[s] === false)), 20000)
+    return () => clearInterval(t)
+  }, [aguardando, slugsPublicados, noAr])
 
   const contagem = (status: BlogStatus) => artigos.filter((a) => a.status === status).length
 
@@ -283,7 +313,7 @@ export default function RootPublicacoes() {
         <div>
           <h1 className="text-xl font-bold text-text">Publicações do blog</h1>
           <p className="mt-1 text-xs text-text-muted">
-            {contagem('PUBLICADO')} publicado(s) · {contagem('RASCUNHO')} rascunho(s) · {contagem('DESPUBLICADO')} despublicado(s)
+            {contagem('PUBLICADO')} publicado(s){aguardando ? ' (site atualizando…)' : ''} · {contagem('RASCUNHO')} rascunho(s) · {contagem('DESPUBLICADO')} despublicado(s)
           </p>
         </div>
         <button
@@ -338,7 +368,13 @@ export default function RootPublicacoes() {
                 <button type="button" onClick={() => setVisualizando(a)} className="rounded-lg border border-surface-input px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface cursor-pointer">Ver</button>
                 {a.status === 'PUBLICADO' ? (
                   <>
-                    <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-surface-input px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface">Abrir no site</a>
+                    {noAr[a.slug] === false ? (
+                      <span className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-400" role="status">
+                        Aguardando o deploy do site (cerca de 3 a 4 min)
+                      </span>
+                    ) : (
+                      <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-surface-input px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface">Abrir no site</a>
+                    )}
                     <button type="button" disabled={ocupado === a.id} onClick={() => setAcao({ tipo: 'despublicar', artigo: a })} className="rounded-lg border border-red-500/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive disabled:opacity-50 cursor-pointer">Despublicar</button>
                   </>
                 ) : (
