@@ -1,6 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../api/client'
 import StatusBadge from '../../components/ui/StatusBadge'
+import UsoSite from '../../components/root/UsoSite'
+import UsoApp from '../../components/root/UsoApp'
+
+type Aba = 'assinaturas' | 'faturas' | 'site' | 'app'
 
 interface Resumo {
   mrrCents: number
@@ -112,7 +116,8 @@ function SimplePagination({ page, totalPages, onChange }: { page: number; totalP
 }
 
 export default function Financeiro() {
-  const [tab, setTab] = useState<'assinaturas' | 'faturas'>('assinaturas')
+  const [tab, setTab] = useState<Aba>('assinaturas')
+  const cobranca = tab === 'assinaturas' || tab === 'faturas'
   const [resumo, setResumo] = useState<Resumo | null>(null)
   const [assinaturas, setAssinaturas] = useState<Paginado<AssinaturaItem> | null>(null)
   const [faturas, setFaturas] = useState<Paginado<FaturaItem> | null>(null)
@@ -146,12 +151,13 @@ export default function Financeiro() {
   }, [loadResumo])
 
   useEffect(() => {
+    if (tab !== 'assinaturas' && tab !== 'faturas') return
     setLoading(true)
     const load = tab === 'assinaturas' ? loadAssinaturas() : loadFaturas()
     load.finally(() => setLoading(false))
   }, [tab, loadAssinaturas, loadFaturas])
 
-  function switchTab(next: 'assinaturas' | 'faturas') {
+  function switchTab(next: Aba) {
     setTab(next)
     setPage(1)
     setStatusFiltro('')
@@ -160,11 +166,11 @@ export default function Financeiro() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text">Financeiro</h1>
-        <p className="text-sm text-text-muted">Assinaturas, cobranças e receita recorrente (MRR) do sistema.</p>
+        <h1 className="text-2xl font-bold text-text">Financeiro e acessos</h1>
+        <p className="text-sm text-text-muted">Assinaturas, cobranças e receita recorrente (MRR), além de quem acessa o site e usa o app.</p>
       </div>
 
-      {resumo && (
+      {cobranca && resumo && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <StatCard label="MRR" value={formatMoney(resumo.mrrCents)} hint="Receita mensal recorrente" />
           <StatCard label="Assinantes pagantes" value={String(resumo.assinantesPagantes)} />
@@ -174,7 +180,7 @@ export default function Financeiro() {
         </div>
       )}
 
-      {resumo && Object.keys(resumo.mrrPorPapel).length > 0 && (
+      {cobranca && resumo && Object.keys(resumo.mrrPorPapel).length > 0 && (
         <div className="rounded-xl border border-border bg-surface-card p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">MRR por papel</p>
           <div className="flex flex-wrap gap-4">
@@ -188,20 +194,35 @@ export default function Financeiro() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 border-b border-border">
+      <div className="flex items-center gap-2 overflow-x-auto border-b border-border">
         <button
           onClick={() => switchTab('assinaturas')}
-          className={`px-3 py-2 text-sm font-semibold ${tab === 'assinaturas' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
+          className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'assinaturas' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
         >
           Assinaturas
         </button>
         <button
           onClick={() => switchTab('faturas')}
-          className={`px-3 py-2 text-sm font-semibold ${tab === 'faturas' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
+          className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'faturas' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
         >
           Faturas
         </button>
+        <button
+          onClick={() => switchTab('site')}
+          className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'site' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
+        >
+          Acessos do site
+        </button>
+        <button
+          onClick={() => switchTab('app')}
+          className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'app' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
+        >
+          Uso do app
+        </button>
       </div>
+
+      {tab === 'site' && <UsoSite />}
+      {tab === 'app' && <UsoApp />}
 
       {tab === 'assinaturas' && (
         <div className="flex flex-wrap gap-2">
@@ -242,7 +263,7 @@ export default function Financeiro() {
         </select>
       )}
 
-      {loading ? (
+      {!cobranca ? null : loading ? (
         <p className="text-text-muted">Carregando...</p>
       ) : tab === 'assinaturas' && assinaturas ? (
         <>

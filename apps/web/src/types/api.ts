@@ -550,6 +550,52 @@ export interface ResumoAcessos {
   serie: DiaAcesso[]
 }
 
+export type SituacaoUso = 'ATIVO' | 'EM_RISCO' | 'PAROU' | 'NUNCA_USOU'
+
+export interface ResumoSite {
+  periodoDias: number
+  totais: { visualizacoes: number; visitantes: number }
+  serie: Array<{ dia: string; visualizacoes: number; visitantes: number }>
+  paginas: Array<{ caminho: string; titulo: string | null; tipo: 'ORIGINAL' | 'CURADORIA' | null; visualizacoes: number; visitantes: number }>
+  origens: Array<{ origem: string; visitantes: number }>
+  dispositivos: Array<{ dispositivo: string; visitantes: number }>
+  conversao: { visitantesLanding: number; cadastros: number }
+}
+
+export interface ResumoApp {
+  periodoDias: number
+  usuariosPorPapel: Array<{ role: string; total: number }>
+  novosPorPapel: Array<{ role: string; total: number }>
+  acessaramNoPeriodo: number
+  treinaramNoPeriodo: number
+  treinaram: { hoje: number; semana: number; mes: number }
+  funilAlunos: Array<{ etapa: string; total: number }>
+  serie: Array<{ dia: string; treinaram: number; series: number; treinos: number; logins: number; novos: number }>
+}
+
+export interface UsuarioUso {
+  id: string
+  nome: string
+  email: string
+  role: string
+  criadoEm: string
+  ultimoAcesso: string | null
+  ultimaSerie: string | null
+  seriesPeriodo: number
+  treinosPeriodo: number
+  totalSeries: number
+  loginsPeriodo: number
+  situacao: SituacaoUso
+}
+
+export interface UsuariosUsoResposta {
+  total: number
+  page: number
+  totalPages: number
+  contagem: Record<SituacaoUso, number>
+  itens: UsuarioUso[]
+}
+
 export type BlogTipo = 'ORIGINAL' | 'CURADORIA'
 export type BlogStatus = 'RASCUNHO' | 'PUBLICADO' | 'DESPUBLICADO'
 

@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus, ExecucaoCuradoria } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus, ExecucaoCuradoria, ResumoSite, ResumoApp, UsuariosUsoResposta } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -475,6 +475,11 @@ export const api = {
   // ─── Root ──────────────────────────────────────────
   registrarVisitaLanding: (visitorId: string) => api.post<void>('/analytics/visita', { visitorId }),
   getAcessos: (dias: number) => api.get<ResumoAcessos>(`/root/acessos?dias=${dias}`),
+  registrarPagina: (d: { visitorId: string; caminho: string; referrer: string | null; utm: string | null }) =>
+    api.post<void>('/analytics/pagina', d),
+  getUsoSite: (dias: number) => api.get<ResumoSite>(`/root/uso/site?dias=${dias}`),
+  getUsoApp: (dias: number) => api.get<ResumoApp>(`/root/uso/app?dias=${dias}`),
+  getUsuariosUso: (params: URLSearchParams) => api.get<UsuariosUsoResposta>(`/root/uso/usuarios?${params.toString()}`),
   getPainel: () => api.get<RootPainel>('/root/painel'),
   getArtigosBlog: () => api.get<ArtigoBlogAdmin[]>('/root/blog/artigos'),
   alterarStatusArtigoBlog: (id: string, status: BlogStatus) =>

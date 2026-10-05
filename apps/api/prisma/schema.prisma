@@ -1060,3 +1060,18 @@ model CuradoriaExecucao {
   @@index([iniciado_em])
   @@map("blog_curadoria_execucoes")
 }
+
+/// Visualizações das páginas públicas (landing, blog, páginas de produto). Anônimas: sem IP, sem cookie;
+/// visitor_id é um UUID aleatório do navegador. origem = busca | instagram | ... | direto | interno.
+model PaginaVisita {
+  id           String   @id @default(cuid())
+  caminho      String
+  visitor_id   String
+  origem       String?
+  dispositivo  String?
+  criado_em    DateTime @default(now())
+
+  @@index([criado_em])
+  @@index([caminho, criado_em])
+  @@map("pagina_visitas")
+}

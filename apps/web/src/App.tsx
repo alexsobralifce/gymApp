@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './stores/auth'
 import { useNotifications } from './hooks/useNotifications'
 import { useCapacitorTheme } from './hooks/useCapacitorTheme'
@@ -72,6 +72,8 @@ import Documentacao from './pages/Documentacao'
 // import PremiumWrapper from './components/ui/PremiumWrapper'
 
 import { EndorfinappIcon } from './components/branding'
+import { api } from './api/client'
+import { rastrearPagina } from './lib/paginaVisita'
 
 export default function App() {
   useNotifications()
@@ -80,6 +82,13 @@ export default function App() {
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
   // const fetchLicenca = useSubscriptionStore((s) => s.fetchLicenca)
   const [ready, setReady] = useState(false)
+  const local = useLocation()
+
+  // Contagem anônima das páginas públicas (landing, blog, produto); ignora o root para não inflar os números
+  useEffect(() => {
+    if (!ready || user?.role === 'ROOT' || user?.admin) return
+    rastrearPagina(local.pathname, local.search, (d) => api.registrarPagina(d))
+  }, [ready, local.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchUser().finally(() => setReady(true))

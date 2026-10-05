@@ -89,6 +89,7 @@ export default function PoliticaPrivacidade() {
               <li><strong className="text-text">Google Play</strong>: processamento de pagamentos de assinaturas</li>
               <li><strong className="text-text">Provedores de infraestrutura</strong>: hospedagem (Railway), banco de dados e filas (PostgreSQL/Redis) e envio de e-mails/notificações</li>
               <li><strong className="text-text">Analytics</strong>: provedor de medição de uso (PostHog) para estatísticas agregadas e pseudonimizadas de navegação, quando habilitado</li>
+              <li><strong className="text-text">Contagem de visitas do site e do blog</strong>: registramos, de forma anônima, quais páginas públicas foram vistas, de onde veio o visitante (por exemplo, buscador ou rede social) e o tipo de aparelho. Usamos um identificador aleatório guardado no seu navegador, sem cookies, sem endereço IP e sem dados pessoais, apenas para saber o que é mais lido</li>
               <li><strong className="text-text">Outros usuários</strong>: apenas os dados que você escolher publicar no feed social, clubes e perfil</li>
             </ul>
             <p className="mt-2">Não vendemos nem alugamos seus dados pessoais a terceiros.</p>

@@ -1,7 +1,7 @@
 const CHAVE_VISITANTE = 'endorfin-visitor-id'
 const CHAVE_SESSAO = 'endorfin-visita-registrada'
 
-function idDoVisitante(): string {
+export function idDoVisitante(): string {
   try {
     const salvo = localStorage.getItem(CHAVE_VISITANTE)
     if (salvo) return salvo
