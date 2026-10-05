@@ -1,0 +1,11 @@
+{
+  "publicas": [
+    "/",
+    "/planos",
+    "/register",
+    "/politica-privacidade",
+    "/app-para-personal-trainer",
+    "/software-para-academia",
+    "/app-de-treino"
+  ]
+}

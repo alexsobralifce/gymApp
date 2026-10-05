@@ -577,7 +577,11 @@ export default function Landing() {
 
             {[
               { title: 'Produto', links: ['Funcionalidades', 'Ciencia', 'Rede Social', 'Como Funciona'] },
-              { title: 'Para Quem', links: ['Aluno Autogestão', 'Professor', 'Academia', 'Personal Trainer'] },
+              { title: 'Para Quem', links: [
+                { label: 'App de treino (aluno)', href: '/app-de-treino' },
+                { label: 'App para personal trainer', href: '/app-para-personal-trainer' },
+                { label: 'Software para academia', href: '/software-para-academia' },
+              ] },
               { title: 'Links', links: [
                 { label: 'Planos', href: '/planos' },
                 { label: 'Entrar', href: '/login' },

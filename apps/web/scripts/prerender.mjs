@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROTAS = ['/', '/planos', '/register', '/politica-privacidade']
+const ROTAS = JSON.parse(await readFile(new URL('../seo-routes.json', import.meta.url), 'utf8')).publicas
 const DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' }
 
@@ -83,7 +83,10 @@ async function main() {
     try {
       await page.goto(origem + rota, { waitUntil: 'networkidle' })
       await page.waitForSelector('#root > *', { timeout: 10000 })
-      const html = '<!doctype html>\n' + (await page.evaluate(() => document.documentElement.outerHTML))
+      // O <noscript> do index.html é só reserva para a casca; com o conteúdo real renderizado ele duplicaria o h1.
+      const html =
+        '<!doctype html>\n' +
+        (await page.evaluate(() => document.documentElement.outerHTML)).replace(/<noscript>[\s\S]*?<\/noscript>/g, '')
       const destino = rota === '/' ? path.join(DIST, 'index.html') : path.join(DIST, rota, 'index.html')
       await mkdir(path.dirname(destino), { recursive: true })
       await writeFile(destino, html)

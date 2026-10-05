@@ -1,8 +1,9 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { readFileSync } from 'node:fs'
 
-const ROTAS_PUBLICAS = ['/', '/planos', '/register', '/politica-privacidade']
+const ROTAS_PUBLICAS: string[] = JSON.parse(readFileSync(new URL('./seo-routes.json', import.meta.url), 'utf8')).publicas
 const ROTAS_PRIVADAS = [
   '/login', '/auth/', '/billing/', '/onboarding/', '/welcome', '/meus-treinos', '/treino/', '/treinos',
   '/dados', '/medidas', '/evolucao', '/feed', '/amizades', '/clubes', '/privacidade', '/alterar-senha',

@@ -15,6 +15,8 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
 import Planos from './pages/planos/Planos'
+import PaginaSeo from './pages/seo/PaginaSeo'
+import { PAGINAS_SEO } from './pages/seo/paginasSeo'
 import Checkout from './pages/billing/Checkout'
 import OnboardingPlano from './pages/auth/OnboardingPlano'
 import GoogleCallback from './pages/auth/GoogleCallback'
@@ -104,6 +106,9 @@ export default function App() {
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
       <Route path="/planos" element={<Planos />} />
+      {PAGINAS_SEO.map((p) => (
+        <Route key={p.caminho} path={p.caminho} element={<PaginaSeo dados={p} />} />
+      ))}
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
       {!user && <Route index element={<Landing />} />}
