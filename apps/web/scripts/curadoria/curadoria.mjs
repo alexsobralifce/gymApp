@@ -45,8 +45,8 @@ if (dry) {
   process.exit(0)
 }
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('\nANTHROPIC_API_KEY ausente: não dá para redigir as curadorias.')
+if (!process.env.OPENAI_API_KEY) {
+  console.error('\nOPENAI_API_KEY ausente: não dá para redigir as curadorias.')
   process.exit(1)
 }
 

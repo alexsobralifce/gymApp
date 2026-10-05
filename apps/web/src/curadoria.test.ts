@@ -84,11 +84,13 @@ describe('redator', () => {
   it('gera slugs de URL', () => {
     expect(slugificar('Agachamento: 3 erros comuns!')).toBe('agachamento-3-erros-comuns')
   })
-  it('redigir usa a API, rejeita irrelevantes e tenta de novo quando a validação falha', async () => {
-    const respostas = [{ parsed_output: { ...gerado, descricao: 'curta' } }, { parsed_output: gerado }]
-    const cliente = { messages: { parse: async () => respostas.shift() } }
+  it('redigir usa o cliente, rejeita irrelevantes e tenta de novo quando a validação falha', async () => {
+    const respostas = [{ texto: JSON.stringify({ ...gerado, descricao: 'curta' }) }, { texto: JSON.stringify(gerado) }]
+    const cliente = { gerar: async () => respostas.shift() }
     expect((await redigir(candidato, { cliente })).ok).toBe(true)
-    const irrelevante = { messages: { parse: async () => ({ parsed_output: { ...gerado, relevante: false, motivo: 'fofoca' } }) } }
+    const irrelevante = { gerar: async () => ({ texto: JSON.stringify({ ...gerado, relevante: false, motivo: 'fofoca' }) }) }
     expect(await redigir(candidato, { cliente: irrelevante })).toMatchObject({ ok: false, motivo: expect.stringContaining('fofoca') })
+    expect(await redigir(candidato, { cliente: { gerar: async () => ({ texto: 'não é json', fim: 'length' }) } })).toMatchObject({ ok: false, motivo: expect.stringContaining('sem JSON') })
+    expect(await redigir(candidato, { cliente: { gerar: async () => ({ recusa: 'não posso' }) } })).toMatchObject({ ok: false, motivo: expect.stringContaining('recusado') })
   })
 })

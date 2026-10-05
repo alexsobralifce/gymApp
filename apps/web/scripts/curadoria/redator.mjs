@@ -1,9 +1,7 @@
-// Pede ao Claude uma curadoria ORIGINAL (não uma cópia) a partir do título e do trecho público do feed.
-import Anthropic from '@anthropic-ai/sdk'
+// Pede à OpenAI uma curadoria ORIGINAL (não uma cópia) a partir do título e do trecho público do feed.
 import { z } from 'zod'
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 
-export const MODELO = process.env.CURADORIA_MODELO || 'claude-opus-5-5'
+export const MODELO = process.env.CURADORIA_MODELO || 'gpt-4.1'
 
 export const ArtigoGerado = z.object({
   relevante: z.boolean(),
@@ -54,7 +52,40 @@ export function validar(gerado, candidato) {
   return erros
 }
 
-export async function redigir(candidato, { cliente = new Anthropic(), modelo = MODELO } = {}) {
+/** Cliente mínimo da API Chat Completions da OpenAI com saída JSON estruturada (sem dependências). */
+export function criarCliente(apiKey = process.env.OPENAI_API_KEY) {
+  const { $schema: _ignorado, ...schema } = z.toJSONSchema(ArtigoGerado)
+  return {
+    async gerar({ modelo, sistema, usuario }) {
+      for (let tentativa = 1; tentativa <= 3; tentativa++) {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(120000),
+          body: JSON.stringify({
+            model: modelo,
+            messages: [
+              { role: 'system', content: sistema },
+              { role: 'user', content: usuario },
+            ],
+            response_format: { type: 'json_schema', json_schema: { name: 'curadoria', strict: true, schema } },
+          }),
+        })
+        if ((res.status === 429 || res.status >= 500) && tentativa < 3) {
+          await new Promise((r) => setTimeout(r, 2000 * tentativa))
+          continue
+        }
+        const json = await res.json()
+        if (!res.ok) throw new Error(`OpenAI HTTP ${res.status}: ${json.error?.message ?? 'erro desconhecido'}`)
+        const escolha = json.choices?.[0]
+        if (escolha?.message?.refusal) return { recusa: escolha.message.refusal }
+        return { texto: escolha?.message?.content ?? '', fim: escolha?.finish_reason }
+      }
+    },
+  }
+}
+
+export async function redigir(candidato, { cliente = criarCliente(), modelo = MODELO } = {}) {
   const base = `<materia>
 <veiculo>${candidato.fonte.nome} (${candidato.fonte.pais})</veiculo>
 <idioma_original>${candidato.fonte.idioma}</idioma_original>
@@ -63,15 +94,14 @@ export async function redigir(candidato, { cliente = new Anthropic(), modelo = M
 </materia>`
   let feedback = ''
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
-    const resposta = await cliente.messages.parse({
-      model: modelo,
-      max_tokens: 8000,
-      system: SISTEMA,
-      output_config: { effort: 'medium', format: zodOutputFormat(ArtigoGerado) },
-      messages: [{ role: 'user', content: base + feedback }],
-    })
-    const gerado = resposta.parsed_output
-    if (!gerado) return { ok: false, motivo: `resposta sem JSON válido (stop_reason: ${resposta.stop_reason})` }
+    const resposta = await cliente.gerar({ modelo, sistema: SISTEMA, usuario: base + feedback })
+    if (resposta.recusa) return { ok: false, motivo: `recusado pelo modelo: ${resposta.recusa}` }
+    let gerado
+    try {
+      gerado = ArtigoGerado.parse(JSON.parse(resposta.texto))
+    } catch {
+      return { ok: false, motivo: `resposta sem JSON válido (finish_reason: ${resposta.fim})` }
+    }
     if (!gerado.relevante) return { ok: false, motivo: `descartado pelo redator: ${gerado.motivo}` }
     const erros = validar(gerado, candidato)
     if (!erros.length) return { ok: true, gerado }
