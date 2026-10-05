@@ -3,6 +3,7 @@
 // Se o Chromium não estiver disponível (ex.: CI sem browsers), avisa e segue — o site continua
 // funcionando como SPA.
 import http from 'node:http'
+import { execSync } from 'node:child_process'
 import { readFile, mkdir, writeFile, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
@@ -54,8 +55,20 @@ async function main() {
   try {
     browser = await chromium.launch()
   } catch (e) {
-    console.warn('[prerender] Chromium indisponível — pulando.', String(e.message).split('\n')[0])
-    return
+    console.warn('[prerender] Chromium indisponível.', String(e.message).split('\n')[0])
+    // Opt-in para CI/Railway: baixa o Chromium e as libs de sistema (precisa de root) e tenta de novo.
+    if (!process.env.PRERENDER_INSTALL) {
+      console.warn('[prerender] pulando (defina PRERENDER_INSTALL=1 para instalar o Chromium no build).')
+      return
+    }
+    try {
+      console.log('[prerender] instalando Chromium…')
+      execSync('npx playwright install --with-deps chromium', { stdio: 'inherit' })
+      browser = await chromium.launch()
+    } catch (e2) {
+      console.warn('[prerender] instalação falhou — pulando.', String(e2.message).split('\n')[0])
+      return
+    }
   }
 
   await writeFile(path.join(DIST, 'index.original.html'), await readFile(path.join(DIST, 'index.html')))
