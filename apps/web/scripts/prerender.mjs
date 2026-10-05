@@ -9,7 +9,9 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROTAS = JSON.parse(await readFile(new URL('../seo-routes.json', import.meta.url), 'utf8')).publicas
+import { rotasPublicas } from './rotasPublicas.mjs'
+
+const ROTAS = rotasPublicas().map((r) => r.caminho)
 const DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' }
 

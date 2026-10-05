@@ -8,6 +8,8 @@ interface SeoOptions {
   /** Caminho canônico da página, ex.: "/planos". */
   path?: string
   noindex?: boolean
+  /** Dados estruturados (schema.org) da página, injetados como JSON-LD. */
+  jsonLd?: Record<string, unknown>
 }
 
 export function urlCanonica(path: string, base = SITE_URL): string | null {
@@ -25,7 +27,7 @@ function definirMeta(seletor: string, atributo: 'name' | 'property', chave: stri
 }
 
 /** Atualiza title, description, canonical, Open Graph e robots da página pública atual. */
-export function useSeo({ title, description, path, noindex }: SeoOptions) {
+export function useSeo({ title, description, path, noindex, jsonLd }: SeoOptions) {
   useEffect(() => {
     document.title = title
     definirMeta('meta[name="description"]', 'name', 'description', description)
@@ -45,4 +47,15 @@ export function useSeo({ title, description, path, noindex }: SeoOptions) {
       definirMeta('meta[property="og:url"]', 'property', 'og:url', url)
     }
   }, [title, description, path, noindex])
+
+  const jsonLdTexto = jsonLd ? JSON.stringify(jsonLd) : null
+  useEffect(() => {
+    if (!jsonLdTexto) return
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.dataset.seo = 'pagina'
+    script.textContent = jsonLdTexto
+    document.head.appendChild(script)
+    return () => script.remove()
+  }, [jsonLdTexto])
 }

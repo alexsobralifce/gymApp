@@ -1,0 +1,80 @@
+{
+  "titulo": "Como montar uma ficha de treino para aluno: passo a passo",
+  "descricao": "Aprenda a montar uma ficha de treino em 6 passos: avaliação inicial, frequência, escolha e ordem dos exercícios, progressão de carga e revisão.",
+  "categoria": "Personal trainer",
+  "autor": "Equipe ENDORFINAPP",
+  "publicadoEm": "2026-10-05",
+  "atualizadoEm": "2026-10-05",
+  "resumo": "Uma boa ficha começa antes do primeiro exercício: com o objetivo, o histórico e a rotina do aluno. Veja um passo a passo simples para montar, enviar e ajustar a ficha ao longo do tempo.",
+  "secoes": [
+    {
+      "titulo": "1. Comece pela avaliação inicial",
+      "paragrafos": [
+        "Antes de escolher exercícios, entenda quem é o aluno. Perguntas simples já mudam a ficha inteira, e um questionário de prontidão para atividade física, como o PAR-Q, ajuda a identificar quem deve ser liberado por um profissional de saúde antes de começar."
+      ],
+      "lista": [
+        "Objetivo principal: ganho de massa, emagrecimento, saúde, desempenho.",
+        "Experiência: nunca treinou, voltou agora ou já treina há anos.",
+        "Dores e lesões: ombro, joelho, lombar e qualquer restrição médica.",
+        "Rotina: quantos dias por semana e quanto tempo por sessão o aluno realmente consegue treinar.",
+        "Equipamentos disponíveis: academia completa, pouco material ou treino em casa."
+      ]
+    },
+    {
+      "titulo": "2. Defina a frequência semanal",
+      "paragrafos": [
+        "A Organização Mundial da Saúde recomenda que adultos façam atividades de fortalecimento muscular que envolvam os principais grupos musculares em 2 ou mais dias por semana. Para iniciantes, o posicionamento do Colégio Americano de Medicina do Esporte (ACSM) sugere de 2 a 3 dias por semana, com treinos que trabalhem o corpo inteiro.",
+        "Na prática, a melhor frequência é a que o aluno consegue manter. Uma ficha de 5 dias que ele só cumpre 2 vezes rende menos que uma de 3 dias cumprida sempre."
+      ]
+    },
+    {
+      "titulo": "3. Escolha uma divisão de treino compatível",
+      "paragrafos": [
+        "A divisão organiza os grupos musculares ao longo da semana. Para quem está começando, treinos de corpo inteiro em 2 ou 3 dias costumam bastar. Com mais experiência e mais dias disponíveis, divisões como superiores e inferiores ou Push, Pull e Legs distribuem melhor o volume."
+      ],
+      "lista": [
+        "Corpo inteiro (2 a 3 dias): simples e indicado para iniciantes.",
+        "Superiores e inferiores (4 dias): bom equilíbrio entre volume e descanso.",
+        "Push, Pull e Legs (3 a 6 dias): empurrar, puxar e pernas, para quem já tem base."
+      ]
+    },
+    {
+      "titulo": "4. Selecione e ordene os exercícios",
+      "paragrafos": [
+        "Priorize exercícios que envolvem várias articulações, como agachamento, remada e supino, e depois complemente com exercícios para grupos menores. O ACSM recomenda realizar os exercícios de grandes grupos musculares antes dos de pequenos grupos, para que o aluno os execute com mais energia.",
+        "Considere as restrições do aluno: se há dor no ombro, por exemplo, substitua movimentos que a agravam por alternativas mais confortáveis. Para iniciantes, máquinas costumam facilitar a aprendizagem do movimento."
+      ]
+    },
+    {
+      "titulo": "5. Defina séries, repetições e carga",
+      "paragrafos": [
+        "Para iniciantes, o ACSM sugere trabalhar com cerca de 8 a 12 repetições por série e carga que permita completar as repetições com boa técnica. Comece com poucas séries por exercício e aumente conforme o aluno se adapta.",
+        "A carga sugerida na ficha é um ponto de partida. Nas primeiras semanas, ajuste conforme a execução real do aluno."
+      ]
+    },
+    {
+      "titulo": "6. Planeje a progressão e revise",
+      "paragrafos": [
+        "A ficha precisa evoluir. Uma regra prática, descrita no posicionamento do ACSM, é aumentar a carga em cerca de 2% a 10% quando o aluno consegue fazer 1 a 2 repetições além da meta com a carga atual.",
+        "Combine revisões periódicas, por exemplo a cada 4 a 8 semanas, olhando o que o aluno registrou: cargas, repetições, faltas e como se sentiu. Trocar a ficha sem olhar esses dados é chute."
+      ]
+    },
+    {
+      "titulo": "Como organizar isso no dia a dia",
+      "paragrafos": [
+        "Com vários alunos, o difícil não é montar uma ficha, e sim enviar, acompanhar e ajustar todas. No ENDORFINAPP você monta o treino, envia ao aluno, que aceita ou recusa, e acompanha o status até a conclusão. Também é possível clonar um treino para vários alunos e ajustar só o que muda."
+      ]
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "World Health Organization. WHO guidelines on physical activity and sedentary behaviour (2020)",
+      "url": "https://www.who.int/publications/i/item/9789240015128"
+    },
+    {
+      "titulo": "American College of Sports Medicine. Position stand: Progression models in resistance training for healthy adults. Med Sci Sports Exerc, 2009",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/"
+    }
+  ],
+  "cta": { "texto": "Conhecer o app para personal trainer", "href": "/app-para-personal-trainer" }
+}

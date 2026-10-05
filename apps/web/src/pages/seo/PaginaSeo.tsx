@@ -1,37 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
-import EndorfinappLogo from '../../components/branding/EndorfinappLogo'
+import LayoutPublico from '../../components/seo/LayoutPublico'
 import { useSeo } from '../../lib/seo'
 import type { PaginaSeoDados } from './paginasSeo'
-import { PAGINAS_SEO } from './paginasSeo'
-
-const ROTULO_LINK: Record<string, string> = {
-  '/app-para-personal-trainer': 'App para personal trainer',
-  '/software-para-academia': 'Software para academia',
-  '/app-de-treino': 'App de treino para alunos',
-}
 
 export default function PaginaSeo({ dados }: { dados: PaginaSeoDados }) {
   useSeo({ title: dados.title, description: dados.description, path: dados.caminho })
-  const outras = PAGINAS_SEO.filter((p) => p.caminho !== dados.caminho)
 
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <header className="border-b border-border bg-background/90 pt-[env(safe-area-inset-top,0px)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" aria-label="ENDORFINAPP, página inicial">
-            <EndorfinappLogo variant="horizontal" size={26} showSlogan={false} />
-          </Link>
-          <nav className="flex items-center gap-2 sm:gap-3 shrink-0" aria-label="Principal">
-            <Link to="/planos" className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground">Planos</Link>
-            <Link to="/login" className="px-2 text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">Entrar</Link>
-            <Link to="/register" className="px-3 sm:px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:brightness-110 whitespace-nowrap">
-              Criar conta
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+    <LayoutPublico atual={dados.caminho}>
       <main>
         <section className="max-w-3xl mx-auto px-4 sm:px-6 py-14 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Para {dados.publico.toLowerCase()}</p>
@@ -95,19 +72,6 @@ export default function PaginaSeo({ dados }: { dados: PaginaSeoDados }) {
           </Link>
         </section>
       </main>
-
-      <footer className="border-t border-border py-8 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row gap-4 justify-between text-sm text-muted-foreground">
-          <nav aria-label="Veja também" className="flex flex-wrap gap-x-5 gap-y-2">
-            {outras.map((o) => (
-              <Link key={o.caminho} to={o.caminho} className="hover:text-foreground">{ROTULO_LINK[o.caminho]}</Link>
-            ))}
-            <Link to="/planos" className="hover:text-foreground">Planos</Link>
-            <Link to="/politica-privacidade" className="hover:text-foreground">Privacidade</Link>
-          </nav>
-          <span>© 2026 ENDORFINAPP</span>
-        </div>
-      </footer>
-    </div>
+    </LayoutPublico>
   )
 }

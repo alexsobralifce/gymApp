@@ -1,9 +1,9 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { readFileSync } from 'node:fs'
+import { rotasPublicas } from './scripts/rotasPublicas.mjs'
 
-const ROTAS_PUBLICAS: string[] = JSON.parse(readFileSync(new URL('./seo-routes.json', import.meta.url), 'utf8')).publicas
+const ROTAS_PUBLICAS = rotasPublicas()
 const ROTAS_PRIVADAS = [
   '/login', '/auth/', '/billing/', '/onboarding/', '/welcome', '/meus-treinos', '/treino/', '/treinos',
   '/dados', '/medidas', '/evolucao', '/feed', '/amizades', '/clubes', '/privacidade', '/alterar-senha',
@@ -34,7 +34,7 @@ function seoPlugin(siteUrl: string): Plugin {
     generateBundle() {
       const robots = [
         'User-agent: *',
-        ...ROTAS_PUBLICAS.filter((r) => r !== '/').map((r) => `Allow: ${r}`),
+        ...ROTAS_PUBLICAS.filter((r) => r.caminho !== '/').map((r) => `Allow: ${r.caminho}`),
         ...ROTAS_PRIVADAS.map((r) => `Disallow: ${r}`),
         ...(base ? ['', `Sitemap: ${base}/sitemap.xml`] : []),
         '',
@@ -43,7 +43,7 @@ function seoPlugin(siteUrl: string): Plugin {
       if (!base) return
       const hoje = new Date().toISOString().slice(0, 10)
       const urls = ROTAS_PUBLICAS.map(
-        (r) => `  <url><loc>${base}${r === '/' ? '' : r}</loc><lastmod>${hoje}</lastmod></url>`,
+        (r) => `  <url><loc>${base}${r.caminho === '/' ? '' : r.caminho}</loc><lastmod>${r.lastmod ?? hoje}</lastmod></url>`,
       ).join('\n')
       this.emitFile({
         type: 'asset',

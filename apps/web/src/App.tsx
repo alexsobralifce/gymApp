@@ -16,6 +16,8 @@ import Register from './pages/auth/Register'
 import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
 import Planos from './pages/planos/Planos'
 import PaginaSeo from './pages/seo/PaginaSeo'
+import BlogLista from './pages/blog/BlogLista'
+import BlogArtigo from './pages/blog/BlogArtigo'
 import { PAGINAS_SEO } from './pages/seo/paginasSeo'
 import Checkout from './pages/billing/Checkout'
 import OnboardingPlano from './pages/auth/OnboardingPlano'
@@ -106,6 +108,8 @@ export default function App() {
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
       <Route path="/planos" element={<Planos />} />
+      <Route path="/blog" element={<BlogLista />} />
+      <Route path="/blog/:slug" element={<BlogArtigo />} />
       {PAGINAS_SEO.map((p) => (
         <Route key={p.caminho} path={p.caminho} element={<PaginaSeo dados={p} />} />
       ))}

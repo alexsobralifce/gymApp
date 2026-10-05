@@ -9,7 +9,7 @@ const app = readFileSync(resolve(raiz, 'src/App.tsx'), 'utf8')
 const serve = JSON.parse(readFileSync(resolve(raiz, 'public/serve.json'), 'utf8'))
 
 const rotasPublicas: string[] = JSON.parse(readFileSync(resolve(raiz, 'seo-routes.json'), 'utf8')).publicas
-const publicas = new Set(rotasPublicas.map((r) => r.replace(/^\//, '').split('/')[0]))
+const publicas = new Set([...rotasPublicas.map((r) => r.replace(/^\//, '').split('/')[0]), 'blog'])
 const cobertos = new Set<string>(
   (serve.rewrites[0].source as string).replace(/^\/\{|\}$/g, '').split(','),
 )
