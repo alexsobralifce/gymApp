@@ -15,6 +15,7 @@ import { NoticiasService } from '../../application/usecases/noticias/NoticiasSer
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // import { verificarAssinaturasExpiradas } from '../../application/usecases/assinaturas/AssinaturaService.js'
 import { executarAgendada } from '../../application/usecases/blog/curadoria/CuradoriaService.js'
+import { iniciarAvisoBuscadores, pararAvisoBuscadores } from '../../infrastructure/seo/avisoBuscadores.js'
 import Redis from 'ioredis'
 
 let connection: { url: string } | null = null
@@ -628,6 +629,7 @@ export async function startWorkers() {
   }
 
   connection = { url: env.REDIS_URL }
+  iniciarAvisoBuscadores(connection)
 
   inatividade30minQueue = new Queue('inatividade-30min', { connection })
   treinoEmAbertoQueue = new Queue('treino-em-aberto', { connection })
@@ -690,5 +692,6 @@ export async function stopWorkers() {
     ...queues.map((q) => q?.close()),
   ])
 
+  await pararAvisoBuscadores()
   console.log('✅ Workers finalizados')
 }

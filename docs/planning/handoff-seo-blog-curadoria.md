@@ -59,7 +59,7 @@ Robô de curadoria semanal, em `apps/web/scripts/curadoria/`:
 
 ## Pendências
 1. Search Console: verificar a propriedade e enviar `sitemap.xml`; pedir indexação de cada Artigo novo.
-2. IndexNow/Search Console automáticos: `.github/workflows/avisar-buscadores.yml` só dispara em mudanças de arquivos no git; como os artigos agora vêm do banco, ele não dispara mais. Se quiser aviso automático, mover `avisar-buscadores` para a API (chamar após o redeploy do site).
+2. IndexNow: automático. Ao publicar um ARTIGO (original) no painel, a API agenda (BullMQ, fila `blog-indexnow`, 2,5 min + até 15 tentativas de 1 min) o aviso a Bing/Yandex assim que `/blog/<slug>` responder 200 (`infrastructure/seo/avisoBuscadores.ts`, variável `INDEXNOW_KEY`). Leituras da semana (noindex) não são avisadas. O workflow `avisar-buscadores.yml` foi removido; os scripts `apps/web/scripts/avisar-buscadores.mjs` e `status-indexacao.mjs` continuam para uso manual (envio de sitemap ao Google precisa de conta de serviço).
 3. Conta de serviço do Google (`GOOGLE_SERVICE_ACCOUNT_JSON`) para enviar sitemap e monitorar indexação.
 4. Ideias: páginas públicas de exercícios (963 com GIF), calculadoras, capa por artigo, sumário, RSS do blog; ler mais contexto da página da matéria (hoje só o trecho do feed).
 

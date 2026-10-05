@@ -1,6 +1,7 @@
 import { BlogStatus, BlogTipo, Prisma, type ArtigoBlog } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ConflictError } from '../../../domain/errors/AppError.js'
+import { enfileirarAviso } from '../../../infrastructure/seo/avisoBuscadores.js'
 import { agendadorRebuild, rebuildConfigurado, redeployDoSite } from '../../../infrastructure/hosting/railwayRebuild.js'
 
 export interface ArtigoEntrada {
@@ -87,6 +88,10 @@ export async function alterarStatusArtigo(id: string, status: BlogStatus) {
   })
   // só mexe no site se o conjunto de publicados mudou
   if (status === BlogStatus.PUBLICADO || atual.status === BlogStatus.PUBLICADO) agendadorRebuild.agendar()
+  // só Artigos (indexáveis) vão aos buscadores; Leituras da semana são noindex
+  if (status === BlogStatus.PUBLICADO && atual.tipo === BlogTipo.ORIGINAL) {
+    enfileirarAviso([`/blog/${atual.slug}`, '/blog']).catch((e: Error) => console.error('[IndexNow] não foi possível agendar:', e.message))
+  }
   return { ...artigo, mudou: true }
 }
 

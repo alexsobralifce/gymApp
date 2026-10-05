@@ -164,7 +164,7 @@ function Guia() {
           </li>
           <li>
             <strong>Railway, serviço api</strong> (Variables): <code>OPENAI_API_KEY</code> (escreve os textos), <code>CURADORIA_TOKEN</code>, <code>CURADORIA_AGENDADA</code> (<code>true</code> liga a reserva semanal da API),
-            {' '}<code>CURADORIA_MODELO</code> e <code>CURADORIA_UTILIDADE_MIN</code> (opcionais), <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
+            {' '}<code>CURADORIA_MODELO</code> e <code>CURADORIA_UTILIDADE_MIN</code> (opcionais), <code>INDEXNOW_KEY</code> (chave do IndexNow, igual ao nome do arquivo .txt em apps/web/public) e <code>SITE_URL</code> (opcional), <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
             {' '}<code>RAILWAY_WEB_SERVICE_ID</code> (ID do <em>serviço</em> web, não de um deploy) e <code>RAILWAY_ENVIRONMENT_ID</code>.
           </li>
           <li><strong>Railway, serviço web</strong>: <code>VITE_API_URL</code> (o build baixa os artigos por ela) e <code>VITE_SITE_URL</code>.</li>
@@ -185,7 +185,7 @@ function Guia() {
         <h2 className={h}>Depois de publicar um Artigo (indexável)</h2>
         <ol className={lista}>
           <li>No Search Console, use “Inspeção de URL” na página nova e peça indexação.</li>
-          <li>O sitemap é atualizado no deploy do site.</li>
+          <li>O sitemap é atualizado no deploy do site, e a API avisa Bing, Yandex e outros (IndexNow) sozinha assim que a página entra no ar. O Google não participa do IndexNow: peça a indexação lá.</li>
         </ol>
       </div>
     </details>

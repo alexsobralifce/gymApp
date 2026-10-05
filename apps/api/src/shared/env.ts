@@ -39,6 +39,9 @@ const envSchema = z.object({
   CURADORIA_MODELO: z.string().optional().default('gpt-5.4-mini'),
   CURADORIA_UTILIDADE_MIN: z.coerce.number().int().min(1).max(5).optional().default(3),
   // Mesmo cuidado do BILLING_ENABLED: nunca z.coerce.boolean() ("false" viraria true).
+  // IndexNow: chave pública (arquivo <chave>.txt na raiz do site) e endereço do site para avisar os buscadores.
+  INDEXNOW_KEY: z.string().optional().default(''),
+  SITE_URL: z.string().url().optional().default('https://endorfinapp.com.br'),
   // Segredo que o GitHub Actions envia (x-curadoria-token) para disparar a curadoria semanal.
   CURADORIA_TOKEN: z.string().optional().default(''),
   CURADORIA_AGENDADA: z.enum(['true', 'false']).optional().default('false').transform((v) => v === 'true'),

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { BlogStatus, BlogTipo, type ArtigoBlog } from '@prisma/client'
 import { paraArquivo } from '../../src/application/usecases/blog/BlogService.js'
+import { payloadIndexNow } from '../../src/infrastructure/seo/avisoBuscadores.js'
 import { criarAgendador } from '../../src/infrastructure/hosting/railwayRebuild.js'
 
 const base: ArtigoBlog = {
@@ -54,5 +55,16 @@ describe('agendador de rebuild', () => {
     expect(executar).toHaveBeenCalledTimes(1)
     expect(ag.pendente()).toBe(false)
     vi.useRealTimers()
+  })
+})
+
+describe('payloadIndexNow', () => {
+  it('monta URLs absolutas e o local do arquivo da chave', () => {
+    expect(payloadIndexNow('https://exemplo.com/', 'abc', ['/', '/blog/guia'])).toEqual({
+      host: 'exemplo.com',
+      key: 'abc',
+      keyLocation: 'https://exemplo.com/abc.txt',
+      urlList: ['https://exemplo.com', 'https://exemplo.com/blog/guia'],
+    })
   })
 })
