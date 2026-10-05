@@ -31,6 +31,14 @@ describe('seleção', () => {
     expect(pontuar(itens[0], config)).toBeGreaterThan(0)
     expect(pontuar(itens[1], config)).toBe(0)
   })
+  it('prioriza conteúdo prático e rebaixa temas de nicho', () => {
+    const base = { categorias: [], trecho: 'strength training for lifters' }
+    const pratico = pontuar({ ...base, titulo: 'How to improve your squat: 3 mistakes' }, config)
+    const neutro = pontuar({ ...base, titulo: 'Squat news this week' }, config)
+    const nicho = pontuar({ ...base, titulo: 'Squat podcast with a tactical coach' }, config)
+    expect(pratico).toBeGreaterThan(neutro)
+    expect(nicho).toBeLessThan(neutro)
+  })
   it('canonicaliza links removendo utm e barra final', () => {
     expect(canonicalizarLink('https://ex.com/a/?utm_source=x#t')).toBe('https://ex.com/a')
   })
@@ -52,6 +60,7 @@ describe('redator', () => {
   const candidato = { fonte: { nome: 'NSCA', pais: 'US', idioma: 'en' }, item: { titulo: 'Original title here', trecho: 'one two three four five six seven eight nine ten', link: 'https://ex.com/a' } }
   const gerado = {
     relevante: true,
+    utilidade: 5,
     motivo: '',
     titulo: 'Um título diferente',
     descricao: 'a'.repeat(120),
@@ -92,5 +101,8 @@ describe('redator', () => {
     expect(await redigir(candidato, { cliente: irrelevante })).toMatchObject({ ok: false, motivo: expect.stringContaining('fofoca') })
     expect(await redigir(candidato, { cliente: { gerar: async () => ({ texto: 'não é json', fim: 'length' }) } })).toMatchObject({ ok: false, motivo: expect.stringContaining('sem JSON') })
     expect(await redigir(candidato, { cliente: { gerar: async () => ({ recusa: 'não posso' }) } })).toMatchObject({ ok: false, motivo: expect.stringContaining('recusado') })
+    const generico = { gerar: async () => ({ texto: JSON.stringify({ ...gerado, utilidade: 3, motivo: 'conselho genérico' }) }) }
+    expect(await redigir(candidato, { cliente: generico })).toMatchObject({ ok: false, motivo: expect.stringContaining('utilidade 3/5') })
+    expect((await redigir(candidato, { cliente: generico, utilidadeMinima: 3 })).ok).toBe(true)
   })
 })

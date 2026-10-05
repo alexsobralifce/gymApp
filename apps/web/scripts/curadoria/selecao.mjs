@@ -7,7 +7,12 @@ export function pontuar(item, config, peso = 1) {
   const conta = (texto, lista) => lista.filter((p) => texto.includes(norm(p))).length
   if (conta(`${titulo} ${corpo}`, config.negativas) > 0) return 0
   const pontos = conta(titulo, config.positivas) * 2 + conta(corpo, config.positivas)
-  return pontos >= 2 ? pontos * peso : 0
+  if (pontos < 2) return 0
+  const tudo = `${titulo} ${corpo} `
+  // Conteúdo prático (guias, "como fazer") sobe; temas de nicho (tático, podcast, carreira) descem muito.
+  const bonus = conta(tudo, config.praticas ?? []) > 0 ? 1.5 : 1
+  const penalidade = conta(tudo, config.nicho ?? []) > 0 ? 0.25 : 1
+  return pontos * peso * bonus * penalidade
 }
 
 export function ehRecente(item, janelaDias, agora = new Date()) {

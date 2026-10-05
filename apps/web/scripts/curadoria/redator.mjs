@@ -1,10 +1,12 @@
 // Pede à OpenAI uma curadoria ORIGINAL (não uma cópia) a partir do título e do trecho público do feed.
 import { z } from 'zod'
 
+export const UTILIDADE_MINIMA = Number(process.env.CURADORIA_UTILIDADE_MIN || 4)
 export const MODELO = process.env.CURADORIA_MODELO || 'gpt-5.4-mini'
 
 export const ArtigoGerado = z.object({
   relevante: z.boolean(),
+  utilidade: z.number().int(),
   motivo: z.string(),
   titulo: z.string(),
   descricao: z.string(),
@@ -18,9 +20,11 @@ Sua tarefa é uma CURADORIA: apresentar ao leitor uma matéria publicada por out
 
 Regras obrigatórias:
 - Use SOMENTE as informações do título e do trecho fornecidos. Não invente dados, números, estudos, nomes ou conclusões que não estejam no trecho. Se o trecho não permitir dizer algo útil, marque relevante=false e explique em "motivo".
+- "utilidade": nota inteira de 1 a 5 para o quanto este texto ajuda de forma PRÁTICA o aluno, o personal trainer ou a academia, considerando apenas o que o trecho permite afirmar. 5 = orientação concreta e aplicável; 4 = útil e específica; 3 = genérica; 2 = curiosidade; 1 = sem utilidade. Seja rigoroso: temas de nicho (militar/tático, carreira, eventos, entrevistas) e textos que só dariam conselhos genéricos recebem 3 ou menos.
 - Marque relevante=false se o tema não for útil a quem treina, a personal trainers ou a academias (fofoca, promoções, receitas, produtos).
 - Escreva com suas palavras. Nunca copie frases do trecho (nem traduza frase a frase). Não cite o texto original entre aspas.
 - Estrutura: seção "O que a matéria aborda" (2 a 3 frases, atribuindo ao veículo: "Segundo o <veículo>..."), seção "O que isso significa na prática" (orientações gerais e prudentes para o aluno, o personal ou a academia, sem promessas de resultado) e, se couber, seção "Cuidados" (limites do que se sabe, quando procurar um profissional). Total de 250 a 450 palavras.
+- Nunca use a palavra "trecho" nem fale de "informações fornecidas": o leitor não sabe como você recebeu o material. Quando faltar detalhe, diga "a matéria divulgada não detalha..." ou "o resumo da matéria não informa...".
 - Não dê conselho médico, não prometa resultado e não recomende suplementos ou doses.
 - "descricao": entre 100 e 160 caracteres. "titulo": diferente do título original, claro e sem clickbait.
 - "lista" pode ser um array vazio.`
@@ -85,7 +89,7 @@ export function criarCliente(apiKey = process.env.OPENAI_API_KEY) {
   }
 }
 
-export async function redigir(candidato, { cliente = criarCliente(), modelo = MODELO } = {}) {
+export async function redigir(candidato, { cliente = criarCliente(), modelo = MODELO, utilidadeMinima = UTILIDADE_MINIMA } = {}) {
   const base = `<materia>
 <veiculo>${candidato.fonte.nome} (${candidato.fonte.pais})</veiculo>
 <idioma_original>${candidato.fonte.idioma}</idioma_original>
@@ -103,6 +107,7 @@ export async function redigir(candidato, { cliente = criarCliente(), modelo = MO
       return { ok: false, motivo: `resposta sem JSON válido (finish_reason: ${resposta.fim})` }
     }
     if (!gerado.relevante) return { ok: false, motivo: `descartado pelo redator: ${gerado.motivo}` }
+    if (gerado.utilidade < utilidadeMinima) return { ok: false, motivo: `utilidade ${gerado.utilidade}/5 abaixo do mínimo ${utilidadeMinima}: ${gerado.motivo}` }
     const erros = validar(gerado, candidato)
     if (!erros.length) return { ok: true, gerado }
     feedback = `\n\nSua tentativa anterior foi rejeitada: ${erros.join('; ')}. Reescreva corrigindo isso.`
