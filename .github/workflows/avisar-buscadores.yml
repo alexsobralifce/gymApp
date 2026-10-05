@@ -1,0 +1,41 @@
+name: Avisar buscadores
+
+# Depois que o site novo estiver no ar (Railway faz o deploy a cada push), avisa o IndexNow
+# e reenvia o sitemap ao Search Console.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/content/blog/**'
+      - 'apps/web/src/pages/seo/**'
+      - 'apps/web/seo-routes.json'
+  workflow_dispatch:
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Esperar o deploy publicar o sitemap atualizado
+        env:
+          SITE_URL: https://endorfinapp.com.br
+        working-directory: apps/web
+        run: |
+          esperado=$(node -e "import('./scripts/rotasPublicas.mjs').then(m=>console.log(m.rotasPublicas().length))")
+          for i in $(seq 1 40); do
+            atual=$(curl -s "$SITE_URL/sitemap.xml?cb=$(date +%s)" | grep -c '<loc>' || true)
+            echo "sitemap no ar: $atual URLs (esperado: $esperado)"
+            [ "$atual" -ge "$esperado" ] && exit 0
+            sleep 30
+          done
+          echo "Deploy não apareceu a tempo; seguindo mesmo assim." && exit 0
+      - name: Avisar buscadores
+        working-directory: apps/web
+        env:
+          SITE_URL: https://endorfinapp.com.br
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: node scripts/avisar-buscadores.mjs
