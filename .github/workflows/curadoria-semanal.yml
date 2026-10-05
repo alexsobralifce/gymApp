@@ -1,0 +1,55 @@
+name: Curadoria semanal do blog
+
+# Toda segunda-feira (08h em Brasília) o robô lê os feeds de curadoria, escreve 2 curadorias originais
+# e abre um Pull Request. Publicar = fazer o merge (o Railway faz o deploy e o workflow
+# "Avisar buscadores" avisa o IndexNow e o Search Console).
+on:
+  schedule:
+    - cron: '0 11 * * 1'
+  workflow_dispatch:
+    inputs:
+      quantidade:
+        description: 'Quantidade de curadorias'
+        default: '2'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  curadoria:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Gerar curadorias
+        working-directory: apps/web
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/curadoria/curadoria.mjs --quantidade=${{ inputs.quantidade || 2 }}
+      - name: Validar os artigos gerados
+        working-directory: apps/web
+        run: npx vitest run src/lib/blog.test.ts src/curadoria.test.ts
+      - name: Abrir Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain apps/web/content)" ]; then echo "Nada novo."; exit 0; fi
+          ramo="curadoria/$(date +%Y-%m-%d)"
+          git config user.name "Robô de curadoria"
+          git config user.email "curadoria@users.noreply.github.com"
+          git checkout -b "$ramo"
+          git add apps/web/content
+          git commit -m "feat(blog): curadorias da semana $(date +%Y-%m-%d)"
+          git push origin "$ramo"
+          gh pr create --base main --head "$ramo" \
+            --title "Curadorias da semana $(date +%d/%m/%Y)" \
+            --body "Gerado automaticamente. **Revise antes de fazer o merge** (o merge publica no site):
+          - o texto é original, sem frases copiadas da fonte;
+          - o link para a matéria original está correto;
+          - não há conselho médico nem promessa de resultado."

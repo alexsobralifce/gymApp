@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSeo } from '../lib/seo'
+import { ARTIGOS } from '../lib/blog'
 import { Link } from 'react-router-dom'
 import {
   Dumbbell, Users, Shield, TrendingUp,
@@ -584,6 +585,7 @@ export default function Landing() {
               ] },
               { title: 'Links', links: [
                 { label: 'Planos', href: '/planos' },
+                ...(ARTIGOS.length > 0 ? [{ label: 'Blog', href: '/blog' }] : []),
                 { label: 'Entrar', href: '/login' },
                 { label: 'Criar Conta', href: '/register' },
                 { label: 'Termos de Uso', href: '/politica-privacidade' },

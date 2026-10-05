@@ -16,6 +16,7 @@ function dadosEstruturados(a: Artigo) {
     inLanguage: 'pt-BR',
     author: { '@type': 'Organization', name: a.autor },
     publisher: { '@type': 'Organization', name: 'ENDORFINAPP' },
+    ...(a.origem && { citation: a.origem.url, isBasedOn: a.origem.url }),
     ...(SITE && { mainEntityOfPage: `${SITE}/blog/${a.slug}` }),
   }
 }
@@ -58,6 +59,18 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
           <p className="text-xs text-muted-foreground mb-8">
             Por {artigo.autor} · Publicado em {formatarData(artigo.publicadoEm)} · Atualizado em {formatarData(artigo.atualizadoEm)}
           </p>
+          {artigo.origem && (
+            <aside className="rounded-xl border border-border bg-surface-card p-4 mb-6 text-sm">
+              <p className="font-semibold mb-1">Curadoria</p>
+              <p className="text-muted-foreground">
+                Este texto comenta uma matéria publicada por {artigo.origem.veiculo}. Leia o conteúdo completo na fonte:{' '}
+                <a href={artigo.origem.url} target="_blank" rel="noopener noreferrer" className="underline text-primary">
+                  {artigo.origem.titulo}
+                </a>
+                .
+              </p>
+            </aside>
+          )}
           <p className="text-lg mb-8">{artigo.resumo}</p>
 
           {artigo.secoes.map((s) => (

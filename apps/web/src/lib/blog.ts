@@ -12,6 +12,9 @@ export interface Artigo {
   autor: string
   publicadoEm: string
   atualizadoEm: string
+  tipo?: 'curadoria'
+  /** Matéria de terceiros comentada (curadoria): sempre com link para o original. */
+  origem?: { veiculo: string; pais: string; titulo: string; url: string }
   resumo: string
   secoes: SecaoArtigo[]
   fontes: Array<{ titulo: string; url: string }>

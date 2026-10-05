@@ -27,5 +27,9 @@ describe('artigos do blog (publicados e rascunhos)', () => {
     // Todo artigo precisa citar ao menos uma fonte verificável.
     expect(a.fontes.length).toBeGreaterThan(0)
     for (const f of a.fontes) expect(f.url).toMatch(/^https:\/\//)
+    if (a.tipo === 'curadoria') {
+      expect(a.origem?.url).toMatch(/^https?:\/\//)
+      expect(a.fontes.some((f: { url: string }) => f.url === a.origem.url)).toBe(true)
+    }
   })
 })
