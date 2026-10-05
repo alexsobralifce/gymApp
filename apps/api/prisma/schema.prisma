@@ -1027,3 +1027,33 @@ model ArtigoBlog {
   @@index([status, tipo])
   @@map("blog_artigos")
 }
+
+enum CuradoriaStatus {
+  EXECUTANDO
+  OK
+  ERRO
+}
+
+enum CuradoriaOrigem {
+  AGENDADA
+  MANUAL
+}
+
+/// Histórico das execuções do robô de curadoria do blog (semanal ou disparada pelo painel root)
+model CuradoriaExecucao {
+  id           String          @id @default(cuid())
+  status       CuradoriaStatus @default(EXECUTANDO)
+  origem       CuradoriaOrigem
+  /// true = publica direto; false = salva como RASCUNHO para aprovação no painel
+  publicar     Boolean
+  quantidade   Int
+  geradas      Int             @default(0)
+  /// { fontes: [{nome, itens, erro?}], candidatos, geradas: [...], descartadas: [{titulo, motivo}] }
+  relatorio    Json?
+  erro         String?
+  iniciado_em  DateTime        @default(now())
+  concluido_em DateTime?
+
+  @@index([iniciado_em])
+  @@map("blog_curadoria_execucoes")
+}

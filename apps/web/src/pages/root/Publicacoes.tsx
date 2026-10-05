@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../api/client'
-import type { ArtigoBlogAdmin, BlogStatus, BlogTipo } from '../../types/api'
+import type { ArtigoBlogAdmin, BlogStatus, BlogTipo, ExecucaoCuradoria } from '../../types/api'
 import BarraBusca from '../../components/ui/BarraBusca'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { useToast } from '../../components/ui/Toast'
@@ -18,60 +18,170 @@ function data(iso: string | null) {
   return iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
 }
 
-const LINK_ACTIONS = 'https://github.com/alexsobralifce/gymApp/actions'
-const LINK_SEGREDOS = 'https://github.com/alexsobralifce/gymApp/settings/secrets/actions'
+function quando(iso: string | null) {
+  return iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'
+}
+
+const EXEC_COR: Record<ExecucaoCuradoria['status'], string> = {
+  EXECUTANDO: 'bg-yellow-500/10 text-yellow-400',
+  OK: 'bg-success/10 text-success',
+  ERRO: 'bg-destructive/10 text-destructive',
+}
+const EXEC_ROTULO: Record<ExecucaoCuradoria['status'], string> = { EXECUTANDO: 'Executando', OK: 'Concluída', ERRO: 'Erro' }
+
+/** Controle do robô de curadoria: roda agora e mostra o histórico das últimas execuções. */
+function RoboCuradoria({ aoConcluir, avisar }: { aoConcluir: () => void; avisar: (m: string, t?: 'success' | 'error') => void }) {
+  const [execucoes, setExecucoes] = useState<ExecucaoCuradoria[]>([])
+  const [modo, setModo] = useState<'rascunho' | 'publicar'>('rascunho')
+  const [quantidade, setQuantidade] = useState(2)
+  const [iniciando, setIniciando] = useState(false)
+  const [aberta, setAberta] = useState<string | null>(null)
+  const executando = execucoes.some((e) => e.status === 'EXECUTANDO')
+
+  async function carregar() {
+    try {
+      setExecucoes(await api.getExecucoesCuradoria())
+    } catch {
+      /* painel secundário: falha silenciosa */
+    }
+  }
+
+  useEffect(() => {
+    carregar()
+  }, [])
+
+  // enquanto houver execução em andamento, consulta a cada 5 s; ao terminar, recarrega os artigos
+  useEffect(() => {
+    if (!executando) return
+    const t = setInterval(async () => {
+      const lista = await api.getExecucoesCuradoria().catch(() => null)
+      if (!lista) return
+      setExecucoes(lista)
+      if (!lista.some((e) => e.status === 'EXECUTANDO')) {
+        aoConcluir()
+        const ultima = lista[0]
+        avisar(ultima?.status === 'ERRO' ? 'A curadoria terminou com erro. Veja o histórico.' : `Curadoria concluída: ${ultima?.geradas ?? 0} texto(s) gerado(s).`, ultima?.status === 'ERRO' ? 'error' : 'success')
+      }
+    }, 5000)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [executando])
+
+  async function rodar() {
+    setIniciando(true)
+    try {
+      await api.executarCuradoria(modo, quantidade)
+      avisar('Robô iniciado. Leva cerca de 1 a 3 minutos.')
+      await carregar()
+    } catch (e) {
+      avisar(e instanceof Error && e.message ? e.message : 'Não foi possível iniciar o robô.', 'error')
+    } finally {
+      setIniciando(false)
+    }
+  }
+
+  return (
+    <section className="mb-5 rounded-xl border border-surface-input bg-surface-card p-4" aria-labelledby="robo-titulo">
+      <h2 id="robo-titulo" className="text-sm font-semibold text-text">Robô de curadoria</h2>
+      <p className="mt-0.5 text-xs text-text-muted">Lê 10 sites de treino (Brasil, EUA e Reino Unido) e escreve “Leituras da semana”. Roda sozinho toda segunda às 8h; aqui você pode rodar na hora.</p>
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <label className="text-xs text-text-muted">
+          Modo
+          <select value={modo} onChange={(e) => setModo(e.target.value as 'rascunho' | 'publicar')} className="mt-1 block rounded border border-surface-input bg-surface px-2 py-1.5 text-sm text-text">
+            <option value="rascunho">Rascunho (eu aprovo)</option>
+            <option value="publicar">Publicar direto</option>
+          </select>
+        </label>
+        <label className="text-xs text-text-muted">
+          Quantidade
+          <select value={quantidade} onChange={(e) => setQuantidade(Number(e.target.value))} className="mt-1 block rounded border border-surface-input bg-surface px-2 py-1.5 text-sm text-text">
+            {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </label>
+        <button type="button" onClick={rodar} disabled={iniciando || executando} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:brightness-110 disabled:opacity-50 cursor-pointer">
+          {executando ? 'Executando...' : iniciando ? 'Iniciando...' : 'Rodar agora'}
+        </button>
+      </div>
+
+      {execucoes.length > 0 && (
+        <ul className="mt-4 space-y-2">
+          {execucoes.slice(0, 5).map((e) => (
+            <li key={e.id} className="rounded-lg bg-surface p-3 text-xs">
+              <button type="button" onClick={() => setAberta(aberta === e.id ? null : e.id)} className="flex w-full flex-wrap items-center gap-2 text-left cursor-pointer" aria-expanded={aberta === e.id}>
+                <span className={`rounded-full px-2 py-0.5 font-semibold ${EXEC_COR[e.status]}`}>{EXEC_ROTULO[e.status]}</span>
+                <span className="text-text">{quando(e.iniciadoEm)}</span>
+                <span className="text-text-muted">{e.origem === 'AGENDADA' ? 'agendada' : 'manual'} · {e.publicar ? 'publicar' : 'rascunho'} · {e.geradas}/{e.quantidade} gerado(s)</span>
+              </button>
+              {aberta === e.id && (
+                <div className="mt-2 space-y-2 border-t border-surface-input pt-2 text-text-muted">
+                  {e.erro && <p className="text-destructive">Erro: {e.erro}</p>}
+                  {e.relatorio?.geradas.map((g) => <p key={g.slug}>✓ {g.titulo} <span>({g.veiculo}, {g.status === 'PUBLICADO' ? 'publicado' : 'rascunho'})</span></p>)}
+                  {e.relatorio?.descartadas.map((d) => <p key={d.titulo}>✗ {d.titulo.slice(0, 80)}: {d.motivo.slice(0, 160)}</p>)}
+                  {e.relatorio && (
+                    <p>
+                      {e.relatorio.candidatos} candidata(s). Fontes: {e.relatorio.fontes.filter((f) => !f.erro).length}/{e.relatorio.fontes.length} ok
+                      {e.relatorio.fontes.some((f) => f.erro) && ` (falharam: ${e.relatorio.fontes.filter((f) => f.erro).map((f) => f.nome).join(', ')})`}.
+                    </p>
+                  )}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
 
 function Guia() {
   const h = 'mb-1.5 mt-4 text-sm font-semibold text-text first:mt-0'
   const lista = 'list-decimal space-y-1 pl-5 text-xs text-text-muted'
-  const link = 'underline text-primary'
+  const bullets = 'list-disc space-y-1 pl-5 text-xs text-text-muted'
   return (
     <details className="mb-5 rounded-xl border border-surface-input bg-surface-card p-4">
       <summary className="cursor-pointer text-sm font-semibold text-text">Dicas: como usar e configurar as publicações</summary>
       <div className="mt-3">
         <h2 className={h}>Como funciona</h2>
-        <ul className="list-disc space-y-1 pl-5 text-xs text-text-muted">
+        <ul className={bullets}>
           <li>Os artigos ficam no banco da API. O site é montado no deploy e baixa só os <strong>publicados</strong>.</li>
           <li><strong>Artigo</strong> é indexado pelo Google. <strong>Leitura da semana</strong> (curadoria do robô) é curta e fica fora do Google (noindex) e fora do sitemap.</li>
           <li>Publicar ou despublicar aqui atualiza o site sozinho cerca de 90 segundos depois da última alteração. O botão “Atualizar o site agora” força na hora.</li>
         </ul>
 
-        <h2 className={h}>Rodar o robô de curadoria agora</h2>
+        <h2 className={h}>Robô de curadoria</h2>
         <ol className={lista}>
-          <li>Abra <a className={link} href={LINK_ACTIONS} target="_blank" rel="noopener noreferrer">GitHub → Actions</a> e clique em “Curadoria semanal do blog”.</li>
-          <li>Clique em “Run workflow”. Em “modo” escolha <strong>rascunho</strong> (aprovar aqui antes) ou <strong>publicar</strong> (vai direto ao ar).</li>
-          <li>Espere ficar verde (cerca de 2 minutos) e volte a esta página: as Leituras da semana aparecem. Clique em “Ver”, leia e depois em “Publicar”.</li>
-          <li>Se ficar vermelho, abra a execução, clique no passo com ✗ e leia a mensagem do erro.</li>
+          <li>Roda sozinho toda segunda-feira às 8h (Brasília), 2 leituras, publicando direto.</li>
+          <li>Para rodar na hora: use o quadro “Robô de curadoria” acima. Em <strong>Rascunho</strong> você lê (botão “Ver”) e publica; em <strong>Publicar direto</strong> vai ao ar.</li>
+          <li>Clique na execução do histórico para ver o que foi gerado, o que foi descartado (e por quê) e se algum site falhou.</li>
+          <li>Travas automáticas: nota de utilidade, texto sem frases copiadas, e bloqueio de termos de risco (suplemento, dose, promessa).</li>
+          <li>Para desligar o envio semanal: variável <code>CURADORIA_AGENDADA=false</code> no Railway (serviço api).</li>
         </ol>
-        <p className="mt-1.5 text-xs text-text-muted">Automático: toda segunda-feira às 8h (Brasília), 2 leituras, no modo publicar.</p>
 
         <h2 className={h}>Onde ficam as chaves (só os nomes; nunca cole valores no código)</h2>
-        <ul className="list-disc space-y-1 pl-5 text-xs text-text-muted">
+        <ul className={bullets}>
           <li>
-            <strong>GitHub</strong> (<a className={link} href={LINK_SEGREDOS} target="_blank" rel="noopener noreferrer">Settings → Secrets → Actions</a>):
-            {' '}<code>OPENAI_API_KEY</code> (redige os textos) e <code>BLOG_BOT_TOKEN</code> (deixa o robô enviar para a API; é o mesmo valor da variável de mesmo nome no Railway).
-          </li>
-          <li>
-            <strong>Railway, serviço api</strong> (Variables): <code>BLOG_BOT_TOKEN</code>, <code>OPENAI_API_KEY</code>, <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
+            <strong>Railway, serviço api</strong> (Variables): <code>OPENAI_API_KEY</code> (escreve os textos), <code>CURADORIA_AGENDADA</code> (<code>true</code> liga a execução semanal),
+            {' '}<code>CURADORIA_MODELO</code> e <code>CURADORIA_UTILIDADE_MIN</code> (opcionais), <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
             {' '}<code>RAILWAY_WEB_SERVICE_ID</code> (ID do <em>serviço</em> web, não de um deploy) e <code>RAILWAY_ENVIRONMENT_ID</code>.
           </li>
-          <li><strong>Railway, serviço web</strong>: <code>VITE_API_URL</code> (usada pelo build para baixar os artigos) e <code>VITE_SITE_URL</code>.</li>
+          <li><strong>Railway, serviço web</strong>: <code>VITE_API_URL</code> (o build baixa os artigos por ela) e <code>VITE_SITE_URL</code>.</li>
           <li>Depois de mudar uma variável do serviço api, reinicie-o (Deploy) para ela valer.</li>
         </ul>
 
         <h2 className={h}>Se algo der errado</h2>
-        <ul className="list-disc space-y-1 pl-5 text-xs text-text-muted">
+        <ul className={bullets}>
           <li><strong>“Atualizar o site agora” avisa que não está configurado:</strong> falta alguma das variáveis <code>RAILWAY_*</code> do serviço api.</li>
           <li><strong>Erro 500 ao atualizar o site (“Not Authorized” no log):</strong> o <code>RAILWAY_WEB_SERVICE_ID</code> está errado ou o token não é do ambiente production.</li>
           <li><strong>Publiquei e o site não mudou:</strong> o deploy leva cerca de 3 minutos; confira o serviço web no Railway (Deployments).</li>
-          <li><strong>Robô falhou com 401:</strong> o <code>BLOG_BOT_TOKEN</code> do GitHub é diferente do da API. <strong>Falhou na OpenAI:</strong> chave inválida ou sem crédito.</li>
-          <li><strong>Nada novo no robô:</strong> normal em semanas sem matéria útil; as travas descartam texto genérico ou com termos de risco (suplemento, dose, promessa).</li>
+          <li><strong>Robô com erro da OpenAI:</strong> chave inválida, sem crédito ou modelo indisponível (<code>CURADORIA_MODELO</code>).</li>
+          <li><strong>Robô gerou 0:</strong> normal em semanas sem matéria útil; veja os motivos no histórico.</li>
+          <li><strong>Execução presa em “Executando”:</strong> some sozinha após 20 minutos (marcada como interrompida).</li>
         </ul>
 
         <h2 className={h}>Depois de publicar um Artigo (indexável)</h2>
         <ol className={lista}>
           <li>No Search Console, use “Inspeção de URL” na página nova e peça indexação.</li>
-          <li>O sitemap e os avisos aos buscadores (IndexNow) são atualizados no deploy.</li>
+          <li>O sitemap é atualizado no deploy do site.</li>
         </ol>
       </div>
     </details>
@@ -185,6 +295,8 @@ export default function RootPublicacoes() {
       <p className="mb-4 rounded-lg bg-surface-card p-3 text-xs text-text-muted">
         Ao publicar ou despublicar, o site é atualizado automaticamente cerca de 90 segundos depois da última alteração (o blog é montado no deploy). “Leitura da semana” fica fora do Google (noindex).
       </p>
+
+      <RoboCuradoria aoConcluir={carregar} avisar={showToast} />
 
       <Guia />
 

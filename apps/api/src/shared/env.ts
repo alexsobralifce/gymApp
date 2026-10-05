@@ -33,8 +33,13 @@ const envSchema = z.object({
   SENDGRID_API_KEY: z.string().optional().default(''),
   RESEND_API_KEY: z.string().optional().default(''),
 
-  // Blog: o robô de curadoria envia artigos com este token; o redeploy do site usa o token de projeto do Railway.
-  BLOG_BOT_TOKEN: z.string().optional().default(''),
+  // Blog: o redeploy do site usa o token de projeto do Railway.
+  // Robô de curadoria semanal (roda dentro da API; o painel root também dispara manualmente).
+  OPENAI_API_KEY: z.string().optional().default(''),
+  CURADORIA_MODELO: z.string().optional().default('gpt-5.4-mini'),
+  CURADORIA_UTILIDADE_MIN: z.coerce.number().int().min(1).max(5).optional().default(3),
+  // Mesmo cuidado do BILLING_ENABLED: nunca z.coerce.boolean() ("false" viraria true).
+  CURADORIA_AGENDADA: z.enum(['true', 'false']).optional().default('false').transform((v) => v === 'true'),
   RAILWAY_PROJECT_TOKEN: z.string().optional().default(''),
   RAILWAY_WEB_SERVICE_ID: z.string().optional().default(''),
   RAILWAY_ENVIRONMENT_ID: z.string().optional().default(''),

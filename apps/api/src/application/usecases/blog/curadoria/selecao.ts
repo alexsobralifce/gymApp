@@ -1,40 +1,54 @@
-// Filtro, pontuação e escolha dos itens (funções puras, testadas em src/curadoria.test.ts).
-const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+// Filtro, pontuação e escolha dos itens (funções puras, testadas em tests/unit/Curadoria.test.ts).
+import type { ConfigCuradoria, FonteFeed } from './fontes.js'
+import type { ItemRss } from './rss.js'
 
-export function pontuar(item, config, peso = 1) {
+export interface Candidato {
+  fonte: FonteFeed
+  item: ItemRss
+  pontos: number
+}
+
+const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+const conta = (texto: string, lista: string[]) => lista.filter((p) => texto.includes(norm(p))).length
+
+export function pontuar(item: Pick<ItemRss, 'titulo' | 'trecho' | 'categorias'>, config: ConfigCuradoria, peso = 1): number {
   const titulo = norm(item.titulo)
   const corpo = norm(`${item.trecho} ${item.categorias.join(' ')}`)
-  const conta = (texto, lista) => lista.filter((p) => texto.includes(norm(p))).length
   if (conta(`${titulo} ${corpo}`, config.negativas) > 0) return 0
   const pontos = conta(titulo, config.positivas) * 2 + conta(corpo, config.positivas)
   if (pontos < 2) return 0
   const tudo = `${titulo} ${corpo} `
   // Conteúdo prático (guias, "como fazer") sobe; temas de nicho (tático, podcast, carreira) descem muito.
-  const bonus = conta(tudo, config.praticas ?? []) > 0 ? 1.5 : 1
-  const penalidade = conta(tudo, config.nicho ?? []) > 0 ? 0.25 : 1
+  const bonus = conta(tudo, config.praticas) > 0 ? 1.5 : 1
+  const penalidade = conta(tudo, config.nicho) > 0 ? 0.25 : 1
   return pontos * peso * bonus * penalidade
 }
 
-export function ehRecente(item, janelaDias, agora = new Date()) {
-  return item.data && agora - item.data <= janelaDias * 86400000 && item.data <= agora
+export function ehRecente(item: { data: Date | null }, janelaDias: number, agora = new Date()): boolean {
+  return Boolean(item.data && agora.getTime() - item.data.getTime() <= janelaDias * 86_400_000 && item.data <= agora)
 }
 
-export function canonicalizarLink(url) {
+export function canonicalizarLink(url: string): string {
   try {
     const u = new URL(url)
     u.hash = ''
-    ;['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((p) => u.searchParams.delete(p))
+    for (const p of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) u.searchParams.delete(p)
     return u.toString().replace(/\/$/, '')
   } catch {
     return url
   }
 }
 
-/** Ordena candidatos por pontuação, sem repetir links do histórico. */
-export function rankear(itensPorFonte, config, historico, agora = new Date()) {
+/** Ordena candidatos por pontuação, sem repetir links já usados. */
+export function rankear(
+  itensPorFonte: Array<{ fonte: FonteFeed; itens: ItemRss[] }>,
+  config: ConfigCuradoria,
+  historico: string[],
+  agora = new Date(),
+): Candidato[] {
   const jaUsados = new Set(historico.map(canonicalizarLink))
-  const vistos = new Set()
-  const candidatos = []
+  const vistos = new Set<string>()
+  const candidatos: Candidato[] = []
   for (const { fonte, itens } of itensPorFonte) {
     for (const item of itens) {
       const link = canonicalizarLink(item.link)
@@ -48,8 +62,8 @@ export function rankear(itensPorFonte, config, historico, agora = new Date()) {
 }
 
 /** Prefere variedade: no máximo um por fonte e, se possível, países diferentes. */
-export function escolher(candidatos, quantidade = 2) {
-  const escolhidos = []
+export function escolher(candidatos: Candidato[], quantidade = 2): Candidato[] {
+  const escolhidos: Candidato[] = []
   for (const c of candidatos) {
     if (escolhidos.length >= quantidade) break
     if (escolhidos.some((e) => e.fonte.id === c.fonte.id)) continue

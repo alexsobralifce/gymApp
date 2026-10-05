@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { BlogStatus, BlogTipo, type ArtigoBlog } from '@prisma/client'
 import { paraArquivo } from '../../src/application/usecases/blog/BlogService.js'
 import { criarAgendador } from '../../src/infrastructure/hosting/railwayRebuild.js'
-import { tokenDoRoboValido } from '../../src/presentation/http/routes/blog.routes.js'
 
 const base: ArtigoBlog = {
   id: 'a1',
@@ -55,14 +54,5 @@ describe('agendador de rebuild', () => {
     expect(executar).toHaveBeenCalledTimes(1)
     expect(ag.pendente()).toBe(false)
     vi.useRealTimers()
-  })
-})
-
-describe('token do robô', () => {
-  it('só aceita o token exato e nunca quando não configurado', () => {
-    expect(tokenDoRoboValido('segredo', 'segredo')).toBe(true)
-    expect(tokenDoRoboValido('outro!!', 'segredo')).toBe(false)
-    expect(tokenDoRoboValido('segredo', '')).toBe(false)
-    expect(tokenDoRoboValido(undefined, 'segredo')).toBe(false)
   })
 })

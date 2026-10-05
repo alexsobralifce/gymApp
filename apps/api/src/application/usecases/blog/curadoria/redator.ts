@@ -1,8 +1,6 @@
 // Pede à OpenAI uma curadoria ORIGINAL (não uma cópia) a partir do título e do trecho público do feed.
 import { z } from 'zod'
-
-export const UTILIDADE_MINIMA = Number(process.env.CURADORIA_UTILIDADE_MIN || 3)
-export const MODELO = process.env.CURADORIA_MODELO || 'gpt-5.4-mini'
+import type { Candidato } from './selecao.js'
 
 export const ArtigoGerado = z.object({
   relevante: z.boolean(),
@@ -14,8 +12,38 @@ export const ArtigoGerado = z.object({
   resumo: z.string(),
   secoes: z.array(z.object({ titulo: z.string(), paragrafos: z.array(z.string()), lista: z.array(z.string()) })),
 })
+export type ArtigoGeradoT = z.infer<typeof ArtigoGerado>
 
-const SISTEMA = `Você escreve para o blog do ENDORFINAPP, um app de treino para alunos, personal trainers e academias, em português do Brasil.
+/** JSON Schema (modo estrito da OpenAI): todos os campos obrigatórios e sem propriedades extras. */
+export const SCHEMA_JSON = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['relevante', 'utilidade', 'motivo', 'titulo', 'descricao', 'categoria', 'resumo', 'secoes'],
+  properties: {
+    relevante: { type: 'boolean' },
+    utilidade: { type: 'integer' },
+    motivo: { type: 'string' },
+    titulo: { type: 'string' },
+    descricao: { type: 'string' },
+    categoria: { type: 'string', enum: ['Personal trainer', 'Academia', 'Aluno'] },
+    resumo: { type: 'string' },
+    secoes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['titulo', 'paragrafos', 'lista'],
+        properties: {
+          titulo: { type: 'string' },
+          paragrafos: { type: 'array', items: { type: 'string' } },
+          lista: { type: 'array', items: { type: 'string' } },
+        },
+      },
+    },
+  },
+} as const
+
+export const SISTEMA = `Você escreve para o blog do ENDORFINAPP, um app de treino para alunos, personal trainers e academias, em português do Brasil.
 Sua tarefa é uma CURADORIA: apresentar ao leitor uma matéria publicada por outro veículo, com texto 100% seu, e levar o leitor à matéria original.
 
 Regras obrigatórias:
@@ -29,12 +57,52 @@ Regras obrigatórias:
 - "descricao": entre 100 e 160 caracteres. "titulo": diferente do título original, claro e sem clickbait.
 - "lista" pode ser um array vazio.`
 
+export interface ClienteIA {
+  gerar(args: { modelo: string; sistema: string; usuario: string }): Promise<{ texto?: string; fim?: string; recusa?: string }>
+}
+
+/** Cliente mínimo da API Chat Completions da OpenAI com saída JSON estruturada (sem SDK). */
+export function criarClienteOpenAI(apiKey: string): ClienteIA {
+  return {
+    async gerar({ modelo, sistema, usuario }) {
+      for (let tentativa = 1; tentativa <= 3; tentativa++) {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(120_000),
+          body: JSON.stringify({
+            model: modelo,
+            messages: [
+              { role: 'system', content: sistema },
+              { role: 'user', content: usuario },
+            ],
+            response_format: { type: 'json_schema', json_schema: { name: 'curadoria', strict: true, schema: SCHEMA_JSON } },
+          }),
+        })
+        if ((res.status === 429 || res.status >= 500) && tentativa < 3) {
+          await new Promise((r) => setTimeout(r, 2000 * tentativa))
+          continue
+        }
+        const json = (await res.json()) as {
+          error?: { message?: string }
+          choices?: Array<{ message?: { content?: string; refusal?: string }; finish_reason?: string }>
+        }
+        if (!res.ok) throw new Error(`OpenAI HTTP ${res.status}: ${json.error?.message ?? 'erro desconhecido'}`)
+        const escolha = json.choices?.[0]
+        if (escolha?.message?.refusal) return { recusa: escolha.message.refusal }
+        return { texto: escolha?.message?.content ?? '', fim: escolha?.finish_reason }
+      }
+      throw new Error('OpenAI: tentativas esgotadas')
+    },
+  }
+}
+
 /** Trechos de n palavras consecutivas do original que reaparecem no texto gerado. */
-export function trechosCopiados(original, gerado, n = 7) {
-  const palavras = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean)
+export function trechosCopiados(original: string, gerado: string, n = 7): string[] {
+  const palavras = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean)
   const o = palavras(original)
   const g = ` ${palavras(gerado).join(' ')} `
-  const achados = []
+  const achados: string[] = []
   for (let i = 0; i + n <= o.length; i++) {
     const janela = o.slice(i, i + n).join(' ')
     if (g.includes(` ${janela} `)) achados.push(janela)
@@ -42,19 +110,20 @@ export function trechosCopiados(original, gerado, n = 7) {
   return achados
 }
 
-export function textoDoArtigo(a) {
+export function textoDoArtigo(a: ArtigoGeradoT): string {
   return [a.titulo, a.descricao, a.resumo, ...a.secoes.flatMap((s) => [s.titulo, ...s.paragrafos, ...s.lista])].join('\n')
 }
 
 // Termos que um texto automático não deve publicar sem revisão humana (saúde, dosagem, promessa).
 const RISCOS = /\b(suplementos?|suplementa[cç][aã]o|creatina|esteroides?|anabolizantes?|horm[oô]nios?|dosagem|doses?|garante|garantid[oa]s?|garantia|milagre|milagros[oa]s?|cura|curar|tratamento|medicamentos?|rem[eé]dios?|diagn[oó]stico|emagre[cç]a|queimar gordura r[aá]pido)\b|\b\d+\s?mg\b/i
 
-export function termosDeRisco(gerado) {
-  return [...new Set((textoDoArtigo(gerado).match(new RegExp(RISCOS.source, 'gi')) ?? []).map((t) => t.toLowerCase()))]
+export function termosDeRisco(gerado: ArtigoGeradoT): string[] {
+  const achados = textoDoArtigo(gerado).match(new RegExp(RISCOS.source, 'gi')) ?? []
+  return [...new Set(achados.map((t) => t.toLowerCase()))]
 }
 
-export function validar(gerado, candidato) {
-  const erros = []
+export function validar(gerado: ArtigoGeradoT, candidato: Pick<Candidato, 'item'>): string[] {
+  const erros: string[] = []
   const riscos = termosDeRisco(gerado)
   if (riscos.length) erros.push(`termos que exigem revisão humana: ${riscos.join(', ')}`)
   if (gerado.descricao.length < 100 || gerado.descricao.length > 160) erros.push(`descricao com ${gerado.descricao.length} caracteres (precisa de 100 a 160)`)
@@ -67,40 +136,12 @@ export function validar(gerado, candidato) {
   return erros
 }
 
-/** Cliente mínimo da API Chat Completions da OpenAI com saída JSON estruturada (sem dependências). */
-export function criarCliente(apiKey = process.env.OPENAI_API_KEY) {
-  const { $schema: _ignorado, ...schema } = z.toJSONSchema(ArtigoGerado)
-  return {
-    async gerar({ modelo, sistema, usuario }) {
-      for (let tentativa = 1; tentativa <= 3; tentativa++) {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-          signal: AbortSignal.timeout(120000),
-          body: JSON.stringify({
-            model: modelo,
-            messages: [
-              { role: 'system', content: sistema },
-              { role: 'user', content: usuario },
-            ],
-            response_format: { type: 'json_schema', json_schema: { name: 'curadoria', strict: true, schema } },
-          }),
-        })
-        if ((res.status === 429 || res.status >= 500) && tentativa < 3) {
-          await new Promise((r) => setTimeout(r, 2000 * tentativa))
-          continue
-        }
-        const json = await res.json()
-        if (!res.ok) throw new Error(`OpenAI HTTP ${res.status}: ${json.error?.message ?? 'erro desconhecido'}`)
-        const escolha = json.choices?.[0]
-        if (escolha?.message?.refusal) return { recusa: escolha.message.refusal }
-        return { texto: escolha?.message?.content ?? '', fim: escolha?.finish_reason }
-      }
-    },
-  }
-}
+export type ResultadoRedacao = { ok: true; gerado: ArtigoGeradoT } | { ok: false; motivo: string }
 
-export async function redigir(candidato, { cliente = criarCliente(), modelo = MODELO, utilidadeMinima = UTILIDADE_MINIMA } = {}) {
+export async function redigir(
+  candidato: Candidato,
+  { cliente, modelo = 'gpt-5.4-mini', utilidadeMinima = 3 }: { cliente: ClienteIA; modelo?: string; utilidadeMinima?: number },
+): Promise<ResultadoRedacao> {
   const base = `<materia>
 <veiculo>${candidato.fonte.nome} (${candidato.fonte.pais})</veiculo>
 <idioma_original>${candidato.fonte.idioma}</idioma_original>
@@ -111,9 +152,9 @@ export async function redigir(candidato, { cliente = criarCliente(), modelo = MO
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
     const resposta = await cliente.gerar({ modelo, sistema: SISTEMA, usuario: base + feedback })
     if (resposta.recusa) return { ok: false, motivo: `recusado pelo modelo: ${resposta.recusa}` }
-    let gerado
+    let gerado: ArtigoGeradoT
     try {
-      gerado = ArtigoGerado.parse(JSON.parse(resposta.texto))
+      gerado = ArtigoGerado.parse(JSON.parse(resposta.texto ?? ''))
     } catch {
       return { ok: false, motivo: `resposta sem JSON válido (finish_reason: ${resposta.fim})` }
     }
@@ -124,12 +165,13 @@ export async function redigir(candidato, { cliente = criarCliente(), modelo = MO
     feedback = `\n\nSua tentativa anterior foi rejeitada: ${erros.join('; ')}. Reescreva corrigindo isso.`
     if (tentativa === 2) return { ok: false, motivo: `reprovado na validação: ${erros.join('; ')}` }
   }
+  return { ok: false, motivo: 'sem resultado' }
 }
 
-export function slugificar(titulo) {
+export function slugificar(titulo: string): string {
   return titulo
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
@@ -137,15 +179,13 @@ export function slugificar(titulo) {
     .replace(/-+$/, '')
 }
 
-export function montarArtigo(candidato, gerado, hoje = new Date().toISOString().slice(0, 10)) {
+export function montarArtigo(candidato: Candidato, gerado: ArtigoGeradoT, hoje = new Date().toISOString().slice(0, 10)) {
   return {
     titulo: gerado.titulo.trim(),
     descricao: gerado.descricao.trim(),
     categoria: gerado.categoria,
     autor: 'Equipe ENDORFINAPP',
     publicadoEm: hoje,
-    atualizadoEm: hoje,
-    tipo: 'curadoria',
     resumo: gerado.resumo.trim(),
     secoes: gerado.secoes.map((s) => ({ titulo: s.titulo.trim(), paragrafos: s.paragrafos, ...(s.lista.length ? { lista: s.lista } : {}) })),
     origem: { veiculo: candidato.fonte.nome, pais: candidato.fonte.pais, titulo: candidato.item.titulo, url: candidato.item.link },

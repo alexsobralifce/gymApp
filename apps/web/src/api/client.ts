@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus, ExecucaoCuradoria } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -480,6 +480,9 @@ export const api = {
   alterarStatusArtigoBlog: (id: string, status: BlogStatus) =>
     api.patch<{ id: string; status: BlogStatus; mudou: boolean }>(`/root/blog/artigos/${id}/status`, { status }),
   removerArtigoBlog: (id: string) => api.delete<void>(`/root/blog/artigos/${id}`),
+  executarCuradoria: (modo: 'rascunho' | 'publicar', quantidade: number) =>
+    api.post<{ id: string }>('/root/blog/curadoria/executar', { modo, quantidade }),
+  getExecucoesCuradoria: () => api.get<ExecucaoCuradoria[]>('/root/blog/curadoria/execucoes'),
   publicarSite: () => api.post<{ disparado: boolean; motivo?: string }>('/root/blog/publicar-site'),
 
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.

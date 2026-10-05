@@ -553,6 +553,24 @@ export interface ResumoAcessos {
 export type BlogTipo = 'ORIGINAL' | 'CURADORIA'
 export type BlogStatus = 'RASCUNHO' | 'PUBLICADO' | 'DESPUBLICADO'
 
+export interface ExecucaoCuradoria {
+  id: string
+  status: 'EXECUTANDO' | 'OK' | 'ERRO'
+  origem: 'AGENDADA' | 'MANUAL'
+  publicar: boolean
+  quantidade: number
+  geradas: number
+  relatorio: {
+    fontes: Array<{ nome: string; itens: number; erro?: string }>
+    candidatos: number
+    geradas: Array<{ slug: string; titulo: string; veiculo: string; status: BlogStatus }>
+    descartadas: Array<{ titulo: string; motivo: string }>
+  } | null
+  erro: string | null
+  iniciadoEm: string
+  concluidoEm: string | null
+}
+
 export interface ArtigoBlogAdmin {
   id: string
   slug: string

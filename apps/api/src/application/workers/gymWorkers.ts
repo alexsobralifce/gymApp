@@ -14,6 +14,7 @@ import { handleUpdateXp } from '../../jobs/social/update-xp.worker.js'
 import { NoticiasService } from '../../application/usecases/noticias/NoticiasService.js'
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // import { verificarAssinaturasExpiradas } from '../../application/usecases/assinaturas/AssinaturaService.js'
+import { executarAgendada } from '../../application/usecases/blog/curadoria/CuradoriaService.js'
 import Redis from 'ioredis'
 
 let connection: { url: string } | null = null
@@ -23,6 +24,7 @@ let treinoEmAbertoQueue: Queue | null = null
 let mensagemMotivaicionalQueue: Queue | null = null
 let correlacaoQueue: Queue | null = null
 let newsFetchQueue: Queue | null = null
+let curadoriaQueue: Queue | null = null
 let newsPushQueue: Queue | null = null
 let resumoDiarioQueue: Queue | null = null
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
@@ -33,6 +35,7 @@ let treinoEmAbertoWorker: Worker | null = null
 let mensagemMotivacionalWorker: Worker | null = null
 let correlacaoWorker: Worker | null = null
 let newsFetchWorker: Worker | null = null
+let curadoriaWorker: Worker | null = null
 let newsPushWorker: Worker | null = null
 let resumoDiarioWorker: Worker | null = null
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
@@ -567,6 +570,12 @@ async function scheduleRecurringJobs() {
     removeOnComplete: true,
   })
 
+  // Curadoria do blog: segundas, 08h (Brasília). O handler ignora se CURADORIA_AGENDADA != true.
+  await curadoriaQueue?.add('curadoria-semanal', {}, {
+    repeat: { pattern: '0 8 * * 1', tz: 'America/Sao_Paulo' },
+    removeOnComplete: true,
+  })
+
   await resumoDiarioQueue.add('send-digest', {}, {
     // Idempotência por dia: agendamento único em cron diário (roda 1x/dia).
     // O marcador `preferencias_notificacao.ultimoResumoEnviadoEm` ainda protege
@@ -624,6 +633,7 @@ export async function startWorkers() {
   mensagemMotivaicionalQueue = new Queue('mensagem-motivacional', { connection })
   correlacaoQueue = new Queue('correlacao-desempenho', { connection })
   newsFetchQueue = new Queue('news-fetch', { connection })
+  curadoriaQueue = new Queue('blog-curadoria', { connection })
   newsPushQueue = new Queue('news-push', { connection })
   resumoDiarioQueue = new Queue('resumo-diario', { connection })
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
@@ -634,6 +644,8 @@ export async function startWorkers() {
   mensagemMotivacionalWorker = new Worker('mensagem-motivacional', handleMensagemMotivacional, { connection })
   correlacaoWorker = new Worker('correlacao-desempenho', handleCorrelacaoDesempenho, { connection })
   newsFetchWorker = new Worker('news-fetch', handleNewsFetch, { connection })
+  curadoriaWorker = new Worker('blog-curadoria', async () => executarAgendada(), { connection })
+  curadoriaWorker.on('failed', (job, err) => console.error('[Curadoria] Job failed:', job?.id, err.message))
   newsPushWorker = new Worker('news-push', handleNewsPush, { connection })
   resumoDiarioWorker = new Worker('resumo-diario', handleResumoDiario, { connection })
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
@@ -667,10 +679,10 @@ export async function stopWorkers() {
   started = false
 
   const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker,
-    newsFetchWorker, newsPushWorker, resumoDiarioWorker, /* assinaturasWorker, */
+    newsFetchWorker, curadoriaWorker, newsPushWorker, resumoDiarioWorker, /* assinaturasWorker, */
     socialFanoutWorker, socialNotifyWorker, socialBadgeWorker, socialLeaderboardWorker]
   const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue,
-    newsFetchQueue, newsPushQueue, resumoDiarioQueue, /* assinaturasQueue */]
+    newsFetchQueue, curadoriaQueue, newsPushQueue, resumoDiarioQueue, /* assinaturasQueue */]
 
   await Promise.all([
     ...workers.map((w) => w?.close()),

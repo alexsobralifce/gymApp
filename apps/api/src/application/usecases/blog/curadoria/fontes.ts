@@ -1,4 +1,24 @@
-{
+// Fontes e palavras-chave da curadoria semanal. Para trocar uma fonte, edite este arquivo.
+export interface FonteFeed {
+  id: string
+  nome: string
+  pais: 'BR' | 'US' | 'UK'
+  idioma: 'pt' | 'en'
+  feed: string
+  peso: number
+  frequencia: string
+}
+
+export interface ConfigCuradoria {
+  janelaDias: number
+  fontes: FonteFeed[]
+  positivas: string[]
+  negativas: string[]
+  praticas: string[]
+  nicho: string[]
+}
+
+export const CONFIG_CURADORIA: ConfigCuradoria = {
   "janelaDias": 14,
   "fontes": [
     {
@@ -205,6 +225,5 @@
     "prêmio",
     "tribute",
     "homenagem"
-  ],
-  "utilidadeMinima": 3
+  ]
 }

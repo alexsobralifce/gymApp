@@ -48,11 +48,23 @@ Robô de curadoria semanal, em `apps/web/scripts/curadoria/`:
 - Rota nova do app precisa entrar em `apps/web/public/serve.json` (há teste que avisa).
 
 
-## Atualização: blog no banco + painel root (2026-10-05, noite)
-- Fonte da verdade dos artigos agora é o banco da API: tabela `blog_artigos` (migration `20261005180000_add_blog_artigos`).
-- Painel root: menu **Publicações do Blog** (`/publicacoes`, `pages/root/Publicacoes.tsx`): busca, filtros, ver, publicar, despublicar, excluir e "Atualizar o site agora".
-- API: `GET /blog/artigos` (público, usado pelo build), `POST /blog/bot/artigos` e `GET /blog/bot/links` (token `x-blog-bot-token` = `BLOG_BOT_TOKEN`), `/root/blog/*` (ROOT).
-- Build do site (`apps/web/scripts/sincronizar-blog.mjs`, roda antes do `vite build` só no Railway): baixa os publicados para `content/blog/*.json`; se a API estiver fora ou o banco vazio, usa os arquivos do repositório.
-- Publicar/despublicar agenda um redeploy do web (debounce de 90 s) via API do Railway: precisa de `RAILWAY_PROJECT_TOKEN` na API (token de PROJETO criado no painel do Railway). `RAILWAY_WEB_SERVICE_ID` e `RAILWAY_ENVIRONMENT_ID` já estão definidos. Sem o token, o botão "Atualizar o site agora" avisa que não está configurado.
-- Robô (`scripts/curadoria/curadoria.mjs`): com `BLOG_API_URL` + `BLOG_BOT_TOKEN` envia para a API (PUBLICADO se `CURADORIA_PUBLICAR=1`, senão RASCUNHO para aprovar no painel); sem eles grava em `content/blog/` (uso local). Workflow semanal não usa mais git; precisa do segredo `BLOG_BOT_TOKEN` no GitHub (copiar do Railway, variável do serviço `api`).
-- Depois do deploy: rodar `BLOG_API_URL=... BLOG_BOT_TOKEN=... node apps/web/scripts/curadoria/importar-originais.mjs` uma vez para levar o artigo original ao banco.
+## Estado atual: blog no banco + painel root + robô dentro da API (2026-10-05)
+- Fonte da verdade dos artigos: banco da API, tabela `blog_artigos`. Execuções do robô: `blog_curadoria_execucoes`.
+- Painel root: menu **Publicações do Blog** (`/publicacoes`): busca, filtros, ver, publicar, despublicar, excluir, "Atualizar o site agora", quadro do **Robô de curadoria** (rodar agora, histórico com geradas/descartadas) e guia de dicas.
+- Robô: código em `apps/api/src/application/usecases/blog/curadoria/` (fontes.ts = 10 feeds e palavras-chave, rss, selecao, redator com OpenAI via fetch, CuradoriaService). Roda sozinho segunda 08h (Brasília) por BullMQ (`gymWorkers.ts`, fila `blog-curadoria`) se `CURADORIA_AGENDADA=true`, e pelo botão do painel. **Não usa mais GitHub Actions** (o workflow foi removido) nem token de robô.
+- Variáveis do serviço `api` (Railway): `OPENAI_API_KEY`, `CURADORIA_AGENDADA`, `CURADORIA_MODELO` (padrão gpt-5.4-mini), `CURADORIA_UTILIDADE_MIN` (padrão 3), `RAILWAY_PROJECT_TOKEN`, `RAILWAY_WEB_SERVICE_ID` (ID do SERVIÇO web, não de deploy), `RAILWAY_ENVIRONMENT_ID`.
+- Rebuild do site: publicar/despublicar agenda um redeploy do web (debounce 90 s) pela API do Railway (`serviceInstanceRedeploy`).
+- Build do web (`apps/web/scripts/sincronizar-blog.mjs`, só no Railway): baixa os publicados de `GET /blog/artigos` para `content/blog/*.json`; se a API cair ou o banco estiver vazio, usa os arquivos do repositório.
+- Curadorias (tipo CURADORIA) são curtas, `noindex`, fora do sitemap e dos avisos; só Artigos (ORIGINAL) são indexados.
+
+## Pendências
+1. Search Console: verificar a propriedade e enviar `sitemap.xml`; pedir indexação de cada Artigo novo.
+2. IndexNow/Search Console automáticos: `.github/workflows/avisar-buscadores.yml` só dispara em mudanças de arquivos no git; como os artigos agora vêm do banco, ele não dispara mais. Se quiser aviso automático, mover `avisar-buscadores` para a API (chamar após o redeploy do site).
+3. Conta de serviço do Google (`GOOGLE_SERVICE_ACCOUNT_JSON`) para enviar sitemap e monitorar indexação.
+4. Ideias: páginas públicas de exercícios (963 com GIF), calculadoras, capa por artigo, sumário, RSS do blog; ler mais contexto da página da matéria (hoje só o trecho do feed).
+
+## Atenção
+- Arquivos NÃO relacionados e não commitados (do usuário): `TrialCartaoStep.tsx`, `src/utils/valorPorAluno*`, `docs/planning/integracao-huawei-health-kit.md`, `imagens_blog/`, `.opencode/`, `.gitignore`. Sempre `git add` com caminhos explícitos.
+- Segredos só em `apps/api/.env` (ignorado pelo git) e no Railway. Nunca em `.env.example`.
+- Antes de push/redeploy em produção, confirmar com o usuário (nesta tarefa ele autorizou "commit e deploy" explicitamente).
+- Rota nova do app precisa entrar em `apps/web/public/serve.json` (há teste que avisa).
