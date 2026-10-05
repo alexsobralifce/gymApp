@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
+import BarraBusca from '../../components/ui/BarraBusca'
+import { filtrarPorTexto } from '../../utils/busca'
 
 interface ProfessorAcademia {
   id: string
@@ -29,6 +31,7 @@ export default function AcademiaProfessores() {
   const [professores, setProfessores] = useState<ProfessorAcademia[]>([])
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   function carregar() {
     setLoading(true)
@@ -62,6 +65,8 @@ export default function AcademiaProfessores() {
     setTimeout(() => setFeedback(null), 4000)
   }
 
+  const professoresFiltrados = filtrarPorTexto(professores, search, (p) => [p.nome, p.email, STATUS_LABEL[p.status]])
+
   if (loading) return <div className="p-4 md:p-6 text-text-muted">Carregando...</div>
 
   return (
@@ -74,11 +79,21 @@ export default function AcademiaProfessores() {
         </div>
       )}
 
+      <BarraBusca
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar professor por nome, email ou status..."
+        total={professores.length}
+        filtrados={professoresFiltrados.length}
+      />
+
       {professores.length === 0 ? (
         <p className="text-text-muted">Nenhum professor vinculado à sua academia.</p>
+      ) : professoresFiltrados.length === 0 ? (
+        <p className="text-text-muted">Nenhum professor encontrado.</p>
       ) : (
         <div className="space-y-2">
-          {professores.map((p) => (
+          {professoresFiltrados.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-xl bg-surface-card border border-surface-input p-4">
               <div>
                 <p className="text-sm font-semibold text-text">{p.nome}</p>

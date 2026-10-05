@@ -7,6 +7,8 @@ import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import type { AlunoAcademia, Treino } from '../../types/api'
+import BarraBusca from '../../components/ui/BarraBusca'
+import { filtrarPorTexto } from '../../utils/busca'
 
 const DIA_LABEL: Record<number, string> = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' }
 
@@ -23,6 +25,7 @@ const STATUS_COR: Record<string, string> = {
 export default function AcademiaTreinos() {
   const [alunos, setAlunos] = useState<AlunoAcademia[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
   const [editingTreino, setEditingTreino] = useState<{ treino: Treino; alunoId: string } | null>(null)
   const [deletingTreino, setDeletingTreino] = useState<{ id: string; nome: string } | null>(null)
   const [viewingTreinos, setViewingTreinos] = useState<{ treinos: AlunoAcademia['treinos']; alunoNome: string } | null>(null)
@@ -108,6 +111,13 @@ export default function AcademiaTreinos() {
     }
   }
 
+  const alunosFiltrados = filtrarPorTexto(alunos, search, (a) => [
+    a.usuario.nome,
+    a.usuario.email,
+    a.professor?.usuario.nome,
+    ...a.treinos.map((t) => t.nome),
+  ])
+
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
@@ -116,8 +126,18 @@ export default function AcademiaTreinos() {
 
       <h1 className="mb-6 text-xl font-bold text-text">Listar Treinos</h1>
 
+      <BarraBusca
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar por aluno, professor ou treino..."
+        total={alunos.length}
+        filtrados={alunosFiltrados.length}
+      />
+
       {alunos.length === 0 ? (
         <p className="text-text-muted">Nenhum aluno cadastrado nesta academia.</p>
+      ) : alunosFiltrados.length === 0 ? (
+        <p className="text-text-muted">Nenhum resultado para a busca.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg bg-surface-card border border-surface-input">
           <table className="w-full text-left border-collapse">
@@ -132,7 +152,7 @@ export default function AcademiaTreinos() {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-input">
-              {alunos.map((aluno) => (
+              {alunosFiltrados.map((aluno) => (
                 <tr key={aluno.id} className="hover:bg-surface/30 transition-colors">
                   <td className="p-4 text-sm font-medium text-text">{aluno.usuario.nome}</td>
                   <td className="p-4 text-sm text-text-muted">{aluno.usuario.telefone || '-'}</td>

@@ -14,6 +14,8 @@ import {
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Toast from '../../components/ui/Toast'
 import type { MeuClube, ClubeDetalhe } from '../../types/api'
+import BarraBusca from '../../components/ui/BarraBusca'
+import { filtrarPorTexto } from '../../utils/busca'
 
 type Tab = 'meus' | 'descobrir' | 'criar'
 
@@ -23,6 +25,7 @@ export default function Clubes() {
   const [meus, setMeus] = useState<MeuClube[]>([])
   const [disponiveis, setDisponiveis] = useState<ClubeDetalhe[]>([])
   const [loading, setLoading] = useState(true)
+  const [busca, setBusca] = useState('')
   const [toast, setToast] = useState<string | null>(null)
   const [academiaNome, setAcademiaNome] = useState<string | null>(null)
 
@@ -100,6 +103,9 @@ export default function Clubes() {
     }
   }
 
+  const meusFiltrados = filtrarPorTexto(meus, busca, (c) => [c.nome, c.descricao])
+  const disponiveisFiltrados = filtrarPorTexto(disponiveis, busca, (c) => [c.nome, c.descricao])
+
   if (loading) {
     return (
       <div className="px-4 py-6 max-w-xl mx-auto w-full">
@@ -150,9 +156,23 @@ export default function Clubes() {
         ))}
       </div>
 
+      {(tab === 'meus' || tab === 'descobrir') && (meus.length > 0 || disponiveis.length > 0) && (
+        <BarraBusca
+          value={busca}
+          onChange={setBusca}
+          placeholder="Buscar clube por nome ou descrição..."
+          className="!mb-0"
+          total={tab === 'meus' ? meus.length : disponiveis.length}
+          filtrados={tab === 'meus' ? meusFiltrados.length : disponiveisFiltrados.length}
+        />
+      )}
+
       {/* Conteúdo das Abas */}
       {tab === 'meus' && (
         <div className="space-y-3">
+          {meus.length > 0 && meusFiltrados.length === 0 && (
+            <p className="text-sm text-text-muted text-center py-6">Nenhum clube encontrado.</p>
+          )}
           {meus.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center space-y-3">
               <TrophyIcon className="h-10 w-10 text-text-muted mx-auto opacity-30" />
@@ -173,7 +193,7 @@ export default function Clubes() {
               </div>
             </div>
           ) : (
-            meus.map((c) => (
+            meusFiltrados.map((c) => (
               <div
                 key={c.id}
                 className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3 hover:border-primary/30 transition-all"
@@ -242,6 +262,9 @@ export default function Clubes() {
 
       {tab === 'descobrir' && (
         <div className="space-y-3">
+          {disponiveis.length > 0 && disponiveisFiltrados.length === 0 && (
+            <p className="text-sm text-text-muted text-center py-6">Nenhum clube encontrado.</p>
+          )}
           {disponiveis.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center space-y-3">
               <GridIcon className="h-10 w-10 text-text-muted mx-auto opacity-30" />
@@ -254,7 +277,7 @@ export default function Clubes() {
               </button>
             </div>
           ) : (
-            disponiveis.map((c) => (
+            disponiveisFiltrados.map((c) => (
               <div
                 key={c.id}
                 className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3 hover:border-primary/30 transition-all"

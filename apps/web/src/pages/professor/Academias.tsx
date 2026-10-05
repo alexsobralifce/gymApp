@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError } from '../../api/client'
 import type { Academia, Vinculo } from '../../types/api'
+import BarraBusca from '../../components/ui/BarraBusca'
+import { filtrarPorTexto } from '../../utils/busca'
 
 const STATUS_BADGE: Record<string, string> = {
   PENDENTE_ACADEMIA: 'Aguardando Academia',
@@ -16,6 +18,7 @@ export default function ProfessorAcademias() {
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [perfilOk, setPerfilOk] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     async function init() {
@@ -83,6 +86,8 @@ export default function ProfessorAcademias() {
     }
   }
 
+  const academiasFiltradas = filtrarPorTexto(academias, search, (a) => [a.nome, a.cnpj])
+
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
@@ -101,10 +106,21 @@ export default function ProfessorAcademias() {
         </div>
       )}
 
+      <BarraBusca
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar academia por nome ou CNPJ..."
+        total={academias.length}
+        filtrados={academiasFiltradas.length}
+      />
+
       {academias.length === 0 && <p className="text-text-muted">Nenhuma academia disponível.</p>}
+      {academias.length > 0 && academiasFiltradas.length === 0 && (
+        <p className="text-text-muted">Nenhuma academia encontrada.</p>
+      )}
 
       <div className="space-y-3">
-        {academias.map((a) => {
+        {academiasFiltradas.map((a) => {
           const vinculo = getVinculo(a.id)
           const isLinked = vinculo !== undefined
 

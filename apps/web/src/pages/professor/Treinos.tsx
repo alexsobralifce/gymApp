@@ -5,6 +5,8 @@ import { useToast } from '../../components/ui/Toast'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import BatchActionBar from '../../components/ui/BatchActionBar'
 import Input from '../../components/ui/Input'
+import BarraBusca from '../../components/ui/BarraBusca'
+import { filtrarPorTexto } from '../../utils/busca'
 import Select from '../../components/ui/Select'
 import FormField from '../../components/ui/FormField'
 import type { ProfessorDashboard, Treino } from '../../types/api'
@@ -47,11 +49,11 @@ export default function ProfessorTreinos() {
     api.getDashboard().then(setAlunos).finally(() => setLoading(false))
   }, [])
 
-  const filteredAlunos = alunos.filter(
-    (a) =>
-      a.usuario.nome.toLowerCase().includes(search.toLowerCase()) ||
-      a.usuario.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredAlunos = filtrarPorTexto(alunos, search, (a) => [
+    a.usuario.nome,
+    a.usuario.email,
+    ...a.treinos.map((t) => t.nome),
+  ])
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -225,14 +227,13 @@ export default function ProfessorTreinos() {
 
       <h1 className="mb-6 text-xl font-bold text-text">Listar Treinos</h1>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Buscar aluno por nome ou email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      <BarraBusca
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar aluno por nome, email ou treino..."
+        total={alunos.length}
+        filtrados={filteredAlunos.length}
+      />
 
       {filteredAlunos.length === 0 ? (
         <p className="text-text-muted">Nenhum aluno encontrado.</p>

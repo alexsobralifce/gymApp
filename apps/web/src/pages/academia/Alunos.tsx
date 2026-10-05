@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import BatchActionBar from '../../components/ui/BatchActionBar'
 import ConfirmModal from '../../components/ui/ConfirmModal'
-import Input from '../../components/ui/Input'
+import BarraBusca from '../../components/ui/BarraBusca'
+import { filtrarPorTexto } from '../../utils/busca'
 
 interface Professor {
   id: string
@@ -56,11 +57,11 @@ export default function AcademiaAlunos() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filteredAlunos = alunos.filter(
-    (a) =>
-      a.usuario.nome.toLowerCase().includes(search.toLowerCase()) ||
-      a.usuario.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredAlunos = filtrarPorTexto(alunos, search, (a) => [
+    a.usuario.nome,
+    a.usuario.email,
+    a.professor?.usuario.nome ?? 'sem professor autogestao',
+  ])
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -146,14 +147,13 @@ export default function AcademiaAlunos() {
     <div className="p-4 md:p-6">
       <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Alunos</h1>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Buscar aluno por nome ou email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      <BarraBusca
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar aluno por nome, email ou professor..."
+        total={alunos.length}
+        filtrados={filteredAlunos.length}
+      />
 
       <BatchActionBar
         selectedCount={selectedIds.length}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
+import BarraBusca from '../../components/ui/BarraBusca'
+import { filtrarPorTexto } from '../../utils/busca'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -53,6 +55,8 @@ export default function ProfessorFichas() {
   const [loading, setLoading] = useState(true)
   const [expandedTreino, setExpandedTreino] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState('')
 
   useEffect(() => {
     carregarFichas()
@@ -81,6 +85,14 @@ export default function ProfessorFichas() {
     }
   }
 
+  const alunosFiltrados = filtrarPorTexto(alunos, search, (a) => [
+    a.usuario.nome,
+    a.usuario.email,
+    ...a.treinos.map((t) => t.nome),
+  ])
+    .map((a) => ({ ...a, treinos: filtroStatus ? a.treinos.filter((t) => t.status === filtroStatus) : a.treinos }))
+    .filter((a) => !filtroStatus || a.treinos.length > 0)
+
   if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
 
   return (
@@ -93,10 +105,37 @@ export default function ProfessorFichas() {
         </div>
       )}
 
+      <BarraBusca
+        value={search}
+        onChange={setSearch}
+        placeholder="Buscar por aluno ou ficha..."
+        total={alunos.length}
+        filtrados={alunosFiltrados.length}
+      />
+
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar por status">
+        {[['', 'Todas'], ...Object.entries(STATUS_LABEL)].map(([valor, rotulo]) => (
+          <button
+            key={valor}
+            type="button"
+            onClick={() => setFiltroStatus(valor)}
+            aria-pressed={filtroStatus === valor}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+              filtroStatus === valor ? 'bg-primary text-primary-foreground' : 'bg-surface-card text-text-muted hover:text-text'
+            }`}
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
+
       {alunos.length === 0 && <p className="text-text-muted">Nenhum aluno vinculado.</p>}
+      {alunos.length > 0 && alunosFiltrados.length === 0 && (
+        <p className="text-text-muted">Nenhuma ficha encontrada para os filtros.</p>
+      )}
 
       <div className="space-y-4">
-        {alunos.map((aluno) => (
+        {alunosFiltrados.map((aluno) => (
           <div key={aluno.id} className="rounded-lg bg-surface-card p-4">
             <div className="mb-3 border-b border-surface-input pb-3">
               <h2 className="font-semibold text-text">{aluno.usuario.nome}</h2>
