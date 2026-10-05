@@ -18,6 +18,66 @@ function data(iso: string | null) {
   return iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
 }
 
+const LINK_ACTIONS = 'https://github.com/alexsobralifce/gymApp/actions'
+const LINK_SEGREDOS = 'https://github.com/alexsobralifce/gymApp/settings/secrets/actions'
+
+function Guia() {
+  const h = 'mb-1.5 mt-4 text-sm font-semibold text-text first:mt-0'
+  const lista = 'list-decimal space-y-1 pl-5 text-xs text-text-muted'
+  const link = 'underline text-primary'
+  return (
+    <details className="mb-5 rounded-xl border border-surface-input bg-surface-card p-4">
+      <summary className="cursor-pointer text-sm font-semibold text-text">Dicas: como usar e configurar as publicações</summary>
+      <div className="mt-3">
+        <h2 className={h}>Como funciona</h2>
+        <ul className="list-disc space-y-1 pl-5 text-xs text-text-muted">
+          <li>Os artigos ficam no banco da API. O site é montado no deploy e baixa só os <strong>publicados</strong>.</li>
+          <li><strong>Artigo</strong> é indexado pelo Google. <strong>Leitura da semana</strong> (curadoria do robô) é curta e fica fora do Google (noindex) e fora do sitemap.</li>
+          <li>Publicar ou despublicar aqui atualiza o site sozinho cerca de 90 segundos depois da última alteração. O botão “Atualizar o site agora” força na hora.</li>
+        </ul>
+
+        <h2 className={h}>Rodar o robô de curadoria agora</h2>
+        <ol className={lista}>
+          <li>Abra <a className={link} href={LINK_ACTIONS} target="_blank" rel="noopener noreferrer">GitHub → Actions</a> e clique em “Curadoria semanal do blog”.</li>
+          <li>Clique em “Run workflow”. Em “modo” escolha <strong>rascunho</strong> (aprovar aqui antes) ou <strong>publicar</strong> (vai direto ao ar).</li>
+          <li>Espere ficar verde (cerca de 2 minutos) e volte a esta página: as Leituras da semana aparecem. Clique em “Ver”, leia e depois em “Publicar”.</li>
+          <li>Se ficar vermelho, abra a execução, clique no passo com ✗ e leia a mensagem do erro.</li>
+        </ol>
+        <p className="mt-1.5 text-xs text-text-muted">Automático: toda segunda-feira às 8h (Brasília), 2 leituras, no modo publicar.</p>
+
+        <h2 className={h}>Onde ficam as chaves (só os nomes; nunca cole valores no código)</h2>
+        <ul className="list-disc space-y-1 pl-5 text-xs text-text-muted">
+          <li>
+            <strong>GitHub</strong> (<a className={link} href={LINK_SEGREDOS} target="_blank" rel="noopener noreferrer">Settings → Secrets → Actions</a>):
+            {' '}<code>OPENAI_API_KEY</code> (redige os textos) e <code>BLOG_BOT_TOKEN</code> (deixa o robô enviar para a API; é o mesmo valor da variável de mesmo nome no Railway).
+          </li>
+          <li>
+            <strong>Railway, serviço api</strong> (Variables): <code>BLOG_BOT_TOKEN</code>, <code>OPENAI_API_KEY</code>, <code>RAILWAY_PROJECT_TOKEN</code> (token de projeto, ambiente production),
+            {' '}<code>RAILWAY_WEB_SERVICE_ID</code> (ID do <em>serviço</em> web, não de um deploy) e <code>RAILWAY_ENVIRONMENT_ID</code>.
+          </li>
+          <li><strong>Railway, serviço web</strong>: <code>VITE_API_URL</code> (usada pelo build para baixar os artigos) e <code>VITE_SITE_URL</code>.</li>
+          <li>Depois de mudar uma variável do serviço api, reinicie-o (Deploy) para ela valer.</li>
+        </ul>
+
+        <h2 className={h}>Se algo der errado</h2>
+        <ul className="list-disc space-y-1 pl-5 text-xs text-text-muted">
+          <li><strong>“Atualizar o site agora” avisa que não está configurado:</strong> falta alguma das variáveis <code>RAILWAY_*</code> do serviço api.</li>
+          <li><strong>Erro 500 ao atualizar o site (“Not Authorized” no log):</strong> o <code>RAILWAY_WEB_SERVICE_ID</code> está errado ou o token não é do ambiente production.</li>
+          <li><strong>Publiquei e o site não mudou:</strong> o deploy leva cerca de 3 minutos; confira o serviço web no Railway (Deployments).</li>
+          <li><strong>Robô falhou com 401:</strong> o <code>BLOG_BOT_TOKEN</code> do GitHub é diferente do da API. <strong>Falhou na OpenAI:</strong> chave inválida ou sem crédito.</li>
+          <li><strong>Nada novo no robô:</strong> normal em semanas sem matéria útil; as travas descartam texto genérico ou com termos de risco (suplemento, dose, promessa).</li>
+        </ul>
+
+        <h2 className={h}>Depois de publicar um Artigo (indexável)</h2>
+        <ol className={lista}>
+          <li>No Search Console, use “Inspeção de URL” na página nova e peça indexação.</li>
+          <li>O sitemap e os avisos aos buscadores (IndexNow) são atualizados no deploy.</li>
+        </ol>
+      </div>
+    </details>
+  )
+}
+
 type Acao = { tipo: 'despublicar' | 'excluir'; artigo: ArtigoBlogAdmin }
 
 export default function RootPublicacoes() {
@@ -125,6 +185,8 @@ export default function RootPublicacoes() {
       <p className="mb-4 rounded-lg bg-surface-card p-3 text-xs text-text-muted">
         Ao publicar ou despublicar, o site é atualizado automaticamente cerca de 90 segundos depois da última alteração (o blog é montado no deploy). “Leitura da semana” fica fora do Google (noindex).
       </p>
+
+      <Guia />
 
       <BarraBusca value={busca} onChange={setBusca} placeholder="Buscar por título, categoria ou veículo..." total={artigos.length} filtrados={filtrados.length} />
 
