@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { montarRotas } from '../scripts/rotasPublicas.mjs'
 import { lerRss } from '../scripts/curadoria/rss.mjs'
 import { pontuar, rankear, escolher, canonicalizarLink, ehRecente } from '../scripts/curadoria/selecao.mjs'
 import { trechosCopiados, validar, montarArtigo, slugificar, redigir } from '../scripts/curadoria/redator.mjs'
@@ -56,6 +57,8 @@ describe('seleção', () => {
   })
 })
 
+const CORPO = 'Texto próprio escrito com palavras diferentes do original para a leitura curta da semana, explicando o assunto para quem treina e para quem orienta alunos na academia no dia a dia.'
+
 describe('redator', () => {
   const candidato = { fonte: { nome: 'NSCA', pais: 'US', idioma: 'en' }, item: { titulo: 'Original title here', trecho: 'one two three four five six seven eight nine ten', link: 'https://ex.com/a' } }
   const gerado = {
@@ -67,8 +70,8 @@ describe('redator', () => {
     categoria: 'Aluno',
     resumo: 'Resumo original.',
     secoes: [
-      { titulo: 'O que a matéria aborda', paragrafos: ['Texto próprio.'], lista: [] },
-      { titulo: 'Na prática', paragrafos: ['Mais texto próprio.'], lista: ['item'] },
+      { titulo: 'O que a matéria aborda', paragrafos: [CORPO], lista: [] },
+      { titulo: 'Na prática', paragrafos: [CORPO], lista: ['item'] },
     ],
   }
 
@@ -79,6 +82,7 @@ describe('redator', () => {
   it('valida descrição, título e cópia', () => {
     expect(validar(gerado, candidato)).toEqual([])
     expect(validar({ ...gerado, descricao: 'curta' }, candidato)[0]).toMatch(/descricao/)
+    expect(validar({ ...gerado, secoes: [{ titulo: 'a', paragrafos: ['curto'], lista: [] }, { titulo: 'b', paragrafos: ['curto'], lista: [] }] }, candidato).join()).toMatch(/palavras/)
     expect(validar({ ...gerado, titulo: 'ORIGINAL TITLE HERE' }, candidato)[0]).toMatch(/titulo igual/)
     expect(validar({ ...gerado, resumo: 'one two three four five six seven' }, candidato)[0]).toMatch(/copiados/)
   })
@@ -102,7 +106,22 @@ describe('redator', () => {
     expect(await redigir(candidato, { cliente: { gerar: async () => ({ texto: 'não é json', fim: 'length' }) } })).toMatchObject({ ok: false, motivo: expect.stringContaining('sem JSON') })
     expect(await redigir(candidato, { cliente: { gerar: async () => ({ recusa: 'não posso' }) } })).toMatchObject({ ok: false, motivo: expect.stringContaining('recusado') })
     const generico = { gerar: async () => ({ texto: JSON.stringify({ ...gerado, utilidade: 3, motivo: 'conselho genérico' }) }) }
-    expect(await redigir(candidato, { cliente: generico })).toMatchObject({ ok: false, motivo: expect.stringContaining('utilidade 3/5') })
+    expect(await redigir(candidato, { cliente: generico, utilidadeMinima: 4 })).toMatchObject({ ok: false, motivo: expect.stringContaining('utilidade 3/5') })
     expect((await redigir(candidato, { cliente: generico, utilidadeMinima: 3 })).ok).toBe(true)
+  })
+})
+
+describe('rotas do blog', () => {
+  it('curadorias são pré-renderizadas mas ficam fora do índice', () => {
+    const rotas = montarRotas(['/'], [
+      { slug: 'guia', atualizadoEm: '2026-10-01' },
+      { slug: 'leitura', atualizadoEm: '2026-10-05', tipo: 'curadoria' },
+    ])
+    const por = Object.fromEntries(rotas.map((r: { caminho: string; indexavel: boolean }) => [r.caminho, r.indexavel]))
+    expect(por).toEqual({ '/': true, '/blog': true, '/blog/guia': true, '/blog/leitura': false })
+  })
+  it('lista /blog fica fora do índice quando só há curadorias', () => {
+    const rotas = montarRotas([], [{ slug: 'leitura', atualizadoEm: '2026-10-05', tipo: 'curadoria' }])
+    expect(rotas.find((r: { caminho: string }) => r.caminho === '/blog')?.indexavel).toBe(false)
   })
 })

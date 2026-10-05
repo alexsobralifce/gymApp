@@ -36,7 +36,7 @@ async function sitemapGoogle() {
   if (!res.ok) process.exitCode = 1
 }
 
-const caminhos = rotasPublicas().map((r) => r.caminho)
+const caminhos = rotasPublicas().filter((r) => r.indexavel).map((r) => r.caminho)
 await indexNow(caminhos)
 await sitemapGoogle().catch((e) => {
   console.error('[google] erro:', e.message)

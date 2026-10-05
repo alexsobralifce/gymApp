@@ -44,7 +44,8 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
     title: `${artigo.titulo} | ENDORFINAPP`,
     description: artigo.descricao,
     path: `/blog/${artigo.slug}`,
-    jsonLd: dadosEstruturados(artigo),
+    noindex: artigo.tipo === 'curadoria',
+    jsonLd: artigo.tipo === 'curadoria' ? undefined : dadosEstruturados(artigo),
   })
   const relacionados = ARTIGOS.filter((a) => a.slug !== artigo.slug).slice(0, 3)
 
@@ -53,7 +54,7 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
       <main>
         <article className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
           <nav aria-label="Você está em" className="text-xs text-muted-foreground mb-4">
-            <Link to="/blog" className="hover:text-foreground">Blog</Link> · {artigo.categoria}
+            <Link to="/blog" className="hover:text-foreground">Blog</Link> · {artigo.tipo === 'curadoria' ? 'Leitura da semana' : artigo.categoria}
           </nav>
           <h1 className="text-3xl sm:text-4xl font-black leading-tight mb-3">{artigo.titulo}</h1>
           <p className="text-xs text-muted-foreground mb-8">

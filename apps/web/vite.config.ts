@@ -34,7 +34,7 @@ function seoPlugin(siteUrl: string): Plugin {
     generateBundle() {
       const robots = [
         'User-agent: *',
-        ...ROTAS_PUBLICAS.filter((r) => r.caminho !== '/').map((r) => `Allow: ${r.caminho}`),
+        ...ROTAS_PUBLICAS.filter((r) => r.indexavel && r.caminho !== '/').map((r) => `Allow: ${r.caminho}`),
         ...ROTAS_PRIVADAS.map((r) => `Disallow: ${r}`),
         ...(base ? ['', `Sitemap: ${base}/sitemap.xml`] : []),
         '',
@@ -42,7 +42,7 @@ function seoPlugin(siteUrl: string): Plugin {
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots })
       if (!base) return
       const hoje = new Date().toISOString().slice(0, 10)
-      const urls = ROTAS_PUBLICAS.map(
+      const urls = ROTAS_PUBLICAS.filter((r) => r.indexavel).map(
         (r) => `  <url><loc>${base}${r.caminho === '/' ? '' : r.caminho}</loc><lastmod>${r.lastmod ?? hoje}</lastmod></url>`,
       ).join('\n')
       this.emitFile({

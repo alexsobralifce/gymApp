@@ -14,15 +14,23 @@ export function artigosPublicados() {
     .map((f) => ({ slug: f.replace(/\.json$/, ''), ...JSON.parse(readFileSync(path.join(dir, f), 'utf8')) }))
 }
 
-/** @returns {{ caminho: string, lastmod: string | null }[]} */
-export function rotasPublicas() {
-  const fixas = JSON.parse(readFileSync(path.join(RAIZ, 'seo-routes.json'), 'utf8')).publicas
-  const artigos = artigosPublicados()
+/**
+ * Curadorias ("Leituras da semana", tipo "curadoria") são pré-renderizadas, mas ficam fora do índice:
+ * `indexavel: false` as exclui do sitemap, do robots e dos avisos aos buscadores.
+ * @returns {{ caminho: string, lastmod: string | null, indexavel: boolean }[]}
+ */
+export function montarRotas(fixas, artigos) {
+  const originais = artigos.filter((a) => a.tipo !== 'curadoria')
   const blog = artigos.length
     ? [
-        { caminho: '/blog', lastmod: artigos.map((a) => a.atualizadoEm).sort().at(-1) },
-        ...artigos.map((a) => ({ caminho: `/blog/${a.slug}`, lastmod: a.atualizadoEm })),
+        { caminho: '/blog', lastmod: (originais.length ? originais : artigos).map((a) => a.atualizadoEm).sort().at(-1), indexavel: originais.length > 0 },
+        ...artigos.map((a) => ({ caminho: `/blog/${a.slug}`, lastmod: a.atualizadoEm, indexavel: a.tipo !== 'curadoria' })),
       ]
     : []
-  return [...fixas.map((caminho) => ({ caminho, lastmod: null })), ...blog]
+  return [...fixas.map((caminho) => ({ caminho, lastmod: null, indexavel: true })), ...blog]
+}
+
+export function rotasPublicas() {
+  const fixas = JSON.parse(readFileSync(path.join(RAIZ, 'seo-routes.json'), 'utf8')).publicas
+  return montarRotas(fixas, artigosPublicados())
 }
