@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError } from '../../../domain/errors/AppError.js'
 import { env } from '../../../shared/env.js'
-import { ensureDir, getAvatarsDir, getFeedDir, getLogosDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
+import { ensureDir, getAvatarsDir, getBlogDir, getFeedDir, getLogosDir, getPromocoesDir, validateMagicBytes } from '../../../infrastructure/storage/paths.js'
 
 async function resolveAluno(usuarioId: string) {
   return prisma.aluno.upsert({
@@ -116,6 +116,28 @@ export async function uploadRoutes(app: FastifyInstance) {
       return reply.status(404).send({ message: 'Logo não encontrada' })
     }
   })
+
+  /** GET /uploads/blog/:filename e /uploads/promocoes/:filename — imagens do blog e das promoções (WebP) */
+  for (const [pasta, dir] of [['blog', getBlogDir], ['promocoes', getPromocoesDir]] as const) {
+    app.get(`/uploads/${pasta}/:filename`, async (request, reply) => {
+      const { filename } = z.object({ filename: z.string() }).parse(request.params)
+      if (!safeFilename(filename)) {
+        return reply.status(400).send({ message: 'Nome de arquivo inválido' })
+      }
+
+      try {
+        const buffer = await fs.readFile(path.join(dir(), filename))
+        const ext = path.extname(filename).toLowerCase()
+        return reply
+          .header('Content-Type', MIME_MAP[ext] || 'image/webp')
+          .header('Cache-Control', 'public, max-age=86400')
+          .header('Cross-Origin-Resource-Policy', 'cross-origin')
+          .send(buffer)
+      } catch {
+        return reply.status(404).send({ message: 'Imagem não encontrada' })
+      }
+    })
+  }
 
   /** GET /uploads/feed/:year/:month/:filename — serve foto do feed */
   app.get('/uploads/feed/:year/:month/:filename', async (request, reply) => {
