@@ -11,6 +11,7 @@ import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
 import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
 import { PlusIcon, DumbbellIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 import WorkoutHelpWizard from '../../components/ui/WorkoutHelpWizard'
+import ImportarTreinoTextoModal, { type FichaImportada } from '../../components/treino/ImportarTreinoTextoModal'
 import { WorkoutMethodBadge, WORKOUT_METHODS_CONFIG } from '../../components/ui/WorkoutMethodBadge'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -61,6 +62,7 @@ export default function CriarTreino() {
   const [previewExercicio, setPreviewExercicio] = useState<Exercicio | null>(null)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   // Mostra o prompt de ajuda automaticamente ao entrar na página
   useEffect(() => {
@@ -178,14 +180,18 @@ export default function CriarTreino() {
     atualizarFicha(fichaAtiva, { exercicios: ordenados })
   }
 
-  async function handleSalvar(e: React.FormEvent) {
+  function handleSalvar(e: React.FormEvent) {
     e.preventDefault()
+    return salvarFichas(fichas)
+  }
+
+  async function salvarFichas(lista: FichaTreino[]) {
     setFeedback(null)
 
-    const fichasValidas = fichas.filter((f) => f.exercicios.length > 0 && f.diasSemana.length > 0)
+    const fichasValidas = lista.filter((f) => f.exercicios.length > 0 && f.diasSemana.length > 0)
     if (fichasValidas.length === 0) {
       setFeedback('Configure pelo menos uma ficha com exercícios e dias da semana.')
-      return
+      return false
     }
 
     try {
@@ -216,12 +222,24 @@ export default function CriarTreino() {
 
       setFeedback(`${treinos.length} ficha(s) criada(s) e enviada(s) com sucesso!`)
       setTimeout(() => navigate('/treinos'), 1800)
+      return true
     } catch (err) {
       console.error(err)
       setFeedback('Erro ao criar fichas.')
+      return false
     } finally {
       setEnviando(false)
     }
+  }
+
+  async function handleImportar(importadas: FichaImportada[]) {
+    const ok = await salvarFichas(importadas)
+    // Se falhou, as fichas importadas ficam no editor para a pessoa tentar de novo sem perder nada.
+    if (!ok) {
+      setFichas(importadas)
+      setFichaAtiva(0)
+    }
+    setIsImportOpen(false)
   }
 
   async function handleSelectTemplate(templateId: string) {
@@ -404,6 +422,15 @@ export default function CriarTreino() {
                 )}
               </div>
             ))}
+
+            <button
+              type="button"
+              onClick={() => setIsImportOpen(true)}
+              disabled={enviando}
+              className="rounded-xl border border-dashed border-primary px-3.5 py-2.5 text-xs font-extrabold text-primary hover:bg-primary/10 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Colar treino em texto
+            </button>
 
             <button
               type="button"
@@ -715,6 +742,16 @@ export default function CriarTreino() {
       )}
 
       {/* Library Drawer */}
+      {isImportOpen && (
+        <ImportarTreinoTextoModal
+          onFechar={() => setIsImportOpen(false)}
+          todosExercicios={todosExercicios}
+          onConfirmar={handleImportar}
+          confirmando={enviando}
+          rotuloConfirmar="Criar e enviar"
+        />
+      )}
+
       <ExerciseLibraryDrawer
         isOpen={isLibraryOpen}
         onClose={() => setIsLibraryOpen(false)}

@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus, ExecucaoCuradoria, ResumoSite, ResumoApp, UsuariosUsoResposta } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus, ExecucaoCuradoria, ResumoSite, ResumoApp, UsuariosUsoResposta, ImportacaoTreinoPreview } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -270,6 +270,9 @@ export const api = {
       feedbackComentario?: string
     }
   ) => api.post<Treino & { primeiroTreino?: boolean; caloriasQueimadas?: number | null }>(`/treinos/${id}/finalizar`, data || {}),
+
+  importarTreinoTexto: (texto: string) =>
+    api.post<ImportacaoTreinoPreview>('/treinos/importar-texto', { texto }),
 
   criarTreinoAutogestao: (data: {
     nome: string

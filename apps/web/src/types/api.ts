@@ -636,3 +636,33 @@ export interface ArtigoBlogAdmin {
   criadoEm: string
   atualizadoEm: string
 }
+
+// ── Importação de treino por texto ──
+export type StatusCasamentoExercicio = 'ok' | 'duvida' | 'nao_encontrado'
+
+export interface ImportacaoCandidato {
+  exercicioId: string
+  nome: string
+  nota: number
+}
+
+export interface ImportacaoExercicioPrevia {
+  textoOriginal: string
+  status: StatusCasamentoExercicio
+  exercicioId: string | null
+  series: number
+  repeticoes: number
+  cargaSugeridaKg: number | null
+  observacoes: string | null
+  candidatos: ImportacaoCandidato[]
+}
+
+export interface ImportacaoTreinoPrevia {
+  rotulo: string
+  diasSemana: number[]
+  exercicios: ImportacaoExercicioPrevia[]
+}
+
+export interface ImportacaoTreinoPreview {
+  treinos: ImportacaoTreinoPrevia[]
+}

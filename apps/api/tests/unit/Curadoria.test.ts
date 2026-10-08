@@ -13,8 +13,8 @@ import {
   redigir,
   SCHEMA_JSON,
   type ArtigoGeradoT,
-  type ClienteIA,
 } from '../../src/application/usecases/blog/curadoria/redator.js'
+import type { ClienteIA } from '../../src/infrastructure/ia/openai.js'
 
 const agora = new Date('2026-10-12T12:00:00Z')
 

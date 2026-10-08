@@ -10,6 +10,7 @@ import Input from '../../components/ui/Input'
 import WorkoutLoading from '../../components/ui/WorkoutLoading'
 import ExerciseLibraryDrawer from '../../components/ui/ExerciseLibraryDrawer'
 import ExercisePreviewModal from '../../components/ui/ExercisePreviewModal'
+import ImportarTreinoTextoModal, { type FichaImportada } from '../../components/treino/ImportarTreinoTextoModal'
 import WorkoutHelpWizard from '../../components/ui/WorkoutHelpWizard'
 import { WorkoutMethodBadge, WORKOUT_METHODS_CONFIG } from '../../components/ui/WorkoutMethodBadge'
 
@@ -49,6 +50,7 @@ export default function AlunoCriarTreino() {
   const [previewExercicio, setPreviewExercicio] = useState<Exercicio | null>(null)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   // Mostra o prompt de ajuda automaticamente ao criar (não ao editar)
   useEffect(() => {
@@ -212,6 +214,42 @@ export default function AlunoCriarTreino() {
     }
   }
 
+  async function handleImportar(fichas: FichaImportada[]) {
+    setFeedback(null)
+    setEnviando(true)
+    const criados: string[] = []
+    try {
+      for (const f of fichas) {
+        await api.criarTreinoAutogestao({
+          nome: f.nome,
+          diasSemana: f.diasSemana,
+          exercicios: f.exercicios.map((e) => ({
+            exercicioId: e.exercicioId,
+            ordem: e.ordem,
+            series: e.series,
+            repeticoes: e.repeticoes,
+            cargaSugeridaKg: e.cargaSugeridaKg,
+            metodo: 'TRADICIONAL',
+            tempoDescansoSegundos: 60,
+            observacoes: e.observacoes,
+          })),
+        })
+        criados.push(f.nome)
+      }
+      setIsImportOpen(false)
+      setFeedback(`${criados.length} treino(s) criado(s)! Redirecionando para Meus Treinos...`)
+      setTimeout(() => navigate('/meus-treinos'), 1200)
+    } catch {
+      setIsImportOpen(false)
+      const faltaram = fichas.slice(criados.length).map((f) => f.nome)
+      setFeedback(
+        `Erro ao criar treinos. ${criados.length > 0 ? `Criados: ${criados.join(', ')}. ` : ''}Não foram criados: ${faltaram.join(', ')}.`,
+      )
+    } finally {
+      setEnviando(false)
+    }
+  }
+
   function openPreviewForTreinoItem(item: ExercicioTreino) {
     const fullEx =
       item.originalExercicio ||
@@ -252,6 +290,16 @@ export default function AlunoCriarTreino() {
         </div>
 
         <div className="flex items-center gap-2">
+          {!isEdit && (
+            <button
+              type="button"
+              onClick={() => setIsImportOpen(true)}
+              disabled={enviando}
+              className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 border border-primary text-primary hover:bg-primary/10 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            >
+              Colar treino em texto
+            </button>
+          )}
           <button
             type="button"
             id="btn-ajuda-treino-aluno"
@@ -615,6 +663,15 @@ export default function AlunoCriarTreino() {
       </button>
 
       {/* Exercise Library Bottom-Sheet Drawer */}
+      {isImportOpen && (
+        <ImportarTreinoTextoModal
+          onFechar={() => setIsImportOpen(false)}
+          todosExercicios={todosExercicios}
+          onConfirmar={handleImportar}
+          confirmando={enviando}
+        />
+      )}
+
       <ExerciseLibraryDrawer
         isOpen={isLibraryOpen}
         onClose={() => setIsLibraryOpen(false)}

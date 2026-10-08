@@ -37,6 +37,8 @@ const envSchema = z.object({
   // Robô de curadoria semanal (roda dentro da API; o painel root também dispara manualmente).
   OPENAI_API_KEY: z.string().optional().default(''),
   CURADORIA_MODELO: z.string().optional().default('gpt-5.4-mini'),
+  // Importação de treino por texto (usa a mesma chave OPENAI_API_KEY).
+  IMPORTACAO_TREINO_MODELO: z.string().optional().default('gpt-5.4-mini'),
   CURADORIA_UTILIDADE_MIN: z.coerce.number().int().min(1).max(5).optional().default(3),
   // Imagens de capa geradas por IA para as Leituras da semana.
   CURADORIA_MODELO_IMAGEM: z.string().optional().default('gpt-image-1-mini'),

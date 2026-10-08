@@ -1,6 +1,7 @@
 // Pede à OpenAI uma curadoria ORIGINAL (não uma cópia) a partir do título e do trecho público do feed.
 import { z } from 'zod'
 import type { Candidato } from './selecao.js'
+import type { ClienteIA } from '../../../../infrastructure/ia/openai.js'
 
 export const ArtigoGerado = z.object({
   relevante: z.boolean(),
@@ -57,46 +58,6 @@ Regras obrigatórias:
 - "descricao": entre 100 e 160 caracteres. "titulo": diferente do título original, claro e sem clickbait.
 - "lista" pode ser um array vazio.`
 
-export interface ClienteIA {
-  gerar(args: { modelo: string; sistema: string; usuario: string }): Promise<{ texto?: string; fim?: string; recusa?: string }>
-}
-
-/** Cliente mínimo da API Chat Completions da OpenAI com saída JSON estruturada (sem SDK). */
-export function criarClienteOpenAI(apiKey: string): ClienteIA {
-  return {
-    async gerar({ modelo, sistema, usuario }) {
-      for (let tentativa = 1; tentativa <= 3; tentativa++) {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-          signal: AbortSignal.timeout(120_000),
-          body: JSON.stringify({
-            model: modelo,
-            messages: [
-              { role: 'system', content: sistema },
-              { role: 'user', content: usuario },
-            ],
-            response_format: { type: 'json_schema', json_schema: { name: 'curadoria', strict: true, schema: SCHEMA_JSON } },
-          }),
-        })
-        if ((res.status === 429 || res.status >= 500) && tentativa < 3) {
-          await new Promise((r) => setTimeout(r, 2000 * tentativa))
-          continue
-        }
-        const json = (await res.json()) as {
-          error?: { message?: string }
-          choices?: Array<{ message?: { content?: string; refusal?: string }; finish_reason?: string }>
-        }
-        if (!res.ok) throw new Error(`OpenAI HTTP ${res.status}: ${json.error?.message ?? 'erro desconhecido'}`)
-        const escolha = json.choices?.[0]
-        if (escolha?.message?.refusal) return { recusa: escolha.message.refusal }
-        return { texto: escolha?.message?.content ?? '', fim: escolha?.finish_reason }
-      }
-      throw new Error('OpenAI: tentativas esgotadas')
-    },
-  }
-}
-
 /** Trechos de n palavras consecutivas do original que reaparecem no texto gerado. */
 export function trechosCopiados(original: string, gerado: string, n = 7): string[] {
   const palavras = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean)
@@ -150,7 +111,7 @@ export async function redigir(
 </materia>`
   let feedback = ''
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
-    const resposta = await cliente.gerar({ modelo, sistema: SISTEMA, usuario: base + feedback })
+    const resposta = await cliente.gerar({ modelo, sistema: SISTEMA, usuario: base + feedback, schema: { nome: 'curadoria', json: SCHEMA_JSON } })
     if (resposta.recusa) return { ok: false, motivo: `recusado pelo modelo: ${resposta.recusa}` }
     let gerado: ArtigoGeradoT
     try {

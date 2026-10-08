@@ -7,7 +7,8 @@ import { gerarImagemNova } from '../BlogImagemService.js'
 import { CONFIG_CURADORIA, type FonteFeed } from './fontes.js'
 import { lerRss, type ItemRss } from './rss.js'
 import { rankear, escolher } from './selecao.js'
-import { redigir, montarArtigo, slugificar, criarClienteOpenAI, type ClienteIA } from './redator.js'
+import { redigir, montarArtigo, slugificar } from './redator.js'
+import { criarClienteOpenAI, type ClienteIA } from '../../../../infrastructure/ia/openai.js'
 
 const UA = 'EndorfinappBot/1.0 (+https://endorfinapp.com.br/blog; curadoria semanal)'
 const EXECUCAO_TRAVADA_MS = 20 * 60 * 1000

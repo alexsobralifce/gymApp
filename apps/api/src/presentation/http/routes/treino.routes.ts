@@ -23,6 +23,7 @@ import {
   substituirExercicio,
   criarTreinoSemanaRetorno,
 } from '../../../application/usecases/treino/TreinoService.js'
+import { gerarPrevia } from '../../../application/usecases/treino/importacao/ImportacaoTreinoService.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
   const prehandlerProfessor = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ROOT)]
@@ -205,6 +206,19 @@ export async function treinoRoutes(app: FastifyInstance) {
     })
     return reply.status(200).send(exercicios)
   })
+
+  /** POST /treinos/importar-texto — lê o texto de uma ficha e devolve a prévia (não grava nada) */
+  app.post(
+    '/importar-texto',
+    {
+      preHandler: [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ACADEMIA, Role.ROOT)],
+      config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
+      const { texto } = z.object({ texto: z.string().trim().min(10).max(8000) }).parse(request.body)
+      return reply.status(200).send(await gerarPrevia(texto))
+    },
+  )
 
   /** POST /treinos/exercicios — UC-12 (cria e vincula exercício) */
   app.post('/exercicios', { preHandler: prehandlerProfessor }, async (request, reply) => {
