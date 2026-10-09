@@ -74,9 +74,9 @@ async function apagarArquivo(url: string | null) {
 }
 
 /** Gera e grava a imagem de um artigo que ainda não foi salvo (usado pela curadoria). */
-export async function gerarImagemNova(slug: string, titulo: string, resumo: string): Promise<{ imagemUrl: string; imagemAlt: string }> {
+export async function gerarImagemNova(slug: string, titulo: string, resumo: string, alt?: string): Promise<{ imagemUrl: string; imagemAlt: string }> {
   const webp = await gerarImagemIA(promptDaImagem(titulo, resumo))
-  return { imagemUrl: await gravarArquivo(slug, webp), imagemAlt: altDaImagem(titulo) }
+  return { imagemUrl: await gravarArquivo(slug, webp), imagemAlt: alt || altDaImagem(titulo) }
 }
 
 async function trocarImagem(id: string, webp: Buffer, alt?: string) {

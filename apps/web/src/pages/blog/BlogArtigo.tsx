@@ -1,6 +1,8 @@
 import { Link, useParams } from 'react-router-dom'
 import LayoutPublico from '../../components/seo/LayoutPublico'
 import { useSeo, urlAbsoluta } from '../../lib/seo'
+import { trilhaDePaginas } from '../../lib/dadosEstruturados'
+import { EMAIL_SUPORTE } from '../../config/contato'
 import { ARTIGOS, buscarArtigo, formatarData, type Artigo } from '../../lib/blog'
 
 const SITE = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/+$/, '') ?? ''
@@ -14,7 +16,7 @@ function dadosEstruturados(a: Artigo) {
     datePublished: a.publicadoEm,
     dateModified: a.atualizadoEm,
     inLanguage: 'pt-BR',
-    author: { '@type': 'Organization', name: a.autor },
+    author: { '@type': 'Organization', name: a.autor, ...(SITE && { url: `${SITE}/quem-somos` }) },
     publisher: { '@type': 'Organization', name: 'ENDORFINAPP' },
     ...(a.imagem && urlAbsoluta(a.imagem.url) && { image: urlAbsoluta(a.imagem.url) }),
     ...(a.origem && { citation: a.origem.url, isBasedOn: a.origem.url }),
@@ -47,7 +49,7 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
     path: `/blog/${artigo.slug}`,
     noindex: artigo.tipo === 'curadoria',
     image: artigo.imagem?.url,
-    jsonLd: artigo.tipo === 'curadoria' ? undefined : dadosEstruturados(artigo),
+    jsonLd: artigo.tipo === 'curadoria' ? undefined : { '@context': 'https://schema.org', '@graph': [dadosEstruturados(artigo), trilhaDePaginas([{ nome: 'Início', caminho: '/' }, { nome: 'Blog', caminho: '/blog' }, { nome: artigo.titulo, caminho: `/blog/${artigo.slug}` }])] },
   })
   const relacionados = ARTIGOS.filter((a) => a.slug !== artigo.slug).slice(0, 3)
 
@@ -60,7 +62,7 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
           </nav>
           <h1 className="text-3xl sm:text-4xl font-black leading-tight mb-3">{artigo.titulo}</h1>
           <p className="text-xs text-muted-foreground mb-8">
-            Por {artigo.autor} · Publicado em {formatarData(artigo.publicadoEm)} · Atualizado em {formatarData(artigo.atualizadoEm)}
+            Por <Link to="/quem-somos" className="underline hover:text-foreground">{artigo.autor}</Link> · Publicado em {formatarData(artigo.publicadoEm)} · Atualizado em {formatarData(artigo.atualizadoEm)}
           </p>
           {artigo.origem && (
             <aside className="rounded-xl border border-border bg-surface-card p-4 mb-6 text-sm">
@@ -110,6 +112,15 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
               </Link>
             </div>
           )}
+
+          <aside className="rounded-xl border border-border bg-surface-card p-4 mb-8 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground mb-1">Sobre a {artigo.autor}</p>
+            <p>
+              Somos o time do ENDORFINAPP.{' '}
+              <Link to="/quem-somos" className="underline text-primary">Conheça quem somos</Link>
+              {' '}ou fale com o suporte: <a href={`mailto:${EMAIL_SUPORTE}`} className="underline text-primary">{EMAIL_SUPORTE}</a>.
+            </p>
+          </aside>
 
           <section aria-labelledby="fontes" className="border-t border-border pt-6">
             <h2 id="fontes" className="text-lg font-bold mb-2">Fontes consultadas</h2>

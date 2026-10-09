@@ -2,10 +2,11 @@ import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import LayoutPublico from '../../components/seo/LayoutPublico'
 import { useSeo } from '../../lib/seo'
+import { perguntasFrequentes } from '../../lib/dadosEstruturados'
 import type { PaginaSeoDados } from './paginasSeo'
 
 export default function PaginaSeo({ dados }: { dados: PaginaSeoDados }) {
-  useSeo({ title: dados.title, description: dados.description, path: dados.caminho })
+  useSeo({ title: dados.title, description: dados.description, path: dados.caminho, jsonLd: perguntasFrequentes(dados.faqs) })
 
   return (
     <LayoutPublico atual={dados.caminho}>

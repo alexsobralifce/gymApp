@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import EndorfinappLogo from '../branding/EndorfinappLogo'
 import { PAGINAS_SEO } from '../../pages/seo/paginasSeo'
 import { ARTIGOS } from '../../lib/blog'
+import { EMAIL_SUPORTE } from '../../config/contato'
 
 const ROTULO_LINK: Record<string, string> = {
   '/app-para-personal-trainer': 'App para personal trainer',
@@ -42,7 +43,9 @@ export default function LayoutPublico({ children, atual }: { children: ReactNode
             ))}
             {ARTIGOS.length > 0 && atual !== '/blog' && <Link to="/blog" className="hover:text-foreground">Blog</Link>}
             <Link to="/planos" className="hover:text-foreground">Planos</Link>
+            {atual !== '/quem-somos' && <Link to="/quem-somos" className="hover:text-foreground">Quem somos</Link>}
             <Link to="/politica-privacidade" className="hover:text-foreground">Privacidade</Link>
+            <a href={`mailto:${EMAIL_SUPORTE}`} className="hover:text-foreground">Suporte</a>
           </nav>
           <span>© 2026 ENDORFINAPP</span>
         </div>

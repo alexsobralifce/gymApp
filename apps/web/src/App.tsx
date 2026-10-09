@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './stores/auth'
 import { useNotifications } from './hooks/useNotifications'
@@ -14,58 +14,59 @@ import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
+import QuemSomos from './pages/QuemSomos'
 import Planos from './pages/planos/Planos'
 import PaginaSeo from './pages/seo/PaginaSeo'
 import BlogLista from './pages/blog/BlogLista'
 import BlogArtigo from './pages/blog/BlogArtigo'
 import { PAGINAS_SEO } from './pages/seo/paginasSeo'
-import Checkout from './pages/billing/Checkout'
-import OnboardingPlano from './pages/auth/OnboardingPlano'
+const Checkout = lazy(() => import('./pages/billing/Checkout'))
+const OnboardingPlano = lazy(() => import('./pages/auth/OnboardingPlano'))
 import GoogleCallback from './pages/auth/GoogleCallback'
-import AlunoDashboard from './pages/aluno/Dashboard'
-import AlunoTreinoInicio from './pages/aluno/TreinoInicio'
-import AlunoTreinoExecucao from './pages/aluno/TreinoExecucao'
-import AlunoTreinoConclusao from './pages/aluno/TreinoConclusao'
-import AlunoMedidas from './pages/aluno/Medidas'
-import AlunoEvolucao from './pages/aluno/Evolucao'
-import HistoricoExercicio from './pages/aluno/HistoricoExercicio'
-import ProfessorDashboard from './pages/professor/Dashboard'
-import ProfessorAlunoCorrelacoes from './pages/professor/AlunoCorrelacoes'
-import ProfessorCriarTreino from './pages/professor/CriarTreino'
-import ProfessorTreinos from './pages/professor/Treinos'
-import ProfessorCriarExercicio from './pages/professor/CriarExercicio'
-import ProfessorAcademias from './pages/professor/Academias'
-import ProfessorVincularAluno from './pages/professor/VincularAluno'
-import ProfessorFichas from './pages/professor/Fichas'
-import RootPainel from './pages/root/Painel'
-import RootVinculos from './pages/root/Vinculos'
-import RootUsuarios from './pages/root/Usuarios'
-import RootSocial from './pages/root/Social'
-import RootPublicacoes from './pages/root/Publicacoes'
-import RootAvaliacoesSistema from './pages/root/AvaliacoesSistema'
-import RootFinanceiro from './pages/root/Financeiro'
-import AcademiaDashboard from './pages/academia/Dashboard'
-import AcademiaProfessores from './pages/academia/Professores'
-import AcademiaAlunos from './pages/academia/Alunos'
-import AcademiaPromocoes from './pages/academia/Promocoes'
-import AcademiaCriarTreino from './pages/academia/CriarTreinoAcademia'
-import AcademiaTreinos from './pages/academia/Treinos'
-import AlunoMeusTreinos from './pages/aluno/MeusTreinos'
-import AlunoCriarTreino from './pages/aluno/CriarTreinoAluno'
-import AlunoDados from './pages/aluno/DadosAluno'
-import BibliotecaPlanos from './pages/aluno/BibliotecaPlanos'
-import AlunoMural from './pages/aluno/Mural'
-import AlunoAmizades from './pages/aluno/Amizades'
-import AlunoPrivacidade from './pages/aluno/Privacidade'
-import AlunoPreferenciasNotificacao from './pages/aluno/PreferenciasNotificacao'
-import AlunoClubes from './pages/aluno/Clubes'
-import Parceiros from './pages/aluno/Parceiros'
-import WelcomeCards from './pages/aluno/WelcomeCards'
-import Noticias from './pages/aluno/Noticias'
-import ClubeFeed from './pages/aluno/ClubeFeed'
-import AlterarSenha from './pages/auth/AlterarSenha'
-import Avaliacoes from './pages/avaliacoes/Avaliacoes'
-import Documentacao from './pages/Documentacao'
+const AlunoDashboard = lazy(() => import('./pages/aluno/Dashboard'))
+const AlunoTreinoInicio = lazy(() => import('./pages/aluno/TreinoInicio'))
+const AlunoTreinoExecucao = lazy(() => import('./pages/aluno/TreinoExecucao'))
+const AlunoTreinoConclusao = lazy(() => import('./pages/aluno/TreinoConclusao'))
+const AlunoMedidas = lazy(() => import('./pages/aluno/Medidas'))
+const AlunoEvolucao = lazy(() => import('./pages/aluno/Evolucao'))
+const HistoricoExercicio = lazy(() => import('./pages/aluno/HistoricoExercicio'))
+const ProfessorDashboard = lazy(() => import('./pages/professor/Dashboard'))
+const ProfessorAlunoCorrelacoes = lazy(() => import('./pages/professor/AlunoCorrelacoes'))
+const ProfessorCriarTreino = lazy(() => import('./pages/professor/CriarTreino'))
+const ProfessorTreinos = lazy(() => import('./pages/professor/Treinos'))
+const ProfessorCriarExercicio = lazy(() => import('./pages/professor/CriarExercicio'))
+const ProfessorAcademias = lazy(() => import('./pages/professor/Academias'))
+const ProfessorVincularAluno = lazy(() => import('./pages/professor/VincularAluno'))
+const ProfessorFichas = lazy(() => import('./pages/professor/Fichas'))
+const RootPainel = lazy(() => import('./pages/root/Painel'))
+const RootVinculos = lazy(() => import('./pages/root/Vinculos'))
+const RootUsuarios = lazy(() => import('./pages/root/Usuarios'))
+const RootSocial = lazy(() => import('./pages/root/Social'))
+const RootPublicacoes = lazy(() => import('./pages/root/Publicacoes'))
+const RootAvaliacoesSistema = lazy(() => import('./pages/root/AvaliacoesSistema'))
+const RootFinanceiro = lazy(() => import('./pages/root/Financeiro'))
+const AcademiaDashboard = lazy(() => import('./pages/academia/Dashboard'))
+const AcademiaProfessores = lazy(() => import('./pages/academia/Professores'))
+const AcademiaAlunos = lazy(() => import('./pages/academia/Alunos'))
+const AcademiaPromocoes = lazy(() => import('./pages/academia/Promocoes'))
+const AcademiaCriarTreino = lazy(() => import('./pages/academia/CriarTreinoAcademia'))
+const AcademiaTreinos = lazy(() => import('./pages/academia/Treinos'))
+const AlunoMeusTreinos = lazy(() => import('./pages/aluno/MeusTreinos'))
+const AlunoCriarTreino = lazy(() => import('./pages/aluno/CriarTreinoAluno'))
+const AlunoDados = lazy(() => import('./pages/aluno/DadosAluno'))
+const BibliotecaPlanos = lazy(() => import('./pages/aluno/BibliotecaPlanos'))
+const AlunoMural = lazy(() => import('./pages/aluno/Mural'))
+const AlunoAmizades = lazy(() => import('./pages/aluno/Amizades'))
+const AlunoPrivacidade = lazy(() => import('./pages/aluno/Privacidade'))
+const AlunoPreferenciasNotificacao = lazy(() => import('./pages/aluno/PreferenciasNotificacao'))
+const AlunoClubes = lazy(() => import('./pages/aluno/Clubes'))
+const Parceiros = lazy(() => import('./pages/aluno/Parceiros'))
+const WelcomeCards = lazy(() => import('./pages/aluno/WelcomeCards'))
+const Noticias = lazy(() => import('./pages/aluno/Noticias'))
+const ClubeFeed = lazy(() => import('./pages/aluno/ClubeFeed'))
+const AlterarSenha = lazy(() => import('./pages/auth/AlterarSenha'))
+const Avaliacoes = lazy(() => import('./pages/avaliacoes/Avaliacoes'))
+const Documentacao = lazy(() => import('./pages/Documentacao'))
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // import Paywall from './pages/paywall/Paywall'
 // import Beneficios from './pages/aluno/Beneficios'
@@ -113,10 +114,12 @@ export default function App() {
 
   return (
     <>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-surface"><LoadingSpinner size="md" /></div>}>
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+      <Route path="/quem-somos" element={<QuemSomos />} />
       <Route path="/planos" element={<Planos />} />
       <Route path="/blog" element={<BlogLista />} />
       <Route path="/blog/:slug" element={<BlogArtigo />} />
@@ -276,6 +279,7 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
     <OnboardingPermissionsModal />
     <PWAInstallPrompt />
     {user && <NotificationPrompt />}

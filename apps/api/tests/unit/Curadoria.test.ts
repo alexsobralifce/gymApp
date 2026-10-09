@@ -7,6 +7,9 @@ import { CONFIG_CURADORIA, type FonteFeed } from '../../src/application/usecases
 import {
   trechosCopiados,
   termosDeRisco,
+  clichesEncontrados,
+  ESTILOS,
+  sortearEstilo,
   validar,
   montarArtigo,
   slugificar,
@@ -80,6 +83,7 @@ describe('redator', () => {
     motivo: '',
     titulo: 'Um título diferente',
     descricao: 'a'.repeat(120),
+    alt_imagem: 'Aluno fazendo agachamento livre com barra em uma academia iluminada',
     categoria: 'Aluno',
     resumo: 'Resumo original.',
     secoes: [
@@ -105,6 +109,34 @@ describe('redator', () => {
     expect(termosDeRisco(com)).toEqual(expect.arrayContaining(['creatina', '5 mg', 'garantido']))
     expect(validar(com, candidato).join()).toMatch(/revisão humana/)
     expect(termosDeRisco({ ...gerado, resumo: 'Uma curadoria sobre treino de força.' })).toEqual([])
+  })
+  it('barra clichês de texto automático e excesso de travessões', () => {
+    const com = { ...gerado, resumo: 'Nos dias de hoje, é fundamental mergulhar nessa jornada.' }
+    expect(clichesEncontrados(com)).toEqual(expect.arrayContaining(['nos dias de hoje', 'é fundamental', 'mergulhar', 'jornada']))
+    expect(validar(com, candidato).join()).toMatch(/clichês/)
+    expect(clichesEncontrados(gerado)).toEqual([])
+    expect(validar({ ...gerado, resumo: 'a — b — c — d' }, candidato).join()).toMatch(/travessões/)
+  })
+  it('limita título a 60 caracteres e exige alt descritivo', () => {
+    expect(validar({ ...gerado, titulo: 'T'.repeat(61) }, candidato).join()).toMatch(/titulo com 61/)
+    expect(validar({ ...gerado, alt_imagem: 'curto' }, candidato).join()).toMatch(/alt_imagem/)
+    expect(montarArtigo(candidato, gerado, '2026-10-12').altImagem).toBe(gerado.alt_imagem)
+  })
+  it('assina sempre como Equipe ENDORFINAPP', () => {
+    expect(montarArtigo(candidato, gerado, '2026-10-12').autor).toBe('Equipe ENDORFINAPP')
+  })
+  it('sorteia um estilo e o envia à IA; auditoria reprovada força reescrita', async () => {
+    expect(ESTILOS).toContain(sortearEstilo())
+    const chamadas: string[] = []
+    const reprova = { aprovado: false, experiencia: 2, confianca: 4, intencao: 3, correcoes: ['Abra direto pela resposta.'] }
+    const aprova = { aprovado: true, experiencia: 4, confianca: 5, intencao: 4, correcoes: [] }
+    const respostas = [gerado, reprova, gerado, aprova].map((r) => ({ texto: JSON.stringify(r) }))
+    const c: ClienteIA = { gerar: async (a) => { chamadas.push(a.usuario); return respostas.shift()! } }
+    expect((await redigir(candidato, { cliente: c, auditar: true, estilo: 'ESTILO_X' })).ok).toBe(true)
+    expect(chamadas[0]).toContain('ESTILO_X')
+    expect(chamadas[2]).toMatch(/auditoria E-E-A-T.*Abra direto/)
+    const sempreReprova: ClienteIA = { gerar: async (a) => ({ texto: JSON.stringify(a.sistema.includes('Search Quality') ? reprova : gerado) }) }
+    expect(await redigir(candidato, { cliente: sempreReprova, auditar: true })).toMatchObject({ ok: false, motivo: expect.stringContaining('auditoria E-E-A-T') })
   })
   it('monta o artigo com origem e fonte', () => {
     const a = montarArtigo(candidato, gerado, '2026-10-12')

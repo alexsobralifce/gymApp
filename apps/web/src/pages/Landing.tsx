@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSeo } from '../lib/seo'
+import { dadosDoSite } from '../lib/dadosEstruturados'
 import { ARTIGOS } from '../lib/blog'
 import { Link } from 'react-router-dom'
 import {
@@ -11,6 +12,7 @@ import EndorfinappLogo from '../components/branding/EndorfinappLogo'
 import DemoTreino from '../components/landing/DemoTreino'
 import { api } from '../api/client'
 import { registrarVisitaLanding } from '../lib/visitaLanding'
+import { EMAIL_SUPORTE } from '../config/contato'
 
 const NAV_LINKS = ['Funcionalidades', 'Ciencia', 'Rede Social', 'Como Funciona']
 
@@ -80,6 +82,7 @@ export default function Landing() {
     title: 'ENDORFINAPP — App de treino para personal, academia e aluno',
     description: 'Monte treinos, acompanhe a evolução e gerencie alunos em um só app. Execução guiada, biblioteca de planos e rede social fitness. Teste grátis.',
     path: '/',
+    jsonLd: dadosDoSite(),
   })
   const [mobileOpen, setMobileOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -635,8 +638,10 @@ export default function Landing() {
                 ...(ARTIGOS.length > 0 ? [{ label: 'Blog', href: '/blog' }] : []),
                 { label: 'Entrar', href: '/login' },
                 { label: 'Criar Conta', href: '/register' },
+                { label: 'Quem somos', href: '/quem-somos' },
                 { label: 'Termos de Uso', href: '/politica-privacidade' },
                 { label: 'Privacidade', href: '/politica-privacidade' },
+                { label: 'Suporte', href: `mailto:${EMAIL_SUPORTE}` },
               ] },
             ].map((col) => (
               <div key={col.title}>

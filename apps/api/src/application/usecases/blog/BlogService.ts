@@ -2,6 +2,7 @@ import { BlogStatus, BlogTipo, Prisma, type ArtigoBlog } from '@prisma/client'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, ConflictError } from '../../../domain/errors/AppError.js'
 import { enfileirarAviso } from '../../../infrastructure/seo/avisoBuscadores.js'
+import { AUTOR_BLOG } from './autor.js'
 import { agendadorRebuild, rebuildConfigurado, redeployDoSite } from '../../../infrastructure/hosting/railwayRebuild.js'
 
 export interface ArtigoEntrada {
@@ -118,7 +119,7 @@ export async function receberArtigos(entradas: ArtigoEntrada[]) {
       titulo: e.titulo,
       descricao: e.descricao,
       categoria: e.categoria,
-      autor: e.autor ?? 'Equipe ENDORFINAPP',
+      autor: AUTOR_BLOG,
       resumo: e.resumo,
       secoes: e.secoes as Prisma.InputJsonValue,
       fontes: e.fontes as Prisma.InputJsonValue,

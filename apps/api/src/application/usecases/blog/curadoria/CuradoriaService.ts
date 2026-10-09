@@ -88,7 +88,7 @@ export async function processarExecucao(id: string, p: ParametrosCuradoria, clie
       if (relatorio.geradas.length >= p.quantidade || tentados.size >= p.quantidade * 4) break
       if (tentados.has(candidato.item.link)) continue
       tentados.add(candidato.item.link)
-      const r = await redigir(candidato, { cliente, modelo: env.CURADORIA_MODELO, utilidadeMinima: env.CURADORIA_UTILIDADE_MIN }).catch((e: Error) => ({ ok: false as const, motivo: `erro na API da OpenAI: ${e.message}` }))
+      const r = await redigir(candidato, { cliente, modelo: env.CURADORIA_MODELO, utilidadeMinima: env.CURADORIA_UTILIDADE_MIN, auditar: true }).catch((e: Error) => ({ ok: false as const, motivo: `erro na API da OpenAI: ${e.message}` }))
       if (!r.ok) {
         relatorio.descartadas.push({ titulo: candidato.item.titulo, motivo: r.motivo })
         continue
@@ -99,7 +99,7 @@ export async function processarExecucao(id: string, p: ParametrosCuradoria, clie
       let imagem: { imagemUrl: string; imagemAlt: string } | null = null
       let erroImagem: string | undefined
       try {
-        imagem = await gerarImagemNova(slug, artigo.titulo, artigo.resumo)
+        imagem = await gerarImagemNova(slug, artigo.titulo, artigo.resumo, artigo.altImagem)
       } catch (e) {
         erroImagem = (e as Error).message.slice(0, 200)
       }

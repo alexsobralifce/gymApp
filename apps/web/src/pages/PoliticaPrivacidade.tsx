@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useSeo } from '../lib/seo'
+import { EMAIL_SUPORTE } from '../config/contato'
 import { ChevronLeftIcon } from '../components/icons/Icon'
 import { EndorfinappLogo } from '../components/branding/EndorfinappLogo'
 
@@ -149,7 +150,7 @@ export default function PoliticaPrivacidade() {
               Dúvidas, reclamações ou solicitações sobre seus dados podem ser enviadas para:
             </p>
             <p className="mt-2 rounded-xl border border-border bg-surface-card p-3">
-              E-mail: <strong className="text-text">suportendorfinapp@gmail.com</strong>
+              E-mail: <strong className="text-text">{EMAIL_SUPORTE}</strong>
               <br />
               Assunto: <strong className="text-text">LGPD / Privacidade</strong>
             </p>
