@@ -4,6 +4,8 @@ import { api } from '../../api/client'
 import { resolveMediaUrl } from '../../lib/media'
 import type { SocialPost } from '../../types/api'
 
+import { useT } from '../../i18n'
+import { t as tx } from '../../i18n'
 interface EditarPostModalProps {
   post: SocialPost
   open: boolean
@@ -28,15 +30,15 @@ function calcularTempoRestante(criadoEm: string): { expirou: boolean; texto: str
 function getMensagemPadrao(post: SocialPost): string {
   if (post.tipo === 'TREINO_INICIADO') {
     return post.academia_nome
-      ? `${post.autor_nome} iniciou o treino na ${post.academia_nome}! 🔥`
-      : `${post.autor_nome} iniciou o treino! 🔥`
+      ? tx('{autor_nome} iniciou o treino na {academia_nome}! 🔥', { autor_nome: post.autor_nome, academia_nome: post.academia_nome })
+      : tx('{autor_nome} iniciou o treino! 🔥', { autor_nome: post.autor_nome })
   }
   if (post.tipo === 'TREINO_CONCLUIDO') {
     return post.academia_nome
-      ? `${post.autor_nome} concluiu o treino na ${post.academia_nome}! 💪`
-      : `${post.autor_nome} concluiu o treino! 💪`
+      ? tx('{autor_nome} concluiu o treino na {academia_nome}! 💪', { autor_nome: post.autor_nome, academia_nome: post.academia_nome })
+      : tx('{autor_nome} concluiu o treino! 💪', { autor_nome: post.autor_nome })
   }
-  return `${post.autor_nome} compartilhou um treino!`
+  return tx('{autor_nome} compartilhou um treino!', { autor_nome: post.autor_nome })
 }
 
 export default function EditarPostModal({
@@ -46,6 +48,7 @@ export default function EditarPostModal({
   onSaved,
   onShareAfterSave,
 }: EditarPostModalProps) {
+  const { t } = useT()
   const [texto, setTexto] = useState<string>(post.legenda ?? getMensagemPadrao(post))
   const [fotoPreview, setFotoPreview] = useState<string | null>(resolveMediaUrl(post.midia_url))
   const [novaFotoArquivo, setNovaFotoArquivo] = useState<File | null>(null)
@@ -63,12 +66,12 @@ export default function EditarPostModal({
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      setErro('Selecione um arquivo de imagem válido (JPG, PNG ou WebP).')
+      setErro(t('Selecione um arquivo de imagem válido (JPG, PNG ou WebP).'))
       return
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setErro('A imagem deve ter no máximo 5MB.')
+      setErro(t('A imagem deve ter no máximo 5MB.'))
       return
     }
 
@@ -90,12 +93,12 @@ export default function EditarPostModal({
 
   async function handleSalvar(compartilhar: boolean = false) {
     if (expirou) {
-      setErro('O prazo de 24 horas para edição desta postagem já expirou.')
+      setErro(t('O prazo de 24 horas para edição desta postagem já expirou.'))
       return
     }
 
     if (!texto.trim()) {
-      setErro('A postagem não pode ficar sem texto.')
+      setErro(t('A postagem não pode ficar sem texto.'))
       return
     }
 
@@ -128,7 +131,7 @@ export default function EditarPostModal({
         onShareAfterSave?.()
       }
     } catch (err: any) {
-      setErro(err?.message || 'Erro ao salvar alterações da postagem.')
+      setErro(t(err?.message) || t('Erro ao salvar alterações da postagem.'))
     } finally {
       setSalvando(false)
     }
@@ -144,8 +147,8 @@ export default function EditarPostModal({
               <Edit2Icon className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-text">Editar Postagem</h2>
-              <p className="text-[11px] text-text-muted">Altere o texto e a foto da sua publicação</p>
+              <h2 className="text-sm font-bold text-text">{t('Editar Postagem')}</h2>
+              <p className="text-[11px] text-text-muted">{t('Altere o texto e a foto da sua publicação')}</p>
             </div>
           </div>
           <button
@@ -179,7 +182,7 @@ export default function EditarPostModal({
           {/* Campo de Texto / Legenda */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-text">Texto da Postagem</label>
+              <label className="text-xs font-semibold text-text">{t('Texto da Postagem')}</label>
               <span className={`text-[11px] ${texto.length > 900 ? 'text-warning font-bold' : 'text-text-muted'}`}>
                 {texto.length}/1000
               </span>
@@ -190,20 +193,20 @@ export default function EditarPostModal({
               onChange={(e) => setTexto(e.target.value)}
               disabled={salvando || expirou}
               maxLength={1000}
-              placeholder="Escreva algo sobre o treino, superações, dicas..."
+              placeholder={t('Escreva algo sobre o treino, superações, dicas...')}
               className="w-full rounded-xl border border-surface-input bg-surface p-3 text-sm text-text placeholder-text-muted/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none disabled:opacity-50"
             />
           </div>
 
           {/* Seção de Foto */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-text">Foto do Treino</label>
+            <label className="text-xs font-semibold text-text">{t('Foto do Treino')}</label>
             
             {fotoPreview ? (
               <div className="relative overflow-hidden rounded-xl border border-surface-input bg-surface aspect-video flex items-center justify-center">
                 <img
                   src={fotoPreview}
-                  alt="Prévia da foto"
+                  alt={t('Prévia da foto')}
                   className="w-full h-full object-cover"
                 />
                 <button
@@ -211,7 +214,7 @@ export default function EditarPostModal({
                   onClick={handleMarcarRemover}
                   disabled={salvando || expirou}
                   className="absolute top-2 right-2 rounded-full bg-destructive/90 text-white p-2 shadow-lg hover:bg-destructive transition-colors cursor-pointer"
-                  title="Remover foto"
+                  title={t('Remover foto')}
                 >
                   <TrashIcon className="h-4 w-4" />
                 </button>
@@ -224,9 +227,9 @@ export default function EditarPostModal({
                 }`}
               >
                 <CameraIcon className="h-8 w-8 text-text-muted mb-2" />
-                <p className="text-xs font-semibold text-text">Nenhuma foto adicionada</p>
+                <p className="text-xs font-semibold text-text">{t('Nenhuma foto adicionada')}</p>
                 <p className="text-[11px] text-text-muted mt-0.5">
-                  Clique para selecionar ou tirar uma foto
+                  {t('Clique para selecionar ou tirar uma foto')}
                 </p>
               </div>
             )}
@@ -249,7 +252,7 @@ export default function EditarPostModal({
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-bold text-text hover:border-primary/50 transition-colors cursor-pointer disabled:opacity-50"
               >
                 <CameraIcon className="h-4 w-4 text-primary" />
-                <span>{fotoPreview ? 'Trocar Foto' : 'Adicionar Foto'}</span>
+                <span>{fotoPreview ? t('Trocar Foto') : t('Adicionar Foto')}</span>
               </button>
 
               {fotoPreview && (
@@ -260,7 +263,7 @@ export default function EditarPostModal({
                   className="flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs font-bold text-destructive hover:bg-destructive/20 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <TrashIcon className="h-4 w-4" />
-                  <span>Remover Foto</span>
+                  <span>{t('Remover Foto')}</span>
                 </button>
               )}
             </div>
@@ -277,7 +280,7 @@ export default function EditarPostModal({
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-500 via-pink-600 to-purple-600 py-2.5 text-xs font-bold text-white shadow-md shadow-pink-500/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
             >
               <InstagramIcon className="h-4 w-4" />
-              <span>{salvando ? 'Salvando...' : 'Salvar e Compartilhar no Instagram'}</span>
+              <span>{salvando ? 'Salvando...' : t('Salvar e Compartilhar no Instagram')}</span>
             </button>
           )}
 
@@ -288,7 +291,7 @@ export default function EditarPostModal({
               disabled={salvando}
               className="flex-1 rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
             >
-              Cancelar
+              {t('Cancelar')}
             </button>
             <button
               type="button"
@@ -297,11 +300,11 @@ export default function EditarPostModal({
               className="flex-1 flex items-center justify-center gap-2 rounded-xl gradient-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
             >
               {salvando ? (
-                <span>Salvando...</span>
+                <span>{t('Salvando...')}</span>
               ) : (
                 <>
                   <CheckIcon className="h-4 w-4" />
-                  <span>Salvar Post</span>
+                  <span>{t('Salvar Post')}</span>
                 </>
               )}
             </button>

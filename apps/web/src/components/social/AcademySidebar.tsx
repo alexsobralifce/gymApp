@@ -5,6 +5,7 @@ import { Building2Icon } from '../icons/Icon'
 import { resolveMediaUrl } from '../../lib/media'
 import { getInitials } from '../../lib/initials'
 
+import { useT } from '../../i18n'
 interface Colega {
   id: string
   nome: string
@@ -35,6 +36,7 @@ function AvatarColega({ nome, fotoUrl }: { nome: string; fotoUrl: string | null 
 }
 
 export default function AcademySidebar() {
+  const { t } = useT()
   const user = useAuthStore((s) => s.user)
   const [colegas, setColegas] = useState<Colega[]>([])
   const [solicitados, setSolicitados] = useState<Set<string>>(new Set())
@@ -61,7 +63,7 @@ export default function AcademySidebar() {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-input">
         <Building2Icon className="h-4 w-4 text-text-muted" />
-        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Alunos da Academia</span>
+        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Alunos da Academia')}</span>
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5 scrollbar-hide">
         {colegas.map((c) => (
@@ -72,13 +74,13 @@ export default function AcademySidebar() {
             <AvatarColega nome={c.nome} fotoUrl={c.fotoUrl} />
             <span className="text-xs text-text truncate flex-1 min-w-0">{c.nome}</span>
             {solicitados.has(c.id) ? (
-              <span className="text-xs text-text-muted shrink-0">Enviado</span>
+              <span className="text-xs text-text-muted shrink-0">{t('Enviado')}</span>
             ) : (
               <button
                 onClick={() => handleSeguir(c.id)}
                 className="rounded-lg bg-primary/10 hover:bg-primary px-2 py-0.5 text-xs font-bold text-primary hover:text-primary-foreground transition-all shrink-0 cursor-pointer"
               >
-                Seguir
+                {t('Seguir')}
               </button>
             )}
           </div>

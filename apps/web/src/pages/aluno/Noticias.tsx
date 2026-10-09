@@ -14,6 +14,9 @@ import {
   Apple,
 } from 'lucide-react'
 
+import { useT } from '../../i18n'
+import { t as tx } from '../../i18n'
+import { localeAtual } from '../../i18n'
 interface NoticiaItem {
   id: string
   titulo: string
@@ -53,7 +56,7 @@ function getCategoryForNews(titulo: string, resumo: string): string {
 
 function getCategoryLabel(catId: string): string {
   const found = CATEGORIES.find((c) => c.id === catId)
-  return found ? found.label : 'Saúde'
+  return found ? found.label : tx('Saúde')
 }
 
 function formatRelativeTime(dateString?: string | null): string {
@@ -67,15 +70,16 @@ function formatRelativeTime(dateString?: string | null): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffMinutes < 5) return 'Agora mesmo'
-  if (diffMinutes < 60) return `Há ${diffMinutes} min`
-  if (diffHours < 24) return `Há ${diffHours} h`
+  if (diffMinutes < 5) return tx('Agora mesmo')
+  if (diffMinutes < 60) return tx('Há {diffMinutes} min', { diffMinutes })
+  if (diffHours < 24) return tx('Há {diffHours} h', { diffHours })
   if (diffDays === 1) return 'Ontem'
-  if (diffDays < 7) return `Há ${diffDays} dias`
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  if (diffDays < 7) return tx('Há {diffDays} dias', { diffDays })
+  return date.toLocaleDateString(localeAtual(), { day: '2-digit', month: 'short' })
 }
 
 export default function Noticias() {
+  const { t } = useT()
   const [noticias, setNoticias] = useState<NoticiaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -108,11 +112,11 @@ export default function Noticias() {
     try {
       await api.refreshNoticias()
       await loadNoticias()
-      setMessage('Notícias atualizadas com sucesso!')
+      setMessage(t('Notícias atualizadas com sucesso!'))
       setTimeout(() => setMessage(null), 4000)
     } catch (err) {
       console.warn('Erro ao atualizar notícias:', err)
-      setMessage('Atualização concluída.')
+      setMessage(t('Atualização concluída.'))
       setTimeout(() => setMessage(null), 3000)
     } finally {
       setRefreshing(false)
@@ -147,10 +151,10 @@ export default function Noticias() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Newspaper className="h-5 w-5" />
             </span>
-            <h1 className="text-2xl font-bold tracking-tight text-text">Notícias & Saúde</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-text">{t('Notícias & Saúde')}</h1>
           </div>
           <p className="text-sm text-text-muted mt-1">
-            As últimas descobertas científicas sobre musculação, saúde metabólica, endorfina e longevidade.
+            {t('As últimas descobertas científicas sobre musculação, saúde metabólica, endorfina e longevidade.')}
           </p>
         </div>
 
@@ -160,14 +164,14 @@ export default function Noticias() {
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 px-4 py-2.5 text-xs font-semibold text-primary transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
         >
           <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Buscando novidades...' : 'Atualizar Notícias'}
+          {refreshing ? t('Buscando novidades...') : t('Atualizar Notícias')}
         </button>
       </div>
 
       {message && (
         <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-xs font-medium text-primary animate-slide-up flex items-center justify-between">
           <span>{message}</span>
-          <span className="text-[10px] opacity-75">Sincronizado via Google News</span>
+          <span className="text-[10px] opacity-75">{t('Sincronizado via Google News')}</span>
         </div>
       )}
 
@@ -177,7 +181,7 @@ export default function Noticias() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
           <input
             type="text"
-            placeholder="Pesquisar por tema, músculo, saúde, alimentação..."
+            placeholder={t('Pesquisar por tema, músculo, saúde, alimentação...')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-input bg-surface-card text-sm text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
@@ -187,7 +191,7 @@ export default function Noticias() {
               onClick={() => setSearch('')}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-text-muted hover:text-text"
             >
-              Limpar
+              {t('Limpar')}
             </button>
           )}
         </div>
@@ -208,7 +212,7 @@ export default function Noticias() {
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
-                {cat.label}
+                {t(cat.label)}
               </button>
             )
           })}
@@ -235,11 +239,11 @@ export default function Noticias() {
             📰
           </div>
           <div className="space-y-1 max-w-sm">
-            <h3 className="text-base font-bold text-text">Nenhuma notícia encontrada</h3>
+            <h3 className="text-base font-bold text-text">{t('Nenhuma notícia encontrada')}</h3>
             <p className="text-xs text-text-muted">
               {search
-                ? `Nenhum artigo corresponde à busca "${search}". Tente outros termos.`
-                : 'Clique no botão abaixo para buscar as notícias mais recentes diretamente dos principais canais de saúde.'}
+                ? t('Nenhum artigo corresponde à busca "{search}". Tente outros termos.', { search })
+                : t('Clique no botão abaixo para buscar as notícias mais recentes diretamente dos principais canais de saúde.')}
             </p>
           </div>
           <button
@@ -247,7 +251,7 @@ export default function Noticias() {
             disabled={refreshing}
             className="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            Buscar Notícias Agora
+            {t('Buscar Notícias Agora')}
           </button>
         </div>
       ) : (
@@ -267,14 +271,14 @@ export default function Noticias() {
                       featured.imagem_url ||
                       'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80'
                     }
-                    alt={featured.titulo}
+                    alt={t(featured.titulo)}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent md:hidden" />
                   <div className="absolute top-3 left-3 flex gap-2">
                     <span className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                      Destaque
+                      {t('Destaque')}
                     </span>
                     <span className="px-2.5 py-1 rounded-md bg-background/80 backdrop-blur-md text-text text-[10px] font-semibold">
                       {getCategoryLabel(getCategoryForNews(featured.titulo, featured.resumo))}
@@ -285,7 +289,7 @@ export default function Noticias() {
                 <div className="md:col-span-6 lg:col-span-5 p-5 md:p-6 flex flex-col justify-between space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span className="font-semibold text-primary">{featured.fonte || 'Google News'}</span>
+                      <span className="font-semibold text-primary">{featured.fonte || t('Google News')}</span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5" />
@@ -294,16 +298,16 @@ export default function Noticias() {
                     </div>
 
                     <h2 className="text-base sm:text-lg font-bold text-text group-hover:text-primary transition-colors line-clamp-3 leading-snug">
-                      {featured.titulo}
+                      {t(featured.titulo)}
                     </h2>
 
                     <p className="text-xs sm:text-sm text-text-muted line-clamp-3 leading-relaxed">
-                      {featured.resumo}
+                      {t(featured.resumo)}
                     </p>
                   </div>
 
                   <div className="pt-2 flex items-center text-xs font-bold text-primary group-hover:underline gap-1">
-                    Ler matéria completa
+                    {t('Ler matéria completa')}
                     <ExternalLink className="h-3.5 w-3.5 ml-0.5" />
                   </div>
                 </div>
@@ -331,7 +335,7 @@ export default function Noticias() {
                           n.imagem_url ||
                           'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80'
                         }
-                        alt={n.titulo}
+                        alt={t(n.titulo)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -346,23 +350,23 @@ export default function Noticias() {
                     <div className="p-4 space-y-2">
                       <div className="flex items-center justify-between text-[11px] text-text-muted">
                         <span className="font-semibold text-primary truncate max-w-[150px]">
-                          {n.fonte || 'Google News'}
+                          {n.fonte || t('Google News')}
                         </span>
                         <span>{formatRelativeTime(n.data_publicacao || n.criado_em)}</span>
                       </div>
 
                       <h3 className="text-sm font-bold text-text group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                        {n.titulo}
+                        {t(n.titulo)}
                       </h3>
 
                       <p className="text-xs text-text-muted line-clamp-2 leading-relaxed">
-                        {n.resumo}
+                        {t(n.resumo)}
                       </p>
                     </div>
                   </div>
 
                   <div className="px-4 pb-4 pt-1 flex items-center justify-between text-xs font-semibold text-primary">
-                    <span className="group-hover:underline">Abrir notícia</span>
+                    <span className="group-hover:underline">{t('Abrir notícia')}</span>
                     <ExternalLink className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
                   </div>
                 </a>

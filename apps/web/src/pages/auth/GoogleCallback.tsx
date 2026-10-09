@@ -15,7 +15,9 @@ import { validateGoogleState, getGoogleRedirectFrom, clearGoogleRedirectData } f
 import { EndorfinappIcon } from '../../components/branding'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
+import { useT } from '../../i18n'
 export default function GoogleCallback() {
+  const { t } = useT()
   const navigate = useNavigate()
   const { loginWithGoogle, loginWithGoogleCode } = useAuthStore()
   const ranRef = useRef(false)
@@ -80,7 +82,7 @@ export default function GoogleCallback() {
       <div className="flex flex-col items-center gap-4">
         <EndorfinappIcon size={44} />
         <LoadingSpinner size="md" />
-        <p className="text-sm text-text-muted">Autenticando com Google...</p>
+        <p className="text-sm text-text-muted">{t('Autenticando com Google...')}</p>
       </div>
     </div>
   )

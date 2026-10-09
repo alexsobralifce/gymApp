@@ -10,6 +10,7 @@ import Step1Basics from './Step1Basics'
 import Step2Profile from './Step2Profile'
 import Step3Academia from './Step3Academia'
 
+import { useT } from '../../i18n'
 const STEPS = ['Dados', 'Perfil', 'Academia']
 
 // Triagem simplificada PAR-Q+ (UX-009) — não bloqueante, respostas enviadas no registro
@@ -24,6 +25,7 @@ type ParqKeys = 'q1' | 'q2' | 'q3' | 'q4'
 type ParqState = Record<ParqKeys, boolean | null>
 
 export default function RegisterWizard() {
+  const { t } = useT()
   const [step, setStep] = useState(0)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -199,8 +201,8 @@ export default function RegisterWizard() {
       if (!isStep2Valid()) {
         setStep3Error(
           modoVinculo === 'ACADEMIA' && !academiaId
-            ? 'Selecione uma academia na lista'
-            : 'Selecione uma modalidade (Autogestão ou Academia)'
+            ? t('Selecione uma academia na lista')
+            : t('Selecione uma modalidade (Autogestão ou Academia)')
         )
         return
       }
@@ -236,7 +238,7 @@ export default function RegisterWizard() {
       await login(email, senha)
       await finalizeProfile()
     } catch (err: any) {
-      setVerifyError(err?.message || 'Código inválido ou expirado. Tente novamente.')
+      setVerifyError(t(err?.message) || t('Código inválido ou expirado. Tente novamente.'))
     } finally {
       setIsVerifying(false)
     }
@@ -250,7 +252,7 @@ export default function RegisterWizard() {
       await api.resendCode(email)
       setResendSuccess(true)
     } catch (err: any) {
-      setVerifyError(err?.message || 'Erro ao reenviar código.')
+      setVerifyError(t(err?.message) || t('Erro ao reenviar código.'))
     } finally {
       setIsResending(false)
     }
@@ -269,7 +271,7 @@ export default function RegisterWizard() {
       setEmail('')
       setSenha('')
       setTouchedStep0({ nome: false, email: false, senha: false })
-      setCancelMessage('Cadastro cancelado e dados removidos do sistema com sucesso.')
+      setCancelMessage(t('Cadastro cancelado e dados removidos do sistema com sucesso.'))
     } catch {
       // Mesmo se houver erro de rede, reseta tela
       setIsVerifyingEmail(false)
@@ -288,10 +290,10 @@ export default function RegisterWizard() {
 
         <div className="text-center">
           <h1 className="text-xl font-bold text-text">
-            {isVerifyingEmail ? 'Verificação de Conta' : 'Crie sua Conta Grátis'}
+            {isVerifyingEmail ? t('Verificação de Conta') : t('Crie sua Conta Grátis')}
           </h1>
           <p className="text-xs text-text-muted mt-0.5">
-            {isVerifyingEmail ? 'Ative seu e-mail para começar' : 'Comece a treinar com inteligência hoje'}
+            {isVerifyingEmail ? t('Ative seu e-mail para começar') : t('Comece a treinar com inteligência hoje')}
           </p>
         </div>
 
@@ -309,13 +311,13 @@ export default function RegisterWizard() {
             {error.includes('já cadastrado') && (
               <div className="rounded-xl bg-primary/10 border border-primary/30 p-3 text-center space-y-2">
                 <p className="text-xs text-text font-medium">
-                  Este e-mail já possui uma conta no ENDORFINAPP.
+                  {t('Este e-mail já possui uma conta no ENDORFINAPP.')}
                 </p>
                 <Link
                   to="/login"
                   className="inline-block w-full text-center rounded-lg bg-primary py-2 px-3 text-xs font-semibold text-primary-foreground hover:brightness-110 active:scale-95 transition-all shadow-sm"
                 >
-                  Entrar ou Recuperar Senha
+                  {t('Entrar ou Recuperar Senha')}
                 </Link>
               </div>
             )}
@@ -325,9 +327,9 @@ export default function RegisterWizard() {
         {googleRedirectError && !isVerifyingEmail && (
           <p className="rounded bg-destructive/10 border border-destructive/30 p-2.5 text-xs text-destructive text-center">
             {googleRedirectError === 'cancelado'
-              ? 'Cadastro com Google cancelado.'
+              ? t('Cadastro com Google cancelado.')
               : googleRedirectError === 'state_invalido'
-              ? 'A sessão do Google expirou ou foi interrompida. Por favor, tente novamente.'
+              ? t('A sessão do Google expirou ou foi interrompida. Por favor, tente novamente.')
               : googleRedirectError}
           </p>
         )}
@@ -343,7 +345,7 @@ export default function RegisterWizard() {
 
             <div>
               <p className="text-xs text-text-muted leading-relaxed">
-                Enviamos um código de 4 dígitos para <br />
+                {t('Enviamos um código de 4 dígitos para')} <br />
                 <span className="font-semibold text-text">{email}</span>.
               </p>
             </div>
@@ -355,13 +357,13 @@ export default function RegisterWizard() {
             )}
             {resendSuccess && (
               <p className="rounded bg-success/10 border border-success/30 p-2.5 text-xs text-success">
-                Código reenviado com sucesso!
+                {t('Código reenviado com sucesso!')}
               </p>
             )}
 
             <div className="py-2">
               <label htmlFor="wizard-verify-code" className="block text-[11px] font-medium text-text-muted mb-1.5">
-                Digite o código de 4 dígitos
+                {t('Digite o código de 4 dígitos')}
               </label>
               <input
                 id="wizard-verify-code"
@@ -383,7 +385,7 @@ export default function RegisterWizard() {
                 disabled={verifyCode.length < 4 || isVerifying || isCancelling}
                 className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
               >
-                {isVerifying ? 'Confirmando...' : 'Confirmar e Começar'}
+                {isVerifying ? 'Confirmando...' : t('Confirmar e Começar')}
               </button>
 
               <button
@@ -392,7 +394,7 @@ export default function RegisterWizard() {
                 disabled={isResending || isCancelling}
                 className="text-xs font-semibold text-primary hover:underline cursor-pointer block w-full py-1"
               >
-                {isResending ? 'Reenviando...' : 'Não recebeu o e-mail? Reenviar código'}
+                {isResending ? 'Reenviando...' : t('Não recebeu o e-mail? Reenviar código')}
               </button>
 
               <div className="pt-2 border-t border-surface-input">
@@ -402,7 +404,7 @@ export default function RegisterWizard() {
                   disabled={isCancelling || isVerifying}
                   className="text-xs text-destructive hover:underline cursor-pointer py-1"
                 >
-                  {isCancelling ? 'Cancelando cadastro...' : 'Cancelar cadastro e recomeçar'}
+                  {isCancelling ? t('Cancelando cadastro...') : t('Cancelar cadastro e recomeçar')}
                 </button>
               </div>
             </div>
@@ -424,12 +426,12 @@ export default function RegisterWizard() {
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </svg>
-                  Cadastrar com Google
+                  {t('Cadastrar com Google')}
                 </button>
 
                 <div className="flex items-center gap-2">
                   <div className="h-px flex-1 bg-surface-input" />
-                  <span className="text-xs text-text-muted">ou preencha com e-mail</span>
+                  <span className="text-xs text-text-muted">{t('ou preencha com e-mail')}</span>
                   <div className="h-px flex-1 bg-surface-input" />
                 </div>
               </div>
@@ -474,8 +476,8 @@ export default function RegisterWizard() {
 
                   <div className="space-y-4 border-t border-surface-input pt-4">
                     <div>
-                      <p className="text-sm font-semibold text-text">Para sua segurança</p>
-                      <p className="text-xs text-text-muted">Isso nos ajuda a personalizar seu treino com segurança.</p>
+                      <p className="text-sm font-semibold text-text">{t('Para sua segurança')}</p>
+                      <p className="text-xs text-text-muted">{t('Isso nos ajuda a personalizar seu treino com segurança.')}</p>
                     </div>
 
                     {PARQ_QUESTIONS.map((pergunta, index) => {
@@ -495,7 +497,7 @@ export default function RegisterWizard() {
                                   : 'border-surface-input bg-surface text-text-muted hover:text-text'
                               }`}
                             >
-                              Sim
+                              {t('Sim')}
                             </button>
                             <button
                               type="button"
@@ -507,7 +509,7 @@ export default function RegisterWizard() {
                                   : 'border-surface-input bg-surface text-text-muted hover:text-text'
                               }`}
                             >
-                              Não
+                              {t('Não')}
                             </button>
                           </div>
                         </div>
@@ -517,7 +519,7 @@ export default function RegisterWizard() {
                     {algumParqPositivo && (
                       <div className="flex items-start gap-2 rounded-lg border border-warning/20 bg-warning/10 px-3 py-2.5" role="alert">
                         <p className="text-xs leading-snug text-warning">
-                          Recomendamos uma avaliação médica antes de iniciar treinos intensos. Seu professor também pode te orientar.
+                          {t('Recomendamos uma avaliação médica antes de iniciar treinos intensos. Seu professor também pode te orientar.')}
                         </p>
                       </div>
                     )}
@@ -543,7 +545,7 @@ export default function RegisterWizard() {
                     onClick={prev}
                     className="flex-1 rounded-xl border border-surface-input bg-surface px-4 py-2.5 text-sm text-text-muted hover:text-text transition-colors cursor-pointer"
                   >
-                    Voltar
+                    {t('Voltar')}
                   </button>
                 )}
                 <button
@@ -551,7 +553,7 @@ export default function RegisterWizard() {
                   disabled={loading}
                   className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
                 >
-                  {loading ? 'Processando...' : step < totalSteps - 1 ? 'Próximo' : 'Concluir Cadastro'}
+                  {loading ? 'Processando...' : step < totalSteps - 1 ? t('Próximo') : t('Concluir Cadastro')}
                 </button>
               </div>
             </form>
@@ -559,9 +561,9 @@ export default function RegisterWizard() {
         )}
 
         <p className="text-center text-xs text-text-muted pt-2 border-t border-surface-input">
-          Já tem conta?{' '}
+          {t('Já tem conta?')}{' '}
           <Link to="/login" className="font-semibold text-primary hover:underline">
-            Entrar
+            {t('Entrar')}
           </Link>
         </p>
       </div>

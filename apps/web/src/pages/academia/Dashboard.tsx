@@ -8,6 +8,7 @@ import { Building2Icon, UsersIcon, UserPlusIcon } from '../../components/icons/I
 import LogoAcademiaCard from '../../components/academia/LogoAcademiaCard'
 import TrialCartaoStep from '../../components/billing/TrialCartaoStep'
 
+import { useT } from '../../i18n'
 function formatCNPJ(value: string) {
   return value
     .replace(/\D/g, '')
@@ -19,6 +20,7 @@ function formatCNPJ(value: string) {
 }
 
 export default function AcademiaDashboard() {
+  const { t } = useT()
   const [data, setData] = useState<AcademiaDashboardType | null>(null)
   const [loading, setLoading] = useState(true)
   const [cadastrada, setCadastrada] = useState(false)
@@ -42,12 +44,12 @@ export default function AcademiaDashboard() {
     e.preventDefault()
     try {
       const a = await api.cadastrarAcademia({ nome, cnpj: cnpj.replace(/\D/g, '') })
-      setFeedback(`Academia "${a.nome}" cadastrada! Aguardando aprovacao do Root.`)
+      setFeedback(t('Academia "{nome}" cadastrada! Aguardando aprovacao do Root.', { nome: a.nome }))
       setCadastrada(true)
       setData({ nome: a.nome, cnpj: a.cnpj, email: null, telefone: null, status: a.status, totalProfessores: 0, totalAlunos: 0, professoresPendentes: 0 })
       setShowBilling(true)
     } catch (err: any) {
-      setFeedback(err.message || 'Erro ao cadastrar. Verifique o CNPJ (14 digitos).')
+      setFeedback(t(err.message) || t('Erro ao cadastrar. Verifique o CNPJ (14 digitos).'))
     }
   }
 
@@ -79,7 +81,7 @@ export default function AcademiaDashboard() {
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-text">{data.nome}</h1>
               <p className="text-xs text-text-muted mt-0.5">
-                CNPJ: {formatCNPJ(data.cnpj)}
+                {t('CNPJ:')} {formatCNPJ(data.cnpj)}
               </p>
             </div>
             <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase ${
@@ -115,14 +117,14 @@ export default function AcademiaDashboard() {
                     <span className="text-base font-medium text-text-muted"> / {data.maxProfessores}</span>
                   )}
                 </p>
-                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Professores</p>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">{t('Professores')}</p>
               </div>
             </div>
             {data.professoresPendentes > 0 && (
               <div className="flex items-center gap-1.5 rounded-lg bg-accent/10 border border-accent/10 px-2.5 py-1.5">
                 <UserPlusIcon className="h-3.5 w-3.5 text-accent" />
                 <span className="text-xs font-semibold text-accent">
-                  {data.professoresPendentes} pendente{data.professoresPendentes > 1 ? 's' : ''} de aprovacao
+                  {data.professoresPendentes} {t('pendente')}{data.professoresPendentes > 1 ? 's' : ''} {t('de aprovacao')}
                 </span>
               </div>
             )}
@@ -140,7 +142,7 @@ export default function AcademiaDashboard() {
                     <span className="text-base font-medium text-text-muted"> / {data.limiteAlunos.limite}</span>
                   )}
                 </p>
-                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Alunos</p>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">{t('Alunos')}</p>
               </div>
             </div>
           </div>
@@ -156,7 +158,7 @@ export default function AcademiaDashboard() {
 
   return (
     <div className="px-4 py-6 max-w-md mx-auto w-full">
-      <h1 className="text-xl font-bold text-text mb-6">Cadastrar Academia</h1>
+      <h1 className="text-xl font-bold text-text mb-6">{t('Cadastrar Academia')}</h1>
 
       {feedback && (
         <div className={`mb-4 rounded-xl p-4 text-sm font-medium ${
@@ -169,17 +171,17 @@ export default function AcademiaDashboard() {
       )}
 
       <form onSubmit={handleCadastrar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Nome da academia" htmlFor="nome-academia" required>
+        <FormField label={t('Nome da academia')} htmlFor="nome-academia" required>
           <Input
             id="nome-academia"
             type="text"
-            placeholder="Ex: Academia Iron Body"
+            placeholder={t('Ex: Academia Iron Body')}
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             required
           />
         </FormField>
-        <FormField label="CNPJ" htmlFor="cnpj" required>
+        <FormField label={t('CNPJ')} htmlFor="cnpj" required>
           <Input
             id="cnpj"
             type="text"
@@ -195,7 +197,7 @@ export default function AcademiaDashboard() {
           disabled={!nome || cnpj.replace(/\D/g, '').length !== 14}
           className="w-full md:col-span-2 rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
         >
-          Cadastrar Academia
+          {t('Cadastrar Academia')}
         </button>
       </form>
     </div>

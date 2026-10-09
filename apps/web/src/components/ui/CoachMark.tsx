@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { useT } from '../../i18n'
 interface CoachMarkStep {
   selector: string
   title: string
@@ -118,6 +119,7 @@ interface CoachMarkOverlayProps {
 }
 
 export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNext, onDismiss }: CoachMarkOverlayProps) {
+  const { t } = useT()
   if (!rect) return null
 
   const isLast = step === totalSteps - 1
@@ -146,9 +148,9 @@ export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNex
       >
         <div className="flex items-center justify-between mb-1">
           <div className="text-xs text-primary font-semibold">
-            Dica {step + 1} de {totalSteps}
+            {t('Dica')} {step + 1} {t('de')} {totalSteps}
           </div>
-          <button onClick={onDismiss} className="text-xs text-text-muted hover:text-text cursor-pointer ml-2" title="Pular dicas">
+          <button onClick={onDismiss} className="text-xs text-text-muted hover:text-text cursor-pointer ml-2" title={t('Pular dicas')}>
             ✕
           </button>
         </div>
@@ -159,7 +161,7 @@ export function CoachMarkOverlay({ rect, title, message, step, totalSteps, onNex
             onClick={onNext}
             className="rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 cursor-pointer"
           >
-            {isLast ? 'Entendi' : 'Próximo'}
+            {isLast ? 'Entendi' : t('Próximo')}
           </button>
         </div>
       </div>

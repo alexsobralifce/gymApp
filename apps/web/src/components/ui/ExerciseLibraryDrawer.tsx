@@ -7,6 +7,7 @@ import ExercisePreviewModal from './ExercisePreviewModal'
 import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
 import { XIcon, CheckIcon, PlusIcon, DumbbellIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface ExerciseLibraryDrawerProps {
   isOpen: boolean
   onClose: () => void
@@ -32,6 +33,7 @@ export default function ExerciseLibraryDrawer({
   onAddExercise,
   onRemoveExercise,
 }: ExerciseLibraryDrawerProps) {
+  const { t } = useT()
   const [busca, setBusca] = useState('')
   const [filtroGrupo, setFiltroGrupo] = useState<MuscleCategoryKey | ''>('')
   const [filtroEquip, setFiltroEquip] = useState('')
@@ -107,10 +109,10 @@ export default function ExerciseLibraryDrawer({
           <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b border-surface-input shrink-0">
             <div>
               <h2 className="text-sm sm:text-base font-black text-text flex items-center gap-1.5">
-                <span>📚</span> Biblioteca de Exercícios
+                <span>📚</span> {t('Biblioteca de Exercícios')}
               </h2>
               <p className="text-[10px] sm:text-xs text-text-muted">
-                Toque no card para prévia com GIF e instruções
+                {t('Toque no card para prévia com GIF e instruções')}
               </p>
             </div>
 
@@ -118,7 +120,7 @@ export default function ExerciseLibraryDrawer({
               type="button"
               onClick={onClose}
               className="rounded-full p-1.5 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
-              title="Fechar biblioteca"
+              title={t('Fechar biblioteca')}
             >
               <XIcon className="w-5 h-5" />
             </button>
@@ -132,7 +134,7 @@ export default function ExerciseLibraryDrawer({
                 type="text"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                placeholder="🔍 Buscar exercício, músculo ou equipamento..."
+                placeholder={t('🔍 Buscar exercício, músculo ou equipamento...')}
                 className="w-full bg-surface-input/90 text-text placeholder:text-text-muted text-xs sm:text-sm font-semibold rounded-xl pl-3.5 pr-9 py-2 border border-surface-input focus:outline-hidden focus:border-primary transition-all"
               />
               {busca && (
@@ -150,15 +152,15 @@ export default function ExerciseLibraryDrawer({
             <div className="space-y-1">
               <div className="flex items-center justify-between px-0.5">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-muted">
-                  Grupos Musculares
+                  {t('Grupos Musculares')}
                 </span>
                 <button
                   type="button"
                   onClick={() => setViewMode((v) => (v === 'chips' ? 'grid' : 'chips'))}
                   className="text-[10px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
-                  title={viewMode === 'chips' ? 'Ver todos em grade' : 'Modo carrossel compacto'}
+                  title={viewMode === 'chips' ? t('Ver todos em grade') : t('Modo carrossel compacto')}
                 >
-                  {viewMode === 'chips' ? '⊞ Ver Grade' : '☰ Carrossel'}
+                  {viewMode === 'chips' ? t('⊞ Ver Grade') : t('☰ Carrossel')}
                 </button>
               </div>
 
@@ -181,10 +183,10 @@ export default function ExerciseLibraryDrawer({
                   onChange={(e) => setFiltroEquip(e.target.value)}
                   className="bg-surface text-text text-[11px] font-bold rounded-lg px-2 py-1 border border-surface-input focus:outline-hidden cursor-pointer"
                 >
-                  <option value="">Todos Equipamentos</option>
+                  <option value="">{t('Todos Equipamentos')}</option>
                   {EQUIPAMENTOS.map((eq) => (
                     <option key={eq.value} value={eq.value}>
-                      {eq.label}
+                      {t(eq.label)}
                     </option>
                   ))}
                 </select>
@@ -220,13 +222,13 @@ export default function ExerciseLibraryDrawer({
                     }}
                     className="text-[10px] font-bold text-destructive hover:underline cursor-pointer"
                   >
-                    Limpar
+                    {t('Limpar')}
                   </button>
                 )}
               </div>
 
               <span className="text-[10px] font-black text-text-muted shrink-0">
-                {exerciciosFiltrados.length} {exerciciosFiltrados.length === 1 ? 'exercício' : 'exercícios'}
+                {exerciciosFiltrados.length} {exerciciosFiltrados.length === 1 ? t('exercício') : t('exercícios')}
               </span>
             </div>
           </div>
@@ -236,8 +238,8 @@ export default function ExerciseLibraryDrawer({
             {exerciciosFiltrados.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-2 text-text-muted">
                 <span className="text-3xl">🔍</span>
-                <p className="text-sm font-bold text-text">Nenhum exercício encontrado</p>
-                <p className="text-xs">Tente buscar por outro termo ou limpar os filtros de categoria.</p>
+                <p className="text-sm font-bold text-text">{t('Nenhum exercício encontrado')}</p>
+                <p className="text-xs">{t('Tente buscar por outro termo ou limpar os filtros de categoria.')}</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -247,7 +249,7 @@ export default function ExerciseLibraryDrawer({
                   }}
                   className="mt-2 text-xs font-bold text-primary hover:underline cursor-pointer"
                 >
-                  Ver todos os 900+ exercícios
+                  {t('Ver todos os 900+ exercícios')}
                 </button>
               </div>
             ) : (
@@ -290,7 +292,7 @@ export default function ExerciseLibraryDrawer({
                           <DumbbellIcon className="w-6 h-6 text-text-muted opacity-40" />
                         </div>
                         <span className="absolute bottom-0.5 right-0.5 bg-black/75 px-1 py-0.2 rounded text-[8px] font-extrabold text-white">
-                          GIF
+                          {t('GIF')}
                         </span>
                       </div>
 
@@ -328,17 +330,17 @@ export default function ExerciseLibraryDrawer({
                             ? 'bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/25'
                             : 'bg-primary text-primary-foreground hover:brightness-110'
                         }`}
-                        title={isAdded ? 'Remover do treino' : 'Adicionar ao treino'}
+                        title={isAdded ? t('Remover do treino') : t('Adicionar ao treino')}
                       >
                         {isAdded ? (
                           <>
                             <CheckIcon className="w-3.5 h-3.5" />
-                            <span className="hidden xs:inline">No Treino</span>
+                            <span className="hidden xs:inline">{t('No Treino')}</span>
                           </>
                         ) : (
                           <>
                             <PlusIcon className="w-3.5 h-3.5" />
-                            <span>Add</span>
+                            <span>{t('Add')}</span>
                           </>
                         )}
                       </button>
@@ -352,7 +354,7 @@ export default function ExerciseLibraryDrawer({
           {/* Drawer Footer with Done Button */}
           <div className="p-3.5 sm:p-4 border-t border-surface-input bg-surface-card shrink-0 flex items-center justify-between gap-3">
             <span className="text-xs font-bold text-text-muted">
-              <strong className="text-text font-black">{addedExerciseIds.size}</strong> no treino
+              <strong className="text-text font-black">{addedExerciseIds.size}</strong> {t('no treino')}
             </span>
 
             <button
@@ -360,7 +362,7 @@ export default function ExerciseLibraryDrawer({
               onClick={onClose}
               className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
-              Concluir Seleção ✓
+              {t('Concluir Seleção ✓')}
             </button>
           </div>
         </div>

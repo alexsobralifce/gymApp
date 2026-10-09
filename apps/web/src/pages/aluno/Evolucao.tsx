@@ -16,6 +16,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 const NOMETES: Record<string, string> = {
   '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
   '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
@@ -28,6 +30,7 @@ function getNomeMesAno(mesStr: string) {
 }
 
 export default function AlunoEvolucao() {
+  const { t } = useT()
   const [medidas, setMedidas] = useState<MedidaCorporal[]>([])
   const [correlacao, setCorrelacao] = useState<CorrelacaoResponse | null>(null)
   const [evolucaoMensal, setEvolucaoMensal] = useState<EvolucaoMensal | null>(null)
@@ -79,7 +82,7 @@ export default function AlunoEvolucao() {
   const chartData = medidas
     .filter((m) => m.peso_kg)
     .map((m) => ({
-      data: new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      data: new Date(m.data).toLocaleDateString(localeAtual(), { day: '2-digit', month: '2-digit' }),
       peso: m.peso_kg,
       imc: m.imc,
     }))
@@ -90,8 +93,8 @@ export default function AlunoEvolucao() {
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-text">Evolução</h1>
-        <p className="text-xs text-text-muted mt-0.5">Frequência, cargas, métricas e análises científicas da sua jornada</p>
+        <h1 className="text-xl font-bold text-text">{t('Evolução')}</h1>
+        <p className="text-xs text-text-muted mt-0.5">{t('Frequência, cargas, métricas e análises científicas da sua jornada')}</p>
       </div>
 
       {/* Seletor de Mês */}
@@ -105,7 +108,7 @@ export default function AlunoEvolucao() {
         </button>
 
         <div className="text-center">
-          <span className="text-xs font-bold text-primary uppercase tracking-wider block">Resumo Mensal</span>
+          <span className="text-xs font-bold text-primary uppercase tracking-wider block">{t('Resumo Mensal')}</span>
           <span className="text-base font-bold text-text">{getNomeMesAno(mesAtualStr)}</span>
         </div>
 
@@ -128,13 +131,13 @@ export default function AlunoEvolucao() {
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted">
                 <ActivityIcon className="h-4 w-4 text-primary" />
-                Frequência
+                {t('Frequência')}
               </div>
               <div className="text-2xl font-black text-text">
-                {evolucaoMensal.totalTreinos} <span className="text-xs font-normal text-text-muted">treinos</span>
+                {evolucaoMensal.totalTreinos} <span className="text-xs font-normal text-text-muted">{t('treinos')}</span>
               </div>
               <div className="text-xs text-text-muted flex items-center gap-1">
-                <span>Meta mensal: {evolucaoMensal.metaSemanal * 4}</span>
+                <span>{t('Meta mensal:')} {evolucaoMensal.metaSemanal * 4}</span>
                 <span className="font-bold text-success">({evolucaoMensal.frequenciaPercent}%)</span>
               </div>
             </div>
@@ -143,18 +146,18 @@ export default function AlunoEvolucao() {
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted">
                 <TrophyIcon className="h-4 w-4 text-warning" />
-                Volume Total
+                {t('Volume Total')}
               </div>
               <div className="text-2xl font-black text-text">
-                {evolucaoMensal.volumeTotalKg.toLocaleString('pt-BR')} <span className="text-xs font-normal text-text-muted">kg</span>
+                {evolucaoMensal.volumeTotalKg.toLocaleString(localeAtual())} <span className="text-xs font-normal text-text-muted">{t('kg')}</span>
               </div>
               <div className="text-xs text-text-muted">
                 {evolucaoMensal.variacaoVolumePercent !== 0 ? (
                   <span className={evolucaoMensal.variacaoVolumePercent > 0 ? 'text-success font-bold' : 'text-destructive font-bold'}>
-                    {evolucaoMensal.variacaoVolumePercent > 0 ? `+${evolucaoMensal.variacaoVolumePercent}%` : `${evolucaoMensal.variacaoVolumePercent}%`} vs mês ant.
+                    {evolucaoMensal.variacaoVolumePercent > 0 ? `+${evolucaoMensal.variacaoVolumePercent}%` : `${evolucaoMensal.variacaoVolumePercent}%`} {t('vs mês ant.')}
                   </span>
                 ) : (
-                  <span>Sem dados ant.</span>
+                  <span>{t('Sem dados ant.')}</span>
                 )}
               </div>
             </div>
@@ -163,13 +166,13 @@ export default function AlunoEvolucao() {
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted">
                 <TimerIcon className="h-4 w-4 text-blue-400" />
-                Tempo de Treino
+                {t('Tempo de Treino')}
               </div>
               <div className="text-2xl font-black text-text">
                 {Math.floor(evolucaoMensal.duracaoTotalMinutos / 60)}h {evolucaoMensal.duracaoTotalMinutos % 60}m
               </div>
               <div className="text-xs text-text-muted">
-                Média: <span className="font-bold text-text">{evolucaoMensal.duracaoMediaMinutos} min</span> / sessão
+                {t('Média:')} <span className="font-bold text-text">{evolucaoMensal.duracaoMediaMinutos} {t('min')}</span> {t('/ sessão')}
               </div>
             </div>
 
@@ -177,20 +180,20 @@ export default function AlunoEvolucao() {
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted truncate">
                 <ChartLineIcon className="h-4 w-4 text-purple-400" />
-                Maior Carga
+                {t('Maior Carga')}
               </div>
               <div className="text-2xl font-black text-text">
                 {evolucaoMensal.maiorCargaExercicio ? `${evolucaoMensal.maiorCargaExercicio.cargaKg} kg` : '---'}
               </div>
               <div className="text-xs text-text-muted truncate">
-                {evolucaoMensal.maiorCargaExercicio ? evolucaoMensal.maiorCargaExercicio.nome : 'Nenhum registro'}
+                {evolucaoMensal.maiorCargaExercicio ? evolucaoMensal.maiorCargaExercicio.nome : t('Nenhum registro')}
               </div>
             </div>
           </div>
 
           {/* Gráfico Semanal de Volume & Frequência */}
           <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold text-text uppercase tracking-wider">Desempenho por Semana do Mês</h3>
+            <h3 className="text-xs font-bold text-text uppercase tracking-wider">{t('Desempenho por Semana do Mês')}</h3>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={evolucaoMensal.semanas} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
@@ -206,7 +209,7 @@ export default function AlunoEvolucao() {
                       color: '#f4f4f5',
                     }}
                     formatter={(val: any, name?: any) => [
-                      String(name) === 'volumeKg' ? `${Number(val || 0).toLocaleString('pt-BR')} kg` : `${val} treinos`,
+                      String(name) === 'volumeKg' ? `${Number(val || 0).toLocaleString(localeAtual())} kg` : `${val} treinos`,
                       String(name) === 'volumeKg' ? 'Volume Semanal' : 'Treinos Realizados'
                     ]}
                   />
@@ -226,7 +229,7 @@ export default function AlunoEvolucao() {
               <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🏋️</span>
-                  <h3 className="text-xs font-bold text-text uppercase tracking-wider">Progressão de Cargas por Semana</h3>
+                  <h3 className="text-xs font-bold text-text uppercase tracking-wider">{t('Progressão de Cargas por Semana')}</h3>
                 </div>
 
                 <div className="space-y-3">
@@ -250,9 +253,9 @@ export default function AlunoEvolucao() {
                             reduziu ? 'bg-warning/10 text-warning border-warning/20' :
                             'bg-text-muted/10 text-text-muted border-text-muted/20'
                           }`}>
-                            {evoluiu ? `▲ +${(ultimaCarga - primeiraCarga).toFixed(1)} kg` :
-                             reduziu ? `▼ ${(ultimaCarga - primeiraCarga).toFixed(1)} kg` :
-                             '➡ mantido'}
+                            {evoluiu ? t('▲ +{v1} kg', { v1: (ultimaCarga - primeiraCarga).toFixed(1) }) :
+                             reduziu ? t('▼ {v1} kg', { v1: (ultimaCarga - primeiraCarga).toFixed(1) }) :
+                             t('➡ mantido')}
                           </span>
                         </div>
 
@@ -281,7 +284,7 @@ export default function AlunoEvolucao() {
                         </div>
 
                         {manteve && dados.length < 2 && (
-                          <p className="text-[10px] text-text-muted">Registre mais séries para ver progressão</p>
+                          <p className="text-[10px] text-text-muted">{t('Registre mais séries para ver progressão')}</p>
                         )}
                       </div>
                     )
@@ -299,30 +302,30 @@ export default function AlunoEvolucao() {
               </span>
               <div className="min-w-0 flex-1">
                 <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border mb-1 ${insight.badgeColor}`}>
-                  Análise Científica de Evolução
+                  {t('Análise Científica de Evolução')}
                 </span>
-                <h3 className="text-base font-bold text-text leading-snug">{insight.titulo}</h3>
-                <p className="text-xs text-text-muted mt-0.5">{insight.subtitulo}</p>
+                <h3 className="text-base font-bold text-text leading-snug">{t(insight.titulo)}</h3>
+                <p className="text-xs text-text-muted mt-0.5">{t(insight.subtitulo)}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
               <div className="p-3 rounded-xl bg-surface border border-surface-input space-y-1">
-                <span className="text-xs font-bold text-primary uppercase block">💪 Corpo</span>
+                <span className="text-xs font-bold text-primary uppercase block">{t('💪 Corpo')}</span>
                 <p className="text-xs text-text-muted leading-relaxed">{insight.beneficioCorpo}</p>
               </div>
               <div className="p-3 rounded-xl bg-surface border border-surface-input space-y-1">
-                <span className="text-xs font-bold text-blue-400 uppercase block">🧠 Mente</span>
+                <span className="text-xs font-bold text-blue-400 uppercase block">{t('🧠 Mente')}</span>
                 <p className="text-xs text-text-muted leading-relaxed">{insight.beneficioMente}</p>
               </div>
               <div className="p-3 rounded-xl bg-surface border border-surface-input space-y-1">
-                <span className="text-xs font-bold text-success uppercase block">❤️ Saúde</span>
+                <span className="text-xs font-bold text-success uppercase block">{t('❤️ Saúde')}</span>
                 <p className="text-xs text-text-muted leading-relaxed">{insight.beneficioSaude}</p>
               </div>
             </div>
 
             <div className="rounded-xl bg-surface-input/40 p-3 border border-surface-input text-xs text-text-muted space-y-1">
-              <span className="font-bold text-text uppercase tracking-wider block text-[10px]">🔬 Evidência Científica Válida</span>
+              <span className="font-bold text-text uppercase tracking-wider block text-[10px]">{t('🔬 Evidência Científica Válida')}</span>
               <p className="italic leading-relaxed">{insight.cienciaRef}</p>
             </div>
           </div>
@@ -334,7 +337,7 @@ export default function AlunoEvolucao() {
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <ChartLineIcon className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Peso Corporal</h2>
+            <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Peso Corporal')}</h2>
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -367,7 +370,7 @@ export default function AlunoEvolucao() {
       ) : (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
           <ChartLineIcon className="h-8 w-8 text-text-muted mx-auto mb-3 opacity-30" />
-          <p className="text-sm text-text-muted">Registre ao menos 2 medições de peso para ver o gráfico de peso.</p>
+          <p className="text-sm text-text-muted">{t('Registre ao menos 2 medições de peso para ver o gráfico de peso.')}</p>
         </div>
       )}
 
@@ -376,7 +379,7 @@ export default function AlunoEvolucao() {
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <ActivityIcon className="h-4 w-4 text-blue-400" />
-            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Evolução do IMC</h2>
+            <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Evolução do IMC')}</h2>
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -413,7 +416,7 @@ export default function AlunoEvolucao() {
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <TimerIcon className="h-4 w-4 text-warning" />
-            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Correlações</h2>
+            <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Correlações')}</h2>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(correlacoes).map(([key, val]) => (
@@ -433,16 +436,16 @@ export default function AlunoEvolucao() {
           onClick={() => api.calcularCorrelacoes().then(setCorrelacao)}
           className="w-full rounded-xl bg-surface-card border border-warning/20 py-3 text-sm font-medium text-warning hover:bg-warning/10 active:scale-[0.98] transition-all cursor-pointer"
         >
-          Dados desatualizados. Recalcular correlações?
+          {t('Dados desatualizados. Recalcular correlações?')}
         </button>
       )}
 
       {/* Histórico de Medidas */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold text-text uppercase tracking-wider">Histórico de Medidas</h2>
+        <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Histórico de Medidas')}</h2>
         {medidas.length === 0 ? (
           <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center">
-            <p className="text-sm text-text-muted">Nenhuma medida registrada.</p>
+            <p className="text-sm text-text-muted">{t('Nenhuma medida registrada.')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -450,19 +453,19 @@ export default function AlunoEvolucao() {
               <div key={m.id} className="rounded-xl bg-surface-card border border-surface-input p-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-semibold text-text-muted">
-                    {new Date(m.data).toLocaleDateString('pt-BR')}
+                    {new Date(m.data).toLocaleDateString(localeAtual())}
                   </span>
                   {m.imc && (
                     <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                      IMC {m.imc.toFixed(1)}
+                      {t('IMC')} {m.imc.toFixed(1)}
                     </span>
                   )}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-3 text-xs">
-                  {m.peso_kg && <span className="text-text font-semibold">{m.peso_kg} kg</span>}
-                  {m.altura_cm && <span className="text-text-muted">{m.altura_cm} cm</span>}
-                  {m.percentual_bf != null && <span className="text-text-muted">BF: {m.percentual_bf}%</span>}
-                  {m.massa_magra_kg != null && <span className="text-text-muted">MM: {m.massa_magra_kg}kg</span>}
+                  {m.peso_kg && <span className="text-text font-semibold">{m.peso_kg} {t('kg')}</span>}
+                  {m.altura_cm && <span className="text-text-muted">{m.altura_cm} {t('cm')}</span>}
+                  {m.percentual_bf != null && <span className="text-text-muted">{t('BF:')} {m.percentual_bf}%</span>}
+                  {m.massa_magra_kg != null && <span className="text-text-muted">{t('MM:')} {m.massa_magra_kg}{t('kg')}</span>}
                 </div>
                 {m.observacao && <p className="mt-1 text-xs text-text-muted italic">{m.observacao}</p>}
               </div>

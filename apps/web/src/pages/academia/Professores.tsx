@@ -3,6 +3,7 @@ import { api } from '../../api/client'
 import BarraBusca from '../../components/ui/BarraBusca'
 import { filtrarPorTexto } from '../../utils/busca'
 
+import { useT } from '../../i18n'
 interface ProfessorAcademia {
   id: string
   nome: string
@@ -28,6 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export default function AcademiaProfessores() {
+  const { t } = useT()
   const [professores, setProfessores] = useState<ProfessorAcademia[]>([])
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -37,7 +39,7 @@ export default function AcademiaProfessores() {
     setLoading(true)
     api.getProfessoresAcademia()
       .then((data: any[]) => setProfessores(data))
-      .catch(() => setFeedback('Erro ao carregar professores.'))
+      .catch(() => setFeedback(t('Erro ao carregar professores.')))
       .finally(() => setLoading(false))
   }
 
@@ -46,10 +48,10 @@ export default function AcademiaProfessores() {
   async function autorizar(id: string) {
     try {
       await api.autorizarProfessor(id)
-      setFeedback('Professor autorizado! Aguardando aprovação do Root.')
+      setFeedback(t('Professor autorizado! Aguardando aprovação do Root.'))
       carregar()
     } catch {
-      setFeedback('Erro ao autorizar professor.')
+      setFeedback(t('Erro ao autorizar professor.'))
     }
     setTimeout(() => setFeedback(null), 4000)
   }
@@ -57,21 +59,21 @@ export default function AcademiaProfessores() {
   async function remover(id: string) {
     try {
       await api.removerProfessor(id)
-      setFeedback('Professor removido.')
+      setFeedback(t('Professor removido.'))
       carregar()
     } catch {
-      setFeedback('Erro ao remover professor.')
+      setFeedback(t('Erro ao remover professor.'))
     }
     setTimeout(() => setFeedback(null), 4000)
   }
 
   const professoresFiltrados = filtrarPorTexto(professores, search, (p) => [p.nome, p.email, STATUS_LABEL[p.status]])
 
-  if (loading) return <div className="p-4 md:p-6 text-text-muted">Carregando...</div>
+  if (loading) return <div className="p-4 md:p-6 text-text-muted">{t('Carregando...')}</div>
 
   return (
     <div className="p-4 md:p-6 max-w-2xl">
-      <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Professores</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Gerenciar Professores')}</h1>
 
       {feedback && (
         <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
@@ -82,15 +84,15 @@ export default function AcademiaProfessores() {
       <BarraBusca
         value={search}
         onChange={setSearch}
-        placeholder="Buscar professor por nome, email ou status..."
+        placeholder={t('Buscar professor por nome, email ou status...')}
         total={professores.length}
         filtrados={professoresFiltrados.length}
       />
 
       {professores.length === 0 ? (
-        <p className="text-text-muted">Nenhum professor vinculado à sua academia.</p>
+        <p className="text-text-muted">{t('Nenhum professor vinculado à sua academia.')}</p>
       ) : professoresFiltrados.length === 0 ? (
-        <p className="text-text-muted">Nenhum professor encontrado.</p>
+        <p className="text-text-muted">{t('Nenhum professor encontrado.')}</p>
       ) : (
         <div className="space-y-2">
           {professoresFiltrados.map((p) => (
@@ -108,7 +110,7 @@ export default function AcademiaProfessores() {
                     onClick={() => autorizar(p.id)}
                     className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
                   >
-                    Aprovar
+                    {t('Aprovar')}
                   </button>
                 )}
                 {p.status === 'ATIVO' && (
@@ -116,7 +118,7 @@ export default function AcademiaProfessores() {
                     onClick={() => remover(p.id)}
                     className="rounded-lg border border-red-500/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-red-500/20 transition-all cursor-pointer"
                   >
-                    Desabilitar
+                    {t('Desabilitar')}
                   </button>
                 )}
               </div>

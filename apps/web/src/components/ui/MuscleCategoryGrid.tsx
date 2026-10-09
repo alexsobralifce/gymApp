@@ -1,5 +1,6 @@
 import { MUSCLE_CATEGORIES, type MuscleCategoryKey } from '../../lib/muscleCategories'
 
+import { useT } from '../../i18n'
 interface MuscleCategoryGridProps {
   selectedCategory?: string | null
   onSelectCategory: (category: MuscleCategoryKey | null) => void
@@ -17,6 +18,7 @@ export default function MuscleCategoryGrid({
   layout = 'grid',
   className = '',
 }: MuscleCategoryGridProps) {
+  const { t } = useT()
   const currentKey = selectedCategory ? selectedCategory.toUpperCase().trim() : null
 
   if (layout === 'chips') {
@@ -32,7 +34,7 @@ export default function MuscleCategoryGrid({
               : 'border border-surface-input bg-surface-card text-text-muted hover:text-text hover:border-primary/40'
           }`}
         >
-          <span>Todos</span>
+          <span>{t('Todos')}</span>
         </button>
 
         {MUSCLE_CATEGORIES.map((cat) => {
@@ -49,7 +51,7 @@ export default function MuscleCategoryGrid({
                   : 'border border-surface-input bg-surface-card text-text-muted hover:text-text hover:border-primary/40'
               }`}
             >
-              <span>{cat.label}</span>
+              <span>{t(cat.label)}</span>
               {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
             </button>
           )
@@ -67,7 +69,7 @@ export default function MuscleCategoryGrid({
     <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center justify-between px-0.5">
         <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-muted">
-          Grupos Musculares
+          {t('Grupos Musculares')}
         </span>
         {showAllOption && currentKey && (
           <button
@@ -75,7 +77,7 @@ export default function MuscleCategoryGrid({
             onClick={() => onSelectCategory(null)}
             className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
           >
-            Ver Todos
+            {t('Ver Todos')}
           </button>
         )}
       </div>
@@ -97,7 +99,7 @@ export default function MuscleCategoryGrid({
               }`}
             >
               <span className="text-[11px] tracking-tight uppercase truncate block flex-1">
-                {cat.label}
+                {t(cat.label)}
               </span>
               <span
                 className={`w-1.5 h-1.5 rounded-full shrink-0 ml-1 transition-colors ${

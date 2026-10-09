@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { SmartphoneIcon } from 'lucide-react'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
 
+import { useT } from '../../i18n'
 export function PWASidebarButton() {
+  const { t } = useT()
   const { isStandalone, isInstallable, isIOS, promptInstall } = usePWAInstall()
 
   const [popoverOpen, setPopoverOpen] = useState(false)
@@ -52,11 +54,11 @@ export function PWASidebarButton() {
       <button
         ref={buttonRef}
         onClick={handleClick}
-        aria-label="Instalar App"
+        aria-label={t('Instalar App')}
         className="w-full flex items-center gap-3 px-4 py-3 text-text-muted hover:text-text rounded-xl hover:bg-[var(--color-menu-hover)] transition-all duration-200 text-sm font-medium"
       >
         <SmartphoneIcon className="h-5 w-5 shrink-0" />
-        <span className="truncate">Instalar App</span>
+        <span className="truncate">{t('Instalar App')}</span>
       </button>
 
       {isIOS && popoverOpen && (
@@ -64,13 +66,13 @@ export function PWASidebarButton() {
           ref={popoverRef}
           className="absolute bottom-full right-0 mb-2 w-60 bg-surface-card border border-surface-input rounded-xl p-3 shadow-2xl z-50 animate-modal-pop"
           role="dialog"
-          aria-label="Instruções de instalação para iOS"
+          aria-label={t('Instruções de instalação para iOS')}
         >
           <p className="text-xs text-text-muted leading-relaxed">
-            No Safari, toque em{' '}
-            <span className="font-semibold text-text">Compartilhar</span>{' '}
+            {t('No Safari, toque em')}{' '}
+            <span className="font-semibold text-text">{t('Compartilhar')}</span>{' '}
             <span className="inline-block px-1 border border-surface-input rounded bg-surface-input/50">↑</span>{' '}
-            e depois em{' '}
+            {t('e depois em')}{' '}
             <span className="font-semibold text-text">
               &quot;Adicionar à Tela de Início&quot;
             </span>{' '}

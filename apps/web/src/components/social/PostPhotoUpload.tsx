@@ -3,11 +3,13 @@ import { api } from '../../api/client'
 import { getApiBaseUrl } from '../../lib/media'
 import { CheckIcon, XIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface PostPhotoUploadProps {
   postId: string
 }
 
 export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
+  const { t } = useT()
   const [preview, setPreview] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -68,7 +70,7 @@ export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
 
       setDone(true)
     } catch (err: any) {
-      setError(err.message || 'Erro ao enviar foto')
+      setError(t(err.message) || t('Erro ao enviar foto'))
     } finally {
       setUploading(false)
     }
@@ -87,7 +89,7 @@ export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10 mx-auto mb-2">
           <CheckIcon className="h-5 w-5 text-success" />
         </div>
-        <p className="text-sm font-semibold text-text">Foto adicionada ao mural!</p>
+        <p className="text-sm font-semibold text-text">{t('Foto adicionada ao mural!')}</p>
       </div>
     )
   }
@@ -95,7 +97,7 @@ export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
   return (
     <div className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3 animate-slide-up">
       <p className="text-xs text-text-muted text-center">
-        Compartilhe uma foto do seu treino no mural
+        {t('Compartilhe uma foto do seu treino no mural')}
       </p>
 
       <input
@@ -113,14 +115,14 @@ export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
           className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-surface-input bg-surface px-4 py-6 text-sm text-text-muted hover:border-primary hover:text-primary transition-all cursor-pointer"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Adicionar foto ao mural
+          {t('Adicionar foto ao mural')}
         </button>
       ) : (
         <div className="space-y-3">
           <div className="relative rounded-xl overflow-hidden">
             <img
               src={preview}
-              alt="Preview"
+              alt={t('Preview')}
               className="w-full h-auto object-cover"
               style={{ maxHeight: 'min(50vw, 240px)', aspectRatio: '4/3' }}
             />
@@ -149,7 +151,7 @@ export default function PostPhotoUpload({ postId }: PostPhotoUploadProps) {
               onClick={handleUpload}
               className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
             >
-              Confirmar e publicar
+              {t('Confirmar e publicar')}
             </button>
           )}
         </div>

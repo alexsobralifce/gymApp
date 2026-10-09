@@ -1,12 +1,14 @@
 import { CheckIcon, UsersIcon } from '../../components/icons/Icon'
 import { formatarBRL, type PlanoPublico } from './plansData'
 
+import { useT } from '../../i18n'
 interface PlanCardProps {
   plano: PlanoPublico
   onSelecionar: (codigo: string) => void
 }
 
 export function PlanCard({ plano, onSelecionar }: PlanCardProps) {
+  const { t } = useT()
   const semCusto = plano.precoMensal === 0
   const sobConsulta = plano.precoMensal === null
 
@@ -28,24 +30,24 @@ export function PlanCard({ plano, onSelecionar }: PlanCardProps) {
 
       <header className="mb-4">
         <h3 className="text-lg font-bold text-text">{plano.nome}</h3>
-        <p className="mt-1 text-xs text-text-muted">{plano.subtitulo}</p>
+        <p className="mt-1 text-xs text-text-muted">{t(plano.subtitulo)}</p>
       </header>
 
       <div className="mb-3">
         {sobConsulta ? (
-          <p className="text-2xl font-extrabold text-text">Sob consulta</p>
+          <p className="text-2xl font-extrabold text-text">{t('Sob consulta')}</p>
         ) : semCusto ? (
-          <p className="text-2xl font-extrabold text-text">Grátis</p>
+          <p className="text-2xl font-extrabold text-text">{t('Grátis')}</p>
         ) : (
           <p className="flex items-baseline gap-1 text-text">
             <span className="text-2xl font-extrabold">{formatarBRL(plano.precoMensal as number)}</span>
-            <span className="text-xs text-text-muted">/mês</span>
+            <span className="text-xs text-text-muted">{t('/mês')}</span>
           </p>
         )}
 
         {plano.porAluno !== null && plano.porAluno > 0 && (
           <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-primary/35 bg-primary/12 px-3 py-1 text-xs font-bold text-primary">
-            {formatarBRL(plano.porAluno)} por aluno
+            {formatarBRL(plano.porAluno)} {t('por aluno')}
           </span>
         )}
       </div>
@@ -88,7 +90,7 @@ export function PlanCard({ plano, onSelecionar }: PlanCardProps) {
             : 'border border-primary/50 text-primary hover:bg-primary/10',
         ].join(' ')}
       >
-        {plano.ctaLabel}
+        {t(plano.ctaLabel)}
       </button>
     </article>
   )

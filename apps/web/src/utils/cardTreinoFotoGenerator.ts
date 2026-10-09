@@ -1,3 +1,4 @@
+import { localeAtual } from '../i18n'
 /**
  * Card "Treino concluído" para aluno vinculado a professor.
  * A foto ocupa o card inteiro (4:5) e as informações ficam centralizadas na base:
@@ -33,7 +34,7 @@ export const LOGO_MAX_LARGURA = 494
 /** Linha de métricas do card: data · tempo · volume · kcal (campos sem valor somem). */
 export function montarLinhaMetricas(data: CardTreinoFotoData): string {
   const partes = [data.data, data.duracaoFormatada]
-  if (data.volumeKg && data.volumeKg > 0) partes.push(`${Math.round(data.volumeKg).toLocaleString('pt-BR')} kg`)
+  if (data.volumeKg && data.volumeKg > 0) partes.push(`${Math.round(data.volumeKg).toLocaleString(localeAtual())} kg`)
   if (data.calorias && data.calorias > 0) partes.push(`~${Math.round(data.calorias)} kcal`)
   return partes.join('   ·   ')
 }
@@ -108,7 +109,7 @@ export function mesesDaSemana(hoje: Date): string[] {
 
 export function formatarDataCard(d: Date): string {
   return d
-    .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .toLocaleDateString(localeAtual(), { day: '2-digit', month: 'short', year: 'numeric' })
     .replace(/\./g, '')
     .replace(/ de /g, ' ')
 }

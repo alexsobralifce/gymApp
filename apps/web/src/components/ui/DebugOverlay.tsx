@@ -13,12 +13,14 @@ import {
 } from '../../lib/debug'
 import { BugIcon, XIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface DebugOverlayProps {
   open: boolean
   onClose: () => void
 }
 
 export function DebugMenuTrigger({ onClick }: { onClick: () => void }) {
+  const { t } = useT()
   const [logs, setLogs] = useState<LogEntry[]>([])
 
   useEffect(() => {
@@ -38,12 +40,13 @@ export function DebugMenuTrigger({ onClick }: { onClick: () => void }) {
       }`}
     >
       <BugIcon className={`h-4 w-4 ${hasErrors ? 'text-red-500 animate-pulse' : 'text-text-muted'}`} />
-      <span>Debug ({logs.length})</span>
+      <span>{t('Debug (')}{logs.length})</span>
     </button>
   )
 }
 
 function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
+  const { t } = useT()
   if (!snap) return null
   const ok = !snap.mismatch
   const isDay = snap.dataMode === 'day'
@@ -56,7 +59,7 @@ function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-bold text-text">Tema (snapshot)</span>
+        <span className="font-bold text-text">{t('Tema (snapshot)')}</span>
         <span className={`font-bold ${ok ? 'text-success' : 'text-destructive'}`}>
           {ok ? 'OK' : 'FALHA'}
         </span>
@@ -71,23 +74,23 @@ function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
         }}
       >
         <p className="text-sm font-bold">
-          {isDay ? 'DIA deve ser BRANCO/CLARO' : 'NOITE deve ser ESCURO'}
+          {isDay ? t('DIA deve ser BRANCO/CLARO') : t('NOITE deve ser ESCURO')}
         </p>
         <p className="font-mono text-[10px] opacity-80 mt-1">
-          surface={snap.computed.surface || '—'} · body={snap.bodyBg || '—'}
+          {t('surface=')}{snap.computed.surface || '—'} {t('· body=')}{snap.bodyBg || '—'}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px] text-text-muted">
-        <span>data-theme</span>
+        <span>{t('data-theme')}</span>
         <span className="text-text font-semibold">{snap.dataTheme ?? '—'}</span>
-        <span>data-mode</span>
+        <span>{t('data-mode')}</span>
         <span className="text-text font-semibold">{snap.dataMode ?? '—'}</span>
-        <span>ls mode</span>
+        <span>{t('ls mode')}</span>
         <span className="text-text">{snap.localStorageMode ?? '—'}</span>
-        <span>prefers dark</span>
+        <span>{t('prefers dark')}</span>
         <span className="text-text">{String(snap.prefersColorSchemeDark)}</span>
-        <span>boot eff</span>
+        <span>{t('boot eff')}</span>
         <span className="text-text">{snap.bootstrap?.resolvedEff ?? '—'}</span>
       </div>
       {snap.mismatch && (
@@ -95,8 +98,7 @@ function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
       )}
       {ok && isDay && (
         <p className="text-[10px] text-text-muted leading-snug">
-          O app reporta fundo claro. Se a tela ainda parece escura: feche todas as abas do site,
-          limpe dados do site no Chrome, reabra (cache do PWA).
+          {t('O app reporta fundo claro. Se a tela ainda parece escura: feche todas as abas do site, limpe dados do site no Chrome, reabra (cache do PWA).')}
         </p>
       )}
     </div>
@@ -104,6 +106,7 @@ function ThemeSummary({ snap }: { snap: ThemeSnapshot | null }) {
 }
 
 function PushSummary({ snap }: { snap: PushSnapshot | null }) {
+  const { t } = useT()
   if (!snap) return null
   const ok = snap.permission === 'granted' && snap.subscriptionEndpoint != null
   const rows: Array<[string, string]> = [
@@ -123,20 +126,19 @@ function PushSummary({ snap }: { snap: PushSnapshot | null }) {
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-bold text-text">Push / Notificações</span>
+        <span className="font-bold text-text">{t('Push / Notificações')}</span>
         <span className={`font-bold ${ok ? 'text-success' : 'text-destructive'}`}>
           {ok ? 'OK' : 'FALHA'}
         </span>
       </div>
       {!snap.notificationApi && (
         <p className="text-destructive font-medium leading-snug">
-          API Notification indisponível neste navegador — push não funciona.
+          {t('API Notification indisponível neste navegador — push não funciona.')}
         </p>
       )}
       {snap.permission === 'denied' && (
         <p className="text-destructive font-medium leading-snug">
-          Permissão BLOQUEADA no navegador. Reative em: menu ⋮ / cadeado → Configurações do
-          site → Notificações → Permitir.
+          {t('Permissão BLOQUEADA no navegador. Reative em: menu ⋮ / cadeado → Configurações do site → Notificações → Permitir.')}
         </p>
       )}
       {snap.permission === 'default' && (
@@ -146,7 +148,7 @@ function PushSummary({ snap }: { snap: PushSnapshot | null }) {
       )}
       {snap.permission === 'granted' && !snap.subscriptionEndpoint && (
         <p className="text-warning font-medium leading-snug">
-          Permissão concedida mas sem subscription — verifique se VAPID está configurado no build.
+          {t('Permissão concedida mas sem subscription — verifique se VAPID está configurado no build.')}
         </p>
       )}
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px] text-text-muted">
@@ -159,17 +161,18 @@ function PushSummary({ snap }: { snap: PushSnapshot | null }) {
       </div>
       {snap.subscriptionEndpoint && (
         <p className="font-mono text-[10px] text-text-muted break-all leading-snug">
-          endpoint: {snap.subscriptionEndpoint}
+          {t('endpoint:')} {snap.subscriptionEndpoint}
         </p>
       )}
       {snap.error && (
-        <p className="text-destructive font-medium leading-snug">erro: {snap.error}</p>
+        <p className="text-destructive font-medium leading-snug">{t('erro:')} {snap.error}</p>
       )}
     </div>
   )
 }
 
 export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
+  const { t } = useT()
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [snap, setSnap] = useState<ThemeSnapshot | null>(null)
   const [pushSnap, setPushSnap] = useState<PushSnapshot | null>(null)
@@ -243,7 +246,7 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
         <div className="flex items-center justify-between border-b border-surface-input px-4 py-3 bg-surface shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-lg shrink-0">🐛</span>
-            <h3 className="text-sm font-bold truncate">Logs de Diagnóstico</h3>
+            <h3 className="text-sm font-bold truncate">{t('Logs de Diagnóstico')}</h3>
             <span className="rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted shrink-0 font-mono font-bold">
               {logs.length}
             </span>
@@ -253,8 +256,8 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
             type="button"
             onClick={onClose}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-input/80 text-text hover:bg-secondary active:scale-95 transition-all cursor-pointer border border-surface-border"
-            aria-label="Fechar modal"
-            title="Fechar"
+            aria-label={t('Fechar modal')}
+            title={t('Fechar')}
           >
             <XIcon className="h-5 w-5 text-text" />
           </button>
@@ -267,14 +270,14 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
             onClick={handleDiagnose}
             className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-colors cursor-pointer"
           >
-            🎨 Diagnóstico Tema
+            {t('🎨 Diagnóstico Tema')}
           </button>
           <button
             type="button"
             onClick={handlePushDiagnose}
             className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-colors cursor-pointer"
           >
-            🔔 Diagnóstico Push
+            {t('🔔 Diagnóstico Push')}
           </button>
           <button
             type="button"
@@ -287,14 +290,14 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
                   : 'bg-surface-input text-text border-surface-border hover:bg-secondary'
             }`}
           >
-            {copyState === 'ok' ? '✓ Copiado!' : copyState === 'fail' ? '✕ Falhou' : '📋 Copiar Logs'}
+            {copyState === 'ok' ? t('✓ Copiado!') : copyState === 'fail' ? t('✕ Falhou') : t('📋 Copiar Logs')}
           </button>
           <button
             type="button"
             onClick={clearDebugLogs}
             className="shrink-0 rounded-xl px-3 py-2 text-xs text-text-muted border border-surface-border hover:bg-surface-input hover:text-text transition-colors cursor-pointer"
           >
-            🗑️ Limpar
+            {t('🗑️ Limpar')}
           </button>
         </div>
 
@@ -322,7 +325,7 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
                   <span className="font-bold uppercase tracking-wider text-primary">[{log.tag}]</span>
                   <span>{log.timestamp}</span>
                 </div>
-                <div className="font-medium break-words">{log.message}</div>
+                <div className="font-medium break-words">{t(log.message)}</div>
                 {log.details && (
                   <pre className="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-[10px] leading-tight text-text-muted">
                     {log.details}
@@ -334,7 +337,7 @@ export function DebugOverlay({ open, onClose }: DebugOverlayProps) {
         </div>
 
         <div className="border-t border-surface-input p-2 text-center text-[10px] text-text-muted bg-surface">
-          Copiar Logs inclui snapshot de tema + UA. Use no mobile após alternar Dia/Noite.
+          {t('Copiar Logs inclui snapshot de tema + UA. Use no mobile após alternar Dia/Noite.')}
         </div>
       </div>
     </div>

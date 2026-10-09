@@ -4,6 +4,7 @@ import type { Academia, Vinculo } from '../../types/api'
 import BarraBusca from '../../components/ui/BarraBusca'
 import { filtrarPorTexto } from '../../utils/busca'
 
+import { useT } from '../../i18n'
 const STATUS_BADGE: Record<string, string> = {
   PENDENTE_ACADEMIA: 'Aguardando Academia',
   PENDENTE_ROOT: 'Aguardando Root',
@@ -13,6 +14,7 @@ const STATUS_BADGE: Record<string, string> = {
 }
 
 export default function ProfessorAcademias() {
+  const { t } = useT()
   const [academias, setAcademias] = useState<Academia[]>([])
   const [vinculos, setVinculos] = useState<Vinculo[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,9 +52,9 @@ export default function ProfessorAcademias() {
         const fresh = await api.getVinculos()
         setVinculos(fresh)
         const vinculo = fresh.find((v) => v.academia_id === academiaId)
-        setFeedback(`Já vinculado. Status: ${STATUS_BADGE[vinculo?.status ?? ''] ?? vinculo?.status}`)
+        setFeedback(t('Já vinculado. Status: {v1}', { v1: STATUS_BADGE[vinculo?.status ?? ''] ?? vinculo?.status }))
       } else {
-        setFeedback('Solicitação enviada! Aguardando aprovação da academia e do Root.')
+        setFeedback(t('Solicitação enviada! Aguardando aprovação da academia e do Root.'))
         const fresh = await api.getVinculos()
         setVinculos(fresh)
       }
@@ -63,12 +65,12 @@ export default function ProfessorAcademias() {
         setVinculos(fresh)
         const vinculo = fresh.find((v) => v.academia_id === academiaId)
         if (vinculo) {
-          setFeedback(`Já vinculado. Status: ${STATUS_BADGE[vinculo.status] ?? vinculo.status}`)
+          setFeedback(t('Já vinculado. Status: {v1}', { v1: STATUS_BADGE[vinculo.status] ?? vinculo.status }))
         } else {
-          setFeedback(err instanceof ApiError ? err.message : 'Erro ao solicitar vínculo.')
+          setFeedback(err instanceof ApiError ? t(err.message) : t('Erro ao solicitar vínculo.'))
         }
       } catch {
-        setFeedback(err instanceof ApiError ? err.message : 'Erro ao solicitar vínculo.')
+        setFeedback(err instanceof ApiError ? t(err.message) : t('Erro ao solicitar vínculo.'))
       }
       setTimeout(() => setFeedback(null), 5000)
     }
@@ -78,25 +80,25 @@ export default function ProfessorAcademias() {
     try {
       await api.desvincularAcademia(academiaId)
       setVinculos((prev) => prev.filter((v) => v.academia_id !== academiaId))
-      setFeedback('Desvinculado com sucesso.')
+      setFeedback(t('Desvinculado com sucesso.'))
       setTimeout(() => setFeedback(null), 3000)
     } catch (err) {
-      setFeedback(err instanceof ApiError ? err.message : 'Erro ao desvincular.')
+      setFeedback(err instanceof ApiError ? t(err.message) : t('Erro ao desvincular.'))
       setTimeout(() => setFeedback(null), 3000)
     }
   }
 
   const academiasFiltradas = filtrarPorTexto(academias, search, (a) => [a.nome, a.cnpj])
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  if (loading) return <div className="p-4 text-text-muted">{t('Carregando...')}</div>
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Academias</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Academias')}</h1>
 
       {!perfilOk && (
         <div className="mb-4 rounded border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-400">
-          Perfil de professor não encontrado. Tente recarregar a página.
+          {t('Perfil de professor não encontrado. Tente recarregar a página.')}
         </div>
       )}
 
@@ -109,14 +111,14 @@ export default function ProfessorAcademias() {
       <BarraBusca
         value={search}
         onChange={setSearch}
-        placeholder="Buscar academia por nome ou CNPJ..."
+        placeholder={t('Buscar academia por nome ou CNPJ...')}
         total={academias.length}
         filtrados={academiasFiltradas.length}
       />
 
-      {academias.length === 0 && <p className="text-text-muted">Nenhuma academia disponível.</p>}
+      {academias.length === 0 && <p className="text-text-muted">{t('Nenhuma academia disponível.')}</p>}
       {academias.length > 0 && academiasFiltradas.length === 0 && (
-        <p className="text-text-muted">Nenhuma academia encontrada.</p>
+        <p className="text-text-muted">{t('Nenhuma academia encontrada.')}</p>
       )}
 
       <div className="space-y-3">
@@ -128,7 +130,7 @@ export default function ProfessorAcademias() {
             <div key={a.id} className="flex items-center justify-between rounded-lg bg-surface-card p-4">
               <div>
                 <h3 className="font-semibold text-text">{a.nome}</h3>
-                <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
+                <p className="text-xs text-text-muted">{t('CNPJ:')} {a.cnpj}</p>
                 {isLinked && (
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs ${
                     vinculo.status === 'ATIVO' ? 'bg-success/10 text-success' :
@@ -146,14 +148,14 @@ export default function ProfessorAcademias() {
                     disabled={!perfilOk}
                     className="rounded bg-success px-3 py-1 text-sm font-medium text-white hover:bg-success/90 disabled:opacity-40"
                   >
-                    Vincular
+                    {t('Vincular')}
                   </button>
                 ) : (
                   <button
                     onClick={() => desvincular(a.id)}
                     className="rounded bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary-dark"
                   >
-                    Vinculado
+                    {t('Vinculado')}
                   </button>
                 )}
               </div>

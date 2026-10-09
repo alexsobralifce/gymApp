@@ -1,3 +1,4 @@
+import { t as tx } from '../../i18n'
 type BadgeVariant = 'pending' | 'active' | 'success' | 'danger' | 'warning' | 'info' | 'neutral'
 
 interface StatusBadgeProps {
@@ -45,12 +46,12 @@ export function getTreinoStatusVariant(status: string): BadgeVariant {
 
 export function getTreinoStatusLabel(status: string): string {
   switch (status) {
-    case 'CADASTRADO': return 'Em preparação'
+    case 'CADASTRADO': return tx('Em preparação')
     case 'ENVIADO': return 'Pendente'
     case 'ACEITO': return 'Aceito'
-    case 'EM_ABERTO': return 'Em aberto'
-    case 'EM_EXECUCAO': return 'Em execução'
-    case 'CONCLUIDO': return 'Concluído'
+    case 'EM_ABERTO': return tx('Em aberto')
+    case 'EM_EXECUCAO': return tx('Em execução')
+    case 'CONCLUIDO': return tx('Concluído')
     case 'RECUSADO': return 'Recusado'
     default: return status
   }

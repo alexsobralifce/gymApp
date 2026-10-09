@@ -5,6 +5,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal'
 import BarraBusca from '../../components/ui/BarraBusca'
 import { filtrarPorTexto } from '../../utils/busca'
 
+import { useT } from '../../i18n'
 interface Professor {
   id: string
   nome: string
@@ -24,6 +25,7 @@ interface RowState {
 }
 
 export default function AcademiaAlunos() {
+  const { t } = useT()
   const [alunos, setAlunos] = useState<AlunoAcademia[]>([])
   const [professores, setProfessores] = useState<Professor[]>([])
   const [loading, setLoading] = useState(true)
@@ -141,16 +143,16 @@ export default function AcademiaAlunos() {
     }
   }
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  if (loading) return <div className="p-4 text-text-muted">{t('Carregando...')}</div>
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Alunos</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Gerenciar Alunos')}</h1>
 
       <BarraBusca
         value={search}
         onChange={setSearch}
-        placeholder="Buscar aluno por nome, email ou professor..."
+        placeholder={t('Buscar aluno por nome, email ou professor...')}
         total={alunos.length}
         filtrados={filteredAlunos.length}
       />
@@ -159,12 +161,12 @@ export default function AcademiaAlunos() {
         selectedCount={selectedIds.length}
         onClearSelection={() => setSelectedIds([])}
         onDeleteSelected={handleBatchDelete}
-        label="Desvincular Selecionados"
+        label={t('Desvincular Selecionados')}
         loading={batchDeleting}
       />
       
       {filteredAlunos.length === 0 ? (
-        <p className="text-text-muted">Nenhum aluno encontrado.</p>
+        <p className="text-text-muted">{t('Nenhum aluno encontrado.')}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg bg-surface-card border border-surface-input">
           <table className="w-full text-left border-collapse">
@@ -178,10 +180,10 @@ export default function AcademiaAlunos() {
                     className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                   />
                 </th>
-                <th className="p-4">Aluno</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Acompanhamento (Professor)</th>
-                <th className="p-4 text-right">Ações</th>
+                <th className="p-4">{t('Aluno')}</th>
+                <th className="p-4">{t('Email')}</th>
+                <th className="p-4">{t('Acompanhamento (Professor)')}</th>
+                <th className="p-4 text-right">{t('Ações')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-input text-sm text-text">
@@ -212,7 +214,7 @@ export default function AcademiaAlunos() {
                           onChange={(e) => handleProfessorChange(aluno.id, e.target.value)}
                           className="rounded border border-surface-input bg-surface px-3 py-1.5 text-sm text-text focus:border-primary focus:outline-none"
                         >
-                          <option value="">Sem Professor (Autogestão)</option>
+                          <option value="">{t('Sem Professor (Autogestão)')}</option>
                           {professores.map((prof) => (
                             <option key={prof.id} value={prof.id}>
                               {prof.nome}
@@ -221,10 +223,10 @@ export default function AcademiaAlunos() {
                         </select>
                         
                         {state.success === true && (
-                          <span className="text-xs font-semibold text-success">Salvo!</span>
+                          <span className="text-xs font-semibold text-success">{t('Salvo!')}</span>
                         )}
                         {state.success === false && (
-                          <span className="text-xs font-semibold text-destructive">Erro!</span>
+                          <span className="text-xs font-semibold text-destructive">{t('Erro!')}</span>
                         )}
                       </div>
                     </td>
@@ -247,8 +249,8 @@ export default function AcademiaAlunos() {
 
       <ConfirmModal
         open={confirmOpen}
-        title="Desvincular professores"
-        message={`Tem certeza que deseja desvincular os professores de ${selectedIds.length} aluno(s) selecionado(s)?`}
+        title={t('Desvincular professores')}
+        message={t('Tem certeza que deseja desvincular os professores de {length} aluno(s) selecionado(s)?', { length: selectedIds.length })}
         onConfirm={() => {
           setConfirmOpen(false)
           executeBatchDesvincular()

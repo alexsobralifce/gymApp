@@ -15,6 +15,11 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
 import QuemSomos from './pages/QuemSomos'
+import HomeEn from './pages/en/HomeEn'
+import FerramentasIndice from './pages/ferramentas/FerramentasIndice'
+import PaginaFerramenta from './pages/ferramentas/PaginaFerramenta'
+import { FERRAMENTAS, ORDEM } from './pages/ferramentas/conteudo'
+import { PAGINAS_SEO_EN } from './pages/seo/paginasSeoEn'
 import Planos from './pages/planos/Planos'
 import PaginaSeo from './pages/seo/PaginaSeo'
 import BlogLista from './pages/blog/BlogLista'
@@ -76,7 +81,10 @@ import { EndorfinappIcon } from './components/branding'
 import { api } from './api/client'
 import { rastrearPagina } from './lib/paginaVisita'
 
+import { useT } from './i18n'
+import TradutorDom from './i18n/TradutorDom'
 export default function App() {
+  const { t } = useT()
   useNotifications()
   useCapacitorTheme()
   const { user, fetchUser } = useAuthStore()
@@ -107,19 +115,32 @@ export default function App() {
       <div className="flex flex-col items-center gap-4">
         <EndorfinappIcon size={48} />
         <LoadingSpinner size="md" />
-        <p className="text-sm text-text-muted">Carregando...</p>
+        <p className="text-sm text-text-muted">{t('Carregando...')}</p>
       </div>
     </div>
   )
 
   return (
     <>
+    <TradutorDom />
     <Suspense fallback={<div className="flex h-screen items-center justify-center bg-surface"><LoadingSpinner size="md" /></div>}>
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
       <Route path="/quem-somos" element={<QuemSomos />} />
+      <Route path="/en" element={<HomeEn />} />
+      <Route path="/en/pricing" element={<Planos />} />
+      <Route path="/en/privacy-policy" element={<PoliticaPrivacidade />} />
+      <Route path="/en/about-us" element={<QuemSomos />} />
+      <Route path="/ferramentas" element={<FerramentasIndice idioma="pt" />} />
+      <Route path="/en/tools" element={<FerramentasIndice idioma="en" />} />
+      {ORDEM.flatMap((id) => (['pt', 'en'] as const).map((idioma) => (
+        <Route key={`${id}-${idioma}`} path={FERRAMENTAS[id][idioma].caminho} element={<PaginaFerramenta id={id} idioma={idioma} />} />
+      )))}
+      {PAGINAS_SEO_EN.map((p) => (
+        <Route key={p.caminho} path={p.caminho} element={<PaginaSeo dados={p} />} />
+      ))}
       <Route path="/planos" element={<Planos />} />
       <Route path="/blog" element={<BlogLista />} />
       <Route path="/blog/:slug" element={<BlogArtigo />} />

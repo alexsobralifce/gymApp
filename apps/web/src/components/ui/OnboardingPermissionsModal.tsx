@@ -5,9 +5,11 @@ import { activatePush, checkNotificationStatus, sendTestNotification, type Notif
 import { usePWAInstall } from '../../hooks/usePWAInstall'
 import { EndorfinappLogo } from '../branding'
 
+import { useT } from '../../i18n'
 const STORAGE_KEY = 'gymapp_onboarding_permissions_done'
 
 export function OnboardingPermissionsModal() {
+  const { t } = useT()
   const { user } = useAuthStore()
   const { isIOS, isStandalone, promptInstall } = usePWAInstall()
   const [open, setOpen] = useState(false)
@@ -96,7 +98,7 @@ export function OnboardingPermissionsModal() {
         <button
           onClick={handleDismiss}
           className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-surface/80 text-text-muted hover:text-text hover:bg-surface border border-surface-input transition-colors cursor-pointer"
-          aria-label="Fechar modal"
+          aria-label={t('Fechar modal')}
         >
           <X className="h-4 w-4" />
         </button>
@@ -109,14 +111,14 @@ export function OnboardingPermissionsModal() {
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-semibold uppercase tracking-wider mb-2">
             <Sparkles className="h-3.5 w-3.5" />
-            Configuração Inicial
+            {t('Configuração Inicial')}
           </div>
 
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text">
-            Turbine sua Experiência
+            {t('Turbine sua Experiência')}
           </h2>
           <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-sm mx-auto">
-            Ative as notificações para seus treinos e adicione o app à sua tela inicial no Android ou iOS.
+            {t('Ative as notificações para seus treinos e adicione o app à sua tela inicial no Android ou iOS.')}
           </p>
         </div>
 
@@ -141,16 +143,16 @@ export function OnboardingPermissionsModal() {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-text">1. Notificações & Lembretes</h3>
+                  <h3 className="text-sm font-bold text-text">{t('1. Notificações & Lembretes')}</h3>
                   {isGranted && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
-                      <Check className="h-3 w-3" /> Ativado
+                      <Check className="h-3 w-3" /> {t('Ativado')}
                     </span>
                   )}
                 </div>
 
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Receba avisos de horário de treino, mensagens motivacionais científicas e conquistas dos seus amigos.
+                  {t('Receba avisos de horário de treino, mensagens motivacionais científicas e conquistas dos seus amigos.')}
                 </p>
 
                 {isGranted ? (
@@ -160,11 +162,11 @@ export function OnboardingPermissionsModal() {
                       className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-all cursor-pointer"
                     >
                       <Bell className="h-3.5 w-3.5" />
-                      {testSent ? 'Notificação enviada! 🎉' : 'Testar Notificação'}
+                      {testSent ? t('Notificação enviada! 🎉') : t('Testar Notificação')}
                     </button>
                     {testSent && (
                       <span className="text-[11px] text-primary flex items-center gap-1 font-medium">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Enviada com sucesso
+                        <CheckCircle2 className="h-3.5 w-3.5" /> {t('Enviada com sucesso')}
                       </span>
                     )}
                   </div>
@@ -172,7 +174,7 @@ export function OnboardingPermissionsModal() {
                   <div className="mt-3">
                     {isDenied ? (
                       <div className="rounded-lg bg-warning/10 border border-warning/20 p-2.5 text-[11px] text-warning">
-                        Notificações estão bloqueadas no navegador. Para ativar, toque no ícone de cadeado na barra de endereço e escolha <strong>Permitir notificações</strong>.
+                        {t('Notificações estão bloqueadas no navegador. Para ativar, toque no ícone de cadeado na barra de endereço e escolha')} <strong>{t('Permitir notificações')}</strong>.
                       </div>
                     ) : (
                       <button
@@ -181,7 +183,7 @@ export function OnboardingPermissionsModal() {
                         className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer disabled:opacity-50"
                       >
                         <Bell className="h-3.5 w-3.5" />
-                        {pushLoading ? 'Ativando...' : 'Permitir Notificações'}
+                        {pushLoading ? 'Ativando...' : t('Permitir Notificações')}
                       </button>
                     )}
                   </div>
@@ -209,16 +211,16 @@ export function OnboardingPermissionsModal() {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-text">2. Instalar no Celular</h3>
+                  <h3 className="text-sm font-bold text-text">{t('2. Instalar no Celular')}</h3>
                   {isStandalone && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold">
-                      <Check className="h-3 w-3" /> Instalado
+                      <Check className="h-3 w-3" /> {t('Instalado')}
                     </span>
                   )}
                 </div>
 
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Abra em 1 toque na tela inicial do seu celular, sem barra de navegação e com desempenho nativo.
+                  {t('Abra em 1 toque na tela inicial do seu celular, sem barra de navegação e com desempenho nativo.')}
                 </p>
 
                 {!isStandalone && (
@@ -230,22 +232,22 @@ export function OnboardingPermissionsModal() {
                           className="inline-flex items-center gap-2 rounded-xl bg-surface-card border border-surface-input px-3.5 py-2 text-xs font-semibold text-text hover:border-primary/40 transition-all cursor-pointer"
                         >
                           <Share2 className="h-3.5 w-3.5 text-primary" />
-                          {iosGuideOpen ? 'Ocultar instruções iOS' : 'Como instalar no iPhone (Safari)'}
+                          {iosGuideOpen ? t('Ocultar instruções iOS') : t('Como instalar no iPhone (Safari)')}
                         </button>
 
                         {iosGuideOpen && (
                           <div className="mt-2.5 p-3 rounded-xl bg-surface-card border border-surface-input text-xs space-y-2 animate-slide-up text-text-muted">
                             <div className="flex items-center gap-2 text-text font-semibold">
                               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-primary text-[11px]">1</span>
-                              No Safari, toque no botão <strong>Compartilhar</strong> (<Share2 className="inline h-3.5 w-3.5 text-primary" />).
+                              {t('No Safari, toque no botão')} <strong>{t('Compartilhar')}</strong> (<Share2 className="inline h-3.5 w-3.5 text-primary" />).
                             </div>
                             <div className="flex items-center gap-2 text-text font-semibold">
                               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-primary text-[11px]">2</span>
-                              Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> (<PlusSquare className="inline h-3.5 w-3.5 text-primary" />).
+                              {t('Role para baixo e toque em')} <strong>{t('"Adicionar à Tela de Início"')}</strong> (<PlusSquare className="inline h-3.5 w-3.5 text-primary" />).
                             </div>
                             <div className="flex items-center gap-2 text-text font-semibold">
                               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-primary text-[11px]">3</span>
-                              Toque em <strong>Adicionar</strong> no canto superior direito.
+                              {t('Toque em')} <strong>{t('Adicionar')}</strong> {t('no canto superior direito.')}
                             </div>
                           </div>
                         )}
@@ -257,10 +259,10 @@ export function OnboardingPermissionsModal() {
                           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer"
                         >
                           <Smartphone className="h-3.5 w-3.5" />
-                          Instalar Aplicativo
+                          {t('Instalar Aplicativo')}
                         </button>
                         <span className="text-[11px] text-text-muted">
-                          (Android / Chrome / Edge)
+                          {t('(Android / Chrome / Edge)')}
                         </span>
                       </div>
                     )}
@@ -273,7 +275,7 @@ export function OnboardingPermissionsModal() {
           {/* Dica de Segurança e Privacidade */}
           <div className="flex items-center gap-2 px-2 text-[11px] text-text-muted">
             <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-            <span>Seus dados de treino e saúde estão seguros e criptografados.</span>
+            <span>{t('Seus dados de treino e saúde estão seguros e criptografados.')}</span>
           </div>
         </div>
 
@@ -283,14 +285,14 @@ export function OnboardingPermissionsModal() {
             onClick={handleDismiss}
             className="w-full sm:w-auto text-xs text-text-muted hover:text-text py-2 px-3 transition-colors cursor-pointer text-center"
           >
-            Lembrar mais tarde
+            {t('Lembrar mais tarde')}
           </button>
 
           <button
             onClick={handleDismiss}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20 cursor-pointer"
           >
-            Concluir e Começar
+            {t('Concluir e Começar')}
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>

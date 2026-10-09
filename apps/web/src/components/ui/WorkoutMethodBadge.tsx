@@ -1,5 +1,6 @@
 import type { WorkoutMethod } from '../../types/api'
 
+import { useT } from '../../i18n'
 interface WorkoutMethodBadgeProps {
   metodo?: WorkoutMethod | string | null
   size?: 'sm' | 'md'
@@ -74,6 +75,7 @@ export function WorkoutMethodBadge({
   className = '',
   showDescription = false,
 }: WorkoutMethodBadgeProps) {
+  const { t } = useT()
   const norm = (metodo || 'TRADICIONAL').toUpperCase()
   const config = WORKOUT_METHODS_CONFIG[norm] || WORKOUT_METHODS_CONFIG.TRADICIONAL
 
@@ -95,7 +97,7 @@ export function WorkoutMethodBadge({
       </span>
       {showDescription && (
         <p className="text-xs text-zinc-400 mt-1 leading-snug">
-          {config.description}
+          {t(config.description)}
         </p>
       )}
     </div>

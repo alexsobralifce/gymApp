@@ -5,6 +5,7 @@ import { resolveMediaUrl } from '../../lib/media'
 import { XIcon, DumbbellIcon, PlusIcon, ChartLineIcon } from '../icons/Icon'
 import { useAuthStore } from '../../stores/auth'
 
+import { useT } from '../../i18n'
 interface ExercisePreviewModalProps {
   exercicio: Exercicio | null
   isOpen: boolean
@@ -20,6 +21,7 @@ export default function ExercisePreviewModal({
   onClose,
   onToggleAdd,
 }: ExercisePreviewModalProps) {
+  const { t } = useT()
   const [imgFailed, setImgFailed] = useState(false)
   const user = useAuthStore((s) => s.user)
 
@@ -78,7 +80,7 @@ export default function ExercisePreviewModal({
                 {exercicio.nome}
               </h2>
               <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
-                {exercicio.grupo_muscular || 'Exercício'}
+                {exercicio.grupo_muscular || t('Exercício')}
               </span>
             </div>
           </div>
@@ -87,7 +89,7 @@ export default function ExercisePreviewModal({
             type="button"
             onClick={onClose}
             className="rounded-full p-2 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer shrink-0"
-            title="Fechar prévia"
+            title={t('Fechar prévia')}
           >
             <XIcon className="w-5 h-5" />
           </button>
@@ -100,7 +102,7 @@ export default function ExercisePreviewModal({
             {mediaSrc ? (
               <img
                 src={mediaSrc}
-                alt={`Execução de ${exercicio.nome}`}
+                alt={t('Execução de {nome}', { nome: exercicio.nome })}
                 className="w-full h-full object-contain"
                 loading="eager"
                 onError={() => setImgFailed(true)}
@@ -108,7 +110,7 @@ export default function ExercisePreviewModal({
             ) : (
               <div className="flex flex-col items-center justify-center p-6 text-center text-text-muted">
                 <DumbbellIcon className="w-16 h-16 opacity-30 mb-2" />
-                <span className="text-xs font-semibold">Demonstração visual do exercício</span>
+                <span className="text-xs font-semibold">{t('Demonstração visual do exercício')}</span>
               </div>
             )}
 
@@ -123,12 +125,12 @@ export default function ExercisePreviewModal({
           {/* Chips de Músculos Ativados */}
           <div className="space-y-1.5">
             <span className="text-[11px] font-black uppercase tracking-wider text-text-muted">
-              Músculos Trabalhados
+              {t('Músculos Trabalhados')}
             </span>
             <div className="flex flex-wrap gap-1.5">
               {exercicio.musculo_alvo && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-primary/15 text-primary border border-primary/30 px-2.5 py-1 text-xs font-black">
-                  🎯 Principal: {exercicio.musculo_alvo}
+                  {t('🎯 Principal:')} {exercicio.musculo_alvo}
                 </span>
               )}
               {exercicio.musculos_secundarios &&
@@ -142,7 +144,7 @@ export default function ExercisePreviewModal({
                 ))}
               {exercicio.nivel && (
                 <span className="inline-flex items-center rounded-lg bg-surface-input text-text-muted px-2 py-1 text-xs font-semibold border border-surface-input">
-                  Nível: {exercicio.nivel}
+                  {t('Nível:')} {exercicio.nivel}
                 </span>
               )}
             </div>
@@ -152,7 +154,7 @@ export default function ExercisePreviewModal({
           {descricao && (
             <div className="bg-surface p-3.5 rounded-2xl border border-surface-input space-y-1">
               <span className="text-[11px] font-black uppercase tracking-wider text-text-muted flex items-center gap-1">
-                📖 Sobre o Movimento
+                {t('📖 Sobre o Movimento')}
               </span>
               <p className="text-xs sm:text-sm text-text leading-relaxed font-medium">
                 {descricao}
@@ -164,7 +166,7 @@ export default function ExercisePreviewModal({
           {passos.length > 0 && (
             <div className="space-y-2">
               <span className="text-[11px] font-black uppercase tracking-wider text-text-muted flex items-center gap-1">
-                ✅ Como Executar Corretamente
+                {t('✅ Como Executar Corretamente')}
               </span>
               <div className="space-y-2">
                 {passos.map((passo, idx) => (
@@ -186,7 +188,7 @@ export default function ExercisePreviewModal({
           {exercicio.dica && passos.length > 0 && (
             <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs sm:text-sm text-amber-300 space-y-0.5">
               <span className="font-bold flex items-center gap-1 text-[11px] uppercase tracking-wider text-amber-400">
-                💡 Dica de Treinador
+                {t('💡 Dica de Treinador')}
               </span>
               <p className="leading-snug text-amber-200/90">{exercicio.dica}</p>
             </div>
@@ -197,10 +199,10 @@ export default function ExercisePreviewModal({
             <Link
               to={`/exercicios/${exercicio.id}/historico`}
               className="flex items-center justify-center gap-1.5 min-h-11 w-full rounded-xl bg-surface border border-surface-input text-xs font-bold text-text-muted hover:text-primary hover:border-primary/30 transition-colors cursor-pointer"
-              aria-label={`Ver histórico de execuções de ${exercicio.nome}`}
+              aria-label={t('Ver histórico de execuções de {nome}', { nome: exercicio.nome })}
             >
               <ChartLineIcon className="h-4 w-4" />
-              Ver histórico
+              {t('Ver histórico')}
             </Link>
           )}
         </div>
@@ -219,12 +221,12 @@ export default function ExercisePreviewModal({
             {isAlreadyAdded ? (
               <>
                 <XIcon className="w-4 h-4" />
-                Remover do Treino
+                {t('Remover do Treino')}
               </>
             ) : (
               <>
                 <PlusIcon className="w-4 h-4" />
-                Adicionar ao Treino
+                {t('Adicionar ao Treino')}
               </>
             )}
           </button>
@@ -234,7 +236,7 @@ export default function ExercisePreviewModal({
             onClick={onClose}
             className="px-4 py-3.5 rounded-2xl bg-surface border border-surface-input text-text-muted hover:text-text text-sm font-bold transition-colors cursor-pointer"
           >
-            Fechar
+            {t('Fechar')}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { BookOpenIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface OnboardingPopupProps {
   open: boolean
   role: 'ALUNO' | 'PROFESSOR'
@@ -8,6 +9,7 @@ interface OnboardingPopupProps {
 }
 
 export default function OnboardingPopup({ open, role, onDismiss }: OnboardingPopupProps) {
+  const { t } = useT()
   const navigate = useNavigate()
 
   if (!open) return null
@@ -26,19 +28,19 @@ export default function OnboardingPopup({ open, role, onDismiss }: OnboardingPop
         <div className="p-6 space-y-5">
           <div className="text-center space-y-1">
             <h2 className="text-lg font-bold text-text">
-              {isAluno ? 'Bem-vindo(a)!' : 'Bem-vindo(a), Professor(a)!'}
+              {isAluno ? 'Bem-vindo(a)!' : t('Bem-vindo(a), Professor(a)!')}
             </h2>
             <p className="text-sm text-text-muted">
               {isAluno
-                ? 'Veja como aproveitar ao máximo a ENDORFINAPP:'
-                : 'Veja como gerenciar seus alunos e usar a plataforma:'}
+                ? t('Veja como aproveitar ao máximo a ENDORFINAPP:')
+                : t('Veja como gerenciar seus alunos e usar a plataforma:')}
             </p>
           </div>
 
           <div className="space-y-3">
             <Card
               icon={isAluno ? '🏋️' : '📋'}
-              title={isAluno ? 'Crie seu treino' : 'Crie treinos para alunos'}
+              title={isAluno ? t('Crie seu treino') : t('Crie treinos para alunos')}
               body={
                 isAluno
                   ? 'Monte suas fichas manualmente ou use o assistente de IA para gerar treinos personalizados em 5 passos.'
@@ -47,12 +49,12 @@ export default function OnboardingPopup({ open, role, onDismiss }: OnboardingPop
             />
             <Card
               icon="📱"
-              title="Feed Social"
+              title={t('Feed Social')}
               body="Veja os treinos dos seus amigos, curta, comente e compartilhe fotos. Acompanhe a rede fitness."
             />
             <Card
               icon="📖"
-              title="Documentação"
+              title={t('Documentação')}
               body="Aprenda tudo sobre a plataforma: medidas, evolução, clubes, gamificação e muito mais."
             />
           </div>
@@ -62,14 +64,14 @@ export default function OnboardingPopup({ open, role, onDismiss }: OnboardingPop
               onClick={onDismiss}
               className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
             >
-              Começar
+              {t('Começar')}
             </button>
             <button
               onClick={handleDocumentacao}
               className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-sm font-medium text-text-muted hover:text-text hover:border-primary/30 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <BookOpenIcon className="h-4 w-4" />
-              Ver Documentação
+              {t('Ver Documentação')}
             </button>
           </div>
         </div>

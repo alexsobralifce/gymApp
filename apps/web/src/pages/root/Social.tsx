@@ -4,6 +4,8 @@ import FormField from '../../components/ui/FormField'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 type SocialTab = 'mural' | 'clubes' | 'amizades'
 
 interface PostItem {
@@ -53,6 +55,7 @@ function Pagination({
   totalPages: number
   onChange: (p: number) => void
 }) {
+  const { t } = useT()
   if (totalPages <= 1) return null
   const pages: (number | '...')[] = []
   for (let i = 1; i <= totalPages; i++) {
@@ -69,7 +72,7 @@ function Pagination({
         disabled={page <= 1}
         className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
       >
-        Anterior
+        {t('Anterior')}
       </button>
       {pages.map((p, i) =>
         p === '...' ? (
@@ -89,13 +92,14 @@ function Pagination({
         disabled={page >= totalPages}
         className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
       >
-        Próximo
+        {t('Próximo')}
       </button>
     </div>
   )
 }
 
 export default function RootSocial() {
+  const { t } = useT()
   const [tab, setTab] = useState<SocialTab>('mural')
   const [feedback, setFeedback] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -128,7 +132,7 @@ export default function RootSocial() {
         setAmizades(result)
       }
     } catch {
-      showFeedback('Erro ao carregar dados.')
+      showFeedback(t('Erro ao carregar dados.'))
     } finally {
       setLoading(false)
     }
@@ -150,22 +154,22 @@ export default function RootSocial() {
   async function handleDeletePost(postId: string) {
     try {
       await api.deleteRootPost(postId)
-      showFeedback('Post removido com sucesso!')
+      showFeedback(t('Post removido com sucesso!'))
       setDeleteConfirm(null)
       await loadData()
     } catch {
-      showFeedback('Erro ao remover post.')
+      showFeedback(t('Erro ao remover post.'))
     }
   }
 
   async function handleDeleteClube(id: string) {
     try {
       await api.deleteRootClube(id)
-      showFeedback('Clube removido com sucesso!')
+      showFeedback(t('Clube removido com sucesso!'))
       setDeleteConfirm(null)
       await loadData()
     } catch {
-      showFeedback('Erro ao remover clube.')
+      showFeedback(t('Erro ao remover clube.'))
     }
   }
 
@@ -174,13 +178,13 @@ export default function RootSocial() {
     setCreating(true)
     try {
       await api.createRootClube(clubNome, clubTipo)
-      showFeedback('Clube criado com sucesso!')
+      showFeedback(t('Clube criado com sucesso!'))
       setShowCreateClub(false)
       setClubNome('')
       setClubTipo('TEMATICO')
       await loadData()
     } catch {
-      showFeedback('Erro ao criar clube.')
+      showFeedback(t('Erro ao criar clube.'))
     } finally {
       setCreating(false)
     }
@@ -194,7 +198,7 @@ export default function RootSocial() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Moderação Social</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Moderação Social')}</h1>
 
       {feedback && (
         <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
@@ -203,15 +207,15 @@ export default function RootSocial() {
       )}
 
       <div className="mb-6 flex gap-1 rounded-lg bg-surface-card p-1">
-        {tabs.map((t) => (
+        {tabs.map((tr) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={tr.key}
+            onClick={() => setTab(tr.key)}
             className={`flex-1 rounded px-3 py-2 text-sm font-medium ${
-              tab === t.key ? 'bg-surface-input text-text' : 'text-text-muted'
+              tab === tr.key ? 'bg-surface-input text-text' : 'text-text-muted'
             }`}
           >
-            {t.label}
+            {t(tr.label)}
           </button>
         ))}
       </div>
@@ -220,7 +224,7 @@ export default function RootSocial() {
         <div className="mb-4">
           <Input
             type="text"
-            placeholder={tab === 'mural' ? 'Buscar por autor ou texto...' : 'Buscar...'}
+            placeholder={tab === 'mural' ? t('Buscar por autor ou texto...') : 'Buscar...'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -228,14 +232,14 @@ export default function RootSocial() {
       )}
 
       {loading ? (
-        <div className="py-12 text-center text-text-muted">Carregando...</div>
+        <div className="py-12 text-center text-text-muted">{t('Carregando...')}</div>
       ) : (
         <>
           {tab === 'mural' && mural && (
             <>
-              <p className="mb-3 text-xs text-text-muted">{mural.total} posts encontrados</p>
+              <p className="mb-3 text-xs text-text-muted">{mural.total} {t('posts encontrados')}</p>
               {mural.items.length === 0 ? (
-                <p className="py-8 text-center text-text-muted">Nenhum post encontrado.</p>
+                <p className="py-8 text-center text-text-muted">{t('Nenhum post encontrado.')}</p>
               ) : (
                 <div className="space-y-2">
                   {mural.items.map((post) => (
@@ -252,19 +256,19 @@ export default function RootSocial() {
                             </span>
                           </div>
                           {post.texto && (
-                            <p className="mt-1 text-sm text-text">{post.texto}</p>
+                            <p className="mt-1 text-sm text-text">{t(post.texto)}</p>
                           )}
                           <div className="mt-2 flex gap-3 text-xs text-text-muted">
-                            <span>{post.curtidas_count} curtidas</span>
-                            <span>{post.comentarios_count} comentarios</span>
-                            <span>{new Date(post.criado_em).toLocaleDateString('pt-BR')}</span>
+                            <span>{post.curtidas_count} {t('curtidas')}</span>
+                            <span>{post.comentarios_count} {t('comentarios')}</span>
+                            <span>{new Date(post.criado_em).toLocaleDateString(localeAtual())}</span>
                           </div>
                         </div>
                         <button
                           onClick={() => setDeleteConfirm({ type: 'post', id: post.id, nome: post.autor_nome })}
                           className="shrink-0 rounded bg-destructive/10 px-3 py-1 text-sm text-destructive"
                         >
-                          Remover
+                          {t('Remover')}
                         </button>
                       </div>
                     </div>
@@ -278,37 +282,37 @@ export default function RootSocial() {
           {tab === 'clubes' && clubes && (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs text-text-muted">{clubes.total} clubes encontrados</p>
+                <p className="text-xs text-text-muted">{clubes.total} {t('clubes encontrados')}</p>
                 <button
                   onClick={() => setShowCreateClub(true)}
                   className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:brightness-110 cursor-pointer"
                 >
-                  + Criar Clube
+                  {t('+ Criar Clube')}
                 </button>
               </div>
 
               {showCreateClub && (
                 <form onSubmit={handleCreateClub} className="mb-4 rounded-lg bg-surface-card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <h3 className="font-semibold text-text md:col-span-2">Novo Clube</h3>
-                  <FormField label="Nome do Clube" htmlFor="clube-nome" required>
+                  <h3 className="font-semibold text-text md:col-span-2">{t('Novo Clube')}</h3>
+                  <FormField label={t('Nome do Clube')} htmlFor="clube-nome" required>
                     <Input
                       id="clube-nome"
                       type="text"
-                      placeholder="Nome do clube"
+                      placeholder={t('Nome do clube')}
                       value={clubNome}
                       onChange={(e) => setClubNome(e.target.value)}
                       required
                       minLength={3}
                     />
                   </FormField>
-                  <FormField label="Tipo" htmlFor="clube-tipo">
+                  <FormField label={t('Tipo')} htmlFor="clube-tipo">
                     <Select
                       id="clube-tipo"
                       value={clubTipo}
                       onChange={(e) => setClubTipo(e.target.value as 'ACADEMIA' | 'TEMATICO')}
                     >
-                      <option value="TEMATICO">Temático</option>
-                      <option value="ACADEMIA">Academia</option>
+                      <option value="TEMATICO">{t('Temático')}</option>
+                      <option value="ACADEMIA">{t('Academia')}</option>
                     </Select>
                   </FormField>
                   <div className="flex gap-2 md:col-span-2">
@@ -324,14 +328,14 @@ export default function RootSocial() {
                       onClick={() => { setShowCreateClub(false); setClubNome(''); setClubTipo('TEMATICO') }}
                       className="rounded border border-surface-input px-4 py-2 text-sm text-text-muted cursor-pointer"
                     >
-                      Cancelar
+                      {t('Cancelar')}
                     </button>
                   </div>
                 </form>
               )}
 
               {clubes.items.length === 0 ? (
-                <p className="py-8 text-center text-text-muted">Nenhum clube encontrado.</p>
+                <p className="py-8 text-center text-text-muted">{t('Nenhum clube encontrado.')}</p>
               ) : (
                 <div className="space-y-2">
                   {clubes.items.map((clube) => (
@@ -344,14 +348,14 @@ export default function RootSocial() {
                           </span>
                         </div>
                         <p className="text-xs text-text-muted">
-                          {clube.totalMembros} membros | Criado em {new Date(clube.criado_em).toLocaleDateString('pt-BR')}
+                          {clube.totalMembros} {t('membros | Criado em')} {new Date(clube.criado_em).toLocaleDateString(localeAtual())}
                         </p>
                       </div>
                       <button
                         onClick={() => setDeleteConfirm({ type: 'clube', id: clube.id, nome: clube.nome })}
                         className="rounded bg-destructive/10 px-3 py-1 text-sm text-destructive"
                       >
-                        Remover
+                        {t('Remover')}
                       </button>
                     </div>
                   ))}
@@ -363,9 +367,9 @@ export default function RootSocial() {
 
           {tab === 'amizades' && amizades && (
             <>
-              <p className="mb-3 text-xs text-text-muted">{amizades.total} amizades encontradas</p>
+              <p className="mb-3 text-xs text-text-muted">{amizades.total} {t('amizades encontradas')}</p>
               {amizades.items.length === 0 ? (
-                <p className="py-8 text-center text-text-muted">Nenhuma amizade encontrada.</p>
+                <p className="py-8 text-center text-text-muted">{t('Nenhuma amizade encontrada.')}</p>
               ) : (
                 <div className="space-y-2">
                   {amizades.items.map((a) => (
@@ -378,7 +382,7 @@ export default function RootSocial() {
                           <span className={`rounded-full px-2 py-0.5 ${a.status === 'ACEITO' ? 'bg-success/10 text-success' : 'bg-yellow-500/10 text-yellow-400'}`}>
                             {a.status}
                           </span>
-                          <span>{new Date(a.criado_em).toLocaleDateString('pt-BR')}</span>
+                          <span>{new Date(a.criado_em).toLocaleDateString(localeAtual())}</span>
                         </div>
                       </div>
                     </div>
@@ -395,18 +399,17 @@ export default function RootSocial() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteConfirm(null)} />
           <div className="relative z-10 w-full max-w-lg rounded-lg bg-surface-card p-6 shadow-2xl">
-            <h2 className="mb-2 text-lg font-bold text-text">Confirmar remoção</h2>
+            <h2 className="mb-2 text-lg font-bold text-text">{t('Confirmar remoção')}</h2>
             <p className="mb-6 text-sm text-text-muted">
-              Tem certeza que deseja remover{' '}
-              <strong className="text-text">{deleteConfirm.nome}</strong>?
-              Esta ação não pode ser desfeita.
+              {t('Tem certeza que deseja remover')}{' '}
+              <strong className="text-text">{deleteConfirm.nome}</strong>{t('? Esta ação não pode ser desfeita.')}
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="rounded border border-surface-input px-4 py-2 text-sm text-text-muted"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
               <button
                 onClick={() => {
@@ -415,7 +418,7 @@ export default function RootSocial() {
                 }}
                 className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white"
               >
-                Remover
+                {t('Remover')}
               </button>
             </div>
           </div>

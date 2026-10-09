@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 
+import { useT } from '../../i18n'
 interface WorkoutHelpWizardProps {
   isOpen: boolean
   onClose: () => void
@@ -144,6 +145,7 @@ export default function WorkoutHelpWizard({
   onClose,
   mode = 'aluno',
 }: WorkoutHelpWizardProps) {
+  const { t } = useT()
   const [step, setStep] = useState(0)
   const [animating, setAnimating] = useState(false)
 
@@ -196,7 +198,7 @@ export default function WorkoutHelpWizard({
       className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Guia de como montar um treino"
+      aria-label={t('Guia de como montar um treino')}
     >
       {/* Backdrop */}
       <div
@@ -222,7 +224,7 @@ export default function WorkoutHelpWizard({
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-extrabold text-text-muted uppercase tracking-widest">
-              GUIA RÁPIDO
+              {t('GUIA RÁPIDO')}
             </span>
             <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               {step + 1}/{steps.length}
@@ -231,7 +233,7 @@ export default function WorkoutHelpWizard({
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-xl bg-surface-input/60 hover:bg-surface-input text-text-muted hover:text-text flex items-center justify-center text-sm font-black transition-all cursor-pointer"
-            aria-label="Fechar guia"
+            aria-label={t('Fechar guia')}
           >
             ✕
           </button>
@@ -255,22 +257,22 @@ export default function WorkoutHelpWizard({
             </div>
             <div className="pt-1">
               <h2 className={`text-lg font-black leading-tight ${current.color}`}>
-                {current.title}
+                {t(current.title)}
               </h2>
               <p className="text-xs text-text-muted font-medium mt-0.5">
-                Passo {step + 1} de {steps.length}
+                {t('Passo')} {step + 1} {t('de')} {steps.length}
               </p>
             </div>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-text leading-relaxed">{current.description}</p>
+          <p className="text-sm text-text leading-relaxed">{t(current.description)}</p>
 
           {/* Tip */}
           {current.tip && (
             <div className="flex gap-2.5 bg-primary/8 border border-primary/20 rounded-2xl p-3.5">
               <span className="text-lg shrink-0 mt-0.5">💡</span>
-              <p className="text-xs text-text-muted leading-relaxed">{current.tip}</p>
+              <p className="text-xs text-text-muted leading-relaxed">{t(current.tip)}</p>
             </div>
           )}
         </div>
@@ -290,7 +292,7 @@ export default function WorkoutHelpWizard({
                       ? 'w-2 h-2 bg-primary/40'
                       : 'w-2 h-2 bg-surface-input'
                 }`}
-                aria-label={`Ir para passo ${i + 1}`}
+                aria-label={t('Ir para passo {v1}', { v1: i + 1 })}
               />
             ))}
           </div>
@@ -302,14 +304,14 @@ export default function WorkoutHelpWizard({
                 onClick={handlePrev}
                 className="flex-1 py-3 rounded-2xl border border-surface-input bg-surface text-text-muted hover:text-text hover:bg-surface-input text-sm font-extrabold transition-all cursor-pointer active:scale-95"
               >
-                ← Anterior
+                {t('← Anterior')}
               </button>
             )}
             <button
               onClick={handleNext}
               className="flex-[2] py-3 rounded-2xl bg-primary text-primary-foreground text-sm font-black shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
-              {isLast ? 'Bora montar! 🚀' : 'Próximo →'}
+              {isLast ? t('Bora montar! 🚀') : t('Próximo →')}
             </button>
           </div>
         </div>

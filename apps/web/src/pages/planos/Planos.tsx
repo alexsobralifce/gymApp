@@ -21,6 +21,7 @@ import {
   type SegmentoPublico,
 } from './plansData'
 
+import { useT } from '../../i18n'
 const VANTAGENS = [
   {
     Icone: ClipboardListIcon,
@@ -55,14 +56,15 @@ const VANTAGENS = [
 ]
 
 export default function Planos() {
+  const { t, idioma } = useT()
   const navigate = useNavigate()
   const [segmento, setSegmento] = useState<SegmentoPublico>('PERSONAL')
   const [planoSelecionado, setPlanoSelecionado] = useState<string | null>(null)
 
   useSeo({
-    title: 'Planos e Preços para Personal e Academia | ENDORFINAPP',
-    description: 'Compare os planos do ENDORFINAPP para personal trainers e academias: gestão de alunos, treinos, evolução e teste grátis.',
-    path: '/planos',
+    title: t('Planos e Preços para Personal e Academia | ENDORFINAPP'),
+    description: t('Compare os planos do ENDORFINAPP para personal trainers e academias: gestão de alunos, treinos, evolução e teste grátis.'),
+    path: idioma === 'en' ? '/en/pricing' : '/planos',
   })
 
   const planos = useMemo(
@@ -96,13 +98,13 @@ export default function Planos() {
               className="flex items-center gap-1 text-sm font-medium text-text-muted hover:text-text cursor-pointer"
             >
               <ChevronLeftIcon className="h-4 w-4" />
-              Voltar
+              {t('Voltar')}
             </button>
             <Link
               to="/login"
               className="rounded-lg border border-primary/50 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
             >
-              Entrar
+              {t('Entrar')}
             </Link>
           </div>
         </div>
@@ -112,23 +114,22 @@ export default function Planos() {
       <section className="gradient-hero">
         <div className="mx-auto max-w-5xl px-4 py-12 text-center fade-in">
           <h1 className="text-3xl font-extrabold leading-tight text-text sm:text-4xl">
-            Planos que cabem na sua <span className="text-primary">Academia</span> e no seu{' '}
-            <span className="text-primary">Personal</span>
+            {t('Planos que cabem na sua')} <span className="text-primary">{t('Academia')}</span> {t('e no seu')}{' '}
+            <span className="text-primary">{t('Personal')}</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-text-muted sm:text-base">
-            Pague por <strong className="text-text">aluno ativo</strong>. Sem surpresa, sem taxa
-            escondida. Do personal autônomo à rede de academias.
+            {t('Pague por')} <strong className="text-text">{t('aluno ativo')}</strong>{t('. Sem surpresa, sem taxa escondida. Do personal autônomo à rede de academias.')}
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs">
             <span className="glass rounded-full px-3 py-1.5 font-semibold text-text">
-              A partir de R$ 0,60 por aluno ativo/mês
+              {t('A partir de R$ 0,60 por aluno ativo/mês')}
             </span>
             <span className="glass rounded-full px-3 py-1.5 font-semibold text-text">
-              15 dias grátis em todos os planos
+              {t('15 dias grátis em todos os planos')}
             </span>
             <span className="glass rounded-full px-3 py-1.5 font-semibold text-text">
-              Pagamento seguro via Mercado Pago
+              {t('Pagamento seguro via Mercado Pago')}
             </span>
           </div>
         </div>
@@ -138,7 +139,7 @@ export default function Planos() {
         {/* Segmento */}
         <div
           role="tablist"
-          aria-label="Escolha o tipo de conta"
+          aria-label={t('Escolha o tipo de conta')}
           className="mx-auto -mt-6 mb-8 flex max-w-md rounded-xl border border-border bg-surface-card p-1"
         >
           {(
@@ -163,7 +164,7 @@ export default function Planos() {
                   ativo ? 'bg-primary text-primary-foreground' : 'text-text-muted hover:text-text',
                 ].join(' ')}
               >
-                {opcao.label}
+                {t(opcao.label)}
               </button>
             )
           })}
@@ -178,17 +179,16 @@ export default function Planos() {
 
         {planoSelecionado && (
           <div className="mt-5 rounded-xl border border-primary/35 bg-primary/10 px-4 py-3 text-sm text-text slide-up">
-            <strong className="font-bold">{planoSelecionado}</strong> selecionado. A contratação
-            direta pelo app está em preparação — fale com nosso time para começar agora.{' '}
+            <strong className="font-bold">{planoSelecionado}</strong> {t('selecionado. A contratação direta pelo app está em preparação — fale com nosso time para começar agora.')}{' '}
             <Link to="/register" className="font-bold text-primary underline">
-              Criar conta
+              {t('Criar conta')}
             </Link>
           </div>
         )}
 
         {/* Add-ons */}
         <section className="mt-10">
-          <h2 className="mb-3 text-lg font-bold text-text">Serviços adicionais</h2>
+          <h2 className="mb-3 text-lg font-bold text-text">{t('Serviços adicionais')}</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {addons.map((addon) => (
               <div
@@ -205,10 +205,10 @@ export default function Planos() {
         {/* Vantagens */}
         <section className="mt-12">
           <h2 className="text-center text-xl font-bold text-text">
-            O que a ferramenta entrega
+            {t('O que a ferramenta entrega')}
           </h2>
           <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-text-muted">
-            Tudo o que a academia e o personal precisam para prescrever, acompanhar e manter o aluno.
+            {t('Tudo o que a academia e o personal precisam para prescrever, acompanhar e manter o aluno.')}
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -224,12 +224,9 @@ export default function Planos() {
 
         {/* Por que pagar por aluno ativo */}
         <section className="mt-12 rounded-2xl border border-border bg-surface-card p-6">
-          <h2 className="mb-2 text-lg font-bold text-text">Por que cobramos por aluno ativo</h2>
+          <h2 className="mb-2 text-lg font-bold text-text">{t('Por que cobramos por aluno ativo')}</h2>
           <p className="text-sm leading-relaxed text-text-muted">
-            Contamos como <strong className="text-text">ativo</strong> o aluno que treinou nos
-            últimos 30 dias. Assim você paga pelo que realmente está em uso — e não pela base
-            inteira de cadastros. Quem cresce, sobe de faixa automaticamente; quem está começando,
-            paga menos.
+            {t('Contamos como')} <strong className="text-text">{t('ativo')}</strong> {t('o aluno que treinou nos últimos 30 dias. Assim você paga pelo que realmente está em uso — e não pela base inteira de cadastros. Quem cresce, sobe de faixa automaticamente; quem está começando, paga menos.')}
           </p>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {[
@@ -248,33 +245,32 @@ export default function Planos() {
 
         {/* CTA final */}
         <section className="mt-12 text-center">
-          <h2 className="text-xl font-bold text-text">Pronto para começar?</h2>
+          <h2 className="text-xl font-bold text-text">{t('Pronto para começar?')}</h2>
           <p className="mt-2 text-sm text-text-muted">
-            Crie sua conta e teste sem custo. Você só paga quando crescer.
+            {t('Crie sua conta e teste sem custo. Você só paga quando crescer.')}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link
               to="/register"
               className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground hover:bg-primary-hover"
             >
-              Criar conta grátis
+              {t('Criar conta grátis')}
             </Link>
             <Link
               to="/login"
               className="rounded-xl border border-primary/50 px-6 py-3 text-sm font-bold text-primary hover:bg-primary/10"
             >
-              Já tenho conta
+              {t('Já tenho conta')}
             </Link>
           </div>
           <p className="mt-4 text-xs text-text-muted">
-            Toda cobrança é processada com segurança pelo Mercado Pago. Você autoriza o cartão no
-            cadastro e só é cobrado automaticamente após os 15 dias de teste, caso não cancele antes.
+            {t('Toda cobrança é processada com segurança pelo Mercado Pago. Você autoriza o cartão no cadastro e só é cobrado automaticamente após os 15 dias de teste, caso não cancele antes.')}
           </p>
         </section>
 
         <footer className="mt-12 flex items-center justify-center gap-2 border-t border-border pt-6 text-xs text-text-muted">
           <Building2Icon className="h-4 w-4" />
-          <span>ENDORFINAPP — A Química do Crescimento · Pagamentos via Mercado Pago</span>
+          <span>{t('ENDORFINAPP — A Química do Crescimento · Pagamentos via Mercado Pago')}</span>
         </footer>
       </main>
     </div>

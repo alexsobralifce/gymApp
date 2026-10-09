@@ -1,7 +1,9 @@
 import { usePWAInstall } from '../../hooks/usePWAInstall'
 import { DownloadCloudIcon, XIcon, SmartphoneIcon } from 'lucide-react'
 
+import { useT } from '../../i18n'
 export function PWAInstallPrompt() {
+  const { t } = useT()
   const { shouldShowPrompt, isIOS, promptInstall, dismissPrompt } = usePWAInstall()
 
   if (!shouldShowPrompt) return null
@@ -12,7 +14,7 @@ export function PWAInstallPrompt() {
         <button
           onClick={dismissPrompt}
           className="absolute top-1.5 right-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text transition-colors"
-          aria-label="Fechar"
+          aria-label={t('Fechar')}
         >
           <XIcon className="h-5 w-5" />
         </button>
@@ -22,9 +24,9 @@ export function PWAInstallPrompt() {
             <SmartphoneIcon className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-text">Instale o App</h3>
+            <h3 className="text-sm font-bold text-text">{t('Instale o App')}</h3>
             <p className="text-xs text-text-muted leading-tight mt-0.5">
-              Adicione o ENDORFINAPP à sua tela inicial para uma melhor experiência.
+              {t('Adicione o ENDORFINAPP à sua tela inicial para uma melhor experiência.')}
             </p>
           </div>
         </div>
@@ -32,7 +34,7 @@ export function PWAInstallPrompt() {
         {isIOS ? (
           <div className="bg-surface-input/50 rounded-xl p-3 mt-1">
             <p className="text-xs text-text-muted">
-              No Safari, toque em <span className="font-bold">Compartilhar</span> <span className="inline-block px-1 border border-surface-input rounded bg-surface">↑</span> e depois em <span className="font-bold">"Adicionar à Tela de Início"</span> <span className="inline-block px-1 border border-surface-input rounded bg-surface">+</span>.
+              {t('No Safari, toque em')} <span className="font-bold">{t('Compartilhar')}</span> <span className="inline-block px-1 border border-surface-input rounded bg-surface">↑</span> {t('e depois em')} <span className="font-bold">{t('"Adicionar à Tela de Início"')}</span> <span className="inline-block px-1 border border-surface-input rounded bg-surface">+</span>.
             </p>
           </div>
         ) : (
@@ -41,7 +43,7 @@ export function PWAInstallPrompt() {
             className="w-full mt-1 bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all"
           >
             <DownloadCloudIcon className="h-4 w-4" />
-            Instalar Agora
+            {t('Instalar Agora')}
           </button>
         )}
       </div>

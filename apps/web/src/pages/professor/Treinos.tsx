@@ -11,6 +11,7 @@ import Select from '../../components/ui/Select'
 import FormField from '../../components/ui/FormField'
 import type { ProfessorDashboard, Treino } from '../../types/api'
 
+import { useT } from '../../i18n'
 const DIA_LABEL: Record<number, string> = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' }
 
 const STATUS_COR: Record<string, string> = {
@@ -24,6 +25,7 @@ const STATUS_COR: Record<string, string> = {
 }
 
 export default function ProfessorTreinos() {
+  const { t } = useT()
   const [alunos, setAlunos] = useState<ProfessorDashboard[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -52,7 +54,7 @@ export default function ProfessorTreinos() {
   const filteredAlunos = filtrarPorTexto(alunos, search, (a) => [
     a.usuario.nome,
     a.usuario.email,
-    ...a.treinos.map((t) => t.nome),
+    ...a.treinos.map((tr) => tr.nome),
   ])
 
   const toggleSelect = (id: string) => {
@@ -76,7 +78,7 @@ export default function ProfessorTreinos() {
     setBatchDeleting(true)
     try {
       await Promise.allSettled(selectedIds.map((id) => api.deleteTreino(id)))
-      showToast(`${selectedIds.length} treino(s) removido(s) com sucesso!`)
+      showToast(t('{length} treino(s) removido(s) com sucesso!', { length: selectedIds.length }))
       setSelectedIds([])
       const updatedDash = await api.getDashboard()
       setAlunos(updatedDash)
@@ -91,7 +93,7 @@ export default function ProfessorTreinos() {
         setViewingTreinos(null)
       }
     } catch (e) {
-      showToast((e as Error).message, 'error')
+      showToast(t((e as Error).message), 'error')
     } finally {
       setBatchDeleting(false)
     }
@@ -116,13 +118,13 @@ export default function ProfessorTreinos() {
     setSaving(true)
     try {
       await api.updateTreino(editingTreino.treino.id, { nome: form.nome, diasSemana: form.diasSemana })
-      showToast('Treino atualizado com sucesso!')
+      showToast(t('Treino atualizado com sucesso!'))
       setEditingTreino(null)
       setForm({ nome: '', diasSemana: [] })
       const data = await api.getDashboard()
       setAlunos(data)
     } catch (e) {
-      showToast((e as Error).message, 'error')
+      showToast(t((e as Error).message), 'error')
     } finally {
       setSaving(false)
     }
@@ -133,12 +135,12 @@ export default function ProfessorTreinos() {
     setSaving(true)
     try {
       await api.deleteTreino(deletingTreino.id)
-      showToast('Treino removido com sucesso!')
+      showToast(t('Treino removido com sucesso!'))
       setDeletingTreino(null)
       const data = await api.getDashboard()
       setAlunos(data)
     } catch (e) {
-      showToast((e as Error).message, 'error')
+      showToast(t((e as Error).message), 'error')
     } finally {
       setSaving(false)
     }
@@ -151,7 +153,7 @@ export default function ProfessorTreinos() {
       const lista = await api.getAlunosProfessor()
       setAlunosDestino(lista)
     } catch {
-      showToast('Erro ao carregar alunos', 'error')
+      showToast(t('Erro ao carregar alunos'), 'error')
     }
   }
 
@@ -161,12 +163,12 @@ export default function ProfessorTreinos() {
     try {
       const treino = await api.clonarTreino(cloningTreino.id, alunoDestinoId)
       await api.enviarTreino(treino.id)
-      showToast('Treino clonado com sucesso!')
+      showToast(t('Treino clonado com sucesso!'))
       setCloningTreino(null)
       const data = await api.getDashboard()
       setAlunos(data)
     } catch (e) {
-      showToast((e as Error).message, 'error')
+      showToast(t((e as Error).message), 'error')
     } finally {
       setSaving(false)
     }
@@ -175,11 +177,11 @@ export default function ProfessorTreinos() {
   const handleToggleTemplate = async (treinoId: string, isTemplate: boolean) => {
     try {
       await api.marcarTemplate(treinoId, isTemplate)
-      showToast(isTemplate ? 'Template ativado!' : 'Template removido!')
+      showToast(isTemplate ? t('Template ativado!') : t('Template removido!'))
       const data = await api.getDashboard()
       setAlunos(data)
     } catch (e) {
-      showToast((e as Error).message, 'error')
+      showToast(t((e as Error).message), 'error')
     }
   }
 
@@ -191,7 +193,7 @@ export default function ProfessorTreinos() {
       const lista = await api.getAlunosProfessor()
       setAlunosLoteDisponiveis(lista)
     } catch {
-      showToast('Erro ao carregar alunos', 'error')
+      showToast(t('Erro ao carregar alunos'), 'error')
     }
   }
 
@@ -206,47 +208,47 @@ export default function ProfessorTreinos() {
     setSaving(true)
     try {
       const treinos = await api.clonarTreinoLote(cloningLote.id, selectedAlunoIds)
-      await Promise.all(treinos.map((t) => api.enviarTreino(t.id)))
-      showToast(`${treinos.length} treino(s) clonado(s) e enviado(s) com sucesso!`)
+      await Promise.all(treinos.map((tr) => api.enviarTreino(tr.id)))
+      showToast(t('{length} treino(s) clonado(s) e enviado(s) com sucesso!', { length: treinos.length }))
       setCloningLote(null)
       setSelectedAlunoIds([])
       const data = await api.getDashboard()
       setAlunos(data)
     } catch (e) {
-      showToast((e as Error).message, 'error')
+      showToast(t((e as Error).message), 'error')
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  if (loading) return <div className="p-4 text-text-muted">{t('Carregando...')}</div>
 
   return (
     <div className="p-4 md:p-6">
       {ToastComponent}
 
-      <h1 className="mb-6 text-xl font-bold text-text">Listar Treinos</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Listar Treinos')}</h1>
 
       <BarraBusca
         value={search}
         onChange={setSearch}
-        placeholder="Buscar aluno por nome, email ou treino..."
+        placeholder={t('Buscar aluno por nome, email ou treino...')}
         total={alunos.length}
         filtrados={filteredAlunos.length}
       />
 
       {filteredAlunos.length === 0 ? (
-        <p className="text-text-muted">Nenhum aluno encontrado.</p>
+        <p className="text-text-muted">{t('Nenhum aluno encontrado.')}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg bg-surface-card border border-surface-input">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-surface-input bg-surface/50 text-xs font-semibold text-text-muted uppercase tracking-wider">
-                <th className="p-4">Aluno</th>
-                <th className="p-4">Fone</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Treinos</th>
-                <th className="p-4 text-right">Ações</th>
+                <th className="p-4">{t('Aluno')}</th>
+                <th className="p-4">{t('Fone')}</th>
+                <th className="p-4">{t('Email')}</th>
+                <th className="p-4">{t('Treinos')}</th>
+                <th className="p-4 text-right">{t('Ações')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-input">
@@ -257,7 +259,7 @@ export default function ProfessorTreinos() {
                   <td className="p-4 text-sm text-text-muted">{aluno.usuario.email}</td>
                   <td className="p-4">
                     {aluno.treinos.length === 0 ? (
-                      <span className="text-xs text-text-muted italic">Nenhum</span>
+                      <span className="text-xs text-text-muted italic">{t('Nenhum')}</span>
                     ) : (
                       <button
                         onClick={() => {
@@ -266,7 +268,7 @@ export default function ProfessorTreinos() {
                         }}
                         className="text-sm text-primary hover:underline cursor-pointer"
                       >
-                        Ver treinos ({aluno.treinos.length})
+                        {t('Ver treinos (')}{aluno.treinos.length})
                       </button>
                     )}
                   </td>
@@ -276,7 +278,7 @@ export default function ProfessorTreinos() {
                         onClick={() => navigate(`/treinos/criar?alunoId=${aluno.id}`)}
                         className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/95 transition-colors cursor-pointer"
                       >
-                        + Novo
+                        {t('+ Novo')}
                       </button>
                     </div>
                   </td>
@@ -293,7 +295,7 @@ export default function ProfessorTreinos() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setViewingTreinos(null)} />
           <div className="relative z-10 mx-4 w-full max-w-lg rounded-lg bg-surface-card p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-text">Treinos de {viewingTreinos.alunoNome}</h3>
+              <h3 className="text-lg font-semibold text-text">{t('Treinos de')} {viewingTreinos.alunoNome}</h3>
               <button onClick={() => setViewingTreinos(null)} className="text-text-muted hover:text-text text-lg cursor-pointer">&times;</button>
             </div>
 
@@ -309,103 +311,103 @@ export default function ProfessorTreinos() {
                 <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={viewingTreinos.treinos.every((t) => selectedIds.includes(t.id))}
+                    checked={viewingTreinos.treinos.every((tr) => selectedIds.includes(tr.id))}
                     onChange={() => toggleSelectAll()}
                     className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4"
                   />
-                  <span>Selecionar todos os treinos</span>
+                  <span>{t('Selecionar todos os treinos')}</span>
                 </label>
               </div>
             )}
 
             <div className="space-y-2 max-h-80 overflow-y-auto">
-              {viewingTreinos.treinos.map((t) => (
-                <div key={t.id} className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${selectedIds.includes(t.id) ? 'border-primary bg-primary/5' : 'border-surface-input bg-surface'}`}>
+              {viewingTreinos.treinos.map((tr) => (
+                <div key={tr.id} className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${selectedIds.includes(tr.id) ? 'border-primary bg-primary/5' : 'border-surface-input bg-surface'}`}>
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
-                      checked={selectedIds.includes(t.id)}
-                      onChange={() => toggleSelect(t.id)}
+                      checked={selectedIds.includes(tr.id)}
+                      onChange={() => toggleSelect(tr.id)}
                       className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-text">{t.nome}</p>
-                        {t.is_template && (
+                        <p className="text-sm font-medium text-text">{tr.nome}</p>
+                        {tr.is_template && (
                           <span className="inline-flex rounded px-1.5 py-0.5 text-xs font-semibold text-warning bg-amber-400/10 border border-amber-400/20">
-                            Template
+                            {t('Template')}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-semibold ${STATUS_COR[t.status] || 'text-text-muted'}`}>
-                          {t.status}
+                        <span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-semibold ${STATUS_COR[tr.status] || 'text-text-muted'}`}>
+                          {tr.status}
                         </span>
                         <span className="text-xs text-text-muted">
-                          {t.dias_semana?.map((d: number) => DIA_LABEL[d]).join(', ')}
+                          {tr.dias_semana?.map((d: number) => t(DIA_LABEL[d])).join(', ')}
                         </span>
-                        {t.nota_avaliacao && (
+                        {tr.nota_avaliacao && (
                           <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-xs font-bold text-amber-400">
-                            ⭐ {t.nota_avaliacao}/5
+                            ⭐ {tr.nota_avaliacao}/5
                           </span>
                         )}
                       </div>
-                      {t.feedback_comentario && (
+                      {tr.feedback_comentario && (
                         <p className="mt-1.5 text-xs text-text-muted italic bg-surface-input/40 px-2 py-1 rounded border border-surface-input">
-                          💬 "{t.feedback_comentario}"
+                          💬 "{tr.feedback_comentario}"
                         </p>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 justify-end">
                       <button
-                        onClick={() => handleToggleTemplate(t.id, !t.is_template)}
-                        className={`text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center ${t.is_template ? 'text-warning' : 'text-amber-500'}`}
+                        onClick={() => handleToggleTemplate(tr.id, !tr.is_template)}
+                        className={`text-xs hover:underline cursor-pointer min-h-[32px] inline-flex items-center ${tr.is_template ? 'text-warning' : 'text-amber-500'}`}
                       >
-                        {t.is_template ? 'Desmarcar Template' : 'Template'}
+                        {tr.is_template ? t('Desmarcar Template') : 'Template'}
                       </button>
-                      {t.is_template && (
+                      {tr.is_template && (
                         <button
-                          onClick={() => { setViewingTreinos(null); openCloneLoteModal(t.id, t.nome) }}
+                          onClick={() => { setViewingTreinos(null); openCloneLoteModal(tr.id, tr.nome) }}
                           className="text-xs text-success hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                         >
-                          Clonar em Lote
+                          {t('Clonar em Lote')}
                         </button>
                       )}
                       <button
-                        onClick={() => { setViewingTreinos(null); navigate(`/treino/${t.id}/inicio`) }}
+                        onClick={() => { setViewingTreinos(null); navigate(`/treino/${tr.id}/inicio`) }}
                         className="text-xs text-primary hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                       >
-                        Exibir
+                        {t('Exibir')}
                       </button>
                     <button
                       onClick={() => {
                         setViewingTreinos(null)
-                        openCloneModal(t.id, t.nome)
+                        openCloneModal(tr.id, tr.nome)
                       }}
                       className="text-xs text-blue-400 hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                     >
-                      Clonar
+                      {t('Clonar')}
                     </button>
                     <button
                       onClick={() => {
-                        const treino = t as Treino
+                        const treino = tr as Treino
                         setEditingTreino({ treino: { ...treino, aluno_id: '', criado_em: '' }, alunoId: viewingTreinos.alunoId })
                         setForm({ nome: treino.nome, diasSemana: treino.dias_semana ? [...treino.dias_semana] : [] })
                         setViewingTreinos(null)
                       }}
                       className="text-xs text-blue-400 hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                     >
-                      Editar
+                      {t('Editar')}
                     </button>
                     <button
                       onClick={() => {
-                        setDeletingTreino({ id: t.id, nome: t.nome })
+                        setDeletingTreino({ id: tr.id, nome: tr.nome })
                         setViewingTreinos(null)
                       }}
                       className="text-xs text-destructive hover:underline cursor-pointer min-h-[32px] inline-flex items-center"
                     >
-                      Deletar
+                      {t('Deletar')}
                     </button>
                   </div>
                 </div>
@@ -420,20 +422,20 @@ export default function ProfessorTreinos() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => { setEditingTreino(null); setForm({ nome: '', diasSemana: [] }) }} />
           <div className="relative z-10 mx-4 w-full max-w-md rounded-lg bg-surface-card p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-text">Editar Treino</h3>
+            <h3 className="text-lg font-semibold text-text">{t('Editar Treino')}</h3>
             <div className="mt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Nome do treino" htmlFor="edit-nome">
+                <FormField label={t('Nome do treino')} htmlFor="edit-nome">
                   <Input
                     id="edit-nome"
                     type="text"
-                    placeholder="Nome do treino"
+                    placeholder={t('Nome do treino')}
                     value={form.nome}
                     onChange={(e) => setForm({ ...form, nome: e.target.value })}
                   />
                 </FormField>
                 <div>
-                  <p className="mb-2 text-xs text-text-muted">Dias da semana</p>
+                  <p className="mb-2 text-xs text-text-muted">{t('Dias da semana')}</p>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(DIA_LABEL).map(([k, v]) => (
                       <button
@@ -458,7 +460,7 @@ export default function ProfessorTreinos() {
                 disabled={saving}
                 className="rounded border border-surface-input bg-surface px-4 py-2 text-sm text-text-muted hover:text-text disabled:opacity-50 cursor-pointer"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
               <button
                 onClick={handleUpdateTreino}
@@ -476,8 +478,8 @@ export default function ProfessorTreinos() {
       {deletingTreino && (
         <ConfirmModal
           open={!!deletingTreino}
-          title="Remover treino"
-          message={`Tem certeza que deseja remover o treino "${deletingTreino.nome}"? Esta ação não pode ser desfeita.`}
+          title={t('Remover treino')}
+          message={t('Tem certeza que deseja remover o treino "{nome}"? Esta ação não pode ser desfeita.', { nome: deletingTreino.nome })}
           onConfirm={handleDeleteTreino}
           onCancel={() => setDeletingTreino(null)}
           loading={saving}
@@ -489,18 +491,18 @@ export default function ProfessorTreinos() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setCloningTreino(null)} />
           <div className="relative z-10 mx-4 w-full max-w-md rounded-lg bg-surface-card p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-text">Clonar Treino</h3>
+            <h3 className="text-lg font-semibold text-text">{t('Clonar Treino')}</h3>
             <p className="mt-1 text-sm text-text-muted">
-              Clonando: <span className="text-text font-medium">{cloningTreino.nome}</span>
+              {t('Clonando:')} <span className="text-text font-medium">{cloningTreino.nome}</span>
             </p>
             <div className="mt-4">
-              <FormField label="Aluno destino" htmlFor="aluno-destino">
+              <FormField label={t('Aluno destino')} htmlFor="aluno-destino">
                 <Select
                   id="aluno-destino"
                   value={alunoDestinoId}
                   onChange={(e) => setAlunoDestinoId(e.target.value)}
                 >
-                  <option value="">Selecione um aluno...</option>
+                  <option value="">{t('Selecione um aluno...')}</option>
                   {alunosDestino.map((a) => (
                     <option key={a.id} value={a.id}>{a.usuario.nome} ({a.usuario.email})</option>
                   ))}
@@ -513,7 +515,7 @@ export default function ProfessorTreinos() {
                 disabled={saving}
                 className="rounded border border-surface-input bg-surface px-4 py-2 text-sm text-text-muted hover:text-text disabled:opacity-50 cursor-pointer"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
               <button
                 onClick={handleCloneTreino}
@@ -532,17 +534,17 @@ export default function ProfessorTreinos() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setCloningLote(null)} />
           <div className="relative z-10 mx-4 w-full max-w-lg rounded-lg bg-surface-card p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-text">Clonar em Lote</h3>
+            <h3 className="text-lg font-semibold text-text">{t('Clonar em Lote')}</h3>
             <p className="mt-1 text-sm text-text-muted">
-              Clonando: <span className="text-text font-medium">{cloningLote.nome}</span>
+              {t('Clonando:')} <span className="text-text font-medium">{cloningLote.nome}</span>
             </p>
             <div className="mt-1 text-xs text-warning">
-              {selectedAlunoIds.length} aluno(s) selecionado(s)
+              {selectedAlunoIds.length} {t('aluno(s) selecionado(s)')}
             </div>
             <div className="mt-3">
               <Input
                 type="text"
-                placeholder="Buscar aluno..."
+                placeholder={t('Buscar aluno...')}
                 value={buscaAlunoLote}
                 onChange={(e) => setBuscaAlunoLote(e.target.value)}
               />
@@ -572,13 +574,13 @@ export default function ProfessorTreinos() {
                 onClick={() => setSelectedAlunoIds(alunosLoteDisponiveis.map((a) => a.id))}
                 className="text-xs text-primary hover:underline cursor-pointer"
               >
-                Selecionar todos
+                {t('Selecionar todos')}
               </button>
               <button
                 onClick={() => setSelectedAlunoIds([])}
                 className="text-xs text-text-muted hover:underline cursor-pointer"
               >
-                Limpar
+                {t('Limpar')}
               </button>
             </div>
             <div className="mt-6 flex justify-end gap-3">
@@ -587,14 +589,14 @@ export default function ProfessorTreinos() {
                 disabled={saving}
                 className="rounded border border-surface-input bg-surface px-4 py-2 text-sm text-text-muted hover:text-text disabled:opacity-50 cursor-pointer"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
               <button
                 onClick={handleCloneLote}
                 disabled={saving || selectedAlunoIds.length === 0}
                 className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/95 disabled:opacity-50 cursor-pointer"
               >
-                {saving ? 'Clonando...' : `Clonar para ${selectedAlunoIds.length} alunos`}
+                {saving ? 'Clonando...' : t('Clonar para {length} alunos', { length: selectedAlunoIds.length })}
               </button>
             </div>
           </div>
@@ -604,8 +606,8 @@ export default function ProfessorTreinos() {
       {/* Modal: Confirmar Exclusão em Lote */}
       <ConfirmModal
         open={confirmDeleteOpen}
-        title="Excluir treinos"
-        message={`Tem certeza que deseja excluir os ${selectedIds.length} treino(s) selecionado(s)?`}
+        title={t('Excluir treinos')}
+        message={t('Tem certeza que deseja excluir os {length} treino(s) selecionado(s)?', { length: selectedIds.length })}
         onConfirm={() => {
           setConfirmDeleteOpen(false)
           executeBatchDelete()

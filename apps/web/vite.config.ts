@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { rotasPublicas } from './scripts/rotasPublicas.mjs'
+import { PARES_IDIOMA } from './scripts/paresIdioma.mjs'
 
 const ROTAS_PUBLICAS = rotasPublicas()
 const ROTAS_PRIVADAS = [
@@ -42,13 +43,22 @@ function seoPlugin(siteUrl: string): Plugin {
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots })
       if (!base) return
       const hoje = new Date().toISOString().slice(0, 10)
+      const url = (caminho: string) => `${base}${caminho === '/' ? '' : caminho}`
+      // hreflang: cada URL lista as duas versões (inclusive ela mesma) e o x-default em português.
+      const alternativas = (caminho: string) => {
+        const par = PARES_IDIOMA.find((p) => p.pt === caminho || p.en === caminho)
+        if (!par) return ''
+        return [['pt-BR', par.pt], ['en', par.en], ['x-default', par.pt]]
+          .map(([h, c]) => `<xhtml:link rel="alternate" hreflang="${h}" href="${url(c)}"/>`)
+          .join('')
+      }
       const urls = ROTAS_PUBLICAS.filter((r) => r.indexavel).map(
-        (r) => `  <url><loc>${base}${r.caminho === '/' ? '' : r.caminho}</loc><lastmod>${r.lastmod ?? hoje}</lastmod></url>`,
+        (r) => `  <url><loc>${url(r.caminho)}</loc>${alternativas(r.caminho)}<lastmod>${r.lastmod ?? hoje}</lastmod></url>`,
       ).join('\n')
       this.emitFile({
         type: 'asset',
         fileName: 'sitemap.xml',
-        source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+        source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}\n</urlset>\n`,
       })
     },
   }

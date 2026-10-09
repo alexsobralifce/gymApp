@@ -4,7 +4,9 @@ import { api } from '../../api/client'
 import Input from '../../components/ui/Input'
 import FormField from '../../components/ui/FormField'
 
+import { useT } from '../../i18n'
 export default function ProfessorVincularAluno() {
+  const { t } = useT()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -15,21 +17,21 @@ export default function ProfessorVincularAluno() {
     setLoading(true)
     try {
       await api.vincularAluno(undefined, email)
-      setFeedback('Aluno vinculado com sucesso!')
+      setFeedback(t('Aluno vinculado com sucesso!'))
       setEmail('')
       setTimeout(() => { setFeedback(null); navigate('/') }, 2000)
     } catch (err: any) {
-      setFeedback(err.message || 'Erro ao vincular aluno. Verifique o email.')
+      setFeedback(t(err.message) || t('Erro ao vincular aluno. Verifique o email.'))
     }
     setLoading(false)
   }
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Vincular Aluno</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Vincular Aluno')}</h1>
 
       <p className="mb-4 text-sm text-text-muted">
-        Informe o email do aluno com role ALUNO para vinculá-lo ao seu perfil.
+        {t('Informe o email do aluno com role ALUNO para vinculá-lo ao seu perfil.')}
       </p>
 
       {feedback && (
@@ -39,11 +41,11 @@ export default function ProfessorVincularAluno() {
       )}
 
       <form onSubmit={handleSubmit} className="max-w-md space-y-3">
-        <FormField label="Email do aluno" htmlFor="email-aluno">
+        <FormField label={t('Email do aluno')} htmlFor="email-aluno">
           <Input
             id="email-aluno"
             type="email"
-            placeholder="Email do aluno"
+            placeholder={t('Email do aluno')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -54,7 +56,7 @@ export default function ProfessorVincularAluno() {
           disabled={loading || !email}
           className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40"
         >
-          {loading ? 'Vinculando...' : 'Vincular Aluno'}
+          {loading ? 'Vinculando...' : t('Vincular Aluno')}
         </button>
       </form>
     </div>

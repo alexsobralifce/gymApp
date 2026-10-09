@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 interface PlanoAssinatura {
   id: string
   codigo: string
@@ -57,6 +59,7 @@ function loadMercadoPagoSdk(): Promise<void> {
 const CARD_BRICK_CONTAINER_ID = 'mp-card-payment-brick'
 
 export default function Checkout() {
+  const { t } = useT()
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
 
@@ -77,7 +80,7 @@ export default function Checkout() {
         const doPapel = todos.filter((p) => p.papel_alvo === user?.role && p.ativo)
         setPlanos(doPapel)
       })
-      .catch(() => setErro('Não foi possível carregar os planos.'))
+      .catch(() => setErro(t('Não foi possível carregar os planos.')))
       .finally(() => setLoading(false))
   }, [user?.role])
 
@@ -88,7 +91,7 @@ export default function Checkout() {
 
     const publicKey = import.meta.env.VITE_MP_PUBLIC_KEY
     if (!publicKey) {
-      setErro('Checkout de cartão não está configurado (VITE_MP_PUBLIC_KEY ausente).')
+      setErro(t('Checkout de cartão não está configurado (VITE_MP_PUBLIC_KEY ausente).'))
       return
     }
 
@@ -107,7 +110,7 @@ export default function Checkout() {
             onReady: () => setSdkPronto(true),
             onError: (error: unknown) => {
               console.error('[Checkout] Erro no Card Payment Brick:', error)
-              setErro('Erro ao carregar o formulário de cartão. Tente recarregar a página.')
+              setErro(t('Erro ao carregar o formulário de cartão. Tente recarregar a página.'))
             },
             onSubmit: async ({ formData }: { formData: { token: string } }) => {
               await confirmarCheckout(planoSelecionado, 'cartao', formData.token)
@@ -119,7 +122,7 @@ export default function Checkout() {
       })
       .catch((err) => {
         console.error('[Checkout] Falha ao carregar SDK do Mercado Pago:', err)
-        setErro('Não foi possível carregar o checkout de cartão.')
+        setErro(t('Não foi possível carregar o checkout de cartão.'))
       })
 
     return () => {
@@ -159,14 +162,14 @@ export default function Checkout() {
   }
 
   if (loading) {
-    return <div className="p-6 text-text-muted">Carregando planos...</div>
+    return <div className="p-6 text-text-muted">{t('Carregando planos...')}</div>
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-text">Assinar plano</h1>
-        <p className="text-sm text-text-muted">Cobrança processada pelo Mercado Pago.</p>
+        <h1 className="text-2xl font-bold text-text">{t('Assinar plano')}</h1>
+        <p className="text-sm text-text-muted">{t('Cobrança processada pelo Mercado Pago.')}</p>
       </div>
 
       {erro && (
@@ -180,7 +183,7 @@ export default function Checkout() {
       ) : (
         <>
           <div className="space-y-2">
-            {planos.length === 0 && <p className="text-text-muted">Nenhum plano disponível para o seu perfil no momento.</p>}
+            {planos.length === 0 && <p className="text-text-muted">{t('Nenhum plano disponível para o seu perfil no momento.')}</p>}
             {planos.sort((a, b) => a.ordem - b.ordem).map((p) => (
               <button
                 key={p.id}
@@ -191,10 +194,10 @@ export default function Checkout() {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-text">{p.nome}</span>
-                  <span className="font-bold text-primary">{formatMoney(p.preco_mensal_cents)}/mês</span>
+                  <span className="font-bold text-primary">{formatMoney(p.preco_mensal_cents)}{t('/mês')}</span>
                 </div>
-                {p.descricao && <p className="mt-1 text-sm text-text-muted">{p.descricao}</p>}
-                {p.trial_dias > 0 && <p className="mt-1 text-xs text-success">{p.trial_dias} dias grátis</p>}
+                {p.descricao && <p className="mt-1 text-sm text-text-muted">{t(p.descricao)}</p>}
+                {p.trial_dias > 0 && <p className="mt-1 text-xs text-success">{p.trial_dias} {t('dias grátis')}</p>}
               </button>
             ))}
           </div>
@@ -218,7 +221,7 @@ export default function Checkout() {
               {metodo === 'cartao' ? (
                 <div className="space-y-3">
                   <div id={CARD_BRICK_CONTAINER_ID} />
-                  {!sdkPronto && <p className="text-sm text-text-muted">Carregando formulário de cartão...</p>}
+                  {!sdkPronto && <p className="text-sm text-text-muted">{t('Carregando formulário de cartão...')}</p>}
                 </div>
               ) : (
                 <button
@@ -238,7 +241,7 @@ export default function Checkout() {
               disabled={processando}
               className="w-full rounded-xl bg-primary px-4 py-3 font-bold text-primary-foreground disabled:opacity-50"
             >
-              {processando ? 'Ativando...' : 'Ativar plano grátis'}
+              {processando ? 'Ativando...' : t('Ativar plano grátis')}
             </button>
           )}
         </>
@@ -248,20 +251,21 @@ export default function Checkout() {
 }
 
 function ResultadoCheckout({ resultado, plano, onVoltar }: { resultado: CheckoutResultado; plano: PlanoAssinatura | null; onVoltar: () => void }) {
+  const { t } = useT()
   if (resultado.cobranca?.pixCopiaECola || resultado.cobranca?.pixQrCodeBase64) {
     return (
       <div className="space-y-4 rounded-xl border border-border bg-surface-card p-4 text-center">
-        <h2 className="text-lg font-bold text-text">Pague com Pix</h2>
+        <h2 className="text-lg font-bold text-text">{t('Pague com Pix')}</h2>
         {resultado.cobranca.pixQrCodeBase64 && (
           <img
             src={`data:image/png;base64,${resultado.cobranca.pixQrCodeBase64}`}
-            alt="QR Code Pix"
+            alt={t('QR Code Pix')}
             className="mx-auto h-48 w-48"
           />
         )}
         {resultado.cobranca.pixCopiaECola && (
           <div>
-            <p className="mb-1 text-xs text-text-muted">Copia e cola:</p>
+            <p className="mb-1 text-xs text-text-muted">{t('Copia e cola:')}</p>
             <textarea
               readOnly
               value={resultado.cobranca.pixCopiaECola}
@@ -270,8 +274,8 @@ function ResultadoCheckout({ resultado, plano, onVoltar }: { resultado: Checkout
             />
           </div>
         )}
-        <p className="text-sm text-text-muted">Assim que o pagamento for confirmado, sua assinatura é ativada automaticamente.</p>
-        <button onClick={onVoltar} className="text-sm font-semibold text-primary">Voltar</button>
+        <p className="text-sm text-text-muted">{t('Assim que o pagamento for confirmado, sua assinatura é ativada automaticamente.')}</p>
+        <button onClick={onVoltar} className="text-sm font-semibold text-primary">{t('Voltar')}</button>
       </div>
     )
   }
@@ -279,16 +283,16 @@ function ResultadoCheckout({ resultado, plano, onVoltar }: { resultado: Checkout
   if (resultado.cobranca?.boletoUrl || resultado.cobranca?.linhaDigitavel) {
     return (
       <div className="space-y-4 rounded-xl border border-border bg-surface-card p-4 text-center">
-        <h2 className="text-lg font-bold text-text">Boleto gerado</h2>
+        <h2 className="text-lg font-bold text-text">{t('Boleto gerado')}</h2>
         {resultado.cobranca.linhaDigitavel && (
           <p className="break-all rounded-lg border border-border bg-surface-input p-2 text-xs text-text">{resultado.cobranca.linhaDigitavel}</p>
         )}
         {resultado.cobranca.boletoUrl && (
           <a href={resultado.cobranca.boletoUrl} target="_blank" rel="noreferrer" className="inline-block rounded-xl bg-primary px-4 py-2 font-bold text-primary-foreground">
-            Ver boleto
+            {t('Ver boleto')}
           </a>
         )}
-        <button onClick={onVoltar} className="block w-full text-sm font-semibold text-primary">Voltar</button>
+        <button onClick={onVoltar} className="block w-full text-sm font-semibold text-primary">{t('Voltar')}</button>
       </div>
     )
   }
@@ -296,13 +300,13 @@ function ResultadoCheckout({ resultado, plano, onVoltar }: { resultado: Checkout
   return (
     <div className="space-y-3 rounded-xl border border-border bg-surface-card p-4 text-center">
       <h2 className="text-lg font-bold text-text">
-        {resultado.status === 'ATIVA' ? 'Assinatura ativada!' : 'Assinatura em processamento'}
+        {resultado.status === 'ATIVA' ? t('Assinatura ativada!') : t('Assinatura em processamento')}
       </h2>
       {plano && <p className="text-text-muted">{plano.nome}</p>}
       {resultado.trialFimEm && (
-        <p className="text-sm text-success">Período de teste até {new Date(resultado.trialFimEm).toLocaleDateString('pt-BR')}.</p>
+        <p className="text-sm text-success">{t('Período de teste até')} {new Date(resultado.trialFimEm).toLocaleDateString(localeAtual())}.</p>
       )}
-      <button onClick={onVoltar} className="rounded-xl bg-primary px-4 py-2 font-bold text-primary-foreground">Voltar ao app</button>
+      <button onClick={onVoltar} className="rounded-xl bg-primary px-4 py-2 font-bold text-primary-foreground">{t('Voltar ao app')}</button>
     </div>
   )
 }

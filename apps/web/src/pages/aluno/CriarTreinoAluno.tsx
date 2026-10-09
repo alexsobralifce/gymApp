@@ -14,6 +14,7 @@ import ImportarTreinoTextoModal, { type FichaImportada } from '../../components/
 import WorkoutHelpWizard from '../../components/ui/WorkoutHelpWizard'
 import { WorkoutMethodBadge, WORKOUT_METHODS_CONFIG } from '../../components/ui/WorkoutMethodBadge'
 
+import { useT } from '../../i18n'
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 interface ExercicioTreino {
@@ -33,6 +34,7 @@ interface ExercicioTreino {
 }
 
 export default function AlunoCriarTreino() {
+  const { t } = useT()
   const { id: treinoId } = useParams<{ id?: string }>()
   const isEdit = Boolean(treinoId)
   const [todosExercicios, setTodosExercicios] = useState<Exercicio[]>([])
@@ -74,7 +76,7 @@ export default function AlunoCriarTreino() {
           const treino = await api.getTreino(treinoId)
           if (cancelled) return
           if (treino.status === 'EM_EXECUCAO') {
-            setFeedback('Não é possível editar um treino em execução.')
+            setFeedback(t('Não é possível editar um treino em execução.'))
             setTimeout(() => navigate('/meus-treinos'), 1500)
             return
           }
@@ -100,7 +102,7 @@ export default function AlunoCriarTreino() {
         }
       } catch {
         if (!cancelled) {
-          setFeedback('Erro ao carregar dados.')
+          setFeedback(t('Erro ao carregar dados.'))
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -170,15 +172,15 @@ export default function AlunoCriarTreino() {
     setFeedback(null)
 
     if (exerciciosTreino.length === 0) {
-      setFeedback('Adicione pelo menos um exercício ao treino.')
+      setFeedback(t('Adicione pelo menos um exercício ao treino.'))
       return
     }
     if (diasSemana.length === 0) {
-      setFeedback('Selecione pelo menos um dia da semana.')
+      setFeedback(t('Selecione pelo menos um dia da semana.'))
       return
     }
     if (!nome.trim() || nome.trim().length < 2) {
-      setFeedback('Dê um nome para o treino (mínimo 2 caracteres).')
+      setFeedback(t('Dê um nome para o treino (mínimo 2 caracteres).'))
       return
     }
 
@@ -201,14 +203,14 @@ export default function AlunoCriarTreino() {
       setEnviando(true)
       if (isEdit && treinoId) {
         await api.editarTreino(treinoId, payload)
-        setFeedback('Alterações salvas! Redirecionando para Meus Treinos...')
+        setFeedback(t('Alterações salvas! Redirecionando para Meus Treinos...'))
       } else {
         await api.criarTreinoAutogestao(payload)
-        setFeedback('Treino salvo com sucesso! Redirecionando para Meus Treinos...')
+        setFeedback(t('Treino salvo com sucesso! Redirecionando para Meus Treinos...'))
       }
       setTimeout(() => navigate('/meus-treinos'), 1200)
     } catch {
-      setFeedback(isEdit ? 'Erro ao salvar alterações.' : 'Erro ao criar treino.')
+      setFeedback(isEdit ? t('Erro ao salvar alterações.') : t('Erro ao criar treino.'))
     } finally {
       setEnviando(false)
     }
@@ -237,13 +239,13 @@ export default function AlunoCriarTreino() {
         criados.push(f.nome)
       }
       setIsImportOpen(false)
-      setFeedback(`${criados.length} treino(s) criado(s)! Redirecionando para Meus Treinos...`)
+      setFeedback(t('{length} treino(s) criado(s)! Redirecionando para Meus Treinos...', { length: criados.length }))
       setTimeout(() => navigate('/meus-treinos'), 1200)
     } catch {
       setIsImportOpen(false)
       const faltaram = fichas.slice(criados.length).map((f) => f.nome)
       setFeedback(
-        `Erro ao criar treinos. ${criados.length > 0 ? `Criados: ${criados.join(', ')}. ` : ''}Não foram criados: ${faltaram.join(', ')}.`,
+        t('Erro ao criar treinos. {v1}Não foram criados: {v2}.', { v1: criados.length > 0 ? `Criados: ${criados.join(', ')}. ` : '', v2: faltaram.join(', ') }),
       )
     } finally {
       setEnviando(false)
@@ -273,18 +275,18 @@ export default function AlunoCriarTreino() {
           <button
             onClick={() => navigate('/meus-treinos')}
             className="rounded-xl border border-surface-input bg-surface p-2.5 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
-            title="Voltar"
+            title={t('Voltar')}
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-text">
-              {isEdit ? 'Editar Ficha de Treino' : 'Montar Treino'}
+              {isEdit ? t('Editar Ficha de Treino') : t('Montar Treino')}
             </h1>
             <p className="text-xs sm:text-sm text-text-muted">
               {isEdit
-                ? 'Ajuste nome, dias, exercícios, séries e cargas'
-                : 'Crie sua rotina com exercícios, séries e repetições'}
+                ? t('Ajuste nome, dias, exercícios, séries e cargas')
+                : t('Crie sua rotina com exercícios, séries e repetições')}
             </p>
           </div>
         </div>
@@ -297,7 +299,7 @@ export default function AlunoCriarTreino() {
               disabled={enviando}
               className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 border border-primary text-primary hover:bg-primary/10 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
             >
-              Colar treino em texto
+              {t('Colar treino em texto')}
             </button>
           )}
           <button
@@ -305,11 +307,11 @@ export default function AlunoCriarTreino() {
             id="btn-ajuda-treino-aluno"
             onClick={() => setIsHelpOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 border border-surface-input bg-surface text-text-muted hover:text-text hover:bg-surface-input text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95"
-            title="Como montar um treino?"
-            aria-label="Abrir guia de ajuda"
+            title={t('Como montar um treino?')}
+            aria-label={t('Abrir guia de ajuda')}
           >
             <span className="text-base leading-none">❓</span>
-            <span className="hidden sm:inline">Como montar?</span>
+            <span className="hidden sm:inline">{t('Como montar?')}</span>
           </button>
         </div>
       </div>
@@ -330,13 +332,13 @@ export default function AlunoCriarTreino() {
       <div className="bg-surface-card border border-surface-input rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <FormField label="Nome da Ficha" htmlFor="nome-treino">
+            <FormField label={t('Nome da Ficha')} htmlFor="nome-treino">
               <Input
                 id="nome-treino"
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                placeholder="Ex: Treino A — Peito e Tríceps"
+                placeholder={t('Ex: Treino A — Peito e Tríceps')}
                 maxLength={60}
                 className="text-sm font-semibold"
               />
@@ -361,7 +363,7 @@ export default function AlunoCriarTreino() {
 
           <div>
             <label className="mb-1.5 block text-xs font-extrabold text-text-muted uppercase tracking-wider">
-              Dias da Semana
+              {t('Dias da Semana')}
             </label>
             <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
               {DIAS.map((d, i) => {
@@ -377,7 +379,7 @@ export default function AlunoCriarTreino() {
                         : 'bg-surface text-text-muted border border-surface-input hover:border-primary/40'
                     }`}
                   >
-                    {d}
+                    {t(d)}
                   </button>
                 )
               })}
@@ -391,10 +393,10 @@ export default function AlunoCriarTreino() {
         <div className="flex items-center justify-between gap-2 border-b border-surface-input pb-3">
           <div>
             <h2 className="text-sm sm:text-base font-extrabold text-text uppercase tracking-wider flex items-center gap-2">
-              <span>📋</span> Exercícios do Treino ({exerciciosTreino.length})
+              <span>📋</span> {t('Exercícios do Treino (')}{exerciciosTreino.length})
             </h2>
             <p className="text-[11px] text-text-muted">
-              Configure métodos avançados (Bi-Set, Drop-Set) e tempo de descanso
+              {t('Configure métodos avançados (Bi-Set, Drop-Set) e tempo de descanso')}
             </p>
           </div>
 
@@ -404,7 +406,7 @@ export default function AlunoCriarTreino() {
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-extrabold shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             <PlusIcon className="w-3.5 h-3.5" />
-            <span>Adicionar</span>
+            <span>{t('Adicionar')}</span>
           </button>
         </div>
 
@@ -414,9 +416,9 @@ export default function AlunoCriarTreino() {
               🏋️
             </div>
             <div className="max-w-xs space-y-1">
-              <h3 className="text-sm font-extrabold text-text">Sua ficha está vazia</h3>
+              <h3 className="text-sm font-extrabold text-text">{t('Sua ficha está vazia')}</h3>
               <p className="text-xs text-text-muted">
-                Adicione exercícios da nossa biblioteca completa com mais de 900 demonstrações em GIF.
+                {t('Adicione exercícios da nossa biblioteca completa com mais de 900 demonstrações em GIF.')}
               </p>
             </div>
             <button
@@ -425,7 +427,7 @@ export default function AlunoCriarTreino() {
               className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-black shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
               <PlusIcon className="w-4 h-4" />
-              Abrir Biblioteca de Exercícios
+              {t('Abrir Biblioteca de Exercícios')}
             </button>
           </div>
         ) : (
@@ -472,7 +474,7 @@ export default function AlunoCriarTreino() {
                           <DumbbellIcon className="w-6 h-6 text-text-muted opacity-40" />
                         </div>
                         <span className="absolute bottom-0.5 right-0.5 bg-black/80 px-1 rounded text-[8px] font-extrabold text-white">
-                          GIF
+                          {t('GIF')}
                         </span>
                       </div>
 
@@ -492,7 +494,7 @@ export default function AlunoCriarTreino() {
                             </span>
                           )}
                           <span className="text-[10px] font-semibold text-primary">
-                            👁️ Ver instruções
+                            {t('👁️ Ver instruções')}
                           </span>
                         </div>
                       </div>
@@ -505,7 +507,7 @@ export default function AlunoCriarTreino() {
                         onClick={() => moverExercicio(idx, 'sobe')}
                         disabled={idx === 0}
                         className="w-9 h-9 rounded-lg bg-surface-input/70 hover:bg-surface-input text-text-muted hover:text-primary disabled:opacity-20 flex items-center justify-center text-xs font-black transition-colors cursor-pointer"
-                        title="Subir na ordem"
+                        title={t('Subir na ordem')}
                       >
                         ▲
                       </button>
@@ -514,7 +516,7 @@ export default function AlunoCriarTreino() {
                         onClick={() => moverExercicio(idx, 'desce')}
                         disabled={idx === exerciciosTreino.length - 1}
                         className="w-9 h-9 rounded-lg bg-surface-input/70 hover:bg-surface-input text-text-muted hover:text-primary disabled:opacity-20 flex items-center justify-center text-xs font-black transition-colors cursor-pointer"
-                        title="Descer na ordem"
+                        title={t('Descer na ordem')}
                       >
                         ▼
                       </button>
@@ -522,7 +524,7 @@ export default function AlunoCriarTreino() {
                         type="button"
                         onClick={() => removerExercicio(ex.exercicioId)}
                         className="w-9 h-9 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive flex items-center justify-center text-xs font-black transition-colors cursor-pointer ml-1"
-                        title="Remover do treino"
+                        title={t('Remover do treino')}
                       >
                         🗑️
                       </button>
@@ -533,7 +535,7 @@ export default function AlunoCriarTreino() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-surface-input/70 text-xs">
                     <div>
                       <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
-                        Método de Execução
+                        {t('Método de Execução')}
                       </label>
                       <select
                         value={ex.metodo || 'TRADICIONAL'}
@@ -542,7 +544,7 @@ export default function AlunoCriarTreino() {
                       >
                         {Object.entries(WORKOUT_METHODS_CONFIG).map(([k, v]) => (
                           <option key={k} value={k}>
-                            {v.icon} {v.label}
+                            {v.icon} {t(v.label)}
                           </option>
                         ))}
                       </select>
@@ -550,7 +552,7 @@ export default function AlunoCriarTreino() {
 
                     <div>
                       <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
-                        Descanso entre Séries
+                        {t('Descanso entre Séries')}
                       </label>
                       <select
                         value={ex.tempoDescansoSegundos || 60}
@@ -559,12 +561,12 @@ export default function AlunoCriarTreino() {
                         }
                         className="w-full bg-surface-input text-text font-bold rounded-xl px-2.5 py-1.5 border border-surface-input focus:outline-hidden focus:border-primary text-xs"
                       >
-                        <option value={30}>⏱️ 30 segundos (Rápido)</option>
-                        <option value={45}>⏱️ 45 segundos</option>
-                        <option value={60}>⏱️ 60 segundos (Padrão)</option>
-                        <option value={90}>⏱️ 90 segundos (Hipertrofia)</option>
-                        <option value={120}>⏱️ 120 segundos (Força/Pesado)</option>
-                        <option value={180}>⏱️ 180 segundos (Força Máxima)</option>
+                        <option value={30}>{t('⏱️ 30 segundos (Rápido)')}</option>
+                        <option value={45}>{t('⏱️ 45 segundos')}</option>
+                        <option value={60}>{t('⏱️ 60 segundos (Padrão)')}</option>
+                        <option value={90}>{t('⏱️ 90 segundos (Hipertrofia)')}</option>
+                        <option value={120}>{t('⏱️ 120 segundos (Força/Pesado)')}</option>
+                        <option value={180}>{t('⏱️ 180 segundos (Força Máxima)')}</option>
                       </select>
                     </div>
                   </div>
@@ -573,7 +575,7 @@ export default function AlunoCriarTreino() {
                   <div className="grid grid-cols-3 gap-2 pt-1 border-t border-surface-input/40">
                     <div>
                       <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
-                        Séries
+                        {t('Séries')}
                       </label>
                       <input
                         type="tel"
@@ -589,7 +591,7 @@ export default function AlunoCriarTreino() {
 
                     <div>
                       <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
-                        Repetições
+                        {t('Repetições')}
                       </label>
                       <input
                         type="tel"
@@ -609,13 +611,13 @@ export default function AlunoCriarTreino() {
 
                     <div>
                       <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
-                        Carga (kg)
+                        {t('Carga (kg)')}
                       </label>
                       <input
                         type="tel"
                         inputMode="numeric"
                         min={0}
-                        placeholder="Opcional"
+                        placeholder={t('Opcional')}
                         value={ex.cargaSugeridaKg ?? ''}
                         onChange={(e) =>
                           atualizarExercicio(
@@ -632,7 +634,7 @@ export default function AlunoCriarTreino() {
                   {isConnectedWithNext && (
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-purple-400 bg-purple-500/10 px-3 py-1.5 rounded-xl border border-purple-500/20">
                       <span>⚡</span>
-                      <span>Conjugado com o próximo exercício (sem descanso intermediário)</span>
+                      <span>{t('Conjugado com o próximo exercício (sem descanso intermediário)')}</span>
                     </div>
                   )}
                 </div>
@@ -646,7 +648,7 @@ export default function AlunoCriarTreino() {
               className="w-full py-3 rounded-2xl border-2 border-dashed border-surface-input hover:border-primary/50 text-xs font-extrabold text-text-muted hover:text-primary flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <PlusIcon className="w-4 h-4" />
-              Adicionar Mais Exercícios
+              {t('Adicionar Mais Exercícios')}
             </button>
           </div>
         )}
@@ -659,7 +661,7 @@ export default function AlunoCriarTreino() {
         disabled={enviando || exerciciosTreino.length === 0 || !nome.trim()}
         className="w-full rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-lg disabled:opacity-40 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
       >
-        {enviando ? 'Salvando Treino...' : isEdit ? 'Salvar Alterações ✓' : 'Salvar Treino Completo ✓'}
+        {enviando ? t('Salvando Treino...') : isEdit ? t('Salvar Alterações ✓') : t('Salvar Treino Completo ✓')}
       </button>
 
       {/* Exercise Library Bottom-Sheet Drawer */}
@@ -702,7 +704,7 @@ export default function AlunoCriarTreino() {
           className="fixed inset-0 z-[190] flex items-end sm:items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Quer ajuda para montar seu treino?"
+          aria-label={t('Quer ajuda para montar seu treino?')}
         >
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -725,10 +727,10 @@ export default function AlunoCriarTreino() {
               </div>
               <div>
                 <h2 className="text-base font-black text-text leading-snug">
-                  Primeira vez por aqui?
+                  {t('Primeira vez por aqui?')}
                 </h2>
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Posso te mostrar como montar seu treino em 5 passos rápidos — leva menos de 1 minuto!
+                  {t('Posso te mostrar como montar seu treino em 5 passos rápidos — leva menos de 1 minuto!')}
                 </p>
               </div>
             </div>
@@ -742,7 +744,7 @@ export default function AlunoCriarTreino() {
                 }}
                 className="w-full py-3 rounded-2xl bg-primary text-primary-foreground text-sm font-black shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
               >
-                Sim, me mostra! 🚀
+                {t('Sim, me mostra! 🚀')}
               </button>
               <button
                 id="btn-ajuda-welcome-nao"
@@ -750,7 +752,7 @@ export default function AlunoCriarTreino() {
                 onClick={() => setIsWelcomeOpen(false)}
                 className="w-full py-2.5 rounded-2xl border border-surface-input bg-surface text-text-muted hover:text-text hover:bg-surface-input text-sm font-semibold transition-all cursor-pointer"
               >
-                Já sei, pode ir 😎
+                {t('Já sei, pode ir 😎')}
               </button>
             </div>
           </div>

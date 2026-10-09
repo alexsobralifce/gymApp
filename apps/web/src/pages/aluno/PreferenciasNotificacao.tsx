@@ -12,6 +12,7 @@ import {
   type NotificationStatus,
 } from '../../hooks/useNotifications'
 
+import { useT } from '../../i18n'
 interface ToggleItem {
   key: keyof Pick<PreferenciasNotificacao, 'lembreteTreino' | 'social' | 'motivacional' | 'conquistas'>
   titulo: string
@@ -77,6 +78,7 @@ function Toggle({
 }
 
 export default function PreferenciasNotificacao() {
+  const { t } = useT()
   const [prefs, setPrefs] = useState<PreferenciasNotificacao | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -121,9 +123,9 @@ export default function PreferenciasNotificacao() {
         frequencia: prefs.frequencia,
       })
       setPrefs(atualizadas)
-      showToast('Preferências salvas com sucesso!', 'success')
+      showToast(t('Preferências salvas com sucesso!'), 'success')
     } catch {
-      showToast('Erro ao salvar as preferências.', 'error')
+      showToast(t('Erro ao salvar as preferências.'), 'error')
     } finally {
       setSaving(false)
     }
@@ -134,12 +136,12 @@ export default function PreferenciasNotificacao() {
     try {
       const ok = await sendTestNotification()
       if (ok) {
-        showToast('Notificação de teste enviada para o seu dispositivo!', 'success')
+        showToast(t('Notificação de teste enviada para o seu dispositivo!'), 'success')
       } else {
-        showToast('Não foi possível exibir a notificação. Verifique se as permissões estão ativas no navegador.', 'error')
+        showToast(t('Não foi possível exibir a notificação. Verifique se as permissões estão ativas no navegador.'), 'error')
       }
     } catch {
-      showToast('Erro ao disparar teste de notificação.', 'error')
+      showToast(t('Erro ao disparar teste de notificação.'), 'error')
     } finally {
       setTesting(false)
     }
@@ -150,9 +152,9 @@ export default function PreferenciasNotificacao() {
     try {
       await activatePush()
       await refreshDeviceStatus()
-      showToast('Permissão de notificações atualizada!', 'success')
+      showToast(t('Permissão de notificações atualizada!'), 'success')
     } catch {
-      showToast('Falha ao ativar notificações.', 'error')
+      showToast(t('Falha ao ativar notificações.'), 'error')
     } finally {
       setCheckingDevice(false)
     }
@@ -189,10 +191,10 @@ export default function PreferenciasNotificacao() {
       <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6">
         <div className="flex items-center gap-3">
           <Bell className="h-6 w-6 text-primary" />
-          <h1 className="text-lg font-bold text-text">Preferências de Notificação</h1>
+          <h1 className="text-lg font-bold text-text">{t('Preferências de Notificação')}</h1>
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-5 text-sm text-text-muted">
-          Não foi possível carregar suas preferências. Tente novamente mais tarde.
+          {t('Não foi possível carregar suas preferências. Tente novamente mais tarde.')}
         </div>
       </div>
     )
@@ -206,8 +208,8 @@ export default function PreferenciasNotificacao() {
       <div className="flex items-center gap-3">
         <Bell className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="text-lg font-bold text-text">Preferências de Notificação</h1>
-          <p className="text-xs text-text-muted">Escolha quais notificações você quer receber</p>
+          <h1 className="text-lg font-bold text-text">{t('Preferências de Notificação')}</h1>
+          <p className="text-xs text-text-muted">{t('Escolha quais notificações você quer receber')}</p>
         </div>
       </div>
 
@@ -217,17 +219,17 @@ export default function PreferenciasNotificacao() {
           <div className="flex items-center gap-2">
             <Smartphone className="h-4 w-4 text-primary" />
             <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">
-              Status no Dispositivo
+              {t('Status no Dispositivo')}
             </h2>
           </div>
           <button
             onClick={refreshDeviceStatus}
             disabled={checkingDevice}
             className="text-xs text-text-muted hover:text-text inline-flex items-center gap-1 cursor-pointer transition-colors"
-            title="Atualizar status"
+            title={t('Atualizar status')}
           >
             <RefreshCw className={`h-3 w-3 ${checkingDevice ? 'animate-spin' : ''}`} />
-            Verificar
+            {t('Verificar')}
           </button>
         </div>
 
@@ -243,17 +245,17 @@ export default function PreferenciasNotificacao() {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-text truncate">
                 {isGranted
-                  ? 'Notificações Ativadas'
+                  ? t('Notificações Ativadas')
                   : isDenied
-                  ? 'Notificações Bloqueadas'
-                  : 'Permissão Pendente'}
+                  ? t('Notificações Bloqueadas')
+                  : t('Permissão Pendente')}
               </p>
               <p className="text-[11px] text-text-muted">
                 {isGranted
-                  ? 'Seu navegador e dispositivo estão autorizados a receber alertas.'
+                  ? t('Seu navegador e dispositivo estão autorizados a receber alertas.')
                   : isDenied
-                  ? 'Permissão negada no navegador. Desbloqueie nas configurações do site.'
-                  : 'O navegador ainda não concedeu a permissão de push.'}
+                  ? t('Permissão negada no navegador. Desbloqueie nas configurações do site.')
+                  : t('O navegador ainda não concedeu a permissão de push.')}
               </p>
             </div>
           </div>
@@ -266,7 +268,7 @@ export default function PreferenciasNotificacao() {
                 className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
               >
                 <Send className="h-3 w-3" />
-                {testing ? 'Enviando...' : 'Testar Notificação'}
+                {testing ? 'Enviando...' : t('Testar Notificação')}
               </button>
             ) : (
               <button
@@ -275,7 +277,7 @@ export default function PreferenciasNotificacao() {
                 className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all shadow-sm cursor-pointer whitespace-nowrap disabled:opacity-50"
               >
                 <Bell className="h-3 w-3" />
-                Ativar
+                {t('Ativar')}
               </button>
             )}
           </div>
@@ -285,19 +287,19 @@ export default function PreferenciasNotificacao() {
       {/* Tipos de Notificação */}
       <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-1">
         <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">
-          Tipos de Notificação
+          {t('Tipos de Notificação')}
         </h2>
         <div className="divide-y divide-surface-input">
           {TOGGLES.map((item) => (
             <div key={item.key} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-text">{item.titulo}</p>
-                <p className="text-xs text-text-muted mt-0.5">{item.descricao}</p>
+                <p className="text-sm font-semibold text-text">{t(item.titulo)}</p>
+                <p className="text-xs text-text-muted mt-0.5">{t(item.descricao)}</p>
               </div>
               <Toggle
                 checked={prefs[item.key]}
                 onChange={(v) => toggleTipo(item.key, v)}
-                label={`${item.titulo} ${prefs[item.key] ? 'ativado' : 'desativado'}`}
+                label={t('{titulo} {v2}', { titulo: t(item.titulo), v2: t(prefs[item.key] ? 'ativado' : 'desativado') })}
               />
             </div>
           ))}
@@ -308,15 +310,15 @@ export default function PreferenciasNotificacao() {
       <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-text">Horário silencioso</h2>
+            <h2 className="text-sm font-semibold text-text">{t('Horário silencioso')}</h2>
             <p className="text-xs text-text-muted mt-0.5">
-              Nenhuma notificação push será enviada nesse período.
+              {t('Nenhuma notificação push será enviada nesse período.')}
             </p>
           </div>
           <Toggle
             checked={prefs.horarioSilencioso.ativo}
             onChange={toggleSilencioso}
-            label={`Horário silencioso ${prefs.horarioSilencioso.ativo ? 'ativado' : 'desativado'}`}
+            label={t('Horário silencioso {v1}', { v1: prefs.horarioSilencioso.ativo ? 'ativado' : 'desativado' })}
           />
         </div>
 
@@ -324,30 +326,30 @@ export default function PreferenciasNotificacao() {
           <div className="grid grid-cols-2 gap-4 pt-1">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-                Início
+                {t('Início')}
               </span>
               <Input
                 type="time"
                 value={prefs.horarioSilencioso.inicio}
                 onChange={(e) => setHoraSilenciosa('inicio', e.target.value)}
-                aria-label="Início do horário silencioso"
+                aria-label={t('Início do horário silencioso')}
                 className="h-11"
               />
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-                Fim
+                {t('Fim')}
               </span>
               <Input
                 type="time"
                 value={prefs.horarioSilencioso.fim}
                 onChange={(e) => setHoraSilenciosa('fim', e.target.value)}
-                aria-label="Fim do horário silencioso"
+                aria-label={t('Fim do horário silencioso')}
                 className="h-11"
               />
             </label>
             <p className="text-xs text-text-muted col-span-2">
-              Ex.: das 22:00 às 07:00 — mensagens não chegam durante a noite.
+              {t('Ex.: das 22:00 às 07:00 — mensagens não chegam durante a noite.')}
             </p>
           </div>
         )}
@@ -355,7 +357,7 @@ export default function PreferenciasNotificacao() {
 
       {/* Frequência */}
       <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-text">Frequência</h2>
+        <h2 className="text-sm font-semibold text-text">{t('Frequência')}</h2>
         <Select
           value={prefs.frequencia}
           onChange={(e) =>
@@ -363,17 +365,17 @@ export default function PreferenciasNotificacao() {
               p ? { ...p, frequencia: e.target.value as FrequenciaNotificacao } : p,
             )
           }
-          aria-label="Frequência das notificações"
+          aria-label={t('Frequência das notificações')}
           className="h-11"
         >
           {FREQUENCIA_OPCOES.map((opcao) => (
             <option key={opcao.value} value={opcao.value}>
-              {opcao.label}
+              {t(opcao.label)}
             </option>
           ))}
         </Select>
         <p className="text-xs text-text-muted">
-          {FREQUENCIA_OPCOES.find((o) => o.value === prefs.frequencia)?.descricao}
+          {t(FREQUENCIA_OPCOES.find((o) => o.value === prefs.frequencia)?.descricao)}
         </p>
       </div>
 
@@ -382,7 +384,7 @@ export default function PreferenciasNotificacao() {
         disabled={saving}
         className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
       >
-        {saving ? 'Salvando...' : 'Salvar Preferências'}
+        {saving ? 'Salvando...' : t('Salvar Preferências')}
       </button>
 
       {ToastComponent}

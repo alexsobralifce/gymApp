@@ -1,5 +1,6 @@
 import { Trash2Icon, XIcon, CheckSquareIcon } from 'lucide-react'
 
+import { useT } from '../../i18n'
 interface BatchActionBarProps {
   selectedCount: number
   onClearSelection: () => void
@@ -15,6 +16,7 @@ export default function BatchActionBar({
   label = 'Excluir Selecionados em Cascata',
   loading = false,
 }: BatchActionBarProps) {
+  const { t } = useT()
   if (selectedCount === 0) return null
 
   return (
@@ -22,7 +24,7 @@ export default function BatchActionBar({
       <div className="flex items-center gap-2 text-sm font-medium text-text">
         <CheckSquareIcon className="h-5 w-5 text-primary" />
         <span>
-          <strong className="text-primary">{selectedCount}</strong> item(s) selecionado(s)
+          <strong className="text-primary">{selectedCount}</strong> {t('item(s) selecionado(s)')}
         </span>
       </div>
 
@@ -33,7 +35,7 @@ export default function BatchActionBar({
           className="flex items-center gap-1 rounded border border-surface-input bg-surface px-3 py-1.5 text-xs text-text-muted transition hover:bg-surface-input hover:text-text min-h-[36px]"
         >
           <XIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">Deselecionar</span>
+          <span className="hidden sm:inline">{t('Deselecionar')}</span>
         </button>
 
         <button
@@ -43,7 +45,7 @@ export default function BatchActionBar({
           className="flex items-center gap-1.5 rounded bg-destructive px-4 py-1.5 text-xs font-semibold text-destructive-foreground shadow transition hover:opacity-90 disabled:opacity-50 min-h-[36px]"
         >
           <Trash2Icon className="h-4 w-4" />
-          <span>{loading ? 'Excluindo...' : <><span className="hidden sm:inline">{label} ({selectedCount})</span><span className="sm:hidden">Excluir ({selectedCount})</span></>}</span>
+          <span>{loading ? 'Excluindo...' : <><span className="hidden sm:inline">{label} ({selectedCount})</span><span className="sm:hidden">{t('Excluir (')}{selectedCount})</span></>}</span>
         </button>
       </div>
     </div>

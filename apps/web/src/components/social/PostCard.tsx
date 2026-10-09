@@ -17,10 +17,13 @@ import SharePostModal from './SharePostModal'
 import ConfirmModal from '../ui/ConfirmModal'
 import { useToast } from '../ui/Toast'
 
+import { useT } from '../../i18n'
+import { t as tx } from '../../i18n'
+import { localeAtual } from '../../i18n'
 function formatHora(dataStr: string): string {
   try {
     const d = new Date(dataStr)
-    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleTimeString(localeAtual(), { hour: '2-digit', minute: '2-digit' })
   } catch {
     return ''
   }
@@ -32,29 +35,29 @@ function tempoRelativo(data: string): string {
   const diff = Math.floor((agora - post) / 1000)
   const horaStr = formatHora(data)
 
-  if (diff < 60) return `agora (${horaStr})`
-  if (diff < 3600) return `${Math.floor(diff / 60)}min atrás (${horaStr})`
-  if (diff < 86400) return `hoje às ${horaStr}`
+  if (diff < 60) return tx('agora ({horaStr})', { horaStr })
+  if (diff < 3600) return tx('{v1}min atrás ({horaStr})', { v1: Math.floor(diff / 60), horaStr })
+  if (diff < 86400) return tx('hoje às {horaStr}', { horaStr })
 
   const d = new Date(data)
   const ontem = new Date()
   ontem.setDate(ontem.getDate() - 1)
-  if (d.toDateString() === ontem.toDateString()) return `ontem às ${horaStr}`
+  if (d.toDateString() === ontem.toDateString()) return tx('ontem às {horaStr}', { horaStr })
 
-  return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${horaStr}`
+  return `${d.toLocaleDateString(localeAtual(), { day: '2-digit', month: '2-digit' })} às ${horaStr}`
 }
 
 function gerarMensagemPost(post: SocialPost): string {
   const hora = formatHora(post.criado_em)
   if (post.tipo === 'TREINO_INICIADO') {
     return post.academia_nome
-      ? `iniciou o treino às ${hora} na ${post.academia_nome} 🔥`
-      : `iniciou o treino às ${hora} 🔥`
+      ? tx('iniciou o treino às {hora} na {academia_nome} 🔥', { hora, academia_nome: post.academia_nome })
+      : tx('iniciou o treino às {hora} 🔥', { hora })
   }
   if (post.tipo === 'TREINO_CONCLUIDO') {
     return post.academia_nome
-      ? `concluiu o treino às ${hora} na ${post.academia_nome}! 💪`
-      : `concluiu o treino às ${hora}! 💪`
+      ? tx('concluiu o treino às {hora} na {academia_nome}! 💪', { hora, academia_nome: post.academia_nome })
+      : tx('concluiu o treino às {hora}! 💪', { hora })
   }
   return ''
 }
@@ -84,6 +87,7 @@ export default function PostCard({
   onPostUpdated,
   onPostDeleted,
 }: PostCardProps) {
+  const { t } = useT()
   const { user } = useAuthStore()
   const [showComments, setShowComments] = useState(false)
   const [comentarios, setComentarios] = useState<SocialComment[]>([])
@@ -158,7 +162,7 @@ export default function PostCard({
       onPostDeleted?.(post.id)
       setDeleteConfirmOpen(false)
     } catch (err: any) {
-      showToast(err?.message || 'Erro ao excluir postagem.', 'error')
+      showToast(t(err?.message) || t('Erro ao excluir postagem.'), 'error')
     } finally {
       setExcluindo(false)
     }
@@ -186,7 +190,7 @@ export default function PostCard({
         </div>
 
         <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${badge.color} bg-white/5 border border-white/10`}>
-          {badge.label}
+          {t(badge.label)}
         </span>
 
         {/* Menu de Ações (Apenas Autor ou Root) */}
@@ -196,7 +200,7 @@ export default function PostCard({
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
-              title="Opções da postagem"
+              title={t('Opções da postagem')}
             >
               <MoreVerticalIcon className="h-4 w-4" />
             </button>
@@ -217,7 +221,7 @@ export default function PostCard({
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
                   >
                     <InstagramIcon className="h-3.5 w-3.5 text-pink-500" />
-                    <span>Compartilhar Stories</span>
+                    <span>{t('Compartilhar Stories')}</span>
                   </button>
 
                   {podeEditar ? (
@@ -230,15 +234,15 @@ export default function PostCard({
                       className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
                     >
                       <Edit2Icon className="h-3.5 w-3.5 text-primary" />
-                      <span>Editar Post</span>
+                      <span>{t('Editar Post')}</span>
                     </button>
                   ) : (
                     <div
                       className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-text-muted/50 cursor-not-allowed text-left select-none"
-                      title="O prazo de 24 horas para editar esta postagem expirou"
+                      title={t('O prazo de 24 horas para editar esta postagem expirou')}
                     >
                       <Edit2Icon className="h-3.5 w-3.5 opacity-40" />
-                      <span>Editar indisponível (+24h)</span>
+                      <span>{t('Editar indisponível (+24h)')}</span>
                     </div>
                   )}
 
@@ -251,7 +255,7 @@ export default function PostCard({
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left"
                   >
                     <TrashIcon className="h-3.5 w-3.5" />
-                    <span>Excluir Post</span>
+                    <span>{t('Excluir Post')}</span>
                   </button>
                 </div>
               </>
@@ -274,7 +278,7 @@ export default function PostCard({
       {post.legenda ? (
         <div className="space-y-1">
           <p className="text-sm text-text leading-relaxed whitespace-pre-line font-medium">
-            {post.legenda}
+            {t(post.legenda)}
           </p>
           <p className="text-xs text-text-muted">
             <strong className="text-text-muted">{post.autor_nome}</strong> {gerarMensagemPost(post)}
@@ -290,7 +294,7 @@ export default function PostCard({
         <div className="overflow-hidden rounded-xl border border-surface-input bg-surface-input/40 flex items-center justify-center">
           <img
             src={resolveMediaUrl(post.midia_url)!}
-            alt="Foto do treino"
+            alt={t('Foto do treino')}
             className="max-w-full w-auto h-auto object-contain"
             style={{ maxHeight: 'min(80vw, 420px)' }}
             loading="lazy"
@@ -316,24 +320,24 @@ export default function PostCard({
             className={`flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer ${showComments ? 'text-text' : 'text-text-muted hover:text-text'}`}
           >
             <MessageCircleIcon className="h-4 w-4" />
-            <span>{post.comentarios_count > 0 ? `${post.comentarios_count} comentários` : 'Comentar'}</span>
+            <span>{post.comentarios_count > 0 ? t('{comentarios_count} comentários', { comentarios_count: post.comentarios_count }) : 'Comentar'}</span>
           </button>
           <button
             type="button"
             onClick={() => setShareModalOpen(true)}
             className="group flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
-            title="Compartilhar treino no Instagram Stories, WhatsApp, Facebook, etc."
+            title={t('Compartilhar treino no Instagram Stories, WhatsApp, Facebook, etc.')}
           >
             <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-tr from-yellow-500/20 via-pink-500/20 to-purple-500/20 text-pink-400 group-hover:from-yellow-500 group-hover:via-pink-500 group-hover:to-purple-500 group-hover:text-white transition-all shadow-sm">
               <InstagramIcon className="h-3 w-3" />
             </div>
-            <span>Compartilhar</span>
+            <span>{t('Compartilhar')}</span>
           </button>
         </div>
 
         {curtiu && (
           <span className="text-xs text-primary/80 font-medium">
-            ✓ Curtido {curtidoEm ? `às ${curtidoEm}` : ''}
+            {t('✓ Curtido')} {curtidoEm ? `às ${curtidoEm}` : ''}
           </span>
         )}
       </div>
@@ -342,9 +346,9 @@ export default function PostCard({
       {showComments && (
         <div className="pt-3 border-t border-surface-input space-y-3">
           {loadingComments ? (
-            <p className="text-xs text-text-muted">Carregando comentários...</p>
+            <p className="text-xs text-text-muted">{t('Carregando comentários...')}</p>
           ) : comentarios.length === 0 ? (
-            <p className="text-xs text-text-muted italic">Nenhum comentário ainda. Seja o primeiro!</p>
+            <p className="text-xs text-text-muted italic">{t('Nenhum comentário ainda. Seja o primeiro!')}</p>
           ) : (
             <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
               {comentarios.map((c) => (
@@ -357,7 +361,7 @@ export default function PostCard({
                       <p className="text-xs font-bold text-text">{c.autor_nome}</p>
                       <span className="text-xs text-text-muted">{formatHora(c.criado_em)}</span>
                     </div>
-                    <p className="text-xs text-text-muted leading-relaxed mt-0.5 break-words">{c.texto}</p>
+                    <p className="text-xs text-text-muted leading-relaxed mt-0.5 break-words">{t(c.texto)}</p>
                   </div>
                 </div>
               ))}
@@ -369,7 +373,7 @@ export default function PostCard({
               type="text"
               value={novoTexto}
               onChange={(e) => setNovoTexto(e.target.value)}
-              placeholder="Escreva um comentário..."
+              placeholder={t('Escreva um comentário...')}
               maxLength={280}
               className="flex-1 rounded-xl border border-surface-input bg-surface-input px-3 py-2 text-xs text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
               onKeyDown={(e) => { if (e.key === 'Enter') handleComentar() }}
@@ -409,8 +413,8 @@ export default function PostCard({
       {/* Confirmação de Exclusão */}
       <ConfirmModal
         open={deleteConfirmOpen}
-        title="Excluir Postagem"
-        message="Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita."
+        title={t('Excluir Postagem')}
+        message={t('Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.')}
         confirmText="Excluir"
         cancelText="Cancelar"
         loading={excluindo}

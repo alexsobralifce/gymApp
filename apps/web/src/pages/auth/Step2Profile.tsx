@@ -4,6 +4,8 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import FormField from '../../components/ui/FormField'
 
+import { useT } from '../../i18n'
+import { t as tx } from '../../i18n'
 interface Step2ProfileProps {
   dataNascimento: string
   setDataNascimento: (v: string) => void
@@ -25,23 +27,23 @@ interface FieldError {
 }
 
 function validatePeso(v: string): string | undefined {
-  if (!v) return 'Peso é obrigatório'
+  if (!v) return tx('Peso é obrigatório')
   const n = Number(v)
-  if (isNaN(n) || n < 20) return 'Peso mínimo: 20 kg'
-  if (n > 500) return 'Peso máximo: 500 kg'
+  if (isNaN(n) || n < 20) return tx('Peso mínimo: 20 kg')
+  if (n > 500) return tx('Peso máximo: 500 kg')
   return undefined
 }
 
 function validateAltura(v: string): string | undefined {
-  if (!v) return 'Altura é obrigatória'
+  if (!v) return tx('Altura é obrigatória')
   const n = Number(v)
-  if (isNaN(n) || n < 50) return 'Altura mínima: 50 cm'
-  if (n > 250) return 'Altura máxima: 250 cm'
+  if (isNaN(n) || n < 50) return tx('Altura mínima: 50 cm')
+  if (n > 250) return tx('Altura máxima: 250 cm')
   return undefined
 }
 
 function validateSexo(v: string): string | undefined {
-  if (!v) return 'Selecione o sexo'
+  if (!v) return tx('Selecione o sexo')
   return undefined
 }
 
@@ -51,6 +53,7 @@ export default function Step2Profile({
   sexo, setSexo, consentiuSocial, setConsentiuSocial,
   forceTouched,
 }: Step2ProfileProps) {
+  const { t } = useT()
   const [errors, setErrors] = useState<FieldError>({})
   const [touched, setTouched] = useState<{ peso: boolean; altura: boolean; sexo: boolean }>({
     peso: false,
@@ -80,7 +83,7 @@ export default function Step2Profile({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <FormField label="Data de nascimento" htmlFor="dataNascimento">
+      <FormField label={t('Data de nascimento')} htmlFor="dataNascimento">
         <Input
           id="dataNascimento"
           type="date"
@@ -89,7 +92,7 @@ export default function Step2Profile({
         />
       </FormField>
 
-      <FormField label="Peso (kg)" htmlFor="peso" error={errors.peso} required>
+      <FormField label={t('Peso (kg)')} htmlFor="peso" error={errors.peso} required>
         <Input
           id="peso"
           type="number"
@@ -109,7 +112,7 @@ export default function Step2Profile({
         />
       </FormField>
 
-      <FormField label="Altura (cm)" htmlFor="altura" error={errors.altura} required>
+      <FormField label={t('Altura (cm)')} htmlFor="altura" error={errors.altura} required>
         <Input
           id="altura"
           type="number"
@@ -129,7 +132,7 @@ export default function Step2Profile({
         />
       </FormField>
 
-      <FormField label="Sexo" htmlFor="sexo" error={errors.sexo} required>
+      <FormField label={t('Sexo')} htmlFor="sexo" error={errors.sexo} required>
         <Select
           id="sexo"
           value={sexo}
@@ -141,9 +144,9 @@ export default function Step2Profile({
           error={errors.sexo}
           required
         >
-          <option value="">Selecionar...</option>
-          <option value="MASCULINO">Masculino</option>
-          <option value="FEMININO">Feminino</option>
+          <option value="">{t('Selecionar...')}</option>
+          <option value="MASCULINO">{t('Masculino')}</option>
+          <option value="FEMININO">{t('Feminino')}</option>
         </Select>
       </FormField>
 
@@ -155,12 +158,12 @@ export default function Step2Profile({
             onChange={(e) => setConsentiuSocial(e.target.checked)}
             className="rounded border-surface-input"
           />
-          <span className="text-xs text-text-muted">Desejo que meus amigos vejam quando eu treino</span>
+          <span className="text-xs text-text-muted">{t('Desejo que meus amigos vejam quando eu treino')}</span>
         </label>
         <p className="mt-2 text-xs text-text-muted">
-          Ao continuar, você concorda com a{' '}
+          {t('Ao continuar, você concorda com a')}{' '}
           <Link to="/politica-privacidade" className="text-primary underline">
-            Política de Privacidade
+            {t('Política de Privacidade')}
           </Link>
           .
         </p>

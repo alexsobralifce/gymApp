@@ -3,6 +3,7 @@ import { InstagramIcon, XIcon, CheckIcon } from '../icons/Icon'
 import { api } from '../../api/client'
 import { getApiBaseUrl } from '../../lib/media'
 
+import { useT } from '../../i18n'
 interface InstagramLoginModalProps {
   open: boolean
   onClose: () => void
@@ -18,6 +19,7 @@ export default function InstagramLoginModal({
   onSelectStoriesFallback,
   initialStatus,
 }: InstagramLoginModalProps) {
+  const { t } = useT()
   const [loading, setLoading] = useState(true)
   const [conectado, setConectado] = useState(initialStatus?.conectado ?? false)
   const [configurado, setConfigurado] = useState(initialStatus?.configurado ?? true)
@@ -47,7 +49,7 @@ export default function InstagramLoginModal({
   function handleIniciarLogin() {
     if (configurado === false) {
       setErro(
-        'A publicação direta via API requer chaves da Meta configuradas no servidor. Utilize a opção "Instagram Stories", que funciona imediatamente sem necessidade de login!'
+        t('A publicação direta via API requer chaves da Meta configuradas no servidor. Utilize a opção "Instagram Stories", que funciona imediatamente sem necessidade de login!')
       )
       return
     }
@@ -99,7 +101,7 @@ export default function InstagramLoginModal({
       setConectado(false)
       setUsername(null)
     } catch (err: any) {
-      setErro(err?.message || 'Erro ao desconectar conta.')
+      setErro(t(err?.message) || t('Erro ao desconectar conta.'))
     } finally {
       setDesconectando(false)
     }
@@ -116,10 +118,10 @@ export default function InstagramLoginModal({
             </div>
             <div>
               <h2 className="text-sm font-black text-text">
-                {conectado ? 'Instagram Conectado' : 'Conectar ao Instagram'}
+                {conectado ? t('Instagram Conectado') : t('Conectar ao Instagram')}
               </h2>
               <p className="text-[10px] text-text-muted">
-                {conectado ? 'Conta vinculada ao ENDORFINAPP' : 'Publicação oficial de treinos'}
+                {conectado ? t('Conta vinculada ao ENDORFINAPP') : t('Publicação oficial de treinos')}
               </p>
             </div>
           </div>
@@ -143,7 +145,7 @@ export default function InstagramLoginModal({
         {loading ? (
           <div className="py-8 text-center text-xs text-text-muted">
             <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent mb-2" />
-            <p>Verificando conexão com o Instagram...</p>
+            <p>{t('Verificando conexão com o Instagram...')}</p>
           </div>
         ) : conectado ? (
           /* Estado Conectado */
@@ -157,13 +159,13 @@ export default function InstagramLoginModal({
                   @{username || 'usuario_conectado'}
                 </p>
                 <p className="text-[11px] text-success font-medium mt-0.5">
-                  Conta pronta para postagens no feed
+                  {t('Conta pronta para postagens no feed')}
                 </p>
               </div>
             </div>
 
             <p className="text-[11px] text-text-muted leading-relaxed">
-              Sua conta está vinculada. Ao concluir um treino, você pode publicar suas fotos e métricas diretamente no seu feed com 1 clique!
+              {t('Sua conta está vinculada. Ao concluir um treino, você pode publicar suas fotos e métricas diretamente no seu feed com 1 clique!')}
             </p>
 
             <div className="pt-2 flex flex-col gap-2">
@@ -176,7 +178,7 @@ export default function InstagramLoginModal({
                 className="w-full flex items-center justify-center gap-2 rounded-xl gradient-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
               >
                 <CheckIcon className="h-4 w-4" />
-                <span>Continuar</span>
+                <span>{t('Continuar')}</span>
               </button>
 
               <button
@@ -185,7 +187,7 @@ export default function InstagramLoginModal({
                 disabled={desconectando}
                 className="w-full rounded-xl border border-destructive/30 bg-destructive/10 py-2.5 text-xs font-bold text-destructive hover:bg-destructive/20 transition-colors cursor-pointer"
               >
-                {desconectando ? 'Desconectando...' : 'Desconectar Conta'}
+                {desconectando ? 'Desconectando...' : t('Desconectar Conta')}
               </button>
             </div>
           </div>
@@ -193,22 +195,22 @@ export default function InstagramLoginModal({
           /* Estado Não Conectado */
           <div className="space-y-4">
             <p className="text-xs text-text-muted leading-relaxed">
-              Faça login no Instagram para publicar fotos, tempo e calorias dos seus treinos diretamente no seu perfil com visual oficial.
+              {t('Faça login no Instagram para publicar fotos, tempo e calorias dos seus treinos diretamente no seu perfil com visual oficial.')}
             </p>
 
             {/* Destaques de Benefícios */}
             <div className="space-y-2 rounded-xl border border-surface-input bg-surface p-3 text-[11px]">
               <div className="flex items-center gap-2 text-text">
                 <span className="text-sm">⚡</span>
-                <span className="font-semibold">Publicação direta em 1 clique</span>
+                <span className="font-semibold">{t('Publicação direta em 1 clique')}</span>
               </div>
               <div className="flex items-center gap-2 text-text">
                 <span className="text-sm">📊</span>
-                <span className="font-semibold">Card com foto e métricas reais de treino</span>
+                <span className="font-semibold">{t('Card com foto e métricas reais de treino')}</span>
               </div>
               <div className="flex items-center gap-2 text-text">
                 <span className="text-sm">🔒</span>
-                <span className="font-semibold">Conexão segura via API oficial da Meta</span>
+                <span className="font-semibold">{t('Conexão segura via API oficial da Meta')}</span>
               </div>
             </div>
 
@@ -219,7 +221,7 @@ export default function InstagramLoginModal({
                 className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-yellow-500 via-pink-600 to-purple-600 py-3 text-xs font-bold text-white shadow-lg shadow-pink-500/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
               >
                 <InstagramIcon className="h-4 w-4" />
-                <span>Fazer Login com Instagram</span>
+                <span>{t('Fazer Login com Instagram')}</span>
               </button>
 
               {onSelectStoriesFallback && (
@@ -231,7 +233,7 @@ export default function InstagramLoginModal({
                   }}
                   className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-[11px] font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
                 >
-                  Postar nos Stories sem login →
+                  {t('Postar nos Stories sem login →')}
                 </button>
               )}
             </div>

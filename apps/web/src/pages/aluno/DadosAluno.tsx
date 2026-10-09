@@ -21,7 +21,9 @@ import {
   ShieldIcon,
 } from '../../components/icons/Icon'
 
+import { useT } from '../../i18n'
 export default function DadosAluno() {
+  const { t } = useT()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const fetchUser = useAuthStore((s) => s.fetchUser)
@@ -79,9 +81,9 @@ export default function DadosAluno() {
     setExportando(formato)
     try {
       await baixarExportacao(formato)
-      showToast(`Histórico exportado (${formato.toUpperCase()}). Verifique seus downloads.`)
+      showToast(t('Histórico exportado ({v1}). Verifique seus downloads.', { v1: formato.toUpperCase() }))
     } catch (err: any) {
-      showToast(err?.message || 'Erro ao exportar seus dados.', 'error')
+      showToast(t(err?.message) || t('Erro ao exportar seus dados.'), 'error')
     } finally {
       setExportando(null)
     }
@@ -93,15 +95,15 @@ export default function DadosAluno() {
       const html = await obterRelatorioHTML()
       const win = window.open('', '_blank')
       if (!win) {
-        showToast('Permita pop-ups para abrir o relatório.', 'error')
+        showToast(t('Permita pop-ups para abrir o relatório.'), 'error')
         return
       }
       win.document.open()
       win.document.write(html)
       win.document.close()
-      showToast('Relatório aberto. Use Ctrl/Cmd+P → Salvar como PDF.')
+      showToast(t('Relatório aberto. Use Ctrl/Cmd+P → Salvar como PDF.'))
     } catch (err: any) {
-      showToast(err?.message || 'Erro ao gerar o relatório.', 'error')
+      showToast(t(err?.message) || t('Erro ao gerar o relatório.'), 'error')
     } finally {
       setExportando(null)
     }
@@ -175,10 +177,10 @@ export default function DadosAluno() {
     try {
       await api.updateMe({ nome, telefone: telefone.replace(/\D/g, '') || undefined })
       await fetchUser()
-      setFeedbackPessoais('Informações pessoais atualizadas com sucesso!')
+      setFeedbackPessoais(t('Informações pessoais atualizadas com sucesso!'))
       setTimeout(() => setFeedbackPessoais(null), 3000)
     } catch {
-      setFeedbackPessoais('Erro ao atualizar informações pessoais.')
+      setFeedbackPessoais(t('Erro ao atualizar informações pessoais.'))
     } finally {
       setSalvandoPessoais(false)
     }
@@ -196,10 +198,10 @@ export default function DadosAluno() {
         sexo: sexo || undefined,
       }) as PerfilAluno
       setPerfil(updated)
-      setFeedbackFisicos('Dados físicos atualizados!')
+      setFeedbackFisicos(t('Dados físicos atualizados!'))
       setTimeout(() => setFeedbackFisicos(null), 3000)
     } catch {
-      setFeedbackFisicos('Erro ao salvar dados físicos.')
+      setFeedbackFisicos(t('Erro ao salvar dados físicos.'))
     } finally {
       setSalvandoFisicos(false)
     }
@@ -217,10 +219,10 @@ export default function DadosAluno() {
         metaSemanal: metaSemanal,
       }) as PerfilAluno
       setPerfil(updated)
-      setFeedbackPreferencias('Preferências e restrições atualizadas!')
+      setFeedbackPreferencias(t('Preferências e restrições atualizadas!'))
       setTimeout(() => setFeedbackPreferencias(null), 3000)
     } catch {
-      setFeedbackPreferencias('Erro ao salvar preferências.')
+      setFeedbackPreferencias(t('Erro ao salvar preferências.'))
     } finally {
       setSalvandoPreferencias(false)
     }
@@ -240,10 +242,10 @@ export default function DadosAluno() {
       const pData = await api.getPerfilAluno()
       setPerfil(pData)
       setTrocandoAcademia(false)
-      setFeedbackGeral('Academia atualizada com sucesso!')
+      setFeedbackGeral(t('Academia atualizada com sucesso!'))
       setTimeout(() => setFeedbackGeral(null), 3000)
     } catch {
-      setFeedbackGeral('Erro ao trocar de academia.')
+      setFeedbackGeral(t('Erro ao trocar de academia.'))
     } finally {
       setSalvandoAcademia(false)
     }
@@ -255,10 +257,10 @@ export default function DadosAluno() {
       const pData = await api.getPerfilAluno()
       setPerfil(pData)
       setModalSairAcademia(false)
-      setFeedbackGeral('Você foi desvinculado da academia.')
+      setFeedbackGeral(t('Você foi desvinculado da academia.'))
       setTimeout(() => setFeedbackGeral(null), 3000)
     } catch {
-      setFeedbackGeral('Erro ao desvincular da academia.')
+      setFeedbackGeral(t('Erro ao desvincular da academia.'))
     }
   }
 
@@ -268,10 +270,10 @@ export default function DadosAluno() {
       const pData = await api.atualizarProfessorAluno(null)
       setPerfil(pData)
       setModalAutogestao(false)
-      setFeedbackGeral('Você agora está no modo autogestão! Seus treinos foram mantidos.')
+      setFeedbackGeral(t('Você agora está no modo autogestão! Seus treinos foram mantidos.'))
       setTimeout(() => setFeedbackGeral(null), 4000)
     } catch {
-      setFeedbackGeral('Erro ao mudar para autogestão.')
+      setFeedbackGeral(t('Erro ao mudar para autogestão.'))
     } finally {
       setSalvandoRemoverProfessor(false)
     }
@@ -284,7 +286,7 @@ export default function DadosAluno() {
       setModalProfessorOpen(false)
       navigate('/')
     } catch (err: any) {
-      setFeedbackGeral(err.message || 'Erro ao mudar perfil para Professor.')
+      setFeedbackGeral(t(err.message) || t('Erro ao mudar perfil para Professor.'))
     } finally {
       setSalvandoTornarProfessor(false)
     }
@@ -303,8 +305,8 @@ export default function DadosAluno() {
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6 pb-24">
       <div>
-        <h1 className="text-2xl font-bold text-text">Dados do Usuário</h1>
-        <p className="text-xs text-text-muted">Gerencie suas informações cadastrais, corporais e vínculos</p>
+        <h1 className="text-2xl font-bold text-text">{t('Dados do Usuário')}</h1>
+        <p className="text-xs text-text-muted">{t('Gerencie suas informações cadastrais, corporais e vínculos')}</p>
       </div>
 
       {feedbackGeral && (
@@ -321,7 +323,7 @@ export default function DadosAluno() {
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2 border-b border-surface-input pb-3">
           <UserCircleIcon className="h-5 w-5 text-primary" />
-          <h2 className="text-sm font-bold text-text uppercase tracking-wider">Dados Pessoais</h2>
+          <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Dados Pessoais')}</h2>
         </div>
 
         {feedbackPessoais && (
@@ -343,7 +345,7 @@ export default function DadosAluno() {
               {fotoUrl && !fotoErro ? (
                 <img
                   src={fotoUrl}
-                  alt="Avatar"
+                  alt={t('Avatar')}
                   onError={() => setFotoErro(true)}
                   className="h-20 w-20 rounded-full object-cover border-2 border-surface-input group-hover:border-primary transition-colors"
                 />
@@ -366,25 +368,25 @@ export default function DadosAluno() {
             />
           </div>
           {uploadingAvatar && (
-            <p className="text-xs text-text-muted text-center md:col-span-2">Enviando foto...</p>
+            <p className="text-xs text-text-muted text-center md:col-span-2">{t('Enviando foto...')}</p>
           )}
 
-          <FormField label="Nome Completo" htmlFor="nome" required>
+          <FormField label={t('Nome Completo')} htmlFor="nome" required>
             <Input
               id="nome"
               type="text"
               required
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              placeholder="Seu nome"
+              placeholder={t('Seu nome')}
             />
           </FormField>
 
-          <FormField label="E-mail (Cadastro)" htmlFor="email">
+          <FormField label={t('E-mail (Cadastro)')} htmlFor="email">
             <Input id="email" type="email" disabled value={user?.email || ''} />
           </FormField>
 
-          <FormField label="Telefone / WhatsApp" htmlFor="telefone">
+          <FormField label={t('Telefone / WhatsApp')} htmlFor="telefone">
             <Input
               id="telefone"
               type="tel"
@@ -399,7 +401,7 @@ export default function DadosAluno() {
             disabled={salvandoPessoais}
             className="w-full md:col-span-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
-            {salvandoPessoais ? 'Salvando...' : 'Salvar Informações Pessoais'}
+            {salvandoPessoais ? 'Salvando...' : t('Salvar Informações Pessoais')}
           </button>
         </form>
       </div>
@@ -408,7 +410,7 @@ export default function DadosAluno() {
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2 border-b border-surface-input pb-3">
           <RulerIcon className="h-5 w-5 text-primary" />
-          <h2 className="text-sm font-bold text-text uppercase tracking-wider">Dados Físicos & IMC</h2>
+          <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Dados Físicos & IMC')}</h2>
         </div>
 
         {feedbackFisicos && (
@@ -420,7 +422,7 @@ export default function DadosAluno() {
         )}
 
         <form onSubmit={handleSalvarFisicos} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Peso (kg)" htmlFor="peso">
+          <FormField label={t('Peso (kg)')} htmlFor="peso">
             <Input
               id="peso"
               type="number"
@@ -429,11 +431,11 @@ export default function DadosAluno() {
               max="300"
               value={pesoKg}
               onChange={(e) => setPesoKg(e.target.value)}
-              placeholder="ex: 75.5"
+              placeholder={t('ex: 75.5')}
             />
           </FormField>
 
-          <FormField label="Altura (cm)" htmlFor="altura">
+          <FormField label={t('Altura (cm)')} htmlFor="altura">
             <Input
               id="altura"
               type="number"
@@ -441,11 +443,11 @@ export default function DadosAluno() {
               max="250"
               value={alturaCm}
               onChange={(e) => setAlturaCm(e.target.value)}
-              placeholder="ex: 175"
+              placeholder={t('ex: 175')}
             />
           </FormField>
 
-          <FormField label="Nascimento" htmlFor="nascimento">
+          <FormField label={t('Nascimento')} htmlFor="nascimento">
             <Input
               id="nascimento"
               type="date"
@@ -454,15 +456,15 @@ export default function DadosAluno() {
             />
           </FormField>
 
-          <FormField label="Sexo Biológico" htmlFor="sexo">
+          <FormField label={t('Sexo Biológico')} htmlFor="sexo">
             <Select
               id="sexo"
               value={sexo}
               onChange={(e) => setSexo(e.target.value as any)}
             >
-              <option value="">Selecione</option>
-              <option value="MASCULINO">Masculino</option>
-              <option value="FEMININO">Feminino</option>
+              <option value="">{t('Selecione')}</option>
+              <option value="MASCULINO">{t('Masculino')}</option>
+              <option value="FEMININO">{t('Feminino')}</option>
             </Select>
           </FormField>
 
@@ -470,14 +472,14 @@ export default function DadosAluno() {
           {imcCalculado !== null && imcBadge && (
             <div className={`md:col-span-2 rounded-xl border p-3 flex items-center justify-between ${imcBadge.cor}`}>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider opacity-80">IMC Calculado</p>
+                <p className="text-xs font-bold uppercase tracking-wider opacity-80">{t('IMC Calculado')}</p>
                 <p className="text-xl font-black">{imcCalculado}</p>
                 <p className="text-xs opacity-80 mt-0.5">
-                  {pNum}kg · {aNum}cm{idadeCalculada ? ` · ${idadeCalculada} anos` : ''}
+                  {pNum}{t('kg ·')} {aNum}{t('cm')}{idadeCalculada ? t(' · {idadeCalculada} anos', { idadeCalculada }) : ''}
                 </p>
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-black/20">
-                {imcBadge.label}
+                {t(imcBadge.label)}
               </span>
             </div>
           )}
@@ -487,7 +489,7 @@ export default function DadosAluno() {
             disabled={salvandoFisicos}
             className="w-full md:col-span-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
-            {salvandoFisicos ? 'Salvando...' : 'Salvar Dados Físicos'}
+            {salvandoFisicos ? 'Salvando...' : t('Salvar Dados Físicos')}
           </button>
         </form>
       </div>
@@ -496,7 +498,7 @@ export default function DadosAluno() {
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2 border-b border-surface-input pb-3">
           <span className="text-lg">🎯</span>
-          <h2 className="text-sm font-bold text-text uppercase tracking-wider">Preferências de Treino & Restrições</h2>
+          <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Preferências de Treino & Restrições')}</h2>
         </div>
 
         {feedbackPreferencias && (
@@ -508,44 +510,44 @@ export default function DadosAluno() {
         )}
 
         <form onSubmit={handleSalvarPreferencias} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Objetivo Principal" htmlFor="objetivo">
+          <FormField label={t('Objetivo Principal')} htmlFor="objetivo">
             <Select
               id="objetivo"
               value={objetivoTreino}
               onChange={(e) => setObjetivoTreino(e.target.value)}
             >
-              <option value="">Selecione um objetivo</option>
-              <option value="HIPERTROFIA">🔥 Hipertrofia (Ganho de massa)</option>
-              <option value="FORCA">💪 Força Máxima</option>
-              <option value="EMAGRECIMENTO">⚡ Emagrecimento / Queima Fat</option>
-              <option value="SAUDE">❤️ Saúde & Condicionamento</option>
+              <option value="">{t('Selecione um objetivo')}</option>
+              <option value="HIPERTROFIA">{t('🔥 Hipertrofia (Ganho de massa)')}</option>
+              <option value="FORCA">{t('💪 Força Máxima')}</option>
+              <option value="EMAGRECIMENTO">{t('⚡ Emagrecimento / Queima Fat')}</option>
+              <option value="SAUDE">{t('❤️ Saúde & Condicionamento')}</option>
             </Select>
           </FormField>
 
-          <FormField label="Nível de Experiência" htmlFor="nivel">
+          <FormField label={t('Nível de Experiência')} htmlFor="nivel">
             <Select
               id="nivel"
               value={nivelTreino}
               onChange={(e) => setNivelTreino(e.target.value)}
             >
-              <option value="">Selecione seu nível</option>
+              <option value="">{t('Selecione seu nível')}</option>
               <option value="INICIANTE">🌱 Iniciante (&lt; 6 meses)</option>
-              <option value="INTERMEDIARIO">⚡ Intermediário (6m a 2 anos)</option>
+              <option value="INTERMEDIARIO">{t('⚡ Intermediário (6m a 2 anos)')}</option>
               <option value="AVANCADO">🚀 Avançado (&gt; 2 anos)</option>
             </Select>
           </FormField>
 
           <FormField
-            label="Meta Semanal de Treinos"
+            label={t('Meta Semanal de Treinos')}
             htmlFor="meta-semanal"
-            hint="Quantos treinos você pretende fazer por semana (1 a 7)."
+            hint={t('Quantos treinos você pretende fazer por semana (1 a 7).')}
           >
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setMetaSemanal((v) => Math.max(1, v - 1))}
                 disabled={metaSemanal <= 1}
-                aria-label="Diminuir meta semanal de treinos"
+                aria-label={t('Diminuir meta semanal de treinos')}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-surface-input bg-surface text-xl font-bold text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 −
@@ -561,14 +563,14 @@ export default function DadosAluno() {
                   const v = parseInt(e.target.value, 10)
                   if (!isNaN(v)) setMetaSemanal(Math.min(7, Math.max(1, v)))
                 }}
-                aria-label="Meta semanal de treinos (1 a 7)"
+                aria-label={t('Meta semanal de treinos (1 a 7)')}
                 className="h-11 w-16 text-center text-base font-bold text-text"
               />
               <button
                 type="button"
                 onClick={() => setMetaSemanal((v) => Math.min(7, v + 1))}
                 disabled={metaSemanal >= 7}
-                aria-label="Aumentar meta semanal de treinos"
+                aria-label={t('Aumentar meta semanal de treinos')}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-surface-input bg-surface text-xl font-bold text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 +
@@ -578,7 +580,7 @@ export default function DadosAluno() {
 
           <div className="md:col-span-2">
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Restrições ou Dores Articulares (Substituição Automática de Exercícios)
+              {t('Restrições ou Dores Articulares (Substituição Automática de Exercícios)')}
             </label>
             <div className="flex flex-wrap gap-2">
               {[
@@ -600,13 +602,13 @@ export default function DadosAluno() {
                         : 'bg-surface border-surface-input text-text-muted hover:border-surface-input/80'
                     }`}
                   >
-                    {item.label} {selected ? '✓' : ''}
+                    {t(item.label)} {selected ? '✓' : ''}
                   </button>
                 )
               })}
             </div>
             <p className="text-xs text-text-muted mt-1.5">
-              Ao adotar um plano pronto, exercícios que sobrecarreguem essas articulações serão trocados por alternativas seguras.
+              {t('Ao adotar um plano pronto, exercícios que sobrecarreguem essas articulações serão trocados por alternativas seguras.')}
             </p>
           </div>
 
@@ -615,7 +617,7 @@ export default function DadosAluno() {
             disabled={salvandoPreferencias}
             className="w-full md:col-span-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
-            {salvandoPreferencias ? 'Salvando...' : 'Salvar Preferências'}
+            {salvandoPreferencias ? 'Salvando...' : t('Salvar Preferências')}
           </button>
         </form>
       </div>
@@ -624,33 +626,33 @@ export default function DadosAluno() {
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2 border-b border-surface-input pb-3">
           <Building2Icon className="h-5 w-5 text-primary" />
-          <h2 className="text-sm font-bold text-text uppercase tracking-wider">Academia & Professor</h2>
+          <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Academia & Professor')}</h2>
         </div>
 
         {/* Academia */}
         <div className="rounded-xl bg-surface p-3.5 border border-surface-input space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-muted uppercase">Academia Atual</span>
+            <span className="text-xs font-bold text-text-muted uppercase">{t('Academia Atual')}</span>
             {perfil?.academia ? (
               <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
                 {perfil.academia.nome}
               </span>
             ) : (
               <span className="text-xs font-semibold text-text-muted bg-surface-input px-2 py-0.5 rounded-full">
-                Sem academia
+                {t('Sem academia')}
               </span>
             )}
           </div>
 
           {trocandoAcademia ? (
             <div className="pt-2 space-y-2">
-              <FormField label="Academia" htmlFor="nova-academia">
+              <FormField label={t('Academia')} htmlFor="nova-academia">
                 <Select
                   id="nova-academia"
                   value={novaAcademiaId}
                   onChange={(e) => setNovaAcademiaId(e.target.value)}
                 >
-                  <option value="">Selecione uma academia...</option>
+                  <option value="">{t('Selecione uma academia...')}</option>
                   {academias.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.nome}
@@ -665,14 +667,14 @@ export default function DadosAluno() {
                   disabled={salvandoAcademia || !novaAcademiaId}
                   className="flex-1 rounded-lg bg-primary py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 transition-all disabled:opacity-40"
                 >
-                  {salvandoAcademia ? 'Salvando...' : 'Confirmar Troca'}
+                  {salvandoAcademia ? 'Salvando...' : t('Confirmar Troca')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setTrocandoAcademia(false)}
                   className="rounded-lg bg-surface-input px-3 py-1.5 text-xs font-medium text-text-muted hover:text-text"
                 >
-                  Cancelar
+                  {t('Cancelar')}
                 </button>
               </div>
             </div>
@@ -683,7 +685,7 @@ export default function DadosAluno() {
                 onClick={() => setTrocandoAcademia(true)}
                 className="flex-1 rounded-lg border border-surface-input bg-surface-card py-1.5 text-xs font-semibold text-text hover:bg-surface-input transition-all"
               >
-                Trocar Academia
+                {t('Trocar Academia')}
               </button>
               {perfil?.academia && (
                 <button
@@ -691,7 +693,7 @@ export default function DadosAluno() {
                   onClick={() => setModalSairAcademia(true)}
                   className="rounded-lg border border-destructive/20 bg-red-500/5 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-all"
                 >
-                  Sair
+                  {t('Sair')}
                 </button>
               )}
             </div>
@@ -701,22 +703,22 @@ export default function DadosAluno() {
         {/* Professor / Autogestão */}
         <div className="rounded-xl bg-surface p-3.5 border border-surface-input space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-muted uppercase">Treinador / Modo</span>
+            <span className="text-xs font-bold text-text-muted uppercase">{t('Treinador / Modo')}</span>
             {perfil?.professor ? (
               <span className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                {perfil.professor.usuario?.nome || 'Com Professor'}
+                {perfil.professor.usuario?.nome || t('Com Professor')}
               </span>
             ) : (
               <span className="text-xs font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
-                Autogestão Ativa
+                {t('Autogestão Ativa')}
               </span>
             )}
           </div>
 
           <p className="text-xs text-text-muted leading-relaxed">
             {perfil?.professor
-              ? 'Seu professor envia fichas personalizadas, mas você também pode criar e editar seus treinos.'
-              : 'Você está no modo autogestão. Você cria e gerencia 100% das suas fichas de treino.'}
+              ? t('Seu professor envia fichas personalizadas, mas você também pode criar e editar seus treinos.')
+              : t('Você está no modo autogestão. Você cria e gerencia 100% das suas fichas de treino.')}
           </p>
 
           {perfil?.professor && (
@@ -725,7 +727,7 @@ export default function DadosAluno() {
               onClick={() => setModalAutogestao(true)}
               className="mt-1 w-full rounded-lg border border-yellow-500/20 bg-yellow-500/5 py-1.5 text-xs font-semibold text-yellow-400 hover:bg-yellow-500/10 transition-all cursor-pointer"
             >
-              Mudar para Autogestão (Remover Professor)
+              {t('Mudar para Autogestão (Remover Professor)')}
             </button>
           )}
         </div>
@@ -734,20 +736,20 @@ export default function DadosAluno() {
         {user?.role === 'ALUNO' && (
           <div className="rounded-xl bg-surface p-3.5 border border-surface-input space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-text-muted uppercase">Perfil de Atuação</span>
+              <span className="text-xs font-bold text-text-muted uppercase">{t('Perfil de Atuação')}</span>
               <span className="text-xs font-semibold text-text-muted bg-surface-input px-2 py-0.5 rounded-full">
-                Aluno / Praticante
+                {t('Aluno / Praticante')}
               </span>
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
-              É um Personal Trainer ou Professor de Educação Física? Altere seu perfil para ter acesso à gestão de alunos e envio de fichas de treino.
+              {t('É um Personal Trainer ou Professor de Educação Física? Altere seu perfil para ter acesso à gestão de alunos e envio de fichas de treino.')}
             </p>
             <button
               type="button"
               onClick={() => setModalProfessorOpen(true)}
               className="w-full rounded-lg border border-primary/30 bg-primary/10 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer"
             >
-              Mudar meu Perfil para Professor
+              {t('Mudar meu Perfil para Professor')}
             </button>
           </div>
         )}
@@ -755,7 +757,7 @@ export default function DadosAluno() {
 
       {/* 4. Segurança e Privacidade */}
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-3">
-        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Conta & Privacidade</h2>
+        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">{t('Conta & Privacidade')}</h2>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -763,7 +765,7 @@ export default function DadosAluno() {
             className="flex items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer"
           >
             <KeyIcon className="h-4 w-4 text-text-muted" />
-            Alterar Senha
+            {t('Alterar Senha')}
           </button>
           <button
             type="button"
@@ -771,7 +773,7 @@ export default function DadosAluno() {
             className="flex items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer"
           >
             <ShieldIcon className="h-4 w-4 text-text-muted" />
-            Privacidade
+            {t('Privacidade')}
           </button>
           <button
             type="button"
@@ -779,7 +781,7 @@ export default function DadosAluno() {
             className="flex items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer md:col-span-2"
           >
             <Bell className="h-4 w-4 text-text-muted" />
-            Preferências de Notificação
+            {t('Preferências de Notificação')}
           </button>
         </div>
       </div>
@@ -788,53 +790,53 @@ export default function DadosAluno() {
       <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex items-center gap-2 border-b border-surface-input pb-3">
           <Download className="h-5 w-5 text-primary" />
-          <h2 className="text-sm font-bold text-text uppercase tracking-wider">Meus dados</h2>
+          <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Meus dados')}</h2>
         </div>
         <p className="text-xs text-text-muted leading-relaxed">
-          Baixe uma cópia completa do seu histórico (treinos, execuções, medidas e avaliações físicas) — seu direito de portabilidade de dados (LGPD, art. 18).
+          {t('Baixe uma cópia completa do seu histórico (treinos, execuções, medidas e avaliações físicas) — seu direito de portabilidade de dados (LGPD, art. 18).')}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => handleExportar('csv')}
             disabled={exportando !== null}
-            aria-label="Exportar histórico em CSV"
+            aria-label={t('Exportar histórico em CSV')}
             className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer disabled:opacity-50"
           >
             <Download className="h-4 w-4 text-text-muted" />
-            {exportando === 'csv' ? 'Exportando...' : 'Exportar histórico (CSV)'}
+            {exportando === 'csv' ? 'Exportando...' : t('Exportar histórico (CSV)')}
           </button>
           <button
             type="button"
             onClick={() => handleExportar('json')}
             disabled={exportando !== null}
-            aria-label="Exportar tudo em JSON"
+            aria-label={t('Exportar tudo em JSON')}
             className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer disabled:opacity-50"
           >
             <Download className="h-4 w-4 text-text-muted" />
-            {exportando === 'json' ? 'Exportando...' : 'Exportar tudo (JSON)'}
+            {exportando === 'json' ? 'Exportando...' : t('Exportar tudo (JSON)')}
           </button>
           <button
             type="button"
             onClick={handleRelatorioPDF}
             disabled={exportando !== null}
-            aria-label="Abrir relatório resumido para imprimir como PDF"
+            aria-label={t('Abrir relatório resumido para imprimir como PDF')}
             className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-surface-input bg-surface p-3 text-xs font-semibold text-text hover:bg-surface-input transition-all cursor-pointer disabled:opacity-50 sm:col-span-2"
           >
             <Download className="h-4 w-4 text-text-muted" />
-            {exportando === 'relatorio' ? 'Gerando relatório...' : 'Relatório resumido (PDF)'}
+            {exportando === 'relatorio' ? t('Gerando relatório...') : t('Relatório resumido (PDF)')}
           </button>
         </div>
         <p className="text-xs text-text-muted">
-          💡 No relatório, use <strong>Ctrl/Cmd + P</strong> → <strong>"Salvar como PDF"</strong>.
+          {t('💡 No relatório, use')} <strong>{t('Ctrl/Cmd + P')}</strong> → <strong>{t('"Salvar como PDF"')}</strong>.
         </p>
       </div>
 
       {/* Modal Confirmação: Sair da Academia */}
       <ConfirmModal
         open={modalSairAcademia}
-        title="Sair da Academia?"
-        message="Você será desvinculado da academia atual. Poderá se vincular a outra a qualquer momento."
+        title={t('Sair da Academia?')}
+        message={t('Você será desvinculado da academia atual. Poderá se vincular a outra a qualquer momento.')}
         onConfirm={handleSairAcademia}
         onCancel={() => setModalSairAcademia(false)}
       />
@@ -842,8 +844,8 @@ export default function DadosAluno() {
       {/* Modal Confirmação: Mudar para Autogestão */}
       <ConfirmModal
         open={modalAutogestao}
-        title="Mudar para Autogestão?"
-        message="Você desvinculará seu professor atual. Todos os treinos que você possui serão mantidos na sua conta para que você possa continuar usando e editando."
+        title={t('Mudar para Autogestão?')}
+        message={t('Você desvinculará seu professor atual. Todos os treinos que você possui serão mantidos na sua conta para que você possa continuar usando e editando.')}
         onConfirm={handleConfirmarAutogestao}
         onCancel={() => setModalAutogestao(false)}
         loading={salvandoRemoverProfessor}
@@ -853,17 +855,17 @@ export default function DadosAluno() {
       {modalProfessorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-card border border-surface-input w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-text">Tornar-se Professor</h3>
+            <h3 className="text-lg font-bold text-text">{t('Tornar-se Professor')}</h3>
             <p className="text-xs text-text-muted leading-relaxed">
-              Ao confirmar, seu perfil será alterado para <strong className="text-primary">Professor</strong>. Você terá acesso ao Dashboard de Personal Trainer, criação e envio de fichas de treino para alunos.
+              {t('Ao confirmar, seu perfil será alterado para')} <strong className="text-primary">{t('Professor')}</strong>{t('. Você terá acesso ao Dashboard de Personal Trainer, criação e envio de fichas de treino para alunos.')}
             </p>
-            <FormField label="Número do CREF (Opcional)" htmlFor="cref">
+            <FormField label={t('Número do CREF (Opcional)')} htmlFor="cref">
               <Input
                 id="cref"
                 type="text"
                 value={cref}
                 onChange={(e) => setCref(e.target.value)}
-                placeholder="Ex: 123456-G/SP"
+                placeholder={t('Ex: 123456-G/SP')}
               />
             </FormField>
             <div className="flex justify-end gap-2 pt-2">
@@ -872,7 +874,7 @@ export default function DadosAluno() {
                 onClick={() => setModalProfessorOpen(false)}
                 className="rounded-xl border border-surface-input bg-surface px-4 py-2 text-xs font-semibold text-text hover:bg-surface-input"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
               <button
                 type="button"
@@ -880,7 +882,7 @@ export default function DadosAluno() {
                 disabled={salvandoTornarProfessor}
                 className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50"
               >
-                {salvandoTornarProfessor ? 'Convertendo...' : 'Confirmar e Mudar Perfil'}
+                {salvandoTornarProfessor ? 'Convertendo...' : t('Confirmar e Mudar Perfil')}
               </button>
             </div>
           </div>

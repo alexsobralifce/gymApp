@@ -4,9 +4,11 @@ import { api } from '../../api/client'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EndorfinappLogo from '../../components/branding/EndorfinappLogo'
 
+import { useT } from '../../i18n'
 const WELCOME_KEY = 'gymapp_welcome_seen'
 
 export default function WelcomeCards() {
+  const { t } = useT()
   const [hasProfessor, setHasProfessor] = useState<boolean | null>(null)
   const navigate = useNavigate()
 
@@ -30,7 +32,7 @@ export default function WelcomeCards() {
       <div className="flex min-h-screen items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-4">
           <LoadingSpinner size="md" />
-          <p className="text-sm text-text-muted">Preparando...</p>
+          <p className="text-sm text-text-muted">{t('Preparando...')}</p>
         </div>
       </div>
     )
@@ -43,9 +45,9 @@ export default function WelcomeCards() {
           <EndorfinappLogo variant="full" iconSize={52} size={22} showSlogan />
         </div>
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-text">Bem-vindo à ENDORFINAPP!</h1>
+          <h1 className="text-2xl font-bold text-text">{t('Bem-vindo à ENDORFINAPP!')}</h1>
           <p className="text-sm text-text-muted">
-            Aqui está o que você precisa saber para começar:
+            {t('Aqui está o que você precisa saber para começar:')}
           </p>
         </div>
 
@@ -53,28 +55,28 @@ export default function WelcomeCards() {
           <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-2">
             <div className="text-3xl">{hasProfessor ? '📨' : '🏋️'}</div>
             <h3 className="text-sm font-bold text-text">
-              {hasProfessor ? 'Aceitar Treino' : 'Criar Treino'}
+              {hasProfessor ? t('Aceitar Treino') : t('Criar Treino')}
             </h3>
             <p className="text-xs text-text-muted">
               {hasProfessor
-                ? 'Seu professor envia fichas de treino. Aceite para começar a treinar!'
-                : 'No modo autogestão, você mesmo monta suas fichas de treino.'}
+                ? t('Seu professor envia fichas de treino. Aceite para começar a treinar!')
+                : t('No modo autogestão, você mesmo monta suas fichas de treino.')}
             </p>
           </div>
 
           <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-2">
             <div className="text-3xl">✅</div>
-            <h3 className="text-sm font-bold text-text">Registrar Execução</h3>
+            <h3 className="text-sm font-bold text-text">{t('Registrar Execução')}</h3>
             <p className="text-xs text-text-muted">
-              Durante o treino, registre carga e repetições de cada série para acompanhar seu progresso.
+              {t('Durante o treino, registre carga e repetições de cada série para acompanhar seu progresso.')}
             </p>
           </div>
 
           <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-2">
             <div className="text-3xl">📈</div>
-            <h3 className="text-sm font-bold text-text">Ver Evolução</h3>
+            <h3 className="text-sm font-bold text-text">{t('Ver Evolução')}</h3>
             <p className="text-xs text-text-muted">
-              Acompanhe seu progresso com gráficos de medidas corporais e correlações de desempenho.
+              {t('Acompanhe seu progresso com gráficos de medidas corporais e correlações de desempenho.')}
             </p>
           </div>
         </div>
@@ -84,13 +86,13 @@ export default function WelcomeCards() {
             onClick={dismiss}
             className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
           >
-            Começar
+            {t('Começar')}
           </button>
           <button
             onClick={dismiss}
             className="text-xs text-text-muted hover:text-text cursor-pointer"
           >
-            Pular
+            {t('Pular')}
           </button>
         </div>
       </div>

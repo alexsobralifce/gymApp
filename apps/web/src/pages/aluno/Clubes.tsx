@@ -17,9 +17,11 @@ import type { MeuClube, ClubeDetalhe } from '../../types/api'
 import BarraBusca from '../../components/ui/BarraBusca'
 import { filtrarPorTexto } from '../../utils/busca'
 
+import { useT } from '../../i18n'
 type Tab = 'meus' | 'descobrir' | 'criar'
 
 export default function Clubes() {
+  const { t } = useT()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('meus')
   const [meus, setMeus] = useState<MeuClube[]>([])
@@ -121,7 +123,7 @@ export default function Clubes() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <TrophyIcon className="h-6 w-6 text-accent" />
-        <h1 className="text-lg font-bold text-text">Clubes</h1>
+        <h1 className="text-lg font-bold text-text">{t('Clubes')}</h1>
       </div>
 
       {/* Clube da Academia (se houver) */}
@@ -130,7 +132,7 @@ export default function Clubes() {
           <Building2Icon className="h-8 w-8 text-accent shrink-0" />
           <div>
             <p className="text-sm font-bold text-text">{academiaNome}</p>
-            <p className="text-xs text-text-muted">Clube da academia</p>
+            <p className="text-xs text-text-muted">{t('Clube da academia')}</p>
           </div>
         </div>
       )}
@@ -141,17 +143,17 @@ export default function Clubes() {
           { key: 'meus' as Tab, label: `Meus (${meus.length})` },
           { key: 'descobrir' as Tab, label: `Descobrir (${disponiveis.length})` },
           { key: 'criar' as Tab, label: 'Criar' },
-        ]).map((t) => (
+        ]).map((tr) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={tr.key}
+            onClick={() => setTab(tr.key)}
             className={`flex-1 rounded-xl py-2 text-xs font-bold transition-all cursor-pointer ${
-              tab === t.key
+              tab === tr.key
                 ? 'bg-surface-card text-text shadow-sm'
                 : 'text-text-muted hover:text-text'
             }`}
           >
-            {t.label}
+            {t(tr.label)}
           </button>
         ))}
       </div>
@@ -160,7 +162,7 @@ export default function Clubes() {
         <BarraBusca
           value={busca}
           onChange={setBusca}
-          placeholder="Buscar clube por nome ou descrição..."
+          placeholder={t('Buscar clube por nome ou descrição...')}
           className="!mb-0"
           total={tab === 'meus' ? meus.length : disponiveis.length}
           filtrados={tab === 'meus' ? meusFiltrados.length : disponiveisFiltrados.length}
@@ -171,24 +173,24 @@ export default function Clubes() {
       {tab === 'meus' && (
         <div className="space-y-3">
           {meus.length > 0 && meusFiltrados.length === 0 && (
-            <p className="text-sm text-text-muted text-center py-6">Nenhum clube encontrado.</p>
+            <p className="text-sm text-text-muted text-center py-6">{t('Nenhum clube encontrado.')}</p>
           )}
           {meus.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center space-y-3">
               <TrophyIcon className="h-10 w-10 text-text-muted mx-auto opacity-30" />
-              <p className="text-sm text-text-muted">Você não participa de nenhum clube ainda.</p>
+              <p className="text-sm text-text-muted">{t('Você não participa de nenhum clube ainda.')}</p>
               <div className="flex gap-2 justify-center">
                 <button
                   onClick={() => setTab('descobrir')}
                   className="rounded-xl bg-surface-input px-4 py-2 text-xs font-bold text-text hover:bg-surface-input/70 transition-all cursor-pointer"
                 >
-                  Descobrir Clubes
+                  {t('Descobrir Clubes')}
                 </button>
                 <button
                   onClick={() => setTab('criar')}
                   className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
                 >
-                  Criar Clube
+                  {t('Criar Clube')}
                 </button>
               </div>
             </div>
@@ -204,16 +206,16 @@ export default function Clubes() {
                       <h3 className="text-base font-bold text-text">{c.nome}</h3>
                       {c.role === 'CRIADOR' && (
                         <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent border border-accent/20">
-                          Criador
+                          {t('Criador')}
                         </span>
                       )}
                     </div>
                     {c.descricao && (
-                      <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{c.descricao}</p>
+                      <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{t(c.descricao)}</p>
                     )}
                     <p className="text-xs text-text-muted mt-1.5">
                       <UsersIcon className="h-3 w-3 inline mr-1" />
-                      {c.total_membros} membro{(c.total_membros || 0) !== 1 ? 's' : ''}
+                      {c.total_membros} {t('membro')}{(c.total_membros || 0) !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
@@ -221,12 +223,12 @@ export default function Clubes() {
                 {/* Código de convite (só criador vê) */}
                 {c.role === 'CRIADOR' && c.codigo_convite && (
                   <div className="flex items-center gap-2 rounded-xl bg-surface p-2.5 border border-surface-input">
-                    <span className="text-xs text-text-muted">Convite:</span>
+                    <span className="text-xs text-text-muted">{t('Convite:')}</span>
                     <code className="flex-1 text-sm font-bold text-primary tracking-widest">{c.codigo_convite}</code>
                     <button
                       onClick={() => handleCopiarCodigo(c.codigo_convite!, c.id)}
                       className="rounded-lg p-1.5 hover:bg-surface-input transition-all cursor-pointer"
-                      title="Copiar código"
+                      title={t('Copiar código')}
                     >
                       {copiadoId === c.id ? (
                         <CheckIcon className="h-4 w-4 text-success" />
@@ -243,7 +245,7 @@ export default function Clubes() {
                     onClick={() => navigate(`/clubes/${c.id}`)}
                     className="flex-1 rounded-xl border border-surface-input bg-surface py-2 text-xs font-bold text-text hover:bg-surface-input/50 transition-all cursor-pointer"
                   >
-                    Ver Clube
+                    {t('Ver Clube')}
                   </button>
                   {c.role !== 'CRIADOR' && (
                     <button
@@ -263,17 +265,17 @@ export default function Clubes() {
       {tab === 'descobrir' && (
         <div className="space-y-3">
           {disponiveis.length > 0 && disponiveisFiltrados.length === 0 && (
-            <p className="text-sm text-text-muted text-center py-6">Nenhum clube encontrado.</p>
+            <p className="text-sm text-text-muted text-center py-6">{t('Nenhum clube encontrado.')}</p>
           )}
           {disponiveis.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center space-y-3">
               <GridIcon className="h-10 w-10 text-text-muted mx-auto opacity-30" />
-              <p className="text-sm text-text-muted">Nenhum clube disponível no momento.</p>
+              <p className="text-sm text-text-muted">{t('Nenhum clube disponível no momento.')}</p>
               <button
                 onClick={() => setTab('criar')}
                 className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
               >
-                Criar o Primeiro
+                {t('Criar o Primeiro')}
               </button>
             </div>
           ) : (
@@ -286,11 +288,11 @@ export default function Clubes() {
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-bold text-text">{c.nome}</h3>
                     {c.descricao && (
-                      <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{c.descricao}</p>
+                      <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{t(c.descricao)}</p>
                     )}
                     <p className="text-xs text-text-muted mt-1.5">
                       <UsersIcon className="h-3 w-3 inline mr-1" />
-                      {c.total_membros} membro{(c.total_membros || 0) !== 1 ? 's' : ''}
+                      {c.total_membros} {t('membro')}{(c.total_membros || 0) !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
@@ -301,7 +303,7 @@ export default function Clubes() {
                       type="text"
                       value={codigoInput}
                       onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
-                      placeholder="Código de convite"
+                      placeholder={t('Código de convite')}
                       maxLength={6}
                       className="flex-1 rounded-xl border border-surface-input bg-surface-input px-3 py-2 text-xs text-text placeholder:text-text-muted focus:border-primary focus:outline-none uppercase tracking-widest"
                     />
@@ -327,7 +329,7 @@ export default function Clubes() {
                     disabled={entrandoId === c.id}
                     className="w-full rounded-xl gradient-primary py-2.5 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
                   >
-                    {entrandoId === c.id ? 'Entrando...' : 'Entrar no Clube'}
+                    {entrandoId === c.id ? 'Entrando...' : t('Entrar no Clube')}
                   </button>
                 )}
               </div>
@@ -339,23 +341,23 @@ export default function Clubes() {
       {tab === 'criar' && (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-text uppercase tracking-wider">Nome do Clube</label>
+            <label className="text-xs font-bold text-text uppercase tracking-wider">{t('Nome do Clube')}</label>
             <input
               type="text"
               value={criarNome}
               onChange={(e) => setCriarNome(e.target.value)}
-              placeholder="Ex: Marombeiros do CrossFit"
+              placeholder={t('Ex: Marombeiros do CrossFit')}
               maxLength={50}
               className="w-full rounded-xl border border-surface-input bg-surface-input px-4 py-3 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-text uppercase tracking-wider">Descrição (opcional)</label>
+            <label className="text-xs font-bold text-text uppercase tracking-wider">{t('Descrição (opcional)')}</label>
             <textarea
               value={criarDescricao}
               onChange={(e) => setCriarDescricao(e.target.value)}
-              placeholder="Descreva o propósito do clube..."
+              placeholder={t('Descreva o propósito do clube...')}
               maxLength={200}
               rows={3}
               className="w-full rounded-xl border border-surface-input bg-surface-input px-4 py-3 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none resize-none"
@@ -366,10 +368,10 @@ export default function Clubes() {
           <div className="rounded-xl bg-surface p-3 border border-surface-input space-y-1">
             <p className="text-xs font-semibold text-text flex items-center gap-1">
               <CheckIcon className="h-3.5 w-3.5 text-success" />
-              Clube público (entrada livre)
+              {t('Clube público (entrada livre)')}
             </p>
             <p className="text-xs text-text-muted">
-              Após criar, um código de convite único será gerado para compartilhar com amigos.
+              {t('Após criar, um código de convite único será gerado para compartilhar com amigos.')}
             </p>
           </div>
 
@@ -378,7 +380,7 @@ export default function Clubes() {
             disabled={!criarNome.trim() || criando}
             className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
           >
-            {criando ? 'Criando...' : 'Criar Clube'}
+            {criando ? 'Criando...' : t('Criar Clube')}
           </button>
         </div>
       )}

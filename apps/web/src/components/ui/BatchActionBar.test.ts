@@ -18,7 +18,7 @@ describe('BatchActionBar Component Verification', () => {
   })
 
   it('should display selected count badge and delete action trigger', () => {
-    expect(componentContent).toContain('{selectedCount}</strong> item(s) selecionado(s)')
+    expect(componentContent).toContain("{selectedCount}</strong> {t('item(s) selecionado(s)')}")
     expect(componentContent).toContain('Excluir Selecionados em Cascata')
   })
 })

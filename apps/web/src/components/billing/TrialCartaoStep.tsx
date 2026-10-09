@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from '../../api/client'
+import { rotuloValorPorAluno } from '../../utils/valorPorAluno'
 
+import { useT } from '../../i18n'
 interface PlanoAssinatura {
   id: string
   codigo: string
@@ -11,6 +13,8 @@ interface PlanoAssinatura {
   trial_dias: number
   ordem: number
   ativo: boolean
+  faixa_max_alunos?: number | null
+  limite_alunos?: number | null
 }
 
 function formatMoney(cents: number): string {
@@ -45,6 +49,7 @@ const CARD_BRICK_CONTAINER_ID = 'mp-trial-card-brick'
  * caso o usuário não cancele antes (`POST /billing/cancelar`).
  */
 export default function TrialCartaoStep({ role, onConcluido }: { role: string; onConcluido: () => void }) {
+  const { t } = useT()
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([])
   const [planoSelecionado, setPlanoSelecionado] = useState<PlanoAssinatura | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,7 +66,7 @@ export default function TrialCartaoStep({ role, onConcluido }: { role: string; o
         // Aluno só tem 1 plano — seleciona direto. Professor/Academia escolhem a faixa.
         if (doPapel.length === 1) setPlanoSelecionado(doPapel[0])
       })
-      .catch(() => setErro('Não foi possível carregar os planos.'))
+      .catch(() => setErro(t('Não foi possível carregar os planos.')))
       .finally(() => setLoading(false))
   }, [role])
 
@@ -70,7 +75,7 @@ export default function TrialCartaoStep({ role, onConcluido }: { role: string; o
 
     const publicKey = import.meta.env.VITE_MP_PUBLIC_KEY
     if (!publicKey) {
-      setErro('Checkout de cartão não está configurado (VITE_MP_PUBLIC_KEY ausente).')
+      setErro(t('Checkout de cartão não está configurado (VITE_MP_PUBLIC_KEY ausente).'))
       return
     }
 
@@ -90,7 +95,7 @@ export default function TrialCartaoStep({ role, onConcluido }: { role: string; o
             onReady: () => setSdkPronto(true),
             onError: (error: unknown) => {
               console.error('[TrialCartaoStep] Erro no Card Payment Brick:', error)
-              setErro('Erro ao carregar o formulário de cartão. Tente recarregar a página.')
+              setErro(t('Erro ao carregar o formulário de cartão. Tente recarregar a página.'))
             },
             onSubmit: async ({ formData }: { formData: { token: string } }) => {
               await confirmarCheckout(planoSelecionado, formData.token)
@@ -102,7 +107,7 @@ export default function TrialCartaoStep({ role, onConcluido }: { role: string; o
       })
       .catch((err) => {
         console.error('[TrialCartaoStep] Falha ao carregar SDK do Mercado Pago:', err)
-        setErro('Não foi possível carregar o checkout de cartão.')
+        setErro(t('Não foi possível carregar o checkout de cartão.'))
       })
 
     return () => {
@@ -119,18 +124,18 @@ export default function TrialCartaoStep({ role, onConcluido }: { role: string; o
       await api.post('/billing/checkout', { planoCodigo: plano.codigo, metodo: 'cartao', cardTokenId })
       onConcluido()
     } catch (err) {
-      setErro(err instanceof ApiError ? err.message : 'Não foi possível autorizar o cartão. Tente novamente.')
+      setErro(err instanceof ApiError ? t(err.message) : t('Não foi possível autorizar o cartão. Tente novamente.'))
     }
   }
 
-  if (loading) return <p className="text-sm text-text-muted text-center py-4">Carregando planos...</p>
+  if (loading) return <p className="text-sm text-text-muted text-center py-4">{t('Carregando planos...')}</p>
 
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <h2 className="text-lg font-bold text-text">Comece seu teste grátis de 15 dias</h2>
+        <h2 className="text-lg font-bold text-text">{t('Comece seu teste grátis de 15 dias')}</h2>
         <p className="text-xs text-text-muted mt-1">
-          Seu cartão só é autorizado agora — a cobrança só acontece depois dos 15 dias, e você pode cancelar quando quiser antes disso.
+          {t('Seu cartão só é autorizado agora — a cobrança só acontece depois dos 15 dias, e você pode cancelar quando quiser antes disso.')}
         </p>
       </div>
 
@@ -155,9 +160,12 @@ export default function TrialCartaoStep({ role, onConcluido }: { role: string; o
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-text text-sm">{p.nome}</span>
-                <span className="font-bold text-primary text-sm">{formatMoney(p.preco_mensal_cents)}/mês</span>
+                <span className="font-bold text-primary text-sm">{formatMoney(p.preco_mensal_cents)}{t('/mês')}</span>
               </div>
-              {p.descricao && <p className="mt-0.5 text-xs text-text-muted">{p.descricao}</p>}
+              {p.descricao && <p className="mt-0.5 text-xs text-text-muted">{t(p.descricao)}</p>}
+              {rotuloValorPorAluno(p, formatMoney) && (
+                <p className="mt-0.5 text-xs font-semibold text-success">{rotuloValorPorAluno(p, formatMoney)}</p>
+              )}
             </button>
           ))}
         </div>
@@ -167,11 +175,14 @@ export default function TrialCartaoStep({ role, onConcluido }: { role: string; o
         <div className="rounded-xl border border-surface-input bg-surface-card p-3">
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm font-bold text-text">{planoSelecionado.nome}</span>
-            <span className="text-sm font-bold text-primary">{formatMoney(planoSelecionado.preco_mensal_cents)}/mês</span>
+            <span className="text-sm font-bold text-primary">{formatMoney(planoSelecionado.preco_mensal_cents)}{t('/mês')}</span>
           </div>
-          <p className="text-xs text-success mb-3">{planoSelecionado.trial_dias} dias grátis, depois cobrado automaticamente se não cancelar</p>
+          {rotuloValorPorAluno(planoSelecionado, formatMoney) && (
+            <p className="text-xs text-text-muted mb-1">{rotuloValorPorAluno(planoSelecionado, formatMoney)}</p>
+          )}
+          <p className="text-xs text-success mb-3">{planoSelecionado.trial_dias} {t('dias grátis, depois cobrado automaticamente se não cancelar')}</p>
           <div id={CARD_BRICK_CONTAINER_ID} />
-          {!sdkPronto && <p className="text-xs text-text-muted mt-2">Carregando formulário de cartão...</p>}
+          {!sdkPronto && <p className="text-xs text-text-muted mt-2">{t('Carregando formulário de cartão...')}</p>}
         </div>
       )}
     </div>

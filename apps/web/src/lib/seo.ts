@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { alternativaDe, idiomaDoCaminho, LOCALE } from './i18n'
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/+$/, '') ?? ''
 
@@ -60,6 +61,32 @@ export function useSeo({ title, description, path, noindex, jsonLd, image }: Seo
       definirMeta('meta[property="og:url"]', 'property', 'og:url', url)
     }
   }, [title, description, path, noindex, image])
+
+  // Idioma do documento e hreflang entre as versões PT e EN (só quando a página tem tradução).
+  useEffect(() => {
+    if (!path) return
+    document.documentElement.lang = LOCALE[idiomaDoCaminho(path)]
+    const alt = alternativaDe(path)
+    if (!alt) return
+    const pt = idiomaDoCaminho(path) === 'pt' ? path : alt.caminho
+    const en = idiomaDoCaminho(path) === 'en' ? path : alt.caminho
+    const links = [
+      ['pt-BR', pt],
+      ['en', en],
+      ['x-default', pt],
+    ].flatMap(([hreflang, caminho]) => {
+      const href = urlCanonica(caminho)
+      if (!href) return []
+      const link = document.createElement('link')
+      link.rel = 'alternate'
+      link.hreflang = hreflang
+      link.href = href
+      link.dataset.seo = 'idioma'
+      document.head.appendChild(link)
+      return [link]
+    })
+    return () => links.forEach((l) => l.remove())
+  }, [path])
 
   const jsonLdTexto = jsonLd ? JSON.stringify(jsonLd) : null
   useEffect(() => {

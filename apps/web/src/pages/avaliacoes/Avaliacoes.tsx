@@ -13,7 +13,10 @@ import ReactMarkdown from 'react-markdown'
 import { resolveMediaUrl, downloadMediaFile } from '../../lib/media'
 import { useAuthStore } from '../../stores/auth'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 export default function Avaliacoes() {
+  const { t } = useT()
   const currentUser = useAuthStore((s) => s.user)
   const [alunos, setAlunos] = useState<any[]>([])
   const [selectedAluno, setSelectedAluno] = useState<any | null>(null)
@@ -97,7 +100,7 @@ export default function Avaliacoes() {
       }
       setAlunos(list)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao carregar alunos', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao carregar alunos'), type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -109,7 +112,7 @@ export default function Avaliacoes() {
       const data = Array.isArray(res) ? res : res?.data ?? []
       setAvaliacoes(data)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao carregar avaliações', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao carregar avaliações'), type: 'error' })
     }
   }
 
@@ -147,10 +150,10 @@ export default function Avaliacoes() {
 
       if (modalMode === 'edit' && editingId) {
         await api.patch(`/avaliacoes/${editingId}`, payload)
-        setToast({ message: 'Avaliação física atualizada com sucesso!', type: 'success' })
+        setToast({ message: t('Avaliação física atualizada com sucesso!'), type: 'success' })
       } else {
         await api.post('/avaliacoes', payload)
-        setToast({ message: 'Avaliação física completa registrada com sucesso!', type: 'success' })
+        setToast({ message: t('Avaliação física completa registrada com sucesso!'), type: 'success' })
       }
 
       setShowModal(false)
@@ -171,7 +174,7 @@ export default function Avaliacoes() {
       setCarga1Rm('')
       setReps1Rm('')
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao registrar avaliação', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao registrar avaliação'), type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -242,10 +245,10 @@ export default function Avaliacoes() {
     try {
       setLoading(true)
       await api.delete(`/avaliacoes/${showConfirmDelete}`)
-      setToast({ message: 'Avaliação excluída com sucesso!', type: 'success' })
+      setToast({ message: t('Avaliação excluída com sucesso!'), type: 'success' })
       if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao excluir avaliação', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao excluir avaliação'), type: 'error' })
     } finally {
       setLoading(false)
       setShowConfirmDelete(null)
@@ -258,9 +261,9 @@ export default function Avaliacoes() {
       await Promise.allSettled(selectedIds.map((id) => api.delete(`/avaliacoes/${id}`)))
       setAvaliacoes((prev) => prev.filter((av) => !selectedIds.includes(av.id)))
       setSelectedIds([])
-      setToast({ message: `${selectedIds.length} avaliação(ões) excluída(s)!`, type: 'success' })
+      setToast({ message: t('{length} avaliação(ões) excluída(s)!', { length: selectedIds.length }), type: 'success' })
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao excluir avaliações', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao excluir avaliações'), type: 'error' })
     } finally {
       setBatchDeleting(false)
     }
@@ -270,7 +273,7 @@ export default function Avaliacoes() {
     const nomeAluno = selectedAluno?.usuario?.nome || av.aluno?.usuario?.nome || 'Aluno'
     const avaliadorNome = currentUser?.nome || 'Professor / Avaliador'
     const avaliadorCref = (currentUser as any)?.professor?.cref || null
-    const dataFormatada = new Date(av.data).toLocaleDateString('pt-BR')
+    const dataFormatada = new Date(av.data).toLocaleDateString(localeAtual())
 
     let target = document.getElementById('avaliacao-pdf-target')
     if (target) {
@@ -375,10 +378,10 @@ export default function Avaliacoes() {
       const res: any = await api.post(`/avaliacoes/${id}/gerar-laudo`, {})
       const laudo = res?.laudo ?? res?.data?.laudo
       setActiveLaudo(laudo)
-      setToast({ message: 'Laudo inteligente gerado com sucesso!', type: 'success' })
+      setToast({ message: t('Laudo inteligente gerado com sucesso!'), type: 'success' })
       if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao gerar laudo', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao gerar laudo'), type: 'error' })
     } finally {
       setLoadingLaudoId(null)
     }
@@ -390,10 +393,10 @@ export default function Avaliacoes() {
       const res: any = await api.post(`/avaliacoes/${id}/gerar-prescricao`, {})
       const prescricao = res?.prescricao ?? res?.data?.prescricao
       setActivePrescricao(prescricao)
-      setToast({ message: 'Prescrição de 4 semanas gerada com sucesso!', type: 'success' })
+      setToast({ message: t('Prescrição de 4 semanas gerada com sucesso!'), type: 'success' })
       if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao gerar prescrição', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao gerar prescrição'), type: 'error' })
     } finally {
       setLoadingPrescricaoId(null)
     }
@@ -401,7 +404,7 @@ export default function Avaliacoes() {
 
   async function handleUploadFoto(avaliacaoId: string, file: File) {
     if (file.size > 3 * 1024 * 1024) {
-      setToast({ message: 'A foto deve ter no máximo 3 MB.', type: 'error' })
+      setToast({ message: t('A foto deve ter no máximo 3 MB.'), type: 'error' })
       return
     }
     setUploadingPhotoAvaliacaoId(avaliacaoId)
@@ -409,10 +412,10 @@ export default function Avaliacoes() {
       const formData = new FormData()
       formData.append('foto', file)
       await api.uploadFotoAvaliacao(avaliacaoId, formData)
-      setToast({ message: 'Foto adicionada à avaliação!', type: 'success' })
+      setToast({ message: t('Foto adicionada à avaliação!'), type: 'success' })
       if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao enviar foto', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao enviar foto'), type: 'error' })
     } finally {
       setUploadingPhotoAvaliacaoId(null)
     }
@@ -421,10 +424,10 @@ export default function Avaliacoes() {
   async function handleDeleteFoto(avaliacaoId: string, fotoId: string) {
     try {
       await api.deleteFotoAvaliacao(avaliacaoId, fotoId)
-      setToast({ message: 'Foto removida da avaliação.', type: 'success' })
+      setToast({ message: t('Foto removida da avaliação.'), type: 'success' })
       if (selectedAluno) carregarAvaliacoes(selectedAluno.id)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao remover foto', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao remover foto'), type: 'error' })
     }
   }
 
@@ -438,7 +441,7 @@ export default function Avaliacoes() {
       const comp = res?.deltas ? res : res?.data
       setActiveComparativo(comp)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao comparar avaliações', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao comparar avaliações'), type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -446,16 +449,16 @@ export default function Avaliacoes() {
 
   return (
     <div className="space-y-6 pb-20">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && <Toast message={t(toast.message)} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-card p-6 rounded-2xl border border-border">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text flex items-center gap-2">
             <RulerIcon className="h-7 w-7 text-primary" />
-            Protocolo de Avaliação Física & Evolução Comparativa
+            {t('Protocolo de Avaliação Física & Evolução Comparativa')}
           </h1>
           <p className="text-sm text-text-muted mt-1">
-            Antropometria, Composição Corporal, Testes Funcionais, Prescrição e Comparativo Evolutivo.
+            {t('Antropometria, Composição Corporal, Testes Funcionais, Prescrição e Comparativo Evolutivo.')}
           </p>
         </div>
       </div>
@@ -463,11 +466,11 @@ export default function Avaliacoes() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de Alunos */}
         <div className="bg-surface-card p-5 rounded-2xl border border-border space-y-4">
-          <h2 className="font-semibold text-text text-lg">Selecione o Aluno</h2>
+          <h2 className="font-semibold text-text text-lg">{t('Selecione o Aluno')}</h2>
           
           <Input
             type="text"
-            placeholder="Buscar aluno por nome ou email..."
+            placeholder={t('Buscar aluno por nome ou email...')}
             value={buscaAluno}
             onChange={(e) => setBuscaAluno(e.target.value)}
           />
@@ -475,7 +478,7 @@ export default function Avaliacoes() {
           {loading && alunos.length === 0 ? (
             <LoadingSpinner />
           ) : alunos.length === 0 ? (
-            <EmptyState icon="👥" title="Nenhum aluno encontrado" description="Você precisa ter alunos vinculados para realizar avaliações." />
+            <EmptyState icon="👥" title={t('Nenhum aluno encontrado')} description={t('Você precisa ter alunos vinculados para realizar avaliações.')} />
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
               {alunos
@@ -522,8 +525,8 @@ export default function Avaliacoes() {
             <>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border pb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-text">Avaliações de {selectedAluno.usuario?.nome || selectedAluno.nome}</h2>
-                  <p className="text-sm text-text-muted">Histórico de protocolos e comparativos evolutivos</p>
+                  <h2 className="text-xl font-bold text-text">{t('Avaliações de')} {selectedAluno.usuario?.nome || selectedAluno.nome}</h2>
+                  <p className="text-sm text-text-muted">{t('Histórico de protocolos e comparativos evolutivos')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {avaliacoes.length >= 2 && (
@@ -532,7 +535,7 @@ export default function Avaliacoes() {
                       className="flex items-center gap-2 px-3.5 py-2 bg-surface border border-border text-text rounded-xl font-medium hover:border-primary transition-all"
                     >
                       <ChartLineIcon className="h-4 w-4 text-primary" />
-                      Comparar
+                      {t('Comparar')}
                     </button>
                   )}
                   <button
@@ -540,7 +543,7 @@ export default function Avaliacoes() {
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-all shadow-lg shadow-primary/20"
                   >
                     <PlusIcon className="h-5 w-5" />
-                    Nova Avaliação
+                    {t('Nova Avaliação')}
                   </button>
                 </div>
               </div>
@@ -549,7 +552,7 @@ export default function Avaliacoes() {
                 <div className="space-y-3">
                   <Input
                     type="text"
-                    placeholder="Buscar avaliação por data ou laudo..."
+                    placeholder={t('Buscar avaliação por data ou laudo...')}
                     value={buscaAvaliacao}
                     onChange={(e) => setBuscaAvaliacao(e.target.value)}
                   />
@@ -569,12 +572,12 @@ export default function Avaliacoes() {
                   <SkeletonCard />
                 </div>
               ) : avaliacoes.length === 0 ? (
-                <EmptyState icon="📋" title="Nenhuma avaliação registrada" description="Clique em 'Nova Avaliação' para iniciar o protocolo completo." />
+                <EmptyState icon="📋" title={t('Nenhuma avaliação registrada')} description={t('Clique em \'Nova Avaliação\' para iniciar o protocolo completo.')} />
               ) : (
                 <div className="space-y-4">
                   {avaliacoes
                     .filter((av) => {
-                      const dateStr = new Date(av.data).toLocaleDateString('pt-BR')
+                      const dateStr = new Date(av.data).toLocaleDateString(localeAtual())
                       return dateStr.includes(buscaAvaliacao) || (av.laudo_markdown && av.laudo_markdown.toLowerCase().includes(buscaAvaliacao.toLowerCase()))
                     })
                     .map((av, idx) => {
@@ -601,19 +604,19 @@ export default function Avaliacoes() {
                                 className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                               />
                               <span className="font-bold text-text text-base">
-                                Data: {new Date(av.data).toLocaleDateString('pt-BR')}
+                                {t('Data:')} {new Date(av.data).toLocaleDateString(localeAtual())}
                               </span>
                               <button
                                 onClick={() => handleOpenEditarAvaliacao(av)}
                                 className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-primary transition-colors rounded-lg hover:bg-surface-card"
-                                title="Editar"
+                                title={t('Editar')}
                               >
                                 <PencilIcon className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => setShowConfirmDelete(av.id)}
                                 className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-destructive transition-colors rounded-lg hover:bg-surface-card"
-                                title="Excluir"
+                                title={t('Excluir')}
                               >
                                 <TrashIcon className="h-4 w-4" />
                               </button>
@@ -625,7 +628,7 @@ export default function Avaliacoes() {
                                 className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-surface-card border border-border text-text rounded-xl text-xs font-semibold hover:border-primary min-h-[44px] disabled:opacity-50 transition-all cursor-pointer"
                               >
                                 <ClipboardListIcon className="h-4 w-4 text-primary" />
-                                {isLaudoLoading ? 'Gerando...' : av.laudo_markdown ? 'Ver Laudo' : 'Gerar Laudo'}
+                                {isLaudoLoading ? 'Gerando...' : av.laudo_markdown ? t('Ver Laudo') : t('Gerar Laudo')}
                               </button>
                               <button
                                 onClick={() => handleGerarPrescricao(av.id)}
@@ -633,33 +636,33 @@ export default function Avaliacoes() {
                                 className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-primary/50 text-primary bg-transparent rounded-xl text-xs font-semibold hover:bg-primary/10 min-h-[44px] disabled:opacity-50 transition-all cursor-pointer"
                               >
                                 <DumbbellIcon className="h-4 w-4" />
-                                {isPrescricaoLoading ? 'Gerando...' : av.prescricao_json ? 'Ver Prescrição' : 'Gerar Treino 4 Semanas'}
+                                {isPrescricaoLoading ? 'Gerando...' : av.prescricao_json ? t('Ver Prescrição') : t('Gerar Treino 4 Semanas')}
                               </button>
                               <button
                                 onClick={() => handleGerarPDF(av)}
                                 className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-surface-card border border-border text-text rounded-xl text-xs font-semibold hover:border-primary min-h-[44px] transition-all cursor-pointer"
-                                title="Exportar laudo em PDF para impressão"
+                                title={t('Exportar laudo em PDF para impressão')}
                               >
-                                📄 Gerar PDF
+                                {t('📄 Gerar PDF')}
                               </button>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                             <div className="p-4 bg-surface-card rounded-xl border border-border">
-                              <p className="text-sm font-medium text-text-muted">Peso</p>
+                              <p className="text-sm font-medium text-text-muted">{t('Peso')}</p>
                               <p className="font-bold text-text text-base mt-0.5">{av.peso_kg ? `${av.peso_kg} kg` : '—'}</p>
                             </div>
                             <div className="p-4 bg-surface-card rounded-xl border border-border">
-                              <p className="text-sm font-medium text-text-muted">IMC</p>
+                              <p className="text-sm font-medium text-text-muted">{t('IMC')}</p>
                               <p className="font-bold text-text text-base mt-0.5">{av.imc ?? '—'}</p>
                             </div>
                             <div className="p-4 bg-surface-card rounded-xl border border-border">
-                              <p className="text-sm font-medium text-text-muted">% Gordura</p>
+                              <p className="text-sm font-medium text-text-muted">{t('% Gordura')}</p>
                               <p className="font-bold text-primary text-base mt-0.5">{av.percentual_gordura ? `${av.percentual_gordura}%` : '—'}</p>
                             </div>
                             <div className="p-4 bg-surface-card rounded-xl border border-border">
-                              <p className="text-sm font-medium text-text-muted">VO₂máx</p>
+                              <p className="text-sm font-medium text-text-muted">{t('VO₂máx')}</p>
                               <p className="font-bold text-text text-base mt-0.5">{av.cardio_json?.vo2max ? `${av.cardio_json.vo2max} ml/kg/min` : '—'}</p>
                             </div>
                           </div>
@@ -668,7 +671,7 @@ export default function Avaliacoes() {
                           <div className="pt-3 border-t border-border/60 space-y-2">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-semibold text-text flex items-center gap-1.5">
-                                📷 Fotos da Avaliação
+                                {t('📷 Fotos da Avaliação')}
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                                   (av.fotos?.length || 0) >= 4
                                     ? 'bg-surface-input text-text-muted'
@@ -676,14 +679,14 @@ export default function Avaliacoes() {
                                     ? 'bg-amber-500/20 text-warning'
                                     : 'bg-primary/20 text-primary'
                                 }`}>
-                                  {av.fotos?.length || 0}/4 fotos
+                                  {av.fotos?.length || 0}{t('/4 fotos')}
                                 </span>
                               </span>
 
                               {(av.fotos?.length || 0) < 4 && (
                                 <label className="flex items-center gap-1 text-xs text-primary font-semibold hover:underline cursor-pointer min-h-[44px] px-2.5 py-1 rounded-xl hover:bg-primary/10 transition-colors">
                                   <PlusIcon className="h-4 w-4" />
-                                  Adicionar Foto
+                                  {t('Adicionar Foto')}
                                   <input
                                     type="file"
                                     accept="image/jpeg,image/png,image/webp"
@@ -719,7 +722,7 @@ export default function Avaliacoes() {
                                         downloadMediaFile(f.url, f.nome_arquivo)
                                       }}
                                       className="p-1 bg-black/70 text-white hover:text-primary rounded-lg transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
-                                      title="Baixar foto"
+                                      title={t('Baixar foto')}
                                     >
                                       📥
                                     </button>
@@ -729,7 +732,7 @@ export default function Avaliacoes() {
                                         handleDeleteFoto(av.id, f.id)
                                       }}
                                       className="p-1 bg-black/70 text-white hover:text-destructive rounded-lg transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
-                                      title="Excluir foto"
+                                      title={t('Excluir foto')}
                                     >
                                       <TrashIcon className="h-4 w-4" />
                                     </button>
@@ -739,13 +742,13 @@ export default function Avaliacoes() {
 
                               {isUploading && (
                                 <div className="aspect-square rounded-xl border border-dashed border-primary flex items-center justify-center bg-primary/5 animate-pulse">
-                                  <span className="text-[10px] text-primary font-semibold">Enviando...</span>
+                                  <span className="text-[10px] text-primary font-semibold">{t('Enviando...')}</span>
                                 </div>
                               )}
 
                               {(!av.fotos || av.fotos.length === 0) && !isUploading && (
                                 <div className="col-span-4 py-3 text-center text-xs text-text-muted bg-surface/40 rounded-xl border border-dashed border-border">
-                                  Nenhuma foto registrada para esta avaliação.
+                                  {t('Nenhuma foto registrada para esta avaliação.')}
                                 </div>
                               )}
                             </div>
@@ -759,7 +762,7 @@ export default function Avaliacoes() {
           ) : (
             <div className="py-20 text-center text-text-muted">
               <RulerIcon className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p>Selecione um aluno ao lado para visualizar e registrar avaliações físicas.</p>
+              <p>{t('Selecione um aluno ao lado para visualizar e registrar avaliações físicas.')}</p>
             </div>
           )}
         </div>
@@ -771,27 +774,27 @@ export default function Avaliacoes() {
           <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center justify-center space-y-3">
             <div className="w-full flex justify-between items-center text-white">
               <span className="text-sm font-medium text-white/80">
-                Foto {activePhotoIndex + 1} de {activePhotoList.length}
+                {t('Foto')} {activePhotoIndex + 1} {t('de')} {activePhotoList.length}
               </span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => downloadMediaFile(activePhotoList[activePhotoIndex], `foto_avaliacao_${activePhotoIndex + 1}.jpg`)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-semibold transition-colors min-h-[44px] cursor-pointer"
                 >
-                  📥 Baixar Foto
+                  {t('📥 Baixar Foto')}
                 </button>
                 <button
                   onClick={() => { setActivePhotoList(null); setActivePhotoIndex(null); }}
                   className="text-white hover:text-primary font-bold text-lg min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                 >
-                  ✕ Fechar
+                  {t('✕ Fechar')}
                 </button>
               </div>
             </div>
 
             <img
               src={activePhotoList[activePhotoIndex]}
-              alt="Foto da avaliação ampliada"
+              alt={t('Foto da avaliação ampliada')}
               className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
             />
 
@@ -801,13 +804,13 @@ export default function Avaliacoes() {
                   onClick={() => setActivePhotoIndex((prev) => (prev! > 0 ? prev! - 1 : activePhotoList.length - 1))}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold transition-colors min-h-[44px] cursor-pointer"
                 >
-                  ← Anterior
+                  {t('← Anterior')}
                 </button>
                 <button
                   onClick={() => setActivePhotoIndex((prev) => (prev! < activePhotoList.length - 1 ? prev! + 1 : 0))}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold transition-colors min-h-[44px] cursor-pointer"
                 >
-                  Próxima →
+                  {t('Próxima →')}
                 </button>
               </div>
             )}
@@ -820,37 +823,37 @@ export default function Avaliacoes() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-card border border-border w-full max-w-2xl rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-border pb-3">
-              <h3 className="text-xl font-bold text-text">Comparativo Evolutivo (Delta)</h3>
+              <h3 className="text-xl font-bold text-text">{t('Comparativo Evolutivo (Delta)')}</h3>
               <button onClick={() => setActiveComparativo(null)} className="text-text-muted hover:text-text font-bold text-lg">✕</button>
             </div>
             
             <p className="text-sm font-medium text-primary bg-primary/10 p-3 rounded-xl border border-primary/20">
-              📊 Análise de Progresso: {activeComparativo.analise}
+              {t('📊 Análise de Progresso:')} {activeComparativo.analise}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
               <div className="p-3 bg-surface rounded-xl border border-border">
-                <p className="text-xs text-text-muted">Variação de Peso</p>
+                <p className="text-xs text-text-muted">{t('Variação de Peso')}</p>
                 <p className={`font-bold text-lg ${activeComparativo.deltas?.pesoKg < 0 ? 'text-success' : 'text-text'}`}>
-                  {activeComparativo.deltas?.pesoKg > 0 ? `+${activeComparativo.deltas.pesoKg}` : activeComparativo.deltas?.pesoKg ?? 0} kg
+                  {activeComparativo.deltas?.pesoKg > 0 ? `+${activeComparativo.deltas.pesoKg}` : activeComparativo.deltas?.pesoKg ?? 0} {t('kg')}
                 </p>
               </div>
               <div className="p-3 bg-surface rounded-xl border border-border">
-                <p className="text-xs text-text-muted">Variação % Gordura</p>
+                <p className="text-xs text-text-muted">{t('Variação % Gordura')}</p>
                 <p className={`font-bold text-lg ${activeComparativo.deltas?.percentualGordura < 0 ? 'text-success' : 'text-text'}`}>
                   {activeComparativo.deltas?.percentualGordura > 0 ? `+${activeComparativo.deltas.percentualGordura}` : activeComparativo.deltas?.percentualGordura ?? 0}%
                 </p>
               </div>
               <div className="p-3 bg-surface rounded-xl border border-border">
-                <p className="text-xs text-text-muted">Variação Massa Magra</p>
+                <p className="text-xs text-text-muted">{t('Variação Massa Magra')}</p>
                 <p className={`font-bold text-lg ${activeComparativo.deltas?.massaMagraKg > 0 ? 'text-success' : 'text-text'}`}>
-                  {activeComparativo.deltas?.massaMagraKg > 0 ? `+${activeComparativo.deltas.massaMagraKg}` : activeComparativo.deltas?.massaMagraKg ?? 0} kg
+                  {activeComparativo.deltas?.massaMagraKg > 0 ? `+${activeComparativo.deltas.massaMagraKg}` : activeComparativo.deltas?.massaMagraKg ?? 0} {t('kg')}
                 </p>
               </div>
             </div>
 
             <div className="flex justify-end pt-2">
-              <button onClick={() => setActiveComparativo(null)} className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl">Fechar Comparativo</button>
+              <button onClick={() => setActiveComparativo(null)} className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl">{t('Fechar Comparativo')}</button>
             </div>
           </div>
         </div>
@@ -861,14 +864,14 @@ export default function Avaliacoes() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-card border border-border w-full max-w-3xl rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
             <div className="flex justify-between items-center border-b border-border pb-3">
-              <h3 className="text-xl font-bold text-text">Laudo Consolidado da Avaliação</h3>
+              <h3 className="text-xl font-bold text-text">{t('Laudo Consolidado da Avaliação')}</h3>
               <button onClick={() => setActiveLaudo(null)} className="text-text-muted hover:text-text font-bold text-lg">✕</button>
             </div>
             <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-text bg-surface p-4 rounded-xl border border-border">
               <ReactMarkdown>{activeLaudo}</ReactMarkdown>
             </div>
             <div className="flex justify-end pt-2">
-              <button onClick={() => setActiveLaudo(null)} className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl">Fechar</button>
+              <button onClick={() => setActiveLaudo(null)} className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl">{t('Fechar')}</button>
             </div>
           </div>
         </div>
@@ -879,11 +882,11 @@ export default function Avaliacoes() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-card border border-border w-full max-w-3xl rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
             <div className="flex justify-between items-center border-b border-border pb-3">
-              <h3 className="text-xl font-bold text-text">Prescrição de 4 Semanas</h3>
+              <h3 className="text-xl font-bold text-text">{t('Prescrição de 4 Semanas')}</h3>
               <button onClick={() => setActivePrescricao(null)} className="text-text-muted hover:text-text font-bold text-lg">✕</button>
             </div>
             <div className="space-y-4 text-sm text-text">
-              <p className="font-medium">Foco: <span className="text-primary">{activePrescricao.foco}</span> ({activePrescricao.microciclo})</p>
+              <p className="font-medium">{t('Foco:')} <span className="text-primary">{activePrescricao.foco}</span> ({activePrescricao.microciclo})</p>
               <div className="space-y-3">
                 {activePrescricao.sessoes?.map((sessao: any, idx: number) => (
                   <div key={idx} className="p-3 rounded-xl bg-surface border border-border space-y-2">
@@ -891,7 +894,7 @@ export default function Avaliacoes() {
                     <ul className="space-y-1 pl-4 list-disc text-text-muted">
                       {sessao.exercicios?.map((ex: any, i: number) => (
                         <li key={i}>
-                          <span className="font-medium text-text">{ex.nome}</span> — {ex.series} séries x {ex.repeticoes} (RPE {ex.rpe})
+                          <span className="font-medium text-text">{ex.nome}</span> — {ex.series} {t('séries x')} {ex.repeticoes} {t('(RPE')} {ex.rpe})
                         </li>
                       ))}
                     </ul>
@@ -901,7 +904,7 @@ export default function Avaliacoes() {
               <p className="text-xs text-text-muted bg-surface p-3 rounded-xl">💡 {activePrescricao.mobilidadeRecomendada}</p>
             </div>
             <div className="flex justify-end pt-2">
-              <button onClick={() => setActivePrescricao(null)} className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl">Fechar</button>
+              <button onClick={() => setActivePrescricao(null)} className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl">{t('Fechar')}</button>
             </div>
           </div>
         </div>
@@ -912,35 +915,35 @@ export default function Avaliacoes() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-card border border-border w-full max-w-2xl rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-text mb-4">
-              {modalMode === 'edit' ? 'Editar Avaliação Física' : 'Nova Avaliação Física'} — {selectedAluno?.usuario?.nome}
+              {modalMode === 'edit' ? t('Editar Avaliação Física') : t('Nova Avaliação Física')} — {selectedAluno?.usuario?.nome}
             </h3>
             
             <form onSubmit={handleCriarAvaliacao} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Peso (kg)" htmlFor="peso-kg" required>
+              <FormField label={t('Peso (kg)')} htmlFor="peso-kg" required>
                 <Input
                   id="peso-kg"
                   type="number"
                   step="0.1"
                   value={pesoKg}
                   onChange={(e) => setPesoKg(e.target.value)}
-                  placeholder="Ex: 75.5"
+                  placeholder={t('Ex: 75.5')}
                   required
                 />
               </FormField>
 
-              <FormField label="Estatura (m)" htmlFor="estatura-m" required>
+              <FormField label={t('Estatura (m)')} htmlFor="estatura-m" required>
                 <Input
                   id="estatura-m"
                   type="number"
                   step="0.01"
                   value={estaturaM}
                   onChange={(e) => setEstaruraM(e.target.value)}
-                  placeholder="Ex: 1.78"
+                  placeholder={t('Ex: 1.78')}
                   required
                 />
               </FormField>
 
-              <FormField label="Cintura (cm)" htmlFor="cintura-cm">
+              <FormField label={t('Cintura (cm)')} htmlFor="cintura-cm">
                 <Input
                   id="cintura-cm"
                   type="number"
@@ -950,7 +953,7 @@ export default function Avaliacoes() {
                 />
               </FormField>
 
-              <FormField label="Quadril (cm)" htmlFor="quadril-cm">
+              <FormField label={t('Quadril (cm)')} htmlFor="quadril-cm">
                 <Input
                   id="quadril-cm"
                   type="number"
@@ -960,52 +963,52 @@ export default function Avaliacoes() {
                 />
               </FormField>
 
-              <FormField label="Protocolo Dobras" htmlFor="protocolo-dobras">
+              <FormField label={t('Protocolo Dobras')} htmlFor="protocolo-dobras">
                 <Select
                   id="protocolo-dobras"
                   value={protocoloDobras}
                   onChange={(e: any) => setProtocoloDobras(e.target.value)}
                 >
-                  <option value="JP7">Jackson & Pollock 7</option>
-                  <option value="JP3">Jackson & Pollock 3</option>
-                  <option value="GUEDES">Guedes</option>
+                  <option value="JP7">{t('Jackson & Pollock 7')}</option>
+                  <option value="JP3">{t('Jackson & Pollock 3')}</option>
+                  <option value="GUEDES">{t('Guedes')}</option>
                 </Select>
               </FormField>
 
-              <FormField label="PA Sistólica" htmlFor="pas">
+              <FormField label={t('PA Sistólica')} htmlFor="pas">
                 <Input id="pas" type="number" value={pas} onChange={(e) => setPas(e.target.value)} placeholder="120" />
               </FormField>
 
-              <FormField label="PA Diastólica" htmlFor="pad">
+              <FormField label={t('PA Diastólica')} htmlFor="pad">
                 <Input id="pad" type="number" value={pad} onChange={(e) => setPad(e.target.value)} placeholder="80" />
               </FormField>
 
-              <FormField label="FC Repouso (bpm)" htmlFor="fc-repouso">
+              <FormField label={t('FC Repouso (bpm)')} htmlFor="fc-repouso">
                 <Input id="fc-repouso" type="number" value={fcRepouso} onChange={(e) => setFcRepouso(e.target.value)} placeholder="70" />
               </FormField>
 
               <div className="md:col-span-2 border-t border-border pt-3">
-                <p className="text-sm font-semibold text-text mb-2">Dobras Cutâneas (mm)</p>
+                <p className="text-sm font-semibold text-text mb-2">{t('Dobras Cutâneas (mm)')}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <FormField label="Tríceps" htmlFor="dobra-triceps">
+                  <FormField label={t('Tríceps')} htmlFor="dobra-triceps">
                     <Input id="dobra-triceps" type="number" step="0.1" value={triceps} onChange={(e) => setTriceps(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
                   </FormField>
-                  <FormField label="Subescapular" htmlFor="dobra-subescapular">
+                  <FormField label={t('Subescapular')} htmlFor="dobra-subescapular">
                     <Input id="dobra-subescapular" type="number" step="0.1" value={subescapular} onChange={(e) => setSubescapular(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
                   </FormField>
-                  <FormField label="Peitoral" htmlFor="dobra-peitoral">
+                  <FormField label={t('Peitoral')} htmlFor="dobra-peitoral">
                     <Input id="dobra-peitoral" type="number" step="0.1" value={peitoral} onChange={(e) => setPeitoral(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
                   </FormField>
-                  <FormField label="Axilar Média" htmlFor="dobra-axilar">
+                  <FormField label={t('Axilar Média')} htmlFor="dobra-axilar">
                     <Input id="dobra-axilar" type="number" step="0.1" value={axilarMedia} onChange={(e) => setAxilarMedia(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
                   </FormField>
-                  <FormField label="Suprailíaca" htmlFor="dobra-suprailiaca">
+                  <FormField label={t('Suprailíaca')} htmlFor="dobra-suprailiaca">
                     <Input id="dobra-suprailiaca" type="number" step="0.1" value={suprailiaca} onChange={(e) => setSuprailiaca(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
                   </FormField>
-                  <FormField label="Abdominal" htmlFor="dobra-abdominal">
+                  <FormField label={t('Abdominal')} htmlFor="dobra-abdominal">
                     <Input id="dobra-abdominal" type="number" step="0.1" value={abdominal} onChange={(e) => setAbdominal(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
                   </FormField>
-                  <FormField label="Coxa" htmlFor="dobra-coxa">
+                  <FormField label={t('Coxa')} htmlFor="dobra-coxa">
                     <Input id="dobra-coxa" type="number" step="0.1" value={coxa} onChange={(e) => setCoxa(e.target.value)} className="!px-2 !py-1.5 !rounded-lg" />
                   </FormField>
                 </div>
@@ -1013,19 +1016,19 @@ export default function Avaliacoes() {
 
               {/* Fase 2: Testes Funcionais */}
               <div className="md:col-span-2 border-t border-border pt-3">
-                <p className="text-sm font-semibold text-text mb-3">Testes Funcionais (Opcional)</p>
+                <p className="text-sm font-semibold text-text mb-3">{t('Testes Funcionais (Opcional)')}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField label="Flexibilidade (Banco de Wells - cm)" htmlFor="wells-cm">
-                    <Input id="wells-cm" type="number" step="0.5" value={wellsCm} onChange={(e) => setWellsCm(e.target.value)} placeholder="Ex: 24.5" />
+                  <FormField label={t('Flexibilidade (Banco de Wells - cm)')} htmlFor="wells-cm">
+                    <Input id="wells-cm" type="number" step="0.5" value={wellsCm} onChange={(e) => setWellsCm(e.target.value)} placeholder={t('Ex: 24.5')} />
                   </FormField>
-                  <FormField label="Cardio (Teste de Cooper - Metros)" htmlFor="cooper-metros">
-                    <Input id="cooper-metros" type="number" step="10" value={cooperMetros} onChange={(e) => setCooperMetros(e.target.value)} placeholder="Ex: 2400" />
+                  <FormField label={t('Cardio (Teste de Cooper - Metros)')} htmlFor="cooper-metros">
+                    <Input id="cooper-metros" type="number" step="10" value={cooperMetros} onChange={(e) => setCooperMetros(e.target.value)} placeholder={t('Ex: 2400')} />
                   </FormField>
-                  <FormField label="Força (Carga 1RM Estimada - kg)" htmlFor="carga-1rm">
-                    <Input id="carga-1rm" type="number" step="0.5" value={carga1Rm} onChange={(e) => setCarga1Rm(e.target.value)} placeholder="Ex: 80" />
+                  <FormField label={t('Força (Carga 1RM Estimada - kg)')} htmlFor="carga-1rm">
+                    <Input id="carga-1rm" type="number" step="0.5" value={carga1Rm} onChange={(e) => setCarga1Rm(e.target.value)} placeholder={t('Ex: 80')} />
                   </FormField>
-                  <FormField label="Repetições Executadas" htmlFor="reps-1rm">
-                    <Input id="reps-1rm" type="number" value={reps1Rm} onChange={(e) => setReps1Rm(e.target.value)} placeholder="Ex: 8" />
+                  <FormField label={t('Repetições Executadas')} htmlFor="reps-1rm">
+                    <Input id="reps-1rm" type="number" value={reps1Rm} onChange={(e) => setReps1Rm(e.target.value)} placeholder={t('Ex: 8')} />
                   </FormField>
                 </div>
               </div>
@@ -1038,7 +1041,7 @@ export default function Avaliacoes() {
                   onChange={(e) => setParqPositivo(e.target.checked)}
                   className="rounded border-border text-primary focus:ring-primary"
                 />
-                <label htmlFor="parq" className="text-xs text-text-muted">PAR-Q+ Positivo (indica necessidade de atenção ou liberação médica)</label>
+                <label htmlFor="parq" className="text-xs text-text-muted">{t('PAR-Q+ Positivo (indica necessidade de atenção ou liberação médica)')}</label>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border md:col-span-2">
@@ -1047,14 +1050,14 @@ export default function Avaliacoes() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 border border-border rounded-xl text-text hover:bg-surface-input"
                 >
-                  Cancelar
+                  {t('Cancelar')}
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
                   className="px-5 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-50"
                 >
-                  {loading ? 'Calculando...' : 'Salvar Avaliação'}
+                  {loading ? 'Calculando...' : t('Salvar Avaliação')}
                 </button>
               </div>
             </form>
@@ -1064,16 +1067,16 @@ export default function Avaliacoes() {
       {/* Confirm Delete Modal */}
       <ConfirmModal
         open={!!showConfirmDelete}
-        title="Excluir Avaliação"
-        message="Tem certeza que deseja excluir esta avaliação física? Esta ação não pode ser desfeita e os dados evolutivos e de comparativos serão removidos do gráfico do aluno."
+        title={t('Excluir Avaliação')}
+        message={t('Tem certeza que deseja excluir esta avaliação física? Esta ação não pode ser desfeita e os dados evolutivos e de comparativos serão removidos do gráfico do aluno.')}
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowConfirmDelete(null)}
       />
       {/* Confirm Delete Batch Modal */}
       <ConfirmModal
         open={confirmDeleteOpen}
-        title="Excluir avaliações"
-        message={`Tem certeza que deseja excluir ${selectedIds.length} avaliação(ões) selecionada(s)?`}
+        title={t('Excluir avaliações')}
+        message={t('Tem certeza que deseja excluir {length} avaliação(ões) selecionada(s)?', { length: selectedIds.length })}
         onConfirm={() => {
           setConfirmDeleteOpen(false)
           executeBatchDeleteAvaliacoes()

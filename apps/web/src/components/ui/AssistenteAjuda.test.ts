@@ -102,7 +102,7 @@ describe('AssistenteAjuda — UX-014 assistente de ajuda', () => {
     })
 
     it('usa rótulo acessível e área de toque ≥ 48px no botão flutuante', () => {
-      expect(src).toContain('aria-label="Abrir assistente de ajuda"')
+      expect(src).toContain("aria-label={t('Abrir assistente de ajuda')}")
       expect(src).toContain('h-14 w-14')
     })
 

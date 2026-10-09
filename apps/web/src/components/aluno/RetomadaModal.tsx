@@ -4,6 +4,7 @@ import { api } from '../../api/client'
 import type { Treino } from '../../types/api'
 import { XIcon, DumbbellIcon, StarIcon, TimerIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface RetomadaModalProps {
   open: boolean
   /** Treino alvo para a semana leve: hero de hoje ou primeiro ativo disponível */
@@ -17,6 +18,7 @@ interface RetomadaModalProps {
  * O fluxo é positivo — "bem-vindo(a) de volta" com 3 caminhos de recomeço.
  */
 export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaModalProps) {
+  const { t } = useT()
   const navigate = useNavigate()
   const [criando, setCriando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -63,7 +65,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
       onDismiss()
       navigate(`/treino/${novoTreino.id}/inicio`)
     } catch {
-      setErro('Não foi possível criar a semana de retorno agora. Tente novamente.')
+      setErro(t('Não foi possível criar a semana de retorno agora. Tente novamente.'))
       setCriando(false)
     }
   }
@@ -74,7 +76,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Bem-vindo(a) de volta"
+      aria-label={t('Bem-vindo(a) de volta')}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 animate-[fade-in_0.2s_ease]"
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onDismiss} />
@@ -82,7 +84,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Fechar"
+          aria-label={t('Fechar')}
           className="absolute top-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-input active:scale-95 transition-all cursor-pointer"
         >
           <XIcon className="h-5 w-5" />
@@ -90,8 +92,8 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
 
         <div className="p-6 pt-8 space-y-5">
           <div className="text-center space-y-1">
-            <h2 className="text-xl font-bold text-text">Bem-vindo(a) de volta! 👋</h2>
-            <p className="text-sm text-text-muted">Vamos retomar no ritmo de hoje.</p>
+            <h2 className="text-xl font-bold text-text">{t('Bem-vindo(a) de volta! 👋')}</h2>
+            <p className="text-sm text-text-muted">{t('Vamos retomar no ritmo de hoje.')}</p>
           </div>
 
           <div className="space-y-3">
@@ -105,7 +107,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
                 <DumbbellIcon className="h-5 w-5" />
               </span>
-              <span className="text-base">Retomar meu plano</span>
+              <span className="text-base">{t('Retomar meu plano')}</span>
             </button>
 
             {/* Opção 2 — Semana mais leve (cópia com volume reduzido) */}
@@ -123,7 +125,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
                 <TimerIcon className="h-5 w-5" />
               </span>
               <span className="flex-1 text-base">
-                {criando ? 'Criando sua semana leve...' : 'Começar com uma semana mais leve'}
+                {criando ? t('Criando sua semana leve...') : t('Começar com uma semana mais leve')}
               </span>
               {criando && (
                 <span className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -139,7 +141,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
                 <StarIcon className="h-5 w-5" />
               </span>
-              <span className="text-base">Atualizar meu objetivo</span>
+              <span className="text-base">{t('Atualizar meu objetivo')}</span>
             </button>
           </div>
 
@@ -151,7 +153,7 @@ export default function RetomadaModal({ open, treinoAlvo, onDismiss }: RetomadaM
 
           {semTreino && !criando && (
             <p className="text-center text-xs text-text-disabled">
-              Crie ou aceite um treino para liberar a opção de semana mais leve.
+              {t('Crie ou aceite um treino para liberar a opção de semana mais leve.')}
             </p>
           )}
         </div>

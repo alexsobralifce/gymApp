@@ -6,7 +6,9 @@ import { useTrainingStore } from '../../stores/training'
 import { DumbbellIcon, TimerIcon, TrophyIcon, ActivityIcon, ChevronLeftIcon } from '../../components/icons/Icon'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 
+import { useT } from '../../i18n'
 export default function AlunoTreinoInicio() {
+  const { t } = useT()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { treinoAtual, loading, error, iniciarTreino } = useTrainingStore()
@@ -43,9 +45,9 @@ export default function AlunoTreinoInicio() {
           className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
         >
           <ChevronLeftIcon className="h-4 w-4" />
-          Voltar
+          {t('Voltar')}
         </button>
-        <span className="text-sm font-semibold text-text-muted">Iniciar Treino</span>
+        <span className="text-sm font-semibold text-text-muted">{t('Iniciar Treino')}</span>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
@@ -54,13 +56,13 @@ export default function AlunoTreinoInicio() {
           <DumbbellIcon className="h-10 w-10 text-white" />
         </div>
 
-        <h1 className="text-2xl font-extrabold text-text text-center">{treino?.nome || 'Iniciar Treino'}</h1>
+        <h1 className="text-2xl font-extrabold text-text text-center">{treino?.nome || t('Iniciar Treino')}</h1>
 
         {treino?.dias_semana && treino.dias_semana.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5 justify-center">
             {treino.dias_semana.map((d) => (
               <span key={d} className="rounded-lg bg-surface-card border border-surface-input px-2.5 py-1 text-xs font-semibold text-text-muted">
-                {DIAS[d]}
+                {t(DIAS[d])}
               </span>
             ))}
           </div>
@@ -71,24 +73,24 @@ export default function AlunoTreinoInicio() {
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <ActivityIcon className="h-5 w-5 text-primary mb-1" />
             <span className="text-lg font-bold text-text">{totalExercicios}</span>
-            <span className="text-xs text-text-muted">Exercícios</span>
+            <span className="text-xs text-text-muted">{t('Exercícios')}</span>
           </div>
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <TrophyIcon className="h-5 w-5 text-warning mb-1" />
             <span className="text-lg font-bold text-text">{totalSeries}</span>
-            <span className="text-xs text-text-muted">Séries</span>
+            <span className="text-xs text-text-muted">{t('Séries')}</span>
           </div>
           <div className="flex flex-col items-center rounded-2xl bg-surface-card border border-surface-input p-3">
             <TimerIcon className="h-5 w-5 text-blue-400 mb-1" />
             <span className="text-lg font-bold text-text">0:00</span>
-            <span className="text-xs text-text-muted">Duração</span>
+            <span className="text-xs text-text-muted">{t('Duração')}</span>
           </div>
         </div>
 
         {/* Exercises Preview */}
         {exercicios.length > 0 && (
           <div className="mt-6 w-full max-w-xs space-y-2">
-            <p className="text-xs font-bold text-text-muted uppercase tracking-wider text-center">Exercícios</p>
+            <p className="text-xs font-bold text-text-muted uppercase tracking-wider text-center">{t('Exercícios')}</p>
             {exercicios.slice(0, 5).map((ex) => (
               <div key={ex.id} className="flex items-center gap-3 rounded-xl bg-surface-card border border-surface-input px-3 py-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
@@ -96,12 +98,12 @@ export default function AlunoTreinoInicio() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-text truncate">{ex.exercicio.nome}</p>
-                  <p className="text-xs text-text-muted">{ex.series}s × {ex.repeticoes} reps</p>
+                  <p className="text-xs text-text-muted">{ex.series}s × {ex.repeticoes} {t('reps')}</p>
                 </div>
               </div>
             ))}
             {exercicios.length > 5 && (
-              <p className="text-xs text-text-muted text-center">+{exercicios.length - 5} exercícios</p>
+              <p className="text-xs text-text-muted text-center">+{exercicios.length - 5} {t('exercícios')}</p>
             )}
           </div>
         )}
@@ -122,10 +124,10 @@ export default function AlunoTreinoInicio() {
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <span className="h-4 w-4 rounded-full border-2 border-surface/30 border-t-surface animate-spin" />
-              Iniciando...
+              {t('Iniciando...')}
             </span>
           ) : (
-            'Comecar Treino'
+            t('Comecar Treino')
           )}
         </button>
       </div>

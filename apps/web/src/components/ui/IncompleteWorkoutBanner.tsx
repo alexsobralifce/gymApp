@@ -5,7 +5,9 @@ import { useAuthStore } from '../../stores/auth'
 import type { Treino } from '../../types/api'
 import { DumbbellIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 export default function IncompleteWorkoutBanner() {
+  const { t } = useT()
   const [treino, setTreino] = useState<Treino | null>(null)
   const [dismissed, setDismissed] = useState(false)
   const user = useAuthStore((s) => s.user)
@@ -16,7 +18,7 @@ export default function IncompleteWorkoutBanner() {
     if (!user) return // não faz chamada autenticada sem sessão
     try {
       const treinos = await api.getAlunoTreinos()
-      const emExecucao = treinos.find((t: Treino) => t.status === 'EM_EXECUCAO')
+      const emExecucao = treinos.find((tr: Treino) => tr.status === 'EM_EXECUCAO')
       if (emExecucao) {
         setTreino(emExecucao)
         setDismissed(false) // re-show if a new/different incomplete workout is found
@@ -60,7 +62,7 @@ export default function IncompleteWorkoutBanner() {
           <DumbbellIcon className="h-5 w-5 text-warning" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-text">Você tem um treino não concluído</p>
+          <p className="text-sm font-bold text-text">{t('Você tem um treino não concluído')}</p>
           <p className="text-xs text-text-muted truncate">{treino.nome}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -68,12 +70,12 @@ export default function IncompleteWorkoutBanner() {
             onClick={() => navigate(`/treino/${treino.id}/inicio`)}
             className="rounded-xl bg-warning px-3.5 py-2 text-xs font-bold text-surface shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            Retomar
+            {t('Retomar')}
           </button>
           <button
             onClick={() => setDismissed(true)}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
-            aria-label="Fechar"
+            aria-label={t('Fechar')}
           >
             ✕
           </button>

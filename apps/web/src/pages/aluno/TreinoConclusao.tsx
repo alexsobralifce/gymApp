@@ -15,6 +15,8 @@ import {
   type CardTreinoFotoData,
 } from '../../utils/cardTreinoFotoGenerator'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 const CONQUISTAS = [
   { msg: 'Cada repetição conta! Continue assim e os resultados virão.', emoji: '🏆' },
   { msg: 'Disciplina e constância são o segredo do progresso.', emoji: '💎' },
@@ -24,6 +26,7 @@ const CONQUISTAS = [
 ]
 
 export default function AlunoTreinoConclusao() {
+  const { t } = useT()
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const { treinoAtual, timerFinalizado, primeiroTreino, execucoes, caloriasQueimadas } = useTrainingStore()
@@ -81,13 +84,13 @@ export default function AlunoTreinoConclusao() {
 
   const storyData = useMemo(() => {
     const agora = new Date()
-    const horaFim = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    const horaFim = agora.toLocaleTimeString(localeAtual(), { hour: '2-digit', minute: '2-digit' })
     let horaInicio: string
     if (treinoAtual?.iniciado_em) {
-      horaInicio = new Date(treinoAtual.iniciado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      horaInicio = new Date(treinoAtual.iniciado_em).toLocaleTimeString(localeAtual(), { hour: '2-digit', minute: '2-digit' })
     } else {
       const inicio = new Date(agora.getTime() - timerFinalizado * 1000)
-      horaInicio = inicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      horaInicio = inicio.toLocaleTimeString(localeAtual(), { hour: '2-digit', minute: '2-digit' })
     }
 
     return {
@@ -96,7 +99,7 @@ export default function AlunoTreinoConclusao() {
       volumeKg: volumeKg > 0 ? Math.round(volumeKg) : undefined,
       seriesConcluidas: execucoes.length > 0 ? execucoes.length : undefined,
       calorias: caloriasQueimadas ?? undefined,
-      data: agora.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase(),
+      data: agora.toLocaleDateString(localeAtual(), { day: '2-digit', month: 'short' }).toUpperCase(),
       horaInicio,
       horaFim,
       fotoUsuario: resolveMediaUrl(user?.fotoUrl),
@@ -127,17 +130,17 @@ export default function AlunoTreinoConclusao() {
             <TrophyIcon className="h-10 w-10 text-success" />
           </div>
 
-          <h1 className="text-2xl font-black text-text">Treino Concluído!</h1>
+          <h1 className="text-2xl font-black text-text">{t('Treino Concluído!')}</h1>
 
           <div className="mt-2 flex items-center gap-2 rounded-xl bg-surface-card border border-surface-input px-4 py-1.5 shadow-sm">
             <TimerIcon className="h-4 w-4 text-text-muted" />
-            <span className="text-xs font-bold text-text-muted">Duração Total: {duracao}</span>
+            <span className="text-xs font-bold text-text-muted">{t('Duração Total:')} {duracao}</span>
           </div>
 
           {/* Frase Motivacional */}
           <div className="mt-3 max-w-xs">
             <p className="text-xs text-text-muted leading-relaxed italic">
-              {msg.emoji} "{msg.msg}"
+              {msg.emoji} "{t(msg.msg)}"
             </p>
           </div>
         </div>
@@ -151,14 +154,14 @@ export default function AlunoTreinoConclusao() {
             onClick={() => navigate('/', { state: { refreshKey: Date.now() } })}
             className="w-full rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
           >
-            Voltar para o Início
+            {t('Voltar para o Início')}
           </button>
 
           <button
             onClick={() => navigate('/evolucao')}
             className="w-full rounded-2xl border border-surface-input bg-surface-card py-3 text-xs font-semibold text-text-muted hover:text-text hover:border-text-muted active:scale-[0.98] transition-all cursor-pointer"
           >
-            Ver Minha Evolução
+            {t('Ver Minha Evolução')}
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { api } from '../../api/client'
 import BarraBusca from '../../components/ui/BarraBusca'
 import { filtrarPorTexto } from '../../utils/busca'
 
+import { useT } from '../../i18n'
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 const STATUS_COR: Record<string, string> = {
@@ -51,6 +52,7 @@ interface AlunoItem {
 }
 
 export default function ProfessorFichas() {
+  const { t } = useT()
   const [alunos, setAlunos] = useState<AlunoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedTreino, setExpandedTreino] = useState<string | null>(null)
@@ -68,7 +70,7 @@ export default function ProfessorFichas() {
       const data = await api.getFichas()
       setAlunos(data as AlunoItem[])
     } catch {
-      setFeedback('Erro ao carregar fichas.')
+      setFeedback(t('Erro ao carregar fichas.'))
     } finally {
       setLoading(false)
     }
@@ -77,11 +79,11 @@ export default function ProfessorFichas() {
   async function enviarTreino(treinoId: string) {
     try {
       await api.enviarTreino(treinoId)
-      setFeedback('Treino enviado ao aluno!')
+      setFeedback(t('Treino enviado ao aluno!'))
       await carregarFichas()
       setTimeout(() => setFeedback(null), 3000)
     } catch {
-      setFeedback('Erro ao enviar treino.')
+      setFeedback(t('Erro ao enviar treino.'))
     }
   }
 
@@ -93,11 +95,11 @@ export default function ProfessorFichas() {
     .map((a) => ({ ...a, treinos: filtroStatus ? a.treinos.filter((t) => t.status === filtroStatus) : a.treinos }))
     .filter((a) => !filtroStatus || a.treinos.length > 0)
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  if (loading) return <div className="p-4 text-text-muted">{t('Carregando...')}</div>
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Fichas de Treino</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Fichas de Treino')}</h1>
 
       {feedback && (
         <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
@@ -108,12 +110,12 @@ export default function ProfessorFichas() {
       <BarraBusca
         value={search}
         onChange={setSearch}
-        placeholder="Buscar por aluno ou ficha..."
+        placeholder={t('Buscar por aluno ou ficha...')}
         total={alunos.length}
         filtrados={alunosFiltrados.length}
       />
 
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar por status">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t('Filtrar por status')}>
         {[['', 'Todas'], ...Object.entries(STATUS_LABEL)].map(([valor, rotulo]) => (
           <button
             key={valor}
@@ -129,9 +131,9 @@ export default function ProfessorFichas() {
         ))}
       </div>
 
-      {alunos.length === 0 && <p className="text-text-muted">Nenhum aluno vinculado.</p>}
+      {alunos.length === 0 && <p className="text-text-muted">{t('Nenhum aluno vinculado.')}</p>}
       {alunos.length > 0 && alunosFiltrados.length === 0 && (
-        <p className="text-text-muted">Nenhuma ficha encontrada para os filtros.</p>
+        <p className="text-text-muted">{t('Nenhuma ficha encontrada para os filtros.')}</p>
       )}
 
       <div className="space-y-4">
@@ -143,7 +145,7 @@ export default function ProfessorFichas() {
             </div>
 
             {aluno.treinos.length === 0 ? (
-              <p className="text-sm text-text-muted">Nenhuma ficha criada.</p>
+              <p className="text-sm text-text-muted">{t('Nenhuma ficha criada.')}</p>
             ) : (
               <div className="space-y-2">
                 {aluno.treinos.map((treino) => (
@@ -164,7 +166,7 @@ export default function ProfessorFichas() {
                         <div className="flex gap-1">
                           {treino.dias_semana.map((d) => (
                             <span key={d} className="rounded bg-surface-input px-1.5 py-0.5 text-xs text-text-muted">
-                              {DIAS[d]}
+                              {t(DIAS[d])}
                             </span>
                           ))}
                         </div>
@@ -173,7 +175,7 @@ export default function ProfessorFichas() {
                             onClick={() => enviarTreino(treino.id)}
                             className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-400"
                           >
-                            Enviar
+                            {t('Enviar')}
                           </button>
                         )}
                       </div>
@@ -182,7 +184,7 @@ export default function ProfessorFichas() {
                     {expandedTreino === treino.id && (
                       <div className="mt-3 border-t border-surface-input pt-3">
                         <p className="mb-2 text-xs font-medium text-text-muted">
-                          Exercícios ({treino.exercicios.length})
+                          {t('Exercícios (')}{treino.exercicios.length})
                         </p>
                         <div className="space-y-1">
                           {treino.exercicios
@@ -200,7 +202,7 @@ export default function ProfessorFichas() {
                                 </div>
                                 <span className="text-xs text-text-muted">
                                   {ex.series}x{ex.repeticoes}
-                                  {ex.carga_sugerida_kg ? ` @ ${ex.carga_sugerida_kg}kg` : ''}
+                                  {ex.carga_sugerida_kg ? t(' @ {carga_sugerida_kg}kg', { carga_sugerida_kg: ex.carga_sugerida_kg }) : ''}
                                 </span>
                               </div>
                             ))}

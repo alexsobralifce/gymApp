@@ -9,7 +9,9 @@ import FormField from '../../components/ui/FormField'
 import { EndorfinappLogo } from '../../components/branding'
 import { debugLog } from '../../lib/debug'
 
+import { useT } from '../../i18n'
 export default function Login() {
+  const { t } = useT()
   useSeo({ title: 'Entrar | ENDORFINAPP', description: 'Acesse sua conta no ENDORFINAPP.', noindex: true })
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -70,7 +72,7 @@ export default function Login() {
       await login(email, senha)
       navigate('/', { replace: true })
     } catch (err: any) {
-      setVerifyError(err?.message || 'Código inválido ou expirado.')
+      setVerifyError(t(err?.message) || t('Código inválido ou expirado.'))
     } finally {
       setVerifying(false)
     }
@@ -84,7 +86,7 @@ export default function Login() {
       await api.resendCode(email)
       setResendSuccess(true)
     } catch (err: any) {
-      setVerifyError(err?.message || 'Erro ao reenviar código.')
+      setVerifyError(t(err?.message) || t('Erro ao reenviar código.'))
     } finally {
       setResending(false)
     }
@@ -99,9 +101,9 @@ export default function Login() {
     try {
       await api.forgotPassword(forgotEmail)
       setForgotStep(2)
-      setForgotMessage('Código de recuperação enviado! Verifique seu e-mail.')
+      setForgotMessage(t('Código de recuperação enviado! Verifique seu e-mail.'))
     } catch (err: any) {
-      setForgotError(err?.message || 'Erro ao enviar código.')
+      setForgotError(t(err?.message) || t('Erro ao enviar código.'))
     } finally {
       setForgotLoading(false)
     }
@@ -110,19 +112,19 @@ export default function Login() {
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault()
     if (forgotCode.length < 4) {
-      setForgotError('O código deve conter 4 dígitos.')
+      setForgotError(t('O código deve conter 4 dígitos.'))
       return
     }
     if (novaSenha.length < 8) {
-      setForgotError('A nova senha deve ter ao menos 8 caracteres.')
+      setForgotError(t('A nova senha deve ter ao menos 8 caracteres.'))
       return
     }
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(novaSenha)) {
-      setForgotError('A senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número.')
+      setForgotError(t('A senha deve conter ao menos 1 letra maiúscula, 1 minúscula e 1 número.'))
       return
     }
     if (novaSenha !== confirmaNovaSenha) {
-      setForgotError('As senhas não coincidem.')
+      setForgotError(t('As senhas não coincidem.'))
       return
     }
 
@@ -142,9 +144,9 @@ export default function Login() {
       setForgotCode('')
       setNovaSenha('')
       setConfirmaNovaSenha('')
-      setForgotMessage('Senha alterada com sucesso! Entre com sua nova senha.')
+      setForgotMessage(t('Senha alterada com sucesso! Entre com sua nova senha.'))
     } catch (err: any) {
-      setForgotError(err?.message || 'Código inválido ou expirado.')
+      setForgotError(t(err?.message) || t('Código inválido ou expirado.'))
     } finally {
       setForgotLoading(false)
     }
@@ -169,11 +171,11 @@ export default function Login() {
         {forgotMode ? (
           <div className="space-y-4 text-left">
             <div className="text-center pb-1">
-              <h2 className="text-base font-bold text-text">Recuperar Senha</h2>
+              <h2 className="text-base font-bold text-text">{t('Recuperar Senha')}</h2>
               <p className="text-xs text-text-muted mt-0.5">
                 {forgotStep === 1
-                  ? 'Informe seu e-mail para receber um código de 4 dígitos'
-                  : 'Digite o código recebido por e-mail e defina a nova senha'}
+                  ? t('Informe seu e-mail para receber um código de 4 dígitos')
+                  : t('Digite o código recebido por e-mail e defina a nova senha')}
               </p>
             </div>
 
@@ -191,11 +193,11 @@ export default function Login() {
 
             {forgotStep === 1 ? (
               <form onSubmit={handleSendForgotCode} className="space-y-4">
-                <FormField label="Email cadastrado" htmlFor="forgot-email">
+                <FormField label={t('Email cadastrado')} htmlFor="forgot-email">
                   <Input
                     id="forgot-email"
                     type="email"
-                    placeholder="seu@email.com"
+                    placeholder={t('seu@email.com')}
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     required
@@ -206,13 +208,13 @@ export default function Login() {
                   disabled={forgotLoading || !forgotEmail}
                   className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
                 >
-                  {forgotLoading ? 'Enviando código...' : 'Enviar Código por E-mail'}
+                  {forgotLoading ? t('Enviando código...') : t('Enviar Código por E-mail')}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-text-muted mb-1">Código de 4 dígitos</label>
+                  <label className="block text-xs font-medium text-text-muted mb-1">{t('Código de 4 dígitos')}</label>
                   <input
                     id="forgot-code"
                     type="text"
@@ -226,22 +228,22 @@ export default function Login() {
                   />
                 </div>
 
-                <FormField label="Nova Senha" htmlFor="nova-senha">
+                <FormField label={t('Nova Senha')} htmlFor="nova-senha">
                   <Input
                     id="nova-senha"
                     type="password"
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder={t('Mínimo 8 caracteres')}
                     value={novaSenha}
                     onChange={(e) => setNovaSenha(e.target.value)}
                     required
                   />
                 </FormField>
 
-                <FormField label="Confirmar Nova Senha" htmlFor="confirma-nova-senha">
+                <FormField label={t('Confirmar Nova Senha')} htmlFor="confirma-nova-senha">
                   <Input
                     id="confirma-nova-senha"
                     type="password"
-                    placeholder="Repita a nova senha"
+                    placeholder={t('Repita a nova senha')}
                     value={confirmaNovaSenha}
                     onChange={(e) => setConfirmaNovaSenha(e.target.value)}
                     required
@@ -253,7 +255,7 @@ export default function Login() {
                   disabled={forgotLoading || forgotCode.length < 4 || !novaSenha || !confirmaNovaSenha}
                   className="w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
                 >
-                  {forgotLoading ? 'Redefinindo...' : 'Salvar Nova Senha'}
+                  {forgotLoading ? 'Redefinindo...' : t('Salvar Nova Senha')}
                 </button>
 
                 <div className="text-center pt-1">
@@ -263,7 +265,7 @@ export default function Login() {
                     disabled={forgotLoading}
                     className="text-xs text-warning hover:underline cursor-pointer"
                   >
-                    Reenviar código
+                    {t('Reenviar código')}
                   </button>
                 </div>
               </form>
@@ -278,14 +280,14 @@ export default function Login() {
                 }}
                 className="text-xs text-text-muted hover:text-text cursor-pointer"
               >
-                ← Voltar para o login
+                {t('← Voltar para o login')}
               </button>
             </div>
           </div>
         ) : (
           /* ─── FLUXO NORMAL DE LOGIN ─── */
           <form onSubmit={handleSubmit} className="space-y-4 text-center">
-            <p className="text-sm text-text-muted">Entre na sua conta</p>
+            <p className="text-sm text-text-muted">{t('Entre na sua conta')}</p>
 
             {error && !notVerified && !googleRedirectError && (
               <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">{error}</p>
@@ -294,9 +296,9 @@ export default function Login() {
             {googleRedirectError && (
               <p className="rounded bg-destructive/10 p-2 text-sm text-destructive">
                 {googleRedirectError === 'cancelado'
-                  ? 'Login com Google cancelado.'
+                  ? t('Login com Google cancelado.')
                   : googleRedirectError === 'state_invalido'
-                  ? 'A sessão de login com o Google expirou ou foi interrompida. Por favor, tente novamente.'
+                  ? t('A sessão de login com o Google expirou ou foi interrompida. Por favor, tente novamente.')
                   : googleRedirectError}
               </p>
             )}
@@ -306,9 +308,9 @@ export default function Login() {
                 <div className="flex items-start gap-2">
                   <span className="text-lg">📩</span>
                   <div>
-                    <p className="text-xs font-semibold text-warning">E-mail não verificado</p>
+                    <p className="text-xs font-semibold text-warning">{t('E-mail não verificado')}</p>
                     <p className="text-[11px] text-text-muted mt-0.5">
-                      Digite o código de 4 dígitos enviado para <span className="font-semibold text-text">{email}</span>:
+                      {t('Digite o código de 4 dígitos enviado para')} <span className="font-semibold text-text">{email}</span>:
                     </p>
                   </div>
                 </div>
@@ -317,7 +319,7 @@ export default function Login() {
                   <p className="rounded bg-destructive/10 p-2 text-xs text-destructive text-center">{verifyError}</p>
                 )}
                 {resendSuccess && (
-                  <p className="rounded bg-success/10 p-2 text-xs text-success text-center">Código reenviado com sucesso!</p>
+                  <p className="rounded bg-success/10 p-2 text-xs text-success text-center">{t('Código reenviado com sucesso!')}</p>
                 )}
 
                 <div className="flex items-center gap-2">
@@ -337,7 +339,7 @@ export default function Login() {
                     disabled={verifyCode.length < 4 || verifying}
                     className="flex-1 rounded-lg bg-primary py-2 px-3 text-xs font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
                   >
-                    {verifying ? 'Verificando...' : 'Verificar e Entrar'}
+                    {verifying ? 'Verificando...' : t('Verificar e Entrar')}
                   </button>
                 </div>
 
@@ -348,7 +350,7 @@ export default function Login() {
                     disabled={resending}
                     className="text-xs font-medium text-warning hover:underline cursor-pointer"
                   >
-                    {resending ? 'Reenviando...' : 'Não recebeu o e-mail? Reenviar código'}
+                    {resending ? 'Reenviando...' : t('Não recebeu o e-mail? Reenviar código')}
                   </button>
                 </div>
               </div>
@@ -367,21 +369,21 @@ export default function Login() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Entrar com Google
+              {t('Entrar com Google')}
             </button>
 
             <div className="flex items-center gap-2">
               <div className="h-px flex-1 bg-surface-input" />
-              <span className="text-xs text-text-muted">ou</span>
+              <span className="text-xs text-text-muted">{t('ou')}</span>
               <div className="h-px flex-1 bg-surface-input" />
             </div>
 
-            <FormField label="Email" htmlFor="email">
-              <Input id="email" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <FormField label={t('Email')} htmlFor="email">
+              <Input id="email" type="email" placeholder={t('Email')} value={email} onChange={(e) => setEmail(e.target.value)} required />
             </FormField>
 
-            <FormField label="Senha" htmlFor="senha">
-              <Input id="senha" type="password" placeholder="Senha" value={senha} onChange={(e) => setSenha(e.target.value)} required />
+            <FormField label={t('Senha')} htmlFor="senha">
+              <Input id="senha" type="password" placeholder={t('Senha')} value={senha} onChange={(e) => setSenha(e.target.value)} required />
             </FormField>
 
             <div className="flex justify-end -mt-2">
@@ -396,7 +398,7 @@ export default function Login() {
                 }}
                 className="text-xs text-primary hover:underline cursor-pointer"
               >
-                Esqueceu a senha?
+                {t('Esqueceu a senha?')}
               </button>
             </div>
 
@@ -408,12 +410,12 @@ export default function Login() {
             </button>
 
             <p className="text-center text-xs text-text-muted">
-              Não tem conta? <Link to="/register" className="text-primary">Cadastre-se</Link>
+              {t('Não tem conta?')} <Link to="/register" className="text-primary">{t('Cadastre-se')}</Link>
             </p>
             <p className="text-center text-xs text-text-muted">
-              Ao entrar, você concorda com a{' '}
+              {t('Ao entrar, você concorda com a')}{' '}
               <Link to="/politica-privacidade" className="text-primary underline">
-                Política de Privacidade
+                {t('Política de Privacidade')}
               </Link>
             </p>
           </form>

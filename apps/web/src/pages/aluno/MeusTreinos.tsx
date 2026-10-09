@@ -12,6 +12,8 @@ import { preloadWorkoutGifs, extractWorkoutGifUrls } from '../../lib/offlineGifP
 import { formatExerciseStep } from '../../lib/exerciseFormatter'
 import { resolveMediaUrl } from '../../lib/media'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 function formatMes(ano: number, mes: number) {
   return `${ano}-${String(mes + 1).padStart(2, '0')}`
 }
@@ -20,6 +22,7 @@ const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julh
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 export default function AlunoMeusTreinos() {
+  const { t } = useT()
   const [treinos, setTreinos] = useState<Treino[]>([])
   const [loading, setLoading] = useState(true)
   const [fichaAtiva, setFichaAtiva] = useState(0)
@@ -46,16 +49,16 @@ export default function AlunoMeusTreinos() {
       setHasProfessor(perfil ? !!perfil.professor_id : null)
       const disponiveis = data
         .filter(
-          (t) => t.status === 'ENVIADO' || t.status === 'ACEITO' || t.status === 'EM_ABERTO' || t.status === 'EM_EXECUCAO' || t.status === 'CADASTRADO' || t.status === 'CONCLUIDO'
+          (tr) => tr.status === 'ENVIADO' || tr.status === 'ACEITO' || tr.status === 'EM_ABERTO' || tr.status === 'EM_EXECUCAO' || tr.status === 'CADASTRADO' || tr.status === 'CONCLUIDO'
         )
         .sort((a, b) => a.nome.localeCompare(b.nome))
       setTreinos(disponiveis)
 
       // Extrair URLs de GIFs de todos os treinos carregados e iniciar pré-carga
       const allUrls: string[] = []
-      for (const t of disponiveis) {
-        if (t.exercicios) {
-          allUrls.push(...extractWorkoutGifUrls(t.exercicios))
+      for (const tr of disponiveis) {
+        if (tr.exercicios) {
+          allUrls.push(...extractWorkoutGifUrls(tr.exercicios))
         }
       }
       const uniqueUrls = [...new Set(allUrls)]
@@ -159,11 +162,11 @@ export default function AlunoMeusTreinos() {
   async function handleResponder(treinoId: string, acao: 'ACEITAR' | 'RECUSAR') {
     try {
       await api.responderTreino(treinoId, acao)
-      setFeedback(acao === 'ACEITAR' ? 'Treino aceito! Pronto para iniciar.' : 'Treino recusado.')
+      setFeedback(acao === 'ACEITAR' ? t('Treino aceito! Pronto para iniciar.') : t('Treino recusado.'))
       await carregarTreinos()
       setTimeout(() => setFeedback(null), 3000)
     } catch {
-      setFeedback('Erro ao responder ao treino.')
+      setFeedback(t('Erro ao responder ao treino.'))
     }
   }
 
@@ -172,7 +175,7 @@ export default function AlunoMeusTreinos() {
     setDeleting(true)
     try {
       await api.deletarTreino(deletingTreino.id)
-      setFeedback('Treino excluído com sucesso.')
+      setFeedback(t('Treino excluído com sucesso.'))
       setDeletingTreino(null)
       await carregarTreinos()
       setTimeout(() => setFeedback(null), 3000)
@@ -180,7 +183,7 @@ export default function AlunoMeusTreinos() {
         setFichaAtiva(treinos.length - 2)
       }
     } catch {
-      setFeedback('Erro ao excluir treino.')
+      setFeedback(t('Erro ao excluir treino.'))
     } finally {
       setDeleting(false)
     }
@@ -197,11 +200,11 @@ export default function AlunoMeusTreinos() {
     return (
       <EmptyState
         icon="📋"
-        title="Nenhum treino ativo"
+        title={t('Nenhum treino ativo')}
         description={
           hasProfessor
-            ? "Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Monte seus próprios treinos ou use um plano da Biblioteca!"
-            : "No modo autogestão, você monta seus próprios treinos. Comece agora ou use um plano pronto da Biblioteca!"
+            ? t('Seu professor ainda não enviou fichas ou você ainda não aceitou nenhuma. Monte seus próprios treinos ou use um plano da Biblioteca!')
+            : t('No modo autogestão, você monta seus próprios treinos. Comece agora ou use um plano pronto da Biblioteca!')
         }
         actionLabel="Criar Treino"
         onAction={() => navigate('/treino/novo')}
@@ -228,22 +231,22 @@ export default function AlunoMeusTreinos() {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-text">Meus Treinos</h1>
-          <p className="text-xs text-text-muted">Veja e gerencie suas fichas de treino</p>
+          <h1 className="text-2xl font-bold text-text">{t('Meus Treinos')}</h1>
+          <p className="text-xs text-text-muted">{t('Veja e gerencie suas fichas de treino')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/biblioteca-planos')}
             className="flex items-center gap-1.5 rounded-xl bg-surface-input border border-surface-input px-3 py-2 text-xs font-bold text-text hover:border-primary/50 transition-all cursor-pointer"
           >
-            📚 Biblioteca
+            {t('📚 Biblioteca')}
           </button>
           <button
             onClick={() => navigate('/treino/novo')}
             className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
           >
             <PlusIcon className="h-4 w-4" />
-            Criar
+            {t('Criar')}
           </button>
         </div>
       </div>
@@ -277,7 +280,7 @@ export default function AlunoMeusTreinos() {
 
         <div className="grid grid-cols-7 text-center gap-1">
           {DIAS_SEMANA.map((d) => (
-            <span key={d} className="text-xs font-bold text-text-muted uppercase">{d}</span>
+            <span key={t(d)} className="text-xs font-bold text-text-muted uppercase">{t(d)}</span>
           ))}
           {diasDoMes.map((dia, i) => (
             <div key={i} className="aspect-square flex items-center justify-center">
@@ -304,19 +307,19 @@ export default function AlunoMeusTreinos() {
         {infoDiaSelecionado && (
           <div className="rounded-xl bg-surface border border-surface-input p-3 space-y-2">
             <p className="text-xs font-bold text-text-muted uppercase tracking-wider">
-              {new Date(diaSelecionado + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date(diaSelecionado + 'T00:00:00').toLocaleDateString(localeAtual(), { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
-            {infoDiaSelecionado.treinos.map((t) => (
-              <div key={t.id} className="flex items-center justify-between">
+            {infoDiaSelecionado.treinos.map((tr) => (
+              <div key={tr.id} className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-text">{t.nome}</p>
-                  <p className="text-xs text-text-muted">{t.grupos.join(' · ')}</p>
+                  <p className="text-sm font-semibold text-text">{tr.nome}</p>
+                  <p className="text-xs text-text-muted">{tr.grupos.join(' · ')}</p>
                 </div>
                 <button
-                  onClick={() => navigate(`/treino/${t.id}/inicio`)}
+                  onClick={() => navigate(`/treino/${tr.id}/inicio`)}
                   className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
                 >
-                  Iniciar
+                  {t('Iniciar')}
                 </button>
               </div>
             ))}
@@ -326,15 +329,15 @@ export default function AlunoMeusTreinos() {
 
       {/* Tabs para selecionar treino */}
       <div className="flex gap-2 bg-surface-card p-1.5 rounded-2xl border border-surface-input overflow-x-auto">
-        {treinos.map((t, idx) => (
+        {treinos.map((tr, idx) => (
           <button
-            key={t.id}
+            key={tr.id}
             onClick={() => setFichaAtiva(idx)}
             className={`flex-1 rounded-xl py-2 px-3 text-sm font-bold transition-all shrink-0 ${
               fichaAtiva === idx ? 'bg-primary text-primary-foreground shadow-sm' : 'text-text-muted hover:text-text'
             }`}
           >
-            {t.nome}
+            {tr.nome}
           </button>
         ))}
       </div>
@@ -345,7 +348,7 @@ export default function AlunoMeusTreinos() {
           <div>
             <h2 className="text-lg font-bold text-text">{treino.nome}</h2>
             <p className="text-xs text-text-muted mt-0.5">
-              Dias: {treino.dias_semana.map((d) => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d]).join(', ')}
+              {t('Dias:')} {treino.dias_semana.map((d) => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d]).join(', ')}
             </p>
           </div>
           <StatusBadge
@@ -399,8 +402,8 @@ export default function AlunoMeusTreinos() {
                   )}
                 </div>
                 <p className="text-xs text-text-muted font-semibold mt-2">
-                  Meta: <span className="text-text font-bold">{ex.series}s × {ex.repeticoes} repetições</span>
-                  {ex.carga_sugerida_kg ? ` @ ${ex.carga_sugerida_kg}kg` : ''}
+                  {t('Meta:')} <span className="text-text font-bold">{ex.series}s × {ex.repeticoes} {t('repetições')}</span>
+                  {ex.carga_sugerida_kg ? t(' @ {carga_sugerida_kg}kg', { carga_sugerida_kg: ex.carga_sugerida_kg }) : ''}
                 </p>
               </div>
             </div>
@@ -414,27 +417,27 @@ export default function AlunoMeusTreinos() {
                 onClick={() => handleResponder(treino.id, 'RECUSAR')}
                 className="flex-1 rounded-xl border border-red-500/30 py-2.5 text-sm font-bold text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
               >
-                Recusar
+                {t('Recusar')}
               </button>
               <button
                 onClick={() => handleResponder(treino.id, 'ACEITAR')}
                 className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-500 active:scale-95 transition-all"
               >
-                Aceitar Ficha
+                {t('Aceitar Ficha')}
               </button>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => navigate(`/treino/${treino.id}/editar`)}
                 className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
-                title="Editar treino"
+                title={t('Editar treino')}
               >
                 <PencilIcon className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setDeletingTreino(treino)}
                 className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-destructive hover:text-red-300 hover:border-red-400/40 hover:bg-destructive/10 active:scale-95 transition-all cursor-pointer"
-                title="Excluir treino"
+                title={t('Excluir treino')}
               >
                 <Trash2Icon className="h-5 w-5" />
               </button>
@@ -443,20 +446,20 @@ export default function AlunoMeusTreinos() {
         ) : treino.status === 'CADASTRADO' ? (
           <div className="space-y-2 pt-1">
             <p className="text-xs text-center text-text-muted italic py-2">
-              Esta ficha ainda está sendo preparada pelo professor e será enviada em breve.
+              {t('Esta ficha ainda está sendo preparada pelo professor e será enviada em breve.')}
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => navigate(`/treino/${treino.id}/editar`)}
                 className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
-                title="Editar treino"
+                title={t('Editar treino')}
               >
                 <PencilIcon className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setDeletingTreino(treino)}
                 className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-destructive hover:text-red-300 hover:border-red-400/40 hover:bg-destructive/10 active:scale-95 transition-all cursor-pointer"
-                title="Excluir treino"
+                title={t('Excluir treino')}
               >
                 <Trash2Icon className="h-5 w-5" />
               </button>
@@ -467,7 +470,7 @@ export default function AlunoMeusTreinos() {
             onClick={() => navigate(`/treino/${treino.id}/inicio`)}
             className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            Continuar Treino
+            {t('Continuar Treino')}
           </button>
         ) : (
           <div className="space-y-2 pt-1">
@@ -475,14 +478,14 @@ export default function AlunoMeusTreinos() {
               <button
                 onClick={() => navigate(`/treino/${treino.id}/editar`)}
                 className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-text-muted hover:text-text hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
-                title="Editar treino"
+                title={t('Editar treino')}
               >
                 <PencilIcon className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setDeletingTreino(treino)}
                 className="flex items-center justify-center w-11 h-11 rounded-xl border border-surface-input text-destructive hover:text-red-300 hover:border-red-400/40 hover:bg-destructive/10 active:scale-95 transition-all cursor-pointer"
-                title="Excluir treino"
+                title={t('Excluir treino')}
               >
                 <Trash2Icon className="h-5 w-5" />
               </button>
@@ -490,7 +493,7 @@ export default function AlunoMeusTreinos() {
                 onClick={() => navigate(`/treino/${treino.id}/inicio`)}
                 className="flex-1 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
               >
-                {treino.status === 'CONCLUIDO' ? 'Fazer Novamente' : 'Iniciar Ficha de Treino'}
+                {treino.status === 'CONCLUIDO' ? t('Fazer Novamente') : t('Iniciar Ficha de Treino')}
               </button>
             </div>
           </div>
@@ -500,8 +503,8 @@ export default function AlunoMeusTreinos() {
       {/* Modal de Exclusão */}
       <ConfirmModal
         open={!!deletingTreino}
-        title="Excluir treino"
-        message={`Tem certeza que deseja excluir "${deletingTreino?.nome}"? Esta ação não pode ser desfeita.`}
+        title={t('Excluir treino')}
+        message={t('Tem certeza que deseja excluir "{nome}"? Esta ação não pode ser desfeita.', { nome: deletingTreino?.nome })}
         onConfirm={handleDeleteTreino}
         onCancel={() => setDeletingTreino(null)}
         loading={deleting}
@@ -563,7 +566,7 @@ export default function AlunoMeusTreinos() {
                   )}
                   {selectedExercicio.musculo_alvo && selectedExercicio.musculo_alvo !== selectedExercicio.grupo_muscular && (
                     <span className="rounded-full bg-success/10 border border-success/20 px-2.5 py-0.5 text-xs font-bold text-success">
-                      Alvo: {selectedExercicio.musculo_alvo}
+                      {t('Alvo:')} {selectedExercicio.musculo_alvo}
                     </span>
                   )}
                 </div>
@@ -571,7 +574,7 @@ export default function AlunoMeusTreinos() {
 
               {/* Passos numerados em Português */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Como Executar</h4>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Como Executar')}</h4>
                 <div className="space-y-2">
                   {(selectedExercicio.passos_pt?.length
                     ? selectedExercicio.passos_pt
@@ -583,14 +586,14 @@ export default function AlunoMeusTreinos() {
                       </span>
                       <span className="text-sm text-text leading-relaxed">{formatExerciseStep(step)}</span>
                     </div>
-                  )) || <p className="text-text-muted italic text-sm">Nenhuma instrução disponível.</p>}
+                  )) || <p className="text-text-muted italic text-sm">{t('Nenhuma instrução disponível.')}</p>}
                 </div>
               </div>
 
               {/* Músculos secundários */}
               {selectedExercicio.musculos_secundarios && selectedExercicio.musculos_secundarios.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">Músculos Trabalhados</h4>
+                  <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">{t('Músculos Trabalhados')}</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedExercicio.musculos_secundarios.map((m, i) => (
                       <span key={i} className="rounded-full bg-surface-input px-2 py-0.5 text-xs font-bold text-text-muted uppercase">
@@ -605,7 +608,7 @@ export default function AlunoMeusTreinos() {
                 onClick={() => setSelectedExercicio(null)}
                 className="w-full rounded-xl bg-surface-input py-3 text-sm font-bold text-text hover:brightness-95 transition-all cursor-pointer"
               >
-                Fechar
+                {t('Fechar')}
               </button>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { api } from '../../api/client'
 import { CrownIcon, XIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface PremiumManagerProps {
   usuarioId: string
   usuarioNome: string
@@ -10,6 +11,7 @@ interface PremiumManagerProps {
 }
 
 export default function PremiumManagerButton({ usuarioId, usuarioNome, temPremium, onToggle }: PremiumManagerProps) {
+  const { t } = useT()
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [nota, setNota] = useState('')
@@ -55,7 +57,7 @@ export default function PremiumManagerButton({ usuarioId, usuarioNome, temPremiu
             ? 'bg-success/20 text-success hover:bg-success/30'
             : 'bg-surface-input text-text-muted hover:bg-border'
         }`}
-        title={temPremium ? 'Revogar premium' : 'Liberar premium'}
+        title={temPremium ? t('Revogar premium') : t('Liberar premium')}
       >
         <CrownIcon className="h-3.5 w-3.5" />
         {temPremium ? 'Premium' : 'Liberar'}
@@ -65,7 +67,7 @@ export default function PremiumManagerButton({ usuarioId, usuarioNome, temPremiu
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md mx-4 rounded-2xl bg-surface-card border border-border p-6 shadow-2xl animate-[modal-pop_0.3s_ease]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-text">Liberar Premium</h3>
+              <h3 className="text-lg font-bold text-text">{t('Liberar Premium')}</h3>
               <button
                 onClick={() => { setShowModal(false); setNota('') }}
                 className="w-8 h-8 rounded-full hover:bg-surface-input flex items-center justify-center cursor-pointer"
@@ -75,17 +77,17 @@ export default function PremiumManagerButton({ usuarioId, usuarioNome, temPremiu
             </div>
 
             <p className="text-sm text-text-muted mb-4">
-              Liberar acesso premium para <strong className="text-text">{usuarioNome}</strong> sem cobrança.
+              {t('Liberar acesso premium para')} <strong className="text-text">{usuarioNome}</strong> {t('sem cobrança.')}
             </p>
 
             <div className="mb-4">
               <label className="block text-xs font-semibold text-text-muted mb-1.5">
-                Nota (opcional)
+                {t('Nota (opcional)')}
               </label>
               <textarea
                 value={nota}
                 onChange={(e) => setNota(e.target.value)}
-                placeholder="Motivo da liberação..."
+                placeholder={t('Motivo da liberação...')}
                 className="w-full rounded-xl border border-border bg-surface-input px-3 py-2 text-sm text-text placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                 rows={3}
               />
@@ -96,7 +98,7 @@ export default function PremiumManagerButton({ usuarioId, usuarioNome, temPremiu
                 onClick={() => { setShowModal(false); setNota('') }}
                 className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-input cursor-pointer"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
               <button
                 onClick={handleConfirm}

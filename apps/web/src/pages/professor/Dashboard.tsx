@@ -7,7 +7,9 @@ import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import Select from '../../components/ui/Select'
 import { UsersIcon, DumbbellIcon, ActivityIcon, Building2Icon, ChartLineIcon, PlusIcon } from '../../components/icons/Icon'
 
+import { useT } from '../../i18n'
 export default function ProfessorDashboard() {
+  const { t } = useT()
   const [dados, setDados] = useState<ProfessorDashboard[]>([])
   const [limiteAlunos, setLimiteAlunos] = useState<{ usados: number; limite: number | null } | null>(null)
   const [vinculos, setVinculos] = useState<Vinculo[]>([])
@@ -59,8 +61,8 @@ export default function ProfessorDashboard() {
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto w-full space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-text">Dashboard</h1>
-        <p className="text-xs text-text-muted mt-0.5">Acompanhe seus alunos</p>
+        <h1 className="text-xl font-bold text-text">{t('Dashboard')}</h1>
+        <p className="text-xs text-text-muted mt-0.5">{t('Acompanhe seus alunos')}</p>
       </div>
 
       {/* Filtro Academia */}
@@ -69,7 +71,7 @@ export default function ProfessorDashboard() {
           value={academiaId}
           onChange={(e) => setAcademiaId(e.target.value)}
         >
-          <option value="">Todas academias</option>
+          <option value="">{t('Todas academias')}</option>
           {vinculos.map((v: any) => (
             <option key={v.academia.id} value={v.academia.id}>{v.academia.nome}</option>
           ))}
@@ -86,24 +88,24 @@ export default function ProfessorDashboard() {
               <span className="text-sm font-medium text-text-muted"> / {limiteAlunos.limite}</span>
             )}
           </p>
-          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Alunos</p>
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{t('Alunos')}</p>
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
           <DumbbellIcon className="h-5 w-5 text-primary mx-auto mb-2" />
           <p className="text-xl font-bold text-text">{totalTreinos}</p>
-          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Treinos</p>
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{t('Treinos')}</p>
         </div>
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 text-center">
           <ActivityIcon className="h-5 w-5 text-success mx-auto mb-2" />
           <p className="text-xl font-bold text-text">{alunosComTreino}</p>
-          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Ativos</p>
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wider">{t('Ativos')}</p>
         </div>
       </div>
 
       {limiteAlunos?.limite != null && limiteAlunos.usados >= limiteAlunos.limite && (
         <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-xs text-accent font-medium">
-          Você atingiu o limite de {limiteAlunos.limite} alunos do seu plano. Remova um aluno ou faça upgrade em{' '}
-          <button onClick={() => navigate('/planos')} className="underline font-bold cursor-pointer">Planos</button>.
+          {t('Você atingiu o limite de')} {limiteAlunos.limite} {t('alunos do seu plano. Remova um aluno ou faça upgrade em')}{' '}
+          <button onClick={() => navigate('/planos')} className="underline font-bold cursor-pointer">{t('Planos')}</button>.
         </div>
       )}
 
@@ -115,13 +117,13 @@ export default function ProfessorDashboard() {
       ) : dados.length === 0 ? (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
           <UsersIcon className="h-8 w-8 text-text-muted mx-auto mb-3 opacity-30" />
-          <p className="text-sm text-text-muted">Nenhum aluno vinculado ao seu perfil.</p>
+          <p className="text-sm text-text-muted">{t('Nenhum aluno vinculado ao seu perfil.')}</p>
           <button
             onClick={() => navigate('/alunos/vincular')}
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             <PlusIcon className="h-4 w-4" />
-            Vincular Aluno
+            {t('Vincular Aluno')}
           </button>
         </div>
       ) : (
@@ -137,7 +139,7 @@ export default function ProfessorDashboard() {
                       <p className="text-xs text-text-muted truncate">{aluno.usuario.email}</p>
                       <span className="inline-flex items-center gap-1 rounded-full bg-surface-input px-2 py-0.5 text-xs text-text-muted">
                         <Building2Icon className="h-3 w-3" />
-                        {aluno.academia?.nome || 'Autogestão'}
+                        {aluno.academia?.nome || t('Autogestão')}
                       </span>
                     </div>
                   </div>
@@ -146,7 +148,7 @@ export default function ProfessorDashboard() {
 
               <div className="p-4">
                 {aluno.treinos.length === 0 ? (
-                  <p className="text-xs text-text-muted italic">Sem fichas montadas</p>
+                  <p className="text-xs text-text-muted italic">{t('Sem fichas montadas')}</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {aluno.treinos.map((t) => (
@@ -168,14 +170,14 @@ export default function ProfessorDashboard() {
                     className="flex-1 rounded-xl bg-surface-input px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input/80 transition-colors text-center cursor-pointer min-h-[36px] flex items-center justify-center gap-1.5"
                   >
                     <ChartLineIcon className="h-3.5 w-3.5" />
-                    Evolução
+                    {t('Evolução')}
                   </button>
                   <button
                     onClick={() => navigate(`/treinos/criar?alunoId=${aluno.id}`)}
                     className="flex-1 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <DumbbellIcon className="h-3.5 w-3.5 inline mr-1.5" />
-                    Montar Treino
+                    {t('Montar Treino')}
                   </button>
                   <button
                     onClick={() => handleRemoverAluno(aluno.id, aluno.usuario.nome)}

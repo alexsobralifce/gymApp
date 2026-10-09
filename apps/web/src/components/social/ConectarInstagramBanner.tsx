@@ -3,11 +3,13 @@ import { InstagramIcon, XIcon } from '../../components/icons/Icon'
 import { api } from '../../api/client'
 import { getApiBaseUrl } from '../../lib/media'
 
+import { useT } from '../../i18n'
 interface ConectarInstagramBannerProps {
   className?: string
 }
 
 export default function ConectarInstagramBanner({ className = '' }: ConectarInstagramBannerProps) {
+  const { t } = useT()
   const [status, setStatus] = useState<{ conectado: boolean; configurado?: boolean; username?: string } | null>(null)
   const [dispensado, setDispensado] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -56,13 +58,13 @@ export default function ConectarInstagramBanner({ className = '' }: ConectarInst
 
         <div className="min-w-0 flex-1 space-y-1">
           <h3 className="text-xs font-bold text-text flex items-center gap-1.5">
-            <span>Conectar ao Instagram</span>
+            <span>{t('Conectar ao Instagram')}</span>
             <span className="rounded-full bg-pink-500/20 px-1.5 py-0.2 text-[9px] font-bold text-pink-300">
-              NOVO
+              {t('NOVO')}
             </span>
           </h3>
           <p className="text-[11px] text-text-muted leading-relaxed">
-            Poste fotos e métricas dos seus treinos diretamente no seu feed e stories com um clique!
+            {t('Poste fotos e métricas dos seus treinos diretamente no seu feed e stories com um clique!')}
           </p>
 
           <div className="pt-2 flex items-center gap-2">
@@ -72,14 +74,14 @@ export default function ConectarInstagramBanner({ className = '' }: ConectarInst
               className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-pink-500/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
             >
               <InstagramIcon className="h-3.5 w-3.5" />
-              <span>Conectar Conta</span>
+              <span>{t('Conectar Conta')}</span>
             </button>
             <button
               type="button"
               onClick={handleDispensar}
               className="text-[11px] font-semibold text-text-muted hover:text-text px-2 py-1 transition-colors cursor-pointer"
             >
-              Agora não
+              {t('Agora não')}
             </button>
           </div>
         </div>
@@ -88,7 +90,7 @@ export default function ConectarInstagramBanner({ className = '' }: ConectarInst
           type="button"
           onClick={handleDispensar}
           className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text transition-colors cursor-pointer shrink-0"
-          title="Fechar"
+          title={t('Fechar')}
         >
           <XIcon className="h-4 w-4" />
         </button>

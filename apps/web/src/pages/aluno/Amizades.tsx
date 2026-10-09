@@ -5,7 +5,9 @@ import FriendRequestCard from '../../components/social/FriendRequestCard'
 import type { Amizade, AmizadePendente } from '../../types/api'
 import { getInitials } from '../../lib/initials'
 
+import { useT } from '../../i18n'
 export default function Amizades() {
+  const { t } = useT()
   const [tab, setTab] = useState<'amigos' | 'solicitacoes' | 'adicionar'>('amigos')
   const [amigos, setAmigos] = useState<Amizade[]>([])
   const [pendentes, setPendentes] = useState<AmizadePendente[]>([])
@@ -31,11 +33,11 @@ export default function Amizades() {
     if (!emailBusca.trim()) return
     try {
       const res = await api.solicitarAmizade(emailBusca.trim())
-      setFeedback(res.message || 'Solicitação enviada!')
+      setFeedback(t(res.message) || t('Solicitação enviada!'))
       setEmailBusca('')
       setTimeout(() => setFeedback(null), 3000)
     } catch (err: any) {
-      setFeedback(err.message || 'Erro ao enviar solicitação')
+      setFeedback(t(err.message) || t('Erro ao enviar solicitação'))
       setTimeout(() => setFeedback(null), 3000)
     }
   }
@@ -52,7 +54,7 @@ export default function Amizades() {
 
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-4">
-      <h1 className="text-lg font-bold text-text">Amigos</h1>
+      <h1 className="text-lg font-bold text-text">{t('Amigos')}</h1>
 
       {feedback && (
         <div className="rounded-xl bg-accent/10 border border-accent/20 p-3 text-sm text-accent text-center animate-slide-up">
@@ -83,12 +85,12 @@ export default function Amizades() {
       {tab === 'amigos' && (
         <div className="space-y-2">
           {loading ? (
-            <p className="text-sm text-text-muted text-center py-4">Carregando...</p>
+            <p className="text-sm text-text-muted text-center py-4">{t('Carregando...')}</p>
           ) : amigos.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
               <UsersIcon className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-30" />
-              <p className="text-sm text-text-muted">Você ainda não tem amigos.</p>
-              <p className="text-xs text-text-muted mt-1">Vá para a aba Adicionar e encontre pessoas pelo email.</p>
+              <p className="text-sm text-text-muted">{t('Você ainda não tem amigos.')}</p>
+              <p className="text-xs text-text-muted mt-1">{t('Vá para a aba Adicionar e encontre pessoas pelo email.')}</p>
             </div>
           ) : (
             amigos.map((a) => (
@@ -115,7 +117,7 @@ export default function Amizades() {
         <div className="space-y-2">
           {pendentes.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
-              <p className="text-sm text-text-muted">Nenhuma solicitação pendente.</p>
+              <p className="text-sm text-text-muted">{t('Nenhuma solicitação pendente.')}</p>
             </div>
           ) : (
             pendentes.map((p) => (
@@ -128,14 +130,14 @@ export default function Amizades() {
       {tab === 'adicionar' && (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3">
           <p className="text-xs text-text-muted">
-            Encontre amigos pelo email cadastrado na ENDORFINAPP.
+            {t('Encontre amigos pelo email cadastrado na ENDORFINAPP.')}
           </p>
           <div className="flex gap-2">
             <input
               type="email"
               value={emailBusca}
               onChange={(e) => setEmailBusca(e.target.value)}
-              placeholder="email@exemplo.com"
+              placeholder={t('email@exemplo.com')}
               className="flex-1 rounded-xl border border-surface-input bg-surface-input px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
               onKeyDown={(e) => { if (e.key === 'Enter') handleSolicitar() }}
             />
@@ -144,7 +146,7 @@ export default function Amizades() {
               disabled={!emailBusca.trim()}
               className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer"
             >
-              Solicitar
+              {t('Solicitar')}
             </button>
           </div>
         </div>

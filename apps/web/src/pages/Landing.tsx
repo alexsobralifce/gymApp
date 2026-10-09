@@ -92,7 +92,7 @@ export default function Landing() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden" style={{ fontFamily: "'DM Sans Variable', 'DM Sans', sans-serif" }}>
       {/* ─── NAV ─── */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/90 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -638,7 +638,9 @@ export default function Landing() {
                 ...(ARTIGOS.length > 0 ? [{ label: 'Blog', href: '/blog' }] : []),
                 { label: 'Entrar', href: '/login' },
                 { label: 'Criar Conta', href: '/register' },
+                { label: 'Ferramentas', href: '/ferramentas' },
                 { label: 'Quem somos', href: '/quem-somos' },
+                { label: 'English', href: '/en' },
                 { label: 'Termos de Uso', href: '/politica-privacidade' },
                 { label: 'Privacidade', href: '/politica-privacidade' },
                 { label: 'Suporte', href: `mailto:${EMAIL_SUPORTE}` },

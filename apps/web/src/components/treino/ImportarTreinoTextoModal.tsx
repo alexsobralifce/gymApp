@@ -4,6 +4,7 @@ import type { Exercicio, ImportacaoTreinoPreview, StatusCasamentoExercicio } fro
 import ExerciseLibraryDrawer from '../ui/ExerciseLibraryDrawer'
 import { XIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const EXEMPLO = `Segunda - Peito e tríceps
 Supino reto c/ barra 4x10
@@ -62,11 +63,11 @@ interface Props {
 }
 
 function paraEditavel(prev: ImportacaoTreinoPreview): TreinoEditavel[] {
-  return prev.treinos.map((t, ti) => ({
-    nome: t.rotulo,
+  return prev.treinos.map((tr, ti) => ({
+    nome: tr.rotulo,
     // Os dias de cada treino são sempre escolhidos pela pessoa, nunca deduzidos do texto.
     diasSemana: [],
-    itens: t.exercicios.map((e, ei) => ({
+    itens: tr.exercicios.map((e, ei) => ({
       chave: `${ti}-${ei}`,
       textoOriginal: e.textoOriginal,
       status: e.status,
@@ -93,6 +94,7 @@ export default function ImportarTreinoTextoModal({
   confirmando = false,
   rotuloConfirmar = 'Criar treinos',
 }: Props) {
+  const { t } = useT()
   const [texto, setTexto] = useState('')
   const [lendo, setLendo] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -103,12 +105,12 @@ export default function ImportarTreinoTextoModal({
 
   const pendencia = useMemo(() => {
     if (!treinos) return null
-    if (treinos.length === 0) return 'Nenhum treino para criar.'
-    if (treinos.some((t) => t.nome.trim().length < 2)) return 'Dê um nome para cada treino.'
-    if (treinos.some((t) => t.diasSemana.length === 0)) return 'Marque pelo menos um dia da semana em cada treino.'
-    if (treinos.some((t) => t.itens.length === 0)) return 'Cada treino precisa de pelo menos um exercício.'
-    if (treinos.some((t) => t.itens.some((it) => it.exercicioId == null)))
-      return 'Escolha no catálogo os exercícios não encontrados, ou remova-os.'
+    if (treinos.length === 0) return t('Nenhum treino para criar.')
+    if (treinos.some((tr) => tr.nome.trim().length < 2)) return t('Dê um nome para cada treino.')
+    if (treinos.some((tr) => tr.diasSemana.length === 0)) return t('Marque pelo menos um dia da semana em cada treino.')
+    if (treinos.some((tr) => tr.itens.length === 0)) return t('Cada treino precisa de pelo menos um exercício.')
+    if (treinos.some((tr) => tr.itens.some((it) => it.exercicioId == null)))
+      return t('Escolha no catálogo os exercícios não encontrados, ou remova-os.')
     return null
   }, [treinos])
 
@@ -124,36 +126,36 @@ export default function ImportarTreinoTextoModal({
     try {
       const prev = await api.importarTreinoTexto(texto)
       if (prev.treinos.length === 0) {
-        setErro('Não encontrei exercícios nesse texto. Escreva um exercício por linha, separando os treinos por dia.')
+        setErro(t('Não encontrei exercícios nesse texto. Escreva um exercício por linha, separando os treinos por dia.'))
         return
       }
       setTreinos(paraEditavel(prev))
     } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Não foi possível ler o texto.')
+      setErro(e instanceof Error ? t(e.message) : t('Não foi possível ler o texto.'))
     } finally {
       setLendo(false)
     }
   }
 
-  function atualizarTreino(t: number, parcial: Partial<TreinoEditavel>) {
-    setTreinos((prev) => prev && prev.map((x, i) => (i === t ? { ...x, ...parcial } : x)))
+  function atualizarTreino(tr: number, parcial: Partial<TreinoEditavel>) {
+    setTreinos((prev) => prev && prev.map((x, i) => (i === tr ? { ...x, ...parcial } : x)))
   }
 
-  function atualizarItem(t: number, i: number, parcial: Partial<Item>) {
+  function atualizarItem(tr: number, i: number, parcial: Partial<Item>) {
     setTreinos(
       (prev) =>
         prev &&
-        prev.map((x, ti) => (ti === t ? { ...x, itens: x.itens.map((it, ii) => (ii === i ? { ...it, ...parcial } : it)) } : x)),
+        prev.map((x, ti) => (ti === tr ? { ...x, itens: x.itens.map((it, ii) => (ii === i ? { ...it, ...parcial } : it)) } : x)),
     )
   }
 
-  function removerItem(t: number, i: number) {
-    setTreinos((prev) => prev && prev.map((x, ti) => (ti === t ? { ...x, itens: x.itens.filter((_, ii) => ii !== i) } : x)))
+  function removerItem(tr: number, i: number) {
+    setTreinos((prev) => prev && prev.map((x, ti) => (ti === tr ? { ...x, itens: x.itens.filter((_, ii) => ii !== i) } : x)))
   }
 
-  function alternarDia(t: number, dia: number) {
-    const atuais = treinos?.[t].diasSemana ?? []
-    atualizarTreino(t, { diasSemana: atuais.includes(dia) ? atuais.filter((d) => d !== dia) : [...atuais, dia].sort() })
+  function alternarDia(tr: number, dia: number) {
+    const atuais = treinos?.[tr].diasSemana ?? []
+    atualizarTreino(tr, { diasSemana: atuais.includes(dia) ? atuais.filter((d) => d !== dia) : [...atuais, dia].sort() })
   }
 
   function escolherNoCatalogo(ex: Exercicio) {
@@ -169,10 +171,10 @@ export default function ImportarTreinoTextoModal({
 
   async function confirmar() {
     if (!treinos || pendencia) return
-    const fichas: FichaImportada[] = treinos.map((t) => ({
-      nome: t.nome.trim(),
-      diasSemana: t.diasSemana,
-      exercicios: t.itens.map((it, idx) => {
+    const fichas: FichaImportada[] = treinos.map((tr) => ({
+      nome: tr.nome.trim(),
+      diasSemana: tr.diasSemana,
+      exercicios: tr.itens.map((it, idx) => {
         const ex = porId.get(it.exercicioId as string)
         const nome = ex?.nome ?? it.candidatos.find((c) => c.exercicioId === it.exercicioId)?.nome ?? it.textoOriginal
         const carga = Number(it.carga.replace(',', '.'))
@@ -201,22 +203,22 @@ export default function ImportarTreinoTextoModal({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Colar treino em texto"
+          aria-label={t('Colar treino em texto')}
           className="relative z-10 flex w-full max-h-[94vh] sm:max-w-2xl flex-col rounded-t-3xl sm:rounded-2xl bg-surface-card shadow-2xl animate-modal-pop safe-bottom"
         >
           <div className="flex items-start justify-between gap-3 border-b border-surface-input p-4 sm:p-5">
             <div>
-              <h2 className="text-lg font-black text-text">Colar treino em texto</h2>
+              <h2 className="text-lg font-black text-text">{t('Colar treino em texto')}</h2>
               <p className="text-xs sm:text-sm text-text-muted">
                 {treinos
-                  ? 'Confira os treinos reconhecidos e dê um nome a cada um.'
-                  : 'Cole a lista dia a dia. O sistema reconhece os exercícios e monta os treinos.'}
+                  ? t('Confira os treinos reconhecidos e dê um nome a cada um.')
+                  : t('Cole a lista dia a dia. O sistema reconhece os exercícios e monta os treinos.')}
               </p>
             </div>
             <button
               type="button"
               onClick={fechar}
-              aria-label="Fechar"
+              aria-label={t('Fechar')}
               className="min-h-11 min-w-11 flex items-center justify-center rounded-xl text-text-muted hover:text-text hover:bg-surface-input cursor-pointer"
             >
               <XIcon className="h-5 w-5" />
@@ -227,7 +229,7 @@ export default function ImportarTreinoTextoModal({
             {!treinos ? (
               <>
                 <label htmlFor="importar-texto" className="block text-sm font-bold text-text">
-                  Texto dos treinos
+                  {t('Texto dos treinos')}
                 </label>
                 <textarea
                   id="importar-texto"
@@ -241,48 +243,48 @@ export default function ImportarTreinoTextoModal({
                 {erro && <p role="alert" className="text-sm font-semibold text-destructive">{erro}</p>}
               </>
             ) : (
-              treinos.map((t, ti) => (
+              treinos.map((tr, ti) => (
                 <section key={ti} className="space-y-3 rounded-2xl border border-surface-input bg-surface p-3.5 sm:p-4">
                   <div>
                     <label htmlFor={`imp-nome-${ti}`} className="mb-1 block text-xs font-bold text-text-muted">
-                      Nome do treino
+                      {t('Nome do treino')}
                     </label>
                     <input
                       id={`imp-nome-${ti}`}
-                      value={t.nome}
+                      value={tr.nome}
                       onChange={(e) => atualizarTreino(ti, { nome: e.target.value })}
                       autoFocus={ti === 0}
                       maxLength={60}
                       className="input-base"
                     />
                   </div>
-                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Dias da semana">
+                  <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('Dias da semana')}>
                     {DIAS.map((d, di) => (
                       <button
                         key={d}
                         type="button"
-                        aria-pressed={t.diasSemana.includes(di)}
+                        aria-pressed={tr.diasSemana.includes(di)}
                         onClick={() => alternarDia(ti, di)}
                         className={`min-h-11 min-w-11 rounded-xl px-3 text-xs font-extrabold cursor-pointer transition-colors ${
-                          t.diasSemana.includes(di)
+                          tr.diasSemana.includes(di)
                             ? 'bg-primary text-primary-foreground'
                             : 'border border-surface-input bg-surface-card text-text-muted hover:text-text'
                         }`}
                       >
-                        {d}
+                        {t(d)}
                       </button>
                     ))}
                   </div>
 
                   <ol className="space-y-2">
-                    {t.itens.map((it, ii) => {
+                    {tr.itens.map((it, ii) => {
                       const selo = SELO[it.exercicioId == null ? 'nao_encontrado' : it.status]
                       return (
                         <li key={it.chave} className="space-y-2 rounded-xl border border-surface-input bg-surface-card p-3">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
                               <p className="truncate text-xs text-text-muted">{ii + 1}. {it.textoOriginal}</p>
-                              <p className={`text-xs font-bold ${selo.classe}`}>{selo.texto}</p>
+                              <p className={`text-xs font-bold ${selo.classe}`}>{t(selo.texto)}</p>
                             </div>
                             <button
                               type="button"
@@ -296,7 +298,7 @@ export default function ImportarTreinoTextoModal({
 
                           <div className="flex flex-col gap-2 sm:flex-row">
                             <select
-                              aria-label={`Exercício para ${it.textoOriginal}`}
+                              aria-label={t('Exercício para {textoOriginal}', { textoOriginal: it.textoOriginal })}
                               value={it.exercicioId ?? ''}
                               onChange={(e) => {
                                 if (e.target.value === '__catalogo') setEscolhendo({ t: ti, i: ii })
@@ -304,23 +306,23 @@ export default function ImportarTreinoTextoModal({
                               }}
                               className="input-base sm:flex-1"
                             >
-                              {it.exercicioId == null && <option value="">Escolha o exercício…</option>}
+                              {it.exercicioId == null && <option value="">{t('Escolha o exercício…')}</option>}
                               {it.candidatos.map((c) => (
                                 <option key={c.exercicioId} value={c.exercicioId}>{c.nome}</option>
                               ))}
-                              <option value="__catalogo">Buscar em todo o catálogo…</option>
+                              <option value="__catalogo">{t('Buscar em todo o catálogo…')}</option>
                             </select>
                           </div>
 
                           <div className="grid grid-cols-3 gap-2">
-                            <CampoNumero rotulo="Séries" valor={String(it.series)} min={1} max={20}
+                            <CampoNumero rotulo={t('Séries')} valor={String(it.series)} min={1} max={20}
                               onChange={(v) => atualizarItem(ti, ii, { series: Math.max(1, Math.min(20, Number(v) || 1)) })} />
-                            <CampoNumero rotulo="Repetições" valor={String(it.repeticoes)} min={1} max={200}
+                            <CampoNumero rotulo={t('Repetições')} valor={String(it.repeticoes)} min={1} max={200}
                               onChange={(v) => atualizarItem(ti, ii, { repeticoes: Math.max(1, Math.min(200, Number(v) || 1)) })} />
-                            <CampoNumero rotulo="Carga (kg)" valor={it.carga} min={0} max={1000} step="0.5" vazioOk
+                            <CampoNumero rotulo={t('Carga (kg)')} valor={it.carga} min={0} max={1000} step="0.5" vazioOk
                               onChange={(v) => atualizarItem(ti, ii, { carga: v })} />
                           </div>
-                          {it.observacoes && <p className="text-xs text-text-muted">Obs.: {it.observacoes}</p>}
+                          {it.observacoes && <p className="text-xs text-text-muted">{t('Obs.:')} {it.observacoes}</p>}
                         </li>
                       )
                     })}
@@ -337,22 +339,22 @@ export default function ImportarTreinoTextoModal({
                 <>
                   <button type="button" onClick={() => setTreinos(null)} disabled={confirmando}
                     className="min-h-11 rounded-xl border border-surface-input bg-surface px-5 text-sm font-semibold text-text-muted hover:text-text disabled:opacity-50 cursor-pointer">
-                    Voltar ao texto
+                    {t('Voltar ao texto')}
                   </button>
                   <button type="button" onClick={confirmar} disabled={!!pendencia || confirmando}
                     className="min-h-11 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground disabled:opacity-50 cursor-pointer active:scale-95 transition-all">
-                    {confirmando ? 'Criando…' : `${rotuloConfirmar} (${treinos.length})`}
+                    {confirmando ? t('Criando…') : `${rotuloConfirmar} (${treinos.length})`}
                   </button>
                 </>
               ) : (
                 <>
                   <button type="button" onClick={fechar} disabled={lendo}
                     className="min-h-11 rounded-xl border border-surface-input bg-surface px-5 text-sm font-semibold text-text-muted hover:text-text cursor-pointer">
-                    Cancelar
+                    {t('Cancelar')}
                   </button>
                   <button type="button" onClick={reconhecer} disabled={lendo || texto.trim().length < 10}
                     className="min-h-11 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground disabled:opacity-50 cursor-pointer active:scale-95 transition-all">
-                    {lendo ? 'Lendo o texto…' : 'Reconhecer treinos'}
+                    {lendo ? t('Lendo o texto…') : t('Reconhecer treinos')}
                   </button>
                 </>
               )}

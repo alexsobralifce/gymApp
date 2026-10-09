@@ -5,6 +5,7 @@ import Textarea from '../ui/Textarea'
 import FormField from '../ui/FormField'
 import { CheckIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface SistemaAvaliacaoModalProps {
   open: boolean
   onClose: () => void
@@ -33,6 +34,7 @@ const RESPOSTAS_INICIAIS: RespostasState = {
 }
 
 export default function SistemaAvaliacaoModal({ open, onClose, onSubmitted }: SistemaAvaliacaoModalProps) {
+  const { t } = useT()
   const [nota, setNota] = useState(0)
   const [respostas, setRespostas] = useState<RespostasState>(RESPOSTAS_INICIAIS)
   const [mensagem, setMensagem] = useState('')
@@ -76,7 +78,7 @@ export default function SistemaAvaliacaoModal({ open, onClose, onSubmitted }: Si
         onClose()
       }, 2000)
     } catch (err) {
-      setError((err as Error)?.message || 'Erro ao enviar avaliação. Tente novamente.')
+      setError(t((err as Error)?.message) || t('Erro ao enviar avaliação. Tente novamente.'))
       setLoading(false)
     }
   }
@@ -93,19 +95,19 @@ export default function SistemaAvaliacaoModal({ open, onClose, onSubmitted }: Si
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 border-2 border-success/20">
                 <CheckIcon className="h-8 w-8 text-success" />
               </div>
-              <h3 className="text-lg font-bold text-text">Obrigado pelo seu feedback! 🎉</h3>
+              <h3 className="text-lg font-bold text-text">{t('Obrigado pelo seu feedback! 🎉')}</h3>
             </div>
           ) : (
             <div className="space-y-5">
               <div className="text-center space-y-1">
-                <h2 className="text-lg font-bold text-text">Como foi sua experiência?</h2>
-                <p className="text-sm text-text-muted">Sua opinião nos ajuda a melhorar o app.</p>
+                <h2 className="text-lg font-bold text-text">{t('Como foi sua experiência?')}</h2>
+                <p className="text-sm text-text-muted">{t('Sua opinião nos ajuda a melhorar o app.')}</p>
               </div>
 
               {/* Nota geral */}
               <div className="rounded-2xl bg-surface border border-surface-input p-4 flex flex-col items-center gap-2">
-                <span className="text-sm font-bold text-text">Nota geral</span>
-                <span className="text-xs text-text-muted text-center">Como você avalia sua experiência geral?</span>
+                <span className="text-sm font-bold text-text">{t('Nota geral')}</span>
+                <span className="text-xs text-text-muted text-center">{t('Como você avalia sua experiência geral?')}</span>
                 <StarRating value={nota} onChange={setNota} size={32} />
               </div>
 
@@ -113,7 +115,7 @@ export default function SistemaAvaliacaoModal({ open, onClose, onSubmitted }: Si
               <div className="space-y-2.5">
                 {PERGUNTAS.map((p) => (
                   <div key={p.key} className="rounded-xl bg-surface border border-surface-input p-3.5">
-                    <p className="text-sm font-semibold text-text">{p.label}</p>
+                    <p className="text-sm font-semibold text-text">{t(p.label)}</p>
                     <p className="text-xs text-text-muted leading-snug mb-2">{p.pergunta}</p>
                     <StarRating
                       value={respostas[p.key]}
@@ -124,12 +126,12 @@ export default function SistemaAvaliacaoModal({ open, onClose, onSubmitted }: Si
                 ))}
               </div>
 
-              <FormField label="Encontrou um bug ou quer deixar uma mensagem?" htmlFor="avaliacao-mensagem">
+              <FormField label={t('Encontrou um bug ou quer deixar uma mensagem?')} htmlFor="avaliacao-mensagem">
                 <Textarea
                   id="avaliacao-mensagem"
                   value={mensagem}
                   onChange={(e) => setMensagem(e.target.value)}
-                  placeholder="Opcional"
+                  placeholder={t('Opcional')}
                   maxLength={2000}
                 />
               </FormField>
@@ -142,14 +144,14 @@ export default function SistemaAvaliacaoModal({ open, onClose, onSubmitted }: Si
                   disabled={nota === 0 || loading}
                   className="w-full rounded-xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  {loading ? 'Enviando...' : 'Enviar avaliação'}
+                  {loading ? 'Enviando...' : t('Enviar avaliação')}
                 </button>
                 <button
                   onClick={onClose}
                   disabled={loading}
                   className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-sm font-medium text-text-muted hover:text-text hover:border-primary/30 transition-all disabled:opacity-50 cursor-pointer"
                 >
-                  Agora não
+                  {t('Agora não')}
                 </button>
               </div>
             </div>

@@ -7,6 +7,23 @@
     "/quem-somos",
     "/app-para-personal-trainer",
     "/software-para-academia",
-    "/app-de-treino"
+    "/app-de-treino",
+    "/ferramentas",
+    "/ferramentas/calculadora-imc",
+    "/ferramentas/peso-ideal",
+    "/ferramentas/gasto-calorico",
+    "/ferramentas/calorias-para-meta",
+    "/en",
+    "/en/about-us",
+    "/en/personal-trainer-app",
+    "/en/gym-management-software",
+    "/en/workout-app",
+    "/en/pricing",
+    "/en/privacy-policy",
+    "/en/tools",
+    "/en/tools/bmi-calculator",
+    "/en/tools/ideal-weight-calculator",
+    "/en/tools/calorie-calculator",
+    "/en/tools/calorie-goal-calculator"
   ]
 }

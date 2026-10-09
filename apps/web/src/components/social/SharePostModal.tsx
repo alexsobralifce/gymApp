@@ -16,6 +16,8 @@ import { api } from '../../api/client'
 import { resolveMediaUrl } from '../../lib/media'
 import type { SocialPost } from '../../types/api'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 interface SharePostModalProps {
   open: boolean
   onClose: () => void
@@ -31,6 +33,7 @@ export default function SharePostModal({
   storyData: propStoryData,
   fotoSrc: propFotoSrc,
 }: SharePostModalProps) {
+  const { t } = useT()
   const [gerando, setGerando] = useState(false)
   const [publicandoIg, setPublicandoIg] = useState(false)
   const [loginModalOpen, setLoginModalOpen] = useState(false)
@@ -62,7 +65,7 @@ export default function SharePostModal({
       : 'Treino Concluído',
     duracaoFormatada: '45 min',
     data: post?.criado_em
-      ? new Date(post.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase()
+      ? new Date(post.criado_em).toLocaleDateString(localeAtual(), { day: '2-digit', month: 'short' }).toUpperCase()
       : undefined,
     fotoUsuario: post?.autor_foto_url ? resolveMediaUrl(post.autor_foto_url) : undefined,
     alunoNome: post?.autor_nome,
@@ -80,12 +83,12 @@ export default function SharePostModal({
       const blob = await gerarStoryImage(effectiveStoryData, effectiveFotoSrc)
       const res = await compartilharStoryCard(blob, 'Treino Concluído - Endorfinapp')
       if (res.compartilhado) {
-        setMensagemSucesso('Compartilhamento iniciado! Selecione o Instagram nos seus apps.')
+        setMensagemSucesso(t('Compartilhamento iniciado! Selecione o Instagram nos seus apps.'))
       } else if (res.baixado) {
-        setMensagemSucesso('Card 9:16 oficial salvo em Downloads! Envie para seu celular ou poste no Instagram.')
+        setMensagemSucesso(t('Card 9:16 oficial salvo em Downloads! Envie para seu celular ou poste no Instagram.'))
       }
     } catch (err: any) {
-      setErro(err?.message || 'Falha ao gerar Story Card.')
+      setErro(t(err?.message) || t('Falha ao gerar Story Card.'))
     } finally {
       setGerando(false)
     }
@@ -117,9 +120,9 @@ export default function SharePostModal({
         caption: shareText,
       })
 
-      setMensagemSucesso('Post publicado com sucesso no seu perfil do Instagram! 🎉')
+      setMensagemSucesso(t('Post publicado com sucesso no seu perfil do Instagram! 🎉'))
     } catch (err: any) {
-      setErro(err?.message || 'Não foi possível publicar diretamente no Instagram.')
+      setErro(t(err?.message) || t('Não foi possível publicar diretamente no Instagram.'))
     } finally {
       setPublicandoIg(false)
     }
@@ -142,9 +145,9 @@ export default function SharePostModal({
     try {
       const blob = await gerarStoryImage(effectiveStoryData, effectiveFotoSrc)
       baixarBlobComoArquivo(blob, `treino-endorfinapp-${Date.now()}.png`)
-      setMensagemSucesso('Card 9:16 salvo em alta resolução!')
+      setMensagemSucesso(t('Card 9:16 salvo em alta resolução!'))
     } catch (err: any) {
-      setErro(err?.message || 'Erro ao salvar imagem.')
+      setErro(t(err?.message) || t('Erro ao salvar imagem.'))
     } finally {
       setGerando(false)
     }
@@ -157,7 +160,7 @@ export default function SharePostModal({
         <div className="flex items-center justify-between border-b border-surface-input pb-3">
           <div className="flex items-center gap-2">
             <InstagramIcon className="h-5 w-5 text-pink-500" />
-            <h2 className="text-base font-bold text-text">Compartilhar Treino</h2>
+            <h2 className="text-base font-bold text-text">{t('Compartilhar Treino')}</h2>
           </div>
           <button
             type="button"
@@ -173,7 +176,7 @@ export default function SharePostModal({
           {effectiveFotoSrc ? (
             <img
               src={effectiveFotoSrc}
-              alt="Foto do treino"
+              alt={t('Foto do treino')}
               className="h-12 w-12 rounded-lg object-cover shrink-0 border border-surface-input"
             />
           ) : (
@@ -186,7 +189,7 @@ export default function SharePostModal({
               {effectiveStoryData.treinoNome}
             </p>
             <p className="text-[11px] text-text-muted truncate">
-              Card 9:16 oficial com métricas
+              {t('Card 9:16 oficial com métricas')}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="rounded bg-primary/10 px-1.5 py-0.2 text-[10px] font-bold text-primary">
@@ -230,14 +233,14 @@ export default function SharePostModal({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-bold text-text group-hover:text-pink-400 transition-colors">
-                  Instagram Stories
+                  {t('Instagram Stories')}
                 </p>
                 <span className="rounded-full bg-pink-500/20 px-1.5 py-0.2 text-[9px] font-bold text-pink-300">
-                  INSTANTÂNEO
+                  {t('INSTANTÂNEO')}
                 </span>
               </div>
               <p className="text-[11px] text-text-muted">
-                Gera card 9:16 com métricas do seu treino
+                {t('Gera card 9:16 com métricas do seu treino')}
               </p>
             </div>
           </button>
@@ -255,7 +258,7 @@ export default function SharePostModal({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-bold text-text group-hover:text-purple-400 transition-colors">
-                  Feed do Instagram
+                  {t('Feed do Instagram')}
                 </p>
                 {igConectado ? (
                   <span className="rounded-md bg-success/20 px-1.5 py-0.5 text-[9px] font-bold text-success">
@@ -263,16 +266,16 @@ export default function SharePostModal({
                   </span>
                 ) : !igConfigurado ? (
                   <span className="rounded-md bg-surface-input px-1.5 py-0.5 text-[9px] font-bold text-text-muted">
-                    Em breve
+                    {t('Em breve')}
                   </span>
                 ) : null}
               </div>
               <p className="text-[11px] text-text-muted">
                 {igConectado
-                  ? 'Publicar foto automaticamente no seu perfil'
+                  ? t('Publicar foto automaticamente no seu perfil')
                   : !igConfigurado
-                  ? 'Publicação direta via API em configuração'
-                  : 'Conectar conta para postagem direta'}
+                  ? t('Publicação direta via API em configuração')
+                  : t('Conectar conta para postagem direta')}
               </p>
             </div>
           </button>
@@ -289,10 +292,10 @@ export default function SharePostModal({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-text group-hover:text-blue-400 transition-colors">
-                Facebook
+                {t('Facebook')}
               </p>
               <p className="text-[11px] text-text-muted">
-                Compartilhar na sua linha do tempo
+                {t('Compartilhar na sua linha do tempo')}
               </p>
             </div>
           </button>
@@ -309,10 +312,10 @@ export default function SharePostModal({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-text group-hover:text-emerald-400 transition-colors">
-                WhatsApp
+                {t('WhatsApp')}
               </p>
               <p className="text-[11px] text-text-muted">
-                Enviar para amigos ou grupos
+                {t('Enviar para amigos ou grupos')}
               </p>
             </div>
           </button>
@@ -329,10 +332,10 @@ export default function SharePostModal({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-text group-hover:text-primary transition-colors">
-                Salvar Card em Alta Resolução
+                {t('Salvar Card em Alta Resolução')}
               </p>
               <p className="text-[11px] text-text-muted">
-                Baixar imagem PNG 1080x1920
+                {t('Baixar imagem PNG 1080x1920')}
               </p>
             </div>
           </button>
@@ -344,7 +347,7 @@ export default function SharePostModal({
           onClick={onClose}
           className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
         >
-          Fechar
+          {t('Fechar')}
         </button>
       </div>
 
@@ -360,7 +363,7 @@ export default function SharePostModal({
         onSuccess={() => {
           setIgConectado(true)
           setLoginModalOpen(false)
-          setMensagemSucesso('Instagram conectado com sucesso! Clique novamente para publicar no feed.')
+          setMensagemSucesso(t('Instagram conectado com sucesso! Clique novamente para publicar no feed.'))
         }}
         onSelectStoriesFallback={() => {
           setLoginModalOpen(false)

@@ -1,3 +1,4 @@
+import { localeAtual } from '../i18n'
 export interface StoryData {
   treinoNome: string
   duracaoFormatada: string
@@ -351,7 +352,7 @@ export async function gerarStoryImage(
 
   // 4. Badge "TREINO CONCLUÍDO • DATA • HORÁRIO"
   ctx.save()
-  const dataTxt = data.data ?? new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase()
+  const dataTxt = data.data ?? new Date().toLocaleDateString(localeAtual(), { day: '2-digit', month: 'short' }).toUpperCase()
   const horarioTxt = data.horaInicio && data.horaFim
     ? ` • ${data.horaInicio} → ${data.horaFim}`
     : data.horaFim
@@ -428,7 +429,7 @@ export async function gerarStoryImage(
   if (data.volumeKg && data.volumeKg > 0) {
     items.push({
       label: 'CARGA TOTAL',
-      valor: `${data.volumeKg.toLocaleString('pt-BR')}`,
+      valor: `${data.volumeKg.toLocaleString(localeAtual())}`,
       unidade: 'kg',
       icon: '🏋️‍♂️',
       cor: '#34D399',

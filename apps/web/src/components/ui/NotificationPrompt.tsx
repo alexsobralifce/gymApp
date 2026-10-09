@@ -3,10 +3,12 @@ import { CheckIcon } from '../icons/Icon'
 import { useState, useEffect, useCallback } from 'react'
 import { activatePush, checkNotificationStatus, type NotificationStatus } from '../../hooks/useNotifications'
 
+import { useT } from '../../i18n'
 const DISMISS_KEY = 'gymapp_notif_prompt_dismissed'
 const REAPPEAR_MS = 7 * 24 * 60 * 60 * 1000
 
 export default function NotificationPrompt() {
+  const { t } = useT()
   const [visible, setVisible] = useState(false)
   const [permission, setPermission] = useState<NotificationStatus>('default')
   const [checking, setChecking] = useState(false)
@@ -125,7 +127,7 @@ export default function NotificationPrompt() {
         <button
           onClick={handleDismiss}
           className="absolute top-3 right-3 text-text-muted hover:text-text transition-all cursor-pointer"
-          aria-label="Fechar"
+          aria-label={t('Fechar')}
         >
           <XIcon className="h-4 w-4" />
         </button>
@@ -145,30 +147,27 @@ export default function NotificationPrompt() {
           <div className="min-w-0">
             {isDenied ? (
               <>
-                <h3 className="text-sm font-bold text-text">Notificações bloqueadas</h3>
+                <h3 className="text-sm font-bold text-text">{t('Notificações bloqueadas')}</h3>
                 <p className="text-xs text-text-muted leading-tight mt-1">
                   {isDesktop() ? (
                     <>
-                      Reative no cadeado da barra de endereço (
-                      <span className="font-bold text-text">Configurações do site → Notificações → Permitir</span>
-                      ) e confira abaixo.
+                      {t('Reative no cadeado da barra de endereço (')}
+                      <span className="font-bold text-text">{t('Configurações do site → Notificações → Permitir')}</span>
+                      {t(') e confira abaixo.')}
                     </>
                   ) : (
                     <>
-                      O navegador bloqueou as notificações deste site. Para reativar, toque no menu
-                      <span className="font-bold text-text"> ⋮ </span>do Chrome (ou no cadeado da barra
-                      de endereço) e escolha <span className="font-bold text-text">Configurações do
-                      site → Notificações → Permitir</span>.
+                      {t('O navegador bloqueou as notificações deste site. Para reativar, toque no menu')}
+                      <span className="font-bold text-text"> ⋮ </span>{t('do Chrome (ou no cadeado da barra de endereço) e escolha')} <span className="font-bold text-text">{t('Configurações do site → Notificações → Permitir')}</span>.
                     </>
                   )}
                 </p>
               </>
             ) : (
               <>
-                <h3 className="text-sm font-bold text-text">Receba notificações</h3>
+                <h3 className="text-sm font-bold text-text">{t('Receba notificações')}</h3>
                 <p className="text-xs text-text-muted leading-tight mt-1">
-                  Saiba quando seus amigos treinam, receba lembretes de treino e
-                  mensagens motivacionais. Ative as notificações!
+                  {t('Saiba quando seus amigos treinam, receba lembretes de treino e mensagens motivacionais. Ative as notificações!')}
                 </p>
               </>
             )}
@@ -182,7 +181,7 @@ export default function NotificationPrompt() {
             className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-bold text-text-muted hover:text-text transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${checking ? 'animate-spin' : ''}`} />
-            {checking ? 'Verificando...' : 'Já reativei — verificar'}
+            {checking ? 'Verificando...' : t('Já reativei — verificar')}
           </button>
         ) : (
           <div className="flex gap-2">
@@ -190,14 +189,14 @@ export default function NotificationPrompt() {
               onClick={handleDismiss}
               className="flex-1 rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-bold text-text-muted hover:text-text transition-all cursor-pointer"
             >
-              Agora não
+              {t('Agora não')}
             </button>
             <button
               onClick={handleAllow}
               className="flex-1 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-sm hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <CheckIcon className="h-4 w-4" />
-              Ativar
+              {t('Ativar')}
             </button>
           </div>
         )}

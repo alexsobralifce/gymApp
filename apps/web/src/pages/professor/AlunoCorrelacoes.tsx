@@ -31,6 +31,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 const NOMES_MESES: Record<string, string> = {
   '01': 'Janeiro',
   '02': 'Fevereiro',
@@ -52,6 +54,7 @@ function getNomeMesAno(mesStr: string) {
 }
 
 export default function ProfessorAlunoEvolucao() {
+  const { t } = useT()
   const { alunoId } = useParams<{ alunoId: string }>()
   const navigate = useNavigate()
 
@@ -112,7 +115,7 @@ export default function ProfessorAlunoEvolucao() {
   const chartData = medidas
     .filter((m) => m.peso_kg)
     .map((m) => ({
-      data: new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      data: new Date(m.data).toLocaleDateString(localeAtual(), { day: '2-digit', month: '2-digit' }),
       peso: m.peso_kg,
       imc: m.imc,
     }))
@@ -137,15 +140,15 @@ export default function ProfessorAlunoEvolucao() {
           onClick={() => navigate('/')}
           className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted hover:text-primary mb-3 transition-colors cursor-pointer"
         >
-          <ChevronLeftIcon className="h-4 w-4" /> Voltar ao Dashboard
+          <ChevronLeftIcon className="h-4 w-4" /> {t('Voltar ao Dashboard')}
         </button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-text">Acompanhamento do Aluno</h1>
-            <p className="text-xs text-text-muted mt-0.5">Evolução, histórico de treinos e cargas registradas</p>
+            <h1 className="text-xl font-bold text-text">{t('Acompanhamento do Aluno')}</h1>
+            <p className="text-xs text-text-muted mt-0.5">{t('Evolução, histórico de treinos e cargas registradas')}</p>
           </div>
           <span className="rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary">
-            Perfil Professor
+            {t('Perfil Professor')}
           </span>
         </div>
       </div>
@@ -162,7 +165,7 @@ export default function ProfessorAlunoEvolucao() {
           }`}
         >
           <ActivityIcon className="h-3.5 w-3.5 shrink-0" />
-          Resumo & Ciência
+          {t('Resumo & Ciência')}
         </button>
         <button
           type="button"
@@ -174,7 +177,7 @@ export default function ProfessorAlunoEvolucao() {
           }`}
         >
           <DumbbellIcon className="h-3.5 w-3.5 shrink-0" />
-          Timeline ({historicoExecucoes.length})
+          {t('Timeline (')}{historicoExecucoes.length})
         </button>
         <button
           type="button"
@@ -186,7 +189,7 @@ export default function ProfessorAlunoEvolucao() {
           }`}
         >
           <RulerIcon className="h-3.5 w-3.5 shrink-0" />
-          Medidas
+          {t('Medidas')}
         </button>
       </div>
 
@@ -202,7 +205,7 @@ export default function ProfessorAlunoEvolucao() {
           </button>
 
           <div className="text-center">
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">Mês Selecionado</span>
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">{t('Mês Selecionado')}</span>
             <span className="text-sm font-bold text-text">{getNomeMesAno(mesAtualStr)}</span>
           </div>
 
@@ -228,13 +231,13 @@ export default function ProfessorAlunoEvolucao() {
                 <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted">
                     <ActivityIcon className="h-4 w-4 text-primary" />
-                    Frequência
+                    {t('Frequência')}
                   </div>
                   <div className="text-2xl font-black text-text">
-                    {evolucaoMensal.totalTreinos} <span className="text-xs font-normal text-text-muted">treinos</span>
+                    {evolucaoMensal.totalTreinos} <span className="text-xs font-normal text-text-muted">{t('treinos')}</span>
                   </div>
                   <div className="text-xs text-text-muted flex items-center gap-1">
-                    <span>Meta mensal: {evolucaoMensal.metaSemanal * 4}</span>
+                    <span>{t('Meta mensal:')} {evolucaoMensal.metaSemanal * 4}</span>
                     <span className="font-bold text-success">({evolucaoMensal.frequenciaPercent}%)</span>
                   </div>
                 </div>
@@ -243,18 +246,18 @@ export default function ProfessorAlunoEvolucao() {
                 <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted">
                     <TrophyIcon className="h-4 w-4 text-warning" />
-                    Volume Total
+                    {t('Volume Total')}
                   </div>
                   <div className="text-2xl font-black text-text">
-                    {evolucaoMensal.volumeTotalKg.toLocaleString('pt-BR')} <span className="text-xs font-normal text-text-muted">kg</span>
+                    {evolucaoMensal.volumeTotalKg.toLocaleString(localeAtual())} <span className="text-xs font-normal text-text-muted">{t('kg')}</span>
                   </div>
                   <div className="text-xs text-text-muted">
                     {evolucaoMensal.variacaoVolumePercent !== 0 ? (
                       <span className={evolucaoMensal.variacaoVolumePercent > 0 ? 'text-success font-bold' : 'text-destructive font-bold'}>
-                        {evolucaoMensal.variacaoVolumePercent > 0 ? `+${evolucaoMensal.variacaoVolumePercent}%` : `${evolucaoMensal.variacaoVolumePercent}%`} vs mês ant.
+                        {evolucaoMensal.variacaoVolumePercent > 0 ? `+${evolucaoMensal.variacaoVolumePercent}%` : `${evolucaoMensal.variacaoVolumePercent}%`} {t('vs mês ant.')}
                       </span>
                     ) : (
-                      <span>Sem dados ant.</span>
+                      <span>{t('Sem dados ant.')}</span>
                     )}
                   </div>
                 </div>
@@ -263,13 +266,13 @@ export default function ProfessorAlunoEvolucao() {
                 <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted">
                     <TimerIcon className="h-4 w-4 text-blue-400" />
-                    Tempo de Treino
+                    {t('Tempo de Treino')}
                   </div>
                   <div className="text-2xl font-black text-text">
                     {Math.floor(evolucaoMensal.duracaoTotalMinutos / 60)}h {evolucaoMensal.duracaoTotalMinutos % 60}m
                   </div>
                   <div className="text-xs text-text-muted">
-                    Média: <span className="font-bold text-text">{evolucaoMensal.duracaoMediaMinutos} min</span> / sessão
+                    {t('Média:')} <span className="font-bold text-text">{evolucaoMensal.duracaoMediaMinutos} {t('min')}</span> {t('/ sessão')}
                   </div>
                 </div>
 
@@ -277,20 +280,20 @@ export default function ProfessorAlunoEvolucao() {
                 <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-text-muted truncate">
                     <ChartLineIcon className="h-4 w-4 text-purple-400" />
-                    Maior Carga
+                    {t('Maior Carga')}
                   </div>
                   <div className="text-2xl font-black text-text">
                     {evolucaoMensal.maiorCargaExercicio ? `${evolucaoMensal.maiorCargaExercicio.cargaKg} kg` : '---'}
                   </div>
                   <div className="text-xs text-text-muted truncate">
-                    {evolucaoMensal.maiorCargaExercicio ? evolucaoMensal.maiorCargaExercicio.nome : 'Nenhum registro'}
+                    {evolucaoMensal.maiorCargaExercicio ? evolucaoMensal.maiorCargaExercicio.nome : t('Nenhum registro')}
                   </div>
                 </div>
               </div>
 
               {/* Gráfico Semanal */}
               <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-3">
-                <h3 className="text-xs font-bold text-text uppercase tracking-wider">Desempenho por Semana do Mês</h3>
+                <h3 className="text-xs font-bold text-text uppercase tracking-wider">{t('Desempenho por Semana do Mês')}</h3>
                 <div className="h-48 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={evolucaoMensal.semanas} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
@@ -306,7 +309,7 @@ export default function ProfessorAlunoEvolucao() {
                           color: '#f4f4f5',
                         }}
                         formatter={(val: any, name?: any) => [
-                          String(name) === 'volumeKg' ? `${Number(val || 0).toLocaleString('pt-BR')} kg` : `${val} treinos`,
+                          String(name) === 'volumeKg' ? `${Number(val || 0).toLocaleString(localeAtual())} kg` : `${val} treinos`,
                           String(name) === 'volumeKg' ? 'Volume Semanal' : 'Treinos Realizados'
                         ]}
                       />
@@ -326,7 +329,7 @@ export default function ProfessorAlunoEvolucao() {
                   <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-4">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">🏋️</span>
-                      <h3 className="text-xs font-bold text-text uppercase tracking-wider">Progressão de Cargas por Semana</h3>
+                      <h3 className="text-xs font-bold text-text uppercase tracking-wider">{t('Progressão de Cargas por Semana')}</h3>
                     </div>
 
                     <div className="space-y-3">
@@ -349,9 +352,9 @@ export default function ProfessorAlunoEvolucao() {
                                 reduziu ? 'bg-warning/10 text-warning border-warning/20' :
                                 'bg-text-muted/10 text-text-muted border-text-muted/20'
                               }`}>
-                                {evoluiu ? `▲ +${(ultimaCarga - primeiraCarga).toFixed(1)} kg` :
-                                 reduziu ? `▼ ${(ultimaCarga - primeiraCarga).toFixed(1)} kg` :
-                                 '➡ mantido'}
+                                {evoluiu ? t('▲ +{v1} kg', { v1: (ultimaCarga - primeiraCarga).toFixed(1) }) :
+                                 reduziu ? t('▼ {v1} kg', { v1: (ultimaCarga - primeiraCarga).toFixed(1) }) :
+                                 t('➡ mantido')}
                               </span>
                             </div>
 
@@ -394,30 +397,30 @@ export default function ProfessorAlunoEvolucao() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border mb-1 ${insight.badgeColor}`}>
-                      Análise Científica da Jornada do Aluno
+                      {t('Análise Científica da Jornada do Aluno')}
                     </span>
-                    <h3 className="text-base font-bold text-text leading-snug">{insight.titulo}</h3>
-                    <p className="text-xs text-text-muted mt-0.5">{insight.subtitulo}</p>
+                    <h3 className="text-base font-bold text-text leading-snug">{t(insight.titulo)}</h3>
+                    <p className="text-xs text-text-muted mt-0.5">{t(insight.subtitulo)}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                   <div className="p-3 rounded-xl bg-surface border border-surface-input space-y-1">
-                    <span className="text-xs font-bold text-primary uppercase block">💪 Corpo</span>
+                    <span className="text-xs font-bold text-primary uppercase block">{t('💪 Corpo')}</span>
                     <p className="text-xs text-text-muted leading-relaxed">{insight.beneficioCorpo}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-surface border border-surface-input space-y-1">
-                    <span className="text-xs font-bold text-blue-400 uppercase block">🧠 Mente</span>
+                    <span className="text-xs font-bold text-blue-400 uppercase block">{t('🧠 Mente')}</span>
                     <p className="text-xs text-text-muted leading-relaxed">{insight.beneficioMente}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-surface border border-surface-input space-y-1">
-                    <span className="text-xs font-bold text-success uppercase block">❤️ Saúde</span>
+                    <span className="text-xs font-bold text-success uppercase block">{t('❤️ Saúde')}</span>
                     <p className="text-xs text-text-muted leading-relaxed">{insight.beneficioSaude}</p>
                   </div>
                 </div>
 
                 <div className="rounded-xl bg-surface-input/40 p-3 border border-surface-input text-xs text-text-muted space-y-1">
-                  <span className="font-bold text-text uppercase tracking-wider block text-[10px]">🔬 Evidência Científica Válida</span>
+                  <span className="font-bold text-text uppercase tracking-wider block text-[10px]">{t('🔬 Evidência Científica Válida')}</span>
                   <p className="italic leading-relaxed">{insight.cienciaRef}</p>
                 </div>
               </div>
@@ -427,7 +430,7 @@ export default function ProfessorAlunoEvolucao() {
                 <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-4">
                   <div className="flex items-center gap-2">
                     <ChartLineIcon className="h-4 w-4 text-primary" />
-                    <h2 className="text-sm font-bold text-text uppercase tracking-wider">Evolução do Peso Corporal</h2>
+                    <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Evolução do Peso Corporal')}</h2>
                   </div>
                   <div className="h-48 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -458,13 +461,13 @@ export default function ProfessorAlunoEvolucao() {
                 </div>
               ) : (
                 <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center">
-                  <p className="text-xs text-text-muted">Sem medições suficientes de peso para exibir gráfico temporal.</p>
+                  <p className="text-xs text-text-muted">{t('Sem medições suficientes de peso para exibir gráfico temporal.')}</p>
                 </div>
               )}
             </div>
           ) : (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center">
-              <p className="text-sm text-text-muted">Nenhum dado de evolução registrado neste mês.</p>
+              <p className="text-sm text-text-muted">{t('Nenhum dado de evolução registrado neste mês.')}</p>
             </div>
           )}
         </>
@@ -476,15 +479,15 @@ export default function ProfessorAlunoEvolucao() {
           {historicoExecucoes.length === 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-8 text-center space-y-2">
               <DumbbellIcon className="h-8 w-8 text-text-muted mx-auto opacity-40" />
-              <h3 className="text-sm font-bold text-text">Nenhum treino concluído no período</h3>
+              <h3 className="text-sm font-bold text-text">{t('Nenhum treino concluído no período')}</h3>
               <p className="text-xs text-text-muted">
-                As sessões de treino finalizadas pelo aluno aparecerão aqui detalhando data, horário, exercícios e cargas.
+                {t('As sessões de treino finalizadas pelo aluno aparecerão aqui detalhando data, horário, exercícios e cargas.')}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {historicoExecucoes.map((sessao) => {
-                const dataFormatada = new Date(sessao.dataConclusao).toLocaleDateString('pt-BR', {
+                const dataFormatada = new Date(sessao.dataConclusao).toLocaleDateString(localeAtual(), {
                   weekday: 'short',
                   day: '2-digit',
                   month: '2-digit',
@@ -505,13 +508,13 @@ export default function ProfessorAlunoEvolucao() {
                       </div>
                       <div className="flex items-center gap-1.5 rounded-xl bg-surface border border-surface-input px-3 py-1.5 text-xs font-semibold text-text-muted">
                         <TimerIcon className="h-3.5 w-3.5 text-primary" />
-                        <span>{sessao.duracaoMinutos} min</span>
+                        <span>{sessao.duracaoMinutos} {t('min')}</span>
                       </div>
                     </div>
 
                     {/* Exercícios e Cargas */}
                     {sessao.exercicios.length === 0 ? (
-                      <p className="text-xs text-text-muted italic py-1">Sem séries de exercícios registradas para esta sessão.</p>
+                      <p className="text-xs text-text-muted italic py-1">{t('Sem séries de exercícios registradas para esta sessão.')}</p>
                     ) : (
                       <div className="space-y-3">
                         {sessao.exercicios.map((ex) => (
@@ -531,9 +534,9 @@ export default function ProfessorAlunoEvolucao() {
                                   key={`${ex.exercicioId}-${serie.serieNumero}`}
                                   className="flex items-center gap-1.5 rounded-lg bg-surface-input/60 border border-surface-input px-2.5 py-1 text-xs"
                                 >
-                                  <span className="font-bold text-text-muted text-[10px]">Sér {serie.serieNumero}:</span>
-                                  <span className="font-black text-primary">{serie.cargaKg} kg</span>
-                                  <span className="text-text-muted text-[10px]">x {serie.repeticoes} reps</span>
+                                  <span className="font-bold text-text-muted text-[10px]">{t('Sér')} {serie.serieNumero}:</span>
+                                  <span className="font-black text-primary">{serie.cargaKg} {t('kg')}</span>
+                                  <span className="text-text-muted text-[10px]">x {serie.repeticoes} {t('reps')}</span>
                                 </div>
                               ))}
                             </div>
@@ -555,7 +558,7 @@ export default function ProfessorAlunoEvolucao() {
           {/* Correlações de Pearson r */}
           {correlacoes && Object.keys(correlacoes).length > 0 ? (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-3">
-              <h2 className="text-xs font-bold text-text uppercase tracking-wider">Correlações Estatísticas (Pearson r)</h2>
+              <h2 className="text-xs font-bold text-text uppercase tracking-wider">{t('Correlações Estatísticas (Pearson r)')}</h2>
               <div className="grid grid-cols-2 gap-3">
                 {Object.entries(correlacoes).map(([key, val]) => (
                   <div key={key} className="rounded-xl bg-surface border border-surface-input p-3 text-center space-y-1">
@@ -572,16 +575,16 @@ export default function ProfessorAlunoEvolucao() {
             </div>
           ) : (
             <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center">
-              <p className="text-xs text-text-muted">Nenhuma correlação estatística disponível no momento.</p>
+              <p className="text-xs text-text-muted">{t('Nenhuma correlação estatística disponível no momento.')}</p>
             </div>
           )}
 
           {/* Histórico de Medidas Corporais */}
           <div className="space-y-3">
-            <h2 className="text-xs font-bold text-text uppercase tracking-wider">Histórico de Medidas do Aluno</h2>
+            <h2 className="text-xs font-bold text-text uppercase tracking-wider">{t('Histórico de Medidas do Aluno')}</h2>
             {medidas.length === 0 ? (
               <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center">
-                <p className="text-xs text-text-muted">Nenhuma medida corporal cadastrada para este aluno.</p>
+                <p className="text-xs text-text-muted">{t('Nenhuma medida corporal cadastrada para este aluno.')}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -589,19 +592,19 @@ export default function ProfessorAlunoEvolucao() {
                   <div key={m.id} className="rounded-xl bg-surface-card border border-surface-input p-3 shadow-sm">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-text-muted">
-                        {new Date(m.data).toLocaleDateString('pt-BR')}
+                        {new Date(m.data).toLocaleDateString(localeAtual())}
                       </span>
                       {m.imc && (
                         <span className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
-                          IMC {m.imc.toFixed(1)}
+                          {t('IMC')} {m.imc.toFixed(1)}
                         </span>
                       )}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-3 text-xs">
-                      {m.peso_kg && <span className="text-text font-semibold">{m.peso_kg} kg</span>}
-                      {m.altura_cm && <span className="text-text-muted">{m.altura_cm} cm</span>}
-                      {m.percentual_bf != null && <span className="text-text-muted">BF: {m.percentual_bf}%</span>}
-                      {m.massa_magra_kg != null && <span className="text-text-muted">MM: {m.massa_magra_kg}kg</span>}
+                      {m.peso_kg && <span className="text-text font-semibold">{m.peso_kg} {t('kg')}</span>}
+                      {m.altura_cm && <span className="text-text-muted">{m.altura_cm} {t('cm')}</span>}
+                      {m.percentual_bf != null && <span className="text-text-muted">{t('BF:')} {m.percentual_bf}%</span>}
+                      {m.massa_magra_kg != null && <span className="text-text-muted">{t('MM:')} {m.massa_magra_kg}{t('kg')}</span>}
                     </div>
                     {m.observacao && <p className="mt-1.5 text-xs text-text-muted italic border-t border-surface-input pt-1">{m.observacao}</p>}
                   </div>

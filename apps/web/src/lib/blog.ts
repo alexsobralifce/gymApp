@@ -1,3 +1,4 @@
+import { localeAtual } from '../i18n'
 export interface ImagemArtigo {
   url: string
   alt: string
@@ -44,5 +45,5 @@ export function buscarArtigo(slug: string | undefined): Artigo | undefined {
 }
 
 export function formatarData(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(`${iso}T12:00:00`).toLocaleDateString(localeAtual(), { day: 'numeric', month: 'long', year: 'numeric' })
 }

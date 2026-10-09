@@ -6,6 +6,8 @@ import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { ChevronLeftIcon, ChartLineIcon, TrophyIcon, DumbbellIcon } from '../../components/icons/Icon'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 const PERIODOS: Array<{ valor: PeriodoHistorico; rotulo: string }> = [
   { valor: '7d', rotulo: '7 dias' },
   { valor: '30d', rotulo: '30 dias' },
@@ -22,11 +24,11 @@ function readCssVar(name: string, fallback: string): string {
 }
 
 function formatDataCurta(isoDate: string): string {
-  return new Date(`${isoDate}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString(localeAtual(), { day: '2-digit', month: '2-digit' })
 }
 
 function formatDataLonga(isoDate: string): string {
-  return new Date(`${isoDate}T12:00:00`).toLocaleDateString('pt-BR', {
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString(localeAtual(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -35,15 +37,16 @@ function formatDataLonga(isoDate: string): string {
 
 function formatKg(valor: number | null | undefined): string {
   if (valor == null || Number.isNaN(valor)) return '—'
-  return `${Number(valor).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kg`
+  return `${Number(valor).toLocaleString(localeAtual(), { maximumFractionDigits: 1 })} kg`
 }
 
 function formatInt(valor: number | null | undefined): string {
   if (valor == null || Number.isNaN(valor)) return '—'
-  return Number(valor).toLocaleString('pt-BR')
+  return Number(valor).toLocaleString(localeAtual())
 }
 
 export default function HistoricoExercicio() {
+  const { t } = useT()
   const { exercicioId } = useParams<{ exercicioId: string }>()
   const navigate = useNavigate()
   const [periodo, setPeriodo] = useState<PeriodoHistorico>('90d')
@@ -92,12 +95,12 @@ export default function HistoricoExercicio() {
   }))
 
   const tendenciaGrafico = useMemo(() => {
-    if (sessoes.length < 2) return 'Apenas uma sessão registrada no período.'
+    if (sessoes.length < 2) return t('Apenas uma sessão registrada no período.')
     const primeira = sessoes[0].cargaMaxima
     const ultima = sessoes[sessoes.length - 1].cargaMaxima
-    if (ultima > primeira) return `A carga máxima subiu de ${primeira} kg para ${ultima} kg no período.`
-    if (ultima < primeira) return `A carga máxima caiu de ${primeira} kg para ${ultima} kg no período.`
-    return `A carga máxima se manteve em ${primeira} kg no período.`
+    if (ultima > primeira) return t('A carga máxima subiu de {primeira} kg para {ultima} kg no período.', { primeira, ultima })
+    if (ultima < primeira) return t('A carga máxima caiu de {primeira} kg para {ultima} kg no período.', { primeira, ultima })
+    return t('A carga máxima se manteve em {primeira} kg no período.', { primeira })
   }, [sessoes])
 
   const sessoesInvertidas = [...sessoes].reverse()
@@ -110,10 +113,10 @@ export default function HistoricoExercicio() {
           type="button"
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 min-h-11 px-3 py-2 rounded-xl text-sm font-bold text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
-          aria-label="Voltar"
+          aria-label={t('Voltar')}
         >
           <ChevronLeftIcon className="h-5 w-5" />
-          Voltar
+          {t('Voltar')}
         </button>
 
         <div className="flex items-center gap-3">
@@ -122,24 +125,24 @@ export default function HistoricoExercicio() {
           </span>
           <div className="min-w-0">
             <h1 className="text-xl font-black text-text leading-tight truncate">
-              {data?.exercicio.nome ?? 'Histórico do Exercício'}
+              {data?.exercicio.nome ?? t('Histórico do Exercício')}
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
               {data?.exercicio.grupo_muscular ? (
                 <StatusBadge label={data.exercicio.grupo_muscular} variant="active" size="sm" />
               ) : (
-                <span className="text-xs text-text-muted">Exercício</span>
+                <span className="text-xs text-text-muted">{t('Exercício')}</span>
               )}
             </div>
           </div>
         </div>
         <p className="text-xs text-text-muted">
-          Evolução de carga, 1RM estimado, volume e frequência — para saber se você está evoluindo neste exercício.
+          {t('Evolução de carga, 1RM estimado, volume e frequência — para saber se você está evoluindo neste exercício.')}
         </p>
       </div>
 
       {/* Filtro de período */}
-      <div className="flex items-center gap-1.5 rounded-2xl bg-surface-card border border-surface-input p-1.5 shadow-sm" role="group" aria-label="Período do histórico">
+      <div className="flex items-center gap-1.5 rounded-2xl bg-surface-card border border-surface-input p-1.5 shadow-sm" role="group" aria-label={t('Período do histórico')}>
         {PERIODOS.map((p) => {
           const ativo = periodo === p.valor
           return (
@@ -154,7 +157,7 @@ export default function HistoricoExercicio() {
                   : 'text-text-muted hover:text-text hover:bg-surface-input'
               }`}
             >
-              {p.rotulo}
+              {t(p.rotulo)}
             </button>
           )
         })}
@@ -167,21 +170,21 @@ export default function HistoricoExercicio() {
         </div>
       ) : error ? (
         <div className="rounded-2xl bg-surface-card border border-destructive/20 p-8 text-center space-y-3">
-          <p className="text-sm text-text font-semibold">Não foi possível carregar o histórico.</p>
+          <p className="text-sm text-text font-semibold">{t('Não foi possível carregar o histórico.')}</p>
           <p className="text-xs text-text-muted">{error}</p>
           <button
             type="button"
             onClick={() => load(periodo)}
             className="min-h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:brightness-110 transition-all cursor-pointer"
           >
-            Tentar novamente
+            {t('Tentar novamente')}
           </button>
         </div>
       ) : sessoes.length === 0 ? (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-10 text-center space-y-2">
           <ChartLineIcon className="h-10 w-10 text-text-muted mx-auto opacity-30" />
-          <p className="text-sm text-text font-bold">Nenhuma execução registrada ainda</p>
-          <p className="text-xs text-text-muted">Nenhuma execução registrada ainda para este exercício.</p>
+          <p className="text-sm text-text font-bold">{t('Nenhuma execução registrada ainda')}</p>
+          <p className="text-xs text-text-muted">{t('Nenhuma execução registrada ainda para este exercício.')}</p>
         </div>
       ) : (
         <>
@@ -190,43 +193,43 @@ export default function HistoricoExercicio() {
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted uppercase tracking-wider">
                 <TrophyIcon className="h-4 w-4 text-warning" />
-                Melhor carga
+                {t('Melhor carga')}
               </div>
               <div className="text-2xl font-black text-text">{formatKg(data?.estatisticas.melhorCarga)}</div>
               {data?.recordePessoal && (
-                <div className="text-[11px] font-bold text-success">🏆 Novo recorde!</div>
+                <div className="text-[11px] font-bold text-success">{t('🏆 Novo recorde!')}</div>
               )}
             </div>
 
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted uppercase tracking-wider">
                 <DumbbellIcon className="h-4 w-4 text-primary" />
-                1RM estimado
+                {t('1RM estimado')}
               </div>
               <div className="text-2xl font-black text-text">{formatKg(data?.estatisticas.estimativa1RMAtual)}</div>
-              <div className="text-[11px] text-text-muted">Fórmula de Brzycki</div>
+              <div className="text-[11px] text-text-muted">{t('Fórmula de Brzycki')}</div>
             </div>
 
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted uppercase tracking-wider">
                 <ChartLineIcon className="h-4 w-4 text-blue-400" />
-                Volume do período
+                {t('Volume do período')}
               </div>
               <div className="text-2xl font-black text-text">
-                {formatInt(data?.estatisticas.volumeTotalPeriodo)} <span className="text-xs font-normal text-text-muted">kg</span>
+                {formatInt(data?.estatisticas.volumeTotalPeriodo)} <span className="text-xs font-normal text-text-muted">{t('kg')}</span>
               </div>
-              <div className="text-[11px] text-text-muted">Σ carga × reps</div>
+              <div className="text-[11px] text-text-muted">{t('Σ carga × reps')}</div>
             </div>
 
             <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-1">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted uppercase tracking-wider">
                 <TrophyIcon className="h-4 w-4 text-success" />
-                Sessões
+                {t('Sessões')}
               </div>
               <div className="text-2xl font-black text-text">
-                {formatInt(data?.estatisticas.sessoesCount)} <span className="text-xs font-normal text-text-muted">dias</span>
+                {formatInt(data?.estatisticas.sessoesCount)} <span className="text-xs font-normal text-text-muted">{t('dias')}</span>
               </div>
-              <div className="text-[11px] text-text-muted">Dias com execução</div>
+              <div className="text-[11px] text-text-muted">{t('Dias com execução')}</div>
             </div>
           </div>
 
@@ -234,12 +237,12 @@ export default function HistoricoExercicio() {
           <div className="rounded-2xl bg-surface-card border border-surface-input p-4 shadow-sm space-y-3">
             <div className="flex items-center gap-2">
               <ChartLineIcon className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-bold text-text uppercase tracking-wider">Carga máxima por sessão</h2>
+              <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Carga máxima por sessão')}</h2>
             </div>
             <div
               className="h-56 w-full"
               role="img"
-              aria-label={`Gráfico de linha da carga máxima por sessão. ${tendenciaGrafico}`}
+              aria-label={t('Gráfico de linha da carga máxima por sessão. {tendenciaGrafico}', { tendenciaGrafico })}
             >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
@@ -283,7 +286,7 @@ export default function HistoricoExercicio() {
 
           {/* Lista de sessões (mais recente primeiro) */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Sessões</h2>
+            <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Sessões')}</h2>
             {sessoesInvertidas.map((s) => {
               const ehUltima = ultimaData !== null && s.data === ultimaData
               const exibirRecorde = data?.recordePessoal === true && ehUltima
@@ -297,17 +300,17 @@ export default function HistoricoExercicio() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-text">{formatDataLonga(s.data)}</span>
                     {exibirRecorde && (
-                      <StatusBadge label="Recorde pessoal" variant="warning" size="sm" />
+                      <StatusBadge label={t('Recorde pessoal')} variant="warning" size="sm" />
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <span className="font-black text-text">
                       {formatKg(s.cargaMaxima)} <span className="text-text-muted font-semibold">× {s.repsTop}</span>
                     </span>
-                    <span className="text-xs text-text-muted">Volume: {formatInt(s.volumeTotal)} kg</span>
-                    <span className="text-xs text-text-muted">{s.seriesCount} séries</span>
+                    <span className="text-xs text-text-muted">{t('Volume:')} {formatInt(s.volumeTotal)} {t('kg')}</span>
+                    <span className="text-xs text-text-muted">{s.seriesCount} {t('séries')}</span>
                     {s.estimativa1RM !== null && (
-                      <span className="text-xs font-bold text-primary">1RM ≈ {formatKg(s.estimativa1RM)}</span>
+                      <span className="text-xs font-bold text-primary">{t('1RM ≈')} {formatKg(s.estimativa1RM)}</span>
                     )}
                   </div>
                 </div>

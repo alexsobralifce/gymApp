@@ -4,6 +4,8 @@ import { useAuthStore } from '../../stores/auth'
 import type { AuthState } from '../../stores/auth'
 import { api } from '../../api/client'
 import { useThemeStore } from '../../stores/theme'
+import SeletorIdioma, { useLangDoApp } from '../ui/SeletorIdioma'
+import { useT } from '../../i18n'
 import OnboardingPopup from '../ui/OnboardingPopup'
 import IncompleteWorkoutBanner from '../ui/IncompleteWorkoutBanner'
 import VitrinePromocoes from '../promocoes/VitrinePromocoes'
@@ -75,13 +77,14 @@ function isSection(entry: NavEntry): entry is NavSection {
 }
 
 function AvaliarAppNavButton({ onClick }: { onClick: () => void }) {
+  const { t } = useT()
   return (
     <button
       onClick={onClick}
       className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-muted hover:bg-[var(--color-menu-hover)] hover:text-text transition-all duration-200 cursor-pointer"
     >
       <StarIcon className="h-5 w-5 shrink-0" />
-      <span>Avaliar o App</span>
+      <span>{t('Avaliar o App')}</span>
     </button>
   )
 }
@@ -352,6 +355,7 @@ function getPageTitle(pathname: string, role: string, isAdmin: boolean): string 
 }
 
 function NavSectionComponent({ section, collapsed = false, onClick }: { section: NavSection; collapsed?: boolean; onClick?: () => void }) {
+  const { t } = useT()
   const location = useLocation()
   const isChildActive = section.children.some((c) =>
     c.end ? location.pathname === c.to : location.pathname.startsWith(c.to)
@@ -369,7 +373,7 @@ function NavSectionComponent({ section, collapsed = false, onClick }: { section:
         <span className="shrink-0">{section.icon}</span>
         {!collapsed && (
           <>
-            <span className="flex-1 text-left">{section.label}</span>
+            <span className="flex-1 text-left">{t(section.label)}</span>
             <ChevronRightIcon className={`h-4 w-4 shrink-0 transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
           </>
         )}
@@ -389,7 +393,7 @@ function NavSectionComponent({ section, collapsed = false, onClick }: { section:
               }
             >
               {child.icon}
-              <span>{child.label}</span>
+              <span>{t(child.label)}</span>
             </NavLink>
           ))}
         </div>
@@ -405,6 +409,8 @@ export default function AppShell() {
   const setMode = useThemeStore((s) => s.setMode)
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useT()
+  useLangDoApp()
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -529,7 +535,7 @@ export default function AppShell() {
               className={linkClass}
             >
               {entry.icon}
-              <span>{entry.label}</span>
+              <span>{t(entry.label)}</span>
               {entry.to === '/feed' && atividadeMural > 0 && (
                 <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                   {atividadeMural}
@@ -547,7 +553,7 @@ export default function AppShell() {
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-all duration-200 cursor-pointer"
         >
           <LogOutIcon className="h-5 w-5" />
-          <span>Sair</span>
+          <span>{t('Sair')}</span>
         </button>
       </div>
     </div>
@@ -581,7 +587,7 @@ export default function AppShell() {
               ) : (
                 <NavLink key={entry.to} to={entry.to} end={entry.end} className={linkClass}>
                   {entry.icon}
-                  <span>{entry.label}</span>
+                  <span>{t(entry.label)}</span>
                   {entry.to === '/feed' && atividadeMural > 0 && (
                     <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
                       {atividadeMural}
@@ -598,7 +604,7 @@ export default function AppShell() {
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-all duration-200 cursor-pointer"
             >
               <LogOutIcon className="h-5 w-5" />
-              <span>Sair da Conta</span>
+              <span>{t('Sair da Conta')}</span>
             </button>
           </div>
         </aside>
@@ -613,11 +619,11 @@ export default function AppShell() {
               <button
                 onClick={() => setDrawerOpen(true)}
                 className="md:hidden rounded-xl p-2.5 text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer -ml-2 min-h-11 min-w-11 flex items-center justify-center"
-                title="Abrir Menu"
+                title={t('Abrir Menu')}
               >
                 <MenuIcon className="h-5 w-5" />
               </button>
-              <Link to="/" className="flex items-center gap-2 md:hidden shrink-0" title="Página Inicial">
+              <Link to="/" className="flex items-center gap-2 md:hidden shrink-0" title={t('Página Inicial')}>
                 <EndorfinappLogo variant="horizontal" iconSize={26} size={15} showSlogan={false} />
               </Link>
               {pageTitle && (
@@ -635,9 +641,9 @@ export default function AppShell() {
                   className={`group/btn flex items-center gap-2 rounded-xl p-1.5 pr-2.5 transition-all duration-200 cursor-pointer active:scale-95 min-w-0 hover:bg-surface-input ${
                     menuOpen ? 'bg-surface-input ring-2 ring-primary/20' : ''
                   }`}
-                  aria-label="Abrir menu do usuário"
+                  aria-label={t('Abrir menu do usuário')}
                   aria-expanded={menuOpen}
-                  title={`${user?.nome} • Clique para abrir o menu`}
+                  title={t('{nome} • Clique para abrir o menu', { nome: user?.nome })}
                 >
                   <div className="relative">
                     <UserAvatar
@@ -661,15 +667,15 @@ export default function AppShell() {
 
                 {!menuOpen && (
                   <div className="absolute right-0 top-full mt-2 px-2 py-1 rounded-lg bg-surface-card border border-border shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-40 whitespace-nowrap">
-                    <p className="text-xs font-semibold text-text">Menu</p>
-                    <p className="text-[10px] text-text-muted">Perfil, tema e configurações</p>
+                    <p className="text-xs font-semibold text-text">{t('Menu')}</p>
+                    <p className="text-[10px] text-text-muted">{t('Perfil, tema e configurações')}</p>
                   </div>
                 )}
 
                 {menuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-border bg-surface-card shadow-2xl z-30 overflow-hidden animate-scale-in">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Status</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">{t('Status')}</span>
                       <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-text">
                         {user?.admin ? 'Admin' : getRoleLabel(role)}
                       </span>
@@ -678,7 +684,7 @@ export default function AppShell() {
                     <div className="px-4 py-3 border-b border-border space-y-2">
                       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                         <PaletteIcon className="h-3.5 w-3.5 text-primary" />
-                        Modo
+                        {t('Modo')}
                       </div>
                       <div className="grid grid-cols-3 gap-1.5">
                         <button
@@ -689,9 +695,9 @@ export default function AppShell() {
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
-                          title="Auto por horário: claro 06h–18h, escuro 18h–06h"
+                          title={t('Auto por horário: claro 06h–18h, escuro 18h–06h')}
                         >
-                          Auto
+                          {t('Auto')}
                         </button>
                         <button
                           type="button"
@@ -701,9 +707,9 @@ export default function AppShell() {
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
-                          title="Força fundo claro"
+                          title={t('Força fundo claro')}
                         >
-                          Dia
+                          {t('Dia')}
                         </button>
                         <button
                           type="button"
@@ -713,11 +719,16 @@ export default function AppShell() {
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border bg-surface text-text-muted hover:bg-secondary hover:text-text'
                           }`}
-                          title="Força fundo escuro"
+                          title={t('Força fundo escuro')}
                         >
-                          Noite
+                          {t('Noite')}
                         </button>
                       </div>
+                    </div>
+
+                    <div className="px-4 py-3 border-b border-border space-y-2">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-text-muted">{t('Idioma')}</div>
+                      <SeletorIdioma />
                     </div>
 
                     <div className="py-1.5">
@@ -726,7 +737,7 @@ export default function AppShell() {
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
                       >
                         <UserCircleIcon className="h-4 w-4 text-text-muted" />
-                        Dados do Usuário
+                        {t('Dados do Usuário')}
                       </button>
                       {isAluno && (
                         <button
@@ -734,7 +745,7 @@ export default function AppShell() {
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                         >
                           <UserPlusIcon className="h-4 w-4 text-primary" />
-                          Tornar-se Professor
+                          {t('Tornar-se Professor')}
                         </button>
                       )}
                       <button
@@ -742,14 +753,14 @@ export default function AppShell() {
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
                       >
                         <ShieldIcon className="h-4 w-4 text-text-muted" />
-                        Privacidade
+                        {t('Privacidade')}
                       </button>
                       <button
                         onClick={handleAlterarSenha}
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-text hover:bg-secondary transition-colors cursor-pointer"
                       >
                         <KeyIcon className="h-4 w-4 text-text-muted" />
-                        Alterar Senha
+                        {t('Alterar Senha')}
                       </button>
                       <a
                         id="menu-whatsapp-suporte"
@@ -760,7 +771,7 @@ export default function AppShell() {
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#25D366] hover:bg-[#25D366]/10 transition-colors cursor-pointer"
                       >
                         <PhoneIcon className="h-4 w-4" />
-                        Suporte via WhatsApp
+                        {t('Suporte via WhatsApp')}
                       </a>
                       {/* Debug sempre visível enquanto diagnosticamos tema dia/noite no mobile */}
                       <DebugMenuTrigger
@@ -775,7 +786,7 @@ export default function AppShell() {
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                       >
                         <LogOutIcon className="h-4 w-4" />
-                        Sair
+                        {t('Sair')}
                       </button>
                     </div>
                     <div className="px-4 py-2.5 border-t border-border">
@@ -817,7 +828,7 @@ export default function AppShell() {
             <div className="relative bg-surface-card border-t border-surface-input rounded-t-3xl p-5 shadow-2xl space-y-4 animate-modal-pop z-10 safe-bottom max-h-[85vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-surface-input pb-3">
                 <h3 className="text-base font-bold text-text flex items-center gap-2">
-                  <span>✨</span> Menu & Recursos — {user?.admin ? 'Root' : getRoleLabel(role)}
+                  <span>✨</span> {t('Menu & Recursos —')} {user?.admin ? 'Root' : getRoleLabel(role)}
                 </h3>
                 <button
                   type="button"
@@ -840,8 +851,8 @@ export default function AppShell() {
                     className="flex flex-col text-left p-3 rounded-2xl bg-surface border border-surface-input hover:border-primary/40 active:scale-95 transition-all cursor-pointer"
                   >
                     <span className="text-xl mb-1">{item.icon}</span>
-                    <span className="text-xs font-bold text-text">{item.label}</span>
-                    <span className="text-xs text-text-muted">{item.desc}</span>
+                    <span className="text-xs font-bold text-text">{t(item.label)}</span>
+                    <span className="text-xs text-text-muted">{t(item.desc)}</span>
                   </button>
                 ))}
               </div>
@@ -856,7 +867,7 @@ export default function AppShell() {
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-surface-input py-3 text-sm font-bold text-text hover:bg-surface-input/70 active:scale-95 transition-all cursor-pointer min-h-11"
                 >
                   <UsersIcon className="h-4 w-4" />
-                  Alunos da Academia
+                  {t('Alunos da Academia')}
                 </button>
               )}
 
@@ -870,7 +881,7 @@ export default function AppShell() {
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-surface-input py-3 text-sm font-bold text-text hover:bg-surface-input/70 active:scale-95 transition-all cursor-pointer min-h-11"
                 >
                   <StarIcon className="h-4 w-4 text-warning" />
-                  Avaliar o App
+                  {t('Avaliar o App')}
                 </button>
               )}
 
@@ -884,7 +895,7 @@ export default function AppShell() {
                   className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-text-muted hover:text-text cursor-pointer"
                 >
                   <ShieldIcon className="h-4 w-4" />
-                  <span>Privacidade</span>
+                  <span>{t('Privacidade')}</span>
                 </button>
 
                 <a
@@ -896,7 +907,7 @@ export default function AppShell() {
                   className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#25D366] hover:text-[#25D366]/80 cursor-pointer"
                 >
                   <PhoneIcon className="h-4 w-4" />
-                  <span>Suporte WhatsApp</span>
+                  <span>{t('Suporte WhatsApp')}</span>
                 </a>
               </div>
 
@@ -908,7 +919,7 @@ export default function AppShell() {
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-bold text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all cursor-pointer"
                 >
                   <LogOutIcon className="h-4 w-4" />
-                  <span>Sair da Conta</span>
+                  <span>{t('Sair da Conta')}</span>
                 </button>
               </div>
             </div>
@@ -926,7 +937,7 @@ export default function AppShell() {
               <div className="flex items-center justify-between px-5 py-4 border-b border-surface-input shrink-0">
                 <h3 className="text-base font-bold text-text flex items-center gap-2">
                   <Building2Icon className="h-5 w-5 text-primary" />
-                  Alunos da Academia
+                  {t('Alunos da Academia')}
                 </h3>
                 <button
                   type="button"
@@ -947,14 +958,14 @@ export default function AppShell() {
         {!hideNav && (
           <nav className="fixed bottom-0 left-0 right-0 z-30 glass border-t border-surface-input safe-bottom md:hidden shadow-lg">
             <div className="flex h-16 items-center justify-around px-1">
-              {getRoleBottomTabs(role, user?.admin ?? false).map((t) => {
-                const isActive = t.end ? location.pathname === t.to : location.pathname.startsWith(t.to)
-                const Icon = t.icon
+              {getRoleBottomTabs(role, user?.admin ?? false).map((tr) => {
+                const isActive = tr.end ? location.pathname === tr.to : location.pathname.startsWith(tr.to)
+                const Icon = tr.icon
                 return (
                   <NavLink
-                    key={t.to}
-                    to={t.to}
-                    end={t.end}
+                    key={tr.to}
+                    to={tr.to}
+                    end={tr.end}
                     onClick={() => {
                       if (typeof window !== 'undefined' && 'vibrate' in navigator) {
                         try { navigator.vibrate(8) } catch {}
@@ -964,7 +975,7 @@ export default function AppShell() {
                   >
                     <div className="relative">
                       <Icon className={`h-5 w-5 transition-all duration-200 ${isActive ? 'text-primary scale-110' : 'text-text-muted group-hover:text-text'}`} />
-                      {t.to === '/feed' && atividadeMural > 0 && (
+                      {tr.to === '/feed' && atividadeMural > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
@@ -972,7 +983,7 @@ export default function AppShell() {
                       )}
                     </div>
                     <span className={`text-xs font-medium transition-colors duration-200 ${isActive ? 'text-primary font-bold' : 'text-text-muted'}`}>
-                      {t.label}
+                      {t(tr.label)}
                     </span>
                     {isActive && (
                       <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-7 rounded-full bg-primary animate-scale-in" />
@@ -995,7 +1006,7 @@ export default function AppShell() {
                 }`}
               >
                 <MoreHorizontalIcon className={`h-5 w-5 transition-all duration-200 ${moreSheetOpen ? 'text-primary scale-110' : ''}`} />
-                <span className="text-xs font-medium">Mais</span>
+                <span className="text-xs font-medium">{t('Mais')}</span>
                 {moreSheetOpen && (
                   <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-7 rounded-full bg-primary animate-scale-in" />
                 )}

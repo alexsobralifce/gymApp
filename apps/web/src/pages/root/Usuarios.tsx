@@ -7,6 +7,8 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import PremiumManagerButton from '../../components/root/PremiumManagerButton'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 type Tab = 'academias' | 'professores' | 'alunos'
 
 interface AcademiaItem {
@@ -77,6 +79,7 @@ function Pagination({
   totalPages: number
   onChange: (p: number) => void
 }) {
+  const { t } = useT()
   if (totalPages <= 1) return null
   const pages: (number | '...')[] = []
   for (let i = 1; i <= totalPages; i++) {
@@ -93,7 +96,7 @@ function Pagination({
         disabled={page <= 1}
         className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
       >
-        Anterior
+        {t('Anterior')}
       </button>
       {pages.map((p, i) =>
         p === '...' ? (
@@ -113,13 +116,14 @@ function Pagination({
         disabled={page >= totalPages}
         className="rounded px-3 py-1 text-sm text-text-muted hover:bg-surface-input disabled:opacity-30"
       >
-        Próximo
+        {t('Próximo')}
       </button>
     </div>
   )
 }
 
 export default function RootUsuarios() {
+  const { t } = useT()
   const [tab, setTab] = useState<Tab>('academias')
   const [feedback, setFeedback] = useState<string | null>(null)
 
@@ -153,7 +157,7 @@ export default function RootUsuarios() {
         setAlunos(result)
       }
     } catch {
-      showFeedback('Erro ao carregar dados.')
+      showFeedback(t('Erro ao carregar dados.'))
     } finally {
       setLoading(false)
     }
@@ -195,12 +199,12 @@ export default function RootUsuarios() {
       } else {
         await Promise.allSettled(selectedIds.map((id) => api.deleteRootAluno(id)))
       }
-      showFeedback(`${selectedIds.length} item(s) excluído(s) em cascata!`)
+      showFeedback(t('{length} item(s) excluído(s) em cascata!', { length: selectedIds.length }))
       setSelectedIds([])
       setBatchConfirm(false)
       await loadData()
     } catch {
-      showFeedback('Erro ao excluir itens selecionados.')
+      showFeedback(t('Erro ao excluir itens selecionados.'))
     } finally {
       setBatchDeleting(false)
     }
@@ -221,10 +225,10 @@ export default function RootUsuarios() {
       } else {
         await api.deleteRootAluno(deleteConfirm.id)
       }
-      showFeedback(`${deleteConfirm.nome} excluido com sucesso!`)
+      showFeedback(t('{nome} excluido com sucesso!', { nome: deleteConfirm.nome }))
       await loadData()
     } catch {
-      showFeedback('Erro ao excluir.')
+      showFeedback(t('Erro ao excluir.'))
     }
     setDeleteConfirm(null)
   }
@@ -237,7 +241,7 @@ export default function RootUsuarios() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Gerenciar Plataforma</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Gerenciar Plataforma')}</h1>
 
       {feedback && (
         <div className={`mb-4 rounded p-3 text-sm ${feedback.includes('Erro') ? 'bg-destructive/10 text-destructive' : 'bg-surface-card text-success'}`}>
@@ -246,15 +250,15 @@ export default function RootUsuarios() {
       )}
 
       <div className="mb-6 flex gap-1 rounded-lg bg-surface-card p-1">
-        {tabs.map((t) => (
+        {tabs.map((tr) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={tr.key}
+            onClick={() => setTab(tr.key)}
             className={`flex-1 rounded px-3 py-2 text-sm font-medium ${
-              tab === t.key ? 'bg-surface-input text-text' : 'text-text-muted'
+              tab === tr.key ? 'bg-surface-input text-text' : 'text-text-muted'
             }`}
           >
-            {t.label}
+            {t(tr.label)}
           </button>
         ))}
       </div>
@@ -262,7 +266,7 @@ export default function RootUsuarios() {
       <div className="mb-4">
         <Input
           type="text"
-          placeholder="Buscar por nome ou email..."
+          placeholder={t('Buscar por nome ou email...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -276,13 +280,13 @@ export default function RootUsuarios() {
       />
 
       {loading ? (
-        <div className="py-12 text-center text-text-muted">Carregando...</div>
+        <div className="py-12 text-center text-text-muted">{t('Carregando...')}</div>
       ) : (
         <>
           {tab === 'academias' && academias && (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs text-text-muted">{academias.total} academias encontradas</p>
+                <p className="text-xs text-text-muted">{academias.total} {t('academias encontradas')}</p>
                 {academias.items.length > 0 && (
                   <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
                     <input
@@ -291,7 +295,7 @@ export default function RootUsuarios() {
                       onChange={() => toggleSelectAll(academias.items)}
                       className="rounded border-surface-input text-primary focus:ring-primary"
                     />
-                    <span>Selecionar Todos nesta página</span>
+                    <span>{t('Selecionar Todos nesta página')}</span>
                   </label>
                 )}
               </div>
@@ -310,7 +314,7 @@ export default function RootUsuarios() {
           {tab === 'professores' && professores && (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs text-text-muted">{professores.total} professores encontrados</p>
+                <p className="text-xs text-text-muted">{professores.total} {t('professores encontrados')}</p>
                 {professores.items.length > 0 && (
                   <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
                     <input
@@ -319,7 +323,7 @@ export default function RootUsuarios() {
                       onChange={() => toggleSelectAll(professores.items)}
                       className="rounded border-surface-input text-primary focus:ring-primary"
                     />
-                    <span>Selecionar Todos nesta página</span>
+                    <span>{t('Selecionar Todos nesta página')}</span>
                   </label>
                 )}
               </div>
@@ -338,7 +342,7 @@ export default function RootUsuarios() {
           {tab === 'alunos' && alunos && (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs text-text-muted">{alunos.total} alunos encontrados</p>
+                <p className="text-xs text-text-muted">{alunos.total} {t('alunos encontrados')}</p>
                 {alunos.items.length > 0 && (
                   <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
                     <input
@@ -347,7 +351,7 @@ export default function RootUsuarios() {
                       onChange={() => toggleSelectAll(alunos.items)}
                       className="rounded border-surface-input text-primary focus:ring-primary"
                     />
-                    <span>Selecionar Todos nesta página</span>
+                    <span>{t('Selecionar Todos nesta página')}</span>
                   </label>
                 )}
               </div>
@@ -367,19 +371,18 @@ export default function RootUsuarios() {
 
       {batchConfirm && (
         <Modal onClose={() => setBatchConfirm(false)}>
-          <h2 className="mb-2 text-lg font-bold text-text">Confirmar exclusão em lote</h2>
+          <h2 className="mb-2 text-lg font-bold text-text">{t('Confirmar exclusão em lote')}</h2>
           <p className="mb-6 text-sm text-text-muted">
-            Tem certeza que deseja excluir em cascata <strong className="text-primary">{selectedIds.length}</strong> item(s) selecionado(s)?
-            Esta ação removerá todos os dados vinculados e não poderá ser desfeita.
+            {t('Tem certeza que deseja excluir em cascata')} <strong className="text-primary">{selectedIds.length}</strong> {t('item(s) selecionado(s)? Esta ação removerá todos os dados vinculados e não poderá ser desfeita.')}
           </p>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setBatchConfirm(false)} className={btnGhost}>Cancelar</button>
+            <button onClick={() => setBatchConfirm(false)} className={btnGhost}>{t('Cancelar')}</button>
             <button
               onClick={handleBatchDelete}
               disabled={batchDeleting}
               className="rounded bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground disabled:opacity-50"
             >
-              {batchDeleting ? 'Excluindo...' : 'Confirmar Exclusão em Lote'}
+              {batchDeleting ? 'Excluindo...' : t('Confirmar Exclusão em Lote')}
             </button>
           </div>
         </Modal>
@@ -392,11 +395,11 @@ export default function RootUsuarios() {
           onSave={async (data) => {
             try {
               await api.updateRootAcademia(editAcademia.id, data)
-              showFeedback('Academia atualizada!')
+              showFeedback(t('Academia atualizada!'))
               setEditAcademia(null)
               await loadData()
             } catch {
-              showFeedback('Erro ao atualizar academia.')
+              showFeedback(t('Erro ao atualizar academia.'))
             }
           }}
         />
@@ -410,11 +413,11 @@ export default function RootUsuarios() {
           onSave={async (data) => {
             try {
               await api.updateRootProfessor(editProfessor.id, data)
-              showFeedback('Professor atualizado!')
+              showFeedback(t('Professor atualizado!'))
               setEditProfessor(null)
               await loadData()
             } catch {
-              showFeedback('Erro ao atualizar professor.')
+              showFeedback(t('Erro ao atualizar professor.'))
             }
           }}
         />
@@ -429,11 +432,11 @@ export default function RootUsuarios() {
           onSave={async (data) => {
             try {
               await api.updateRootAluno(editAluno.id, data)
-              showFeedback('Aluno atualizado!')
+              showFeedback(t('Aluno atualizado!'))
               setEditAluno(null)
               await loadData()
             } catch {
-              showFeedback('Erro ao atualizar aluno.')
+              showFeedback(t('Erro ao atualizar aluno.'))
             }
           }}
         />
@@ -441,18 +444,17 @@ export default function RootUsuarios() {
 
       {deleteConfirm && (
         <Modal onClose={() => setDeleteConfirm(null)}>
-          <h2 className="mb-2 text-lg font-bold text-text">Confirmar exclusão</h2>
+          <h2 className="mb-2 text-lg font-bold text-text">{t('Confirmar exclusão')}</h2>
           <p className="mb-6 text-sm text-text-muted">
-            Tem certeza que deseja excluir <strong className="text-text">{deleteConfirm.nome}</strong>?
-            Esta ação não pode ser desfeita e todos os dados vinculados serão removidos.
+            {t('Tem certeza que deseja excluir')} <strong className="text-text">{deleteConfirm.nome}</strong>{t('? Esta ação não pode ser desfeita e todos os dados vinculados serão removidos.')}
           </p>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setDeleteConfirm(null)} className={btnGhost}>Cancelar</button>
+            <button onClick={() => setDeleteConfirm(null)} className={btnGhost}>{t('Cancelar')}</button>
             <button
               onClick={handleDelete}
               className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white"
             >
-              Excluir
+              {t('Excluir')}
             </button>
           </div>
         </Modal>
@@ -473,6 +475,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
 }
 
 function AdminToggleButton({ usuarioId, isAdmin }: { usuarioId: string; isAdmin: boolean }) {
+  const { t } = useT()
   const [busy, setBusy] = useState(false)
   const [admin, setAdmin] = useState(isAdmin)
 
@@ -498,7 +501,7 @@ function AdminToggleButton({ usuarioId, isAdmin }: { usuarioId: string; isAdmin:
           : 'bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20'
       }`}
     >
-      {busy ? '...' : admin ? 'Admin' : 'Tornar Admin'}
+      {busy ? '...' : admin ? 'Admin' : t('Tornar Admin')}
     </button>
   )
 }
@@ -518,7 +521,8 @@ function AcademiasTab({
   onDelete: (a: AcademiaItem) => void
   onPremiumToggle: () => void
 }) {
-  if (academias.length === 0) return <p className="text-text-muted">Nenhuma academia encontrada.</p>
+  const { t } = useT()
+  if (academias.length === 0) return <p className="text-text-muted">{t('Nenhuma academia encontrada.')}</p>
 
   return (
     <div className="space-y-2">
@@ -536,15 +540,15 @@ function AcademiasTab({
                 <h3 className="font-semibold text-text">{a.nome}</h3>
                 {statusBadge(a.status)}
               </div>
-              <p className="text-xs text-text-muted">CNPJ: {a.cnpj}</p>
+              <p className="text-xs text-text-muted">{t('CNPJ:')} {a.cnpj}</p>
               <p className="text-xs text-text-muted">{a.usuario.email}</p>
               <p className="text-xs text-text-muted">
-                {mostrarLimiteProfessores && `Max. professores: ${a.max_professores} | `}Professores: {a._count.professores} | Alunos: {a._count.alunos}
+                {mostrarLimiteProfessores && t('Max. professores: {max_professores} | ', { max_professores: a.max_professores })}{t('Professores:')} {a._count.professores} {t('| Alunos:')} {a._count.alunos}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
-            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">{t('Editar')}</button>
             <PremiumManagerButton
               usuarioId={a.usuario.id}
               usuarioNome={a.usuario.nome}
@@ -552,7 +556,7 @@ function AcademiasTab({
               onToggle={onPremiumToggle}
             />
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
-            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
+            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">{t('Excluir')}</button>
           </div>
         </div>
       ))}
@@ -575,7 +579,8 @@ function ProfessoresTab({
   onDelete: (p: ProfessorItem) => void
   onPremiumToggle: () => void
 }) {
-  if (professores.length === 0) return <p className="text-text-muted">Nenhum professor encontrado.</p>
+  const { t } = useT()
+  if (professores.length === 0) return <p className="text-text-muted">{t('Nenhum professor encontrado.')}</p>
 
   return (
     <div className="space-y-2">
@@ -593,12 +598,12 @@ function ProfessoresTab({
                 <h3 className="font-semibold text-text">{p.usuario.nome}</h3>
                 <p className="text-xs text-text-muted">{p.usuario.email}</p>
                 <p className="text-xs text-text-muted">
-                  CREF: {p.cref || '---'} | Alunos: {p._count.alunos}
+                  {t('CREF:')} {p.cref || '---'} {t('| Alunos:')} {p._count.alunos}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5 justify-end sm:hidden sm:self-start ml-3">
-              <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+              <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">{t('Editar')}</button>
               <PremiumManagerButton
                 usuarioId={p.usuario.id}
                 usuarioNome={p.usuario.nome}
@@ -606,11 +611,11 @@ function ProfessoresTab({
                 onToggle={onPremiumToggle}
               />
               <AdminToggleButton usuarioId={p.usuario.id} isAdmin={!!p.usuario.admin} />
-              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
+              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">{t('Excluir')}</button>
             </div>
           </div>
             <div className="hidden sm:flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-start">
-              <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+              <button onClick={() => onEdit(p)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">{t('Editar')}</button>
               <PremiumManagerButton
                 usuarioId={p.usuario.id}
                 usuarioNome={p.usuario.nome}
@@ -618,7 +623,7 @@ function ProfessoresTab({
                 onToggle={onPremiumToggle}
               />
               <AdminToggleButton usuarioId={p.usuario.id} isAdmin={!!p.usuario.admin} />
-              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
+              <button onClick={() => onDelete(p)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">{t('Excluir')}</button>
             </div>
           {p.academias.length > 0 && (
             <div className="mt-2 ml-7 flex flex-wrap gap-1">
@@ -650,7 +655,8 @@ function AlunosTab({
   onDelete: (a: AlunoItem) => void
   onPremiumToggle: () => void
 }) {
-  if (alunos.length === 0) return <p className="text-text-muted">Nenhum aluno encontrado.</p>
+  const { t } = useT()
+  if (alunos.length === 0) return <p className="text-text-muted">{t('Nenhum aluno encontrado.')}</p>
 
   return (
     <div className="space-y-2">
@@ -667,18 +673,18 @@ function AlunosTab({
               <h3 className="font-semibold text-text">{a.usuario.nome}</h3>
               <p className="text-xs text-text-muted">{a.usuario.email}</p>
               <p className="text-xs text-text-muted">
-                Academia: {a.academia?.nome || '---'} | Professor: {a.professor?.usuario.nome || 'Autogestão'}
+                {t('Academia:')} {a.academia?.nome || '---'} {t('| Professor:')} {a.professor?.usuario.nome || t('Autogestão')}
               </p>
               {(a.peso_kg || a.altura_cm) && (
                 <p className="text-xs text-text-muted">
-                  Peso: {a.peso_kg ? `${a.peso_kg}kg` : '---'} | Altura: {a.altura_cm ? `${a.altura_cm}cm` : '---'}
-                  {a.data_nascimento && ` | Nasc: ${new Date(a.data_nascimento).toLocaleDateString('pt-BR')}`}
+                  {t('Peso:')} {a.peso_kg ? `${a.peso_kg}kg` : '---'} {t('| Altura:')} {a.altura_cm ? `${a.altura_cm}cm` : '---'}
+                  {a.data_nascimento && t(' | Nasc: {v1}', { v1: new Date(a.data_nascimento).toLocaleDateString(localeAtual()) })}
                 </p>
               )}
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 justify-end sm:flex-nowrap sm:self-center">
-            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">Editar</button>
+            <button onClick={() => onEdit(a)} className="rounded bg-blue-500/10 px-3 py-1.5 text-sm text-blue-400 min-h-[36px] inline-flex items-center">{t('Editar')}</button>
             <PremiumManagerButton
               usuarioId={a.usuario.id}
               usuarioNome={a.usuario.nome}
@@ -686,7 +692,7 @@ function AlunosTab({
               onToggle={onPremiumToggle}
             />
             <AdminToggleButton usuarioId={a.usuario.id} isAdmin={!!a.usuario.admin} />
-            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">Excluir</button>
+            <button onClick={() => onDelete(a)} className="rounded bg-destructive/10 px-3 py-1.5 text-sm text-destructive min-h-[36px] inline-flex items-center">{t('Excluir')}</button>
           </div>
         </div>
       ))}
@@ -703,6 +709,7 @@ function EditAcademiaModal({
   onClose: () => void
   onSave: (data: any) => Promise<void>
 }) {
+  const { t } = useT()
   const [nome, setNome] = useState(academia.nome)
   const [cnpj, setCnpj] = useState(academia.cnpj)
   const [email, setEmail] = useState(academia.usuario.email)
@@ -716,11 +723,11 @@ function EditAcademiaModal({
     if (newPassword.length < 8) return
     try {
       await api.resetPassword(academia.usuario.id, newPassword)
-      setResetMsg('Senha redefinida com sucesso!')
+      setResetMsg(t('Senha redefinida com sucesso!'))
       setNewPassword('')
       setTimeout(() => setResetMsg(''), 3000)
     } catch {
-      setResetMsg('Erro ao redefinir senha.')
+      setResetMsg(t('Erro ao redefinir senha.'))
     }
   }
 
@@ -733,40 +740,40 @@ function EditAcademiaModal({
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="mb-4 text-lg font-bold text-text">Editar Academia</h2>
+      <h2 className="mb-4 text-lg font-bold text-text">{t('Editar Academia')}</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Nome" htmlFor="academia-nome" required>
+        <FormField label={t('Nome')} htmlFor="academia-nome" required>
           <Input id="academia-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
         </FormField>
-        <FormField label="CNPJ" htmlFor="academia-cnpj" required>
+        <FormField label={t('CNPJ')} htmlFor="academia-cnpj" required>
           <Input id="academia-cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} required />
         </FormField>
-        <FormField label="E-mail" htmlFor="academia-email" required>
+        <FormField label={t('E-mail')} htmlFor="academia-email" required>
           <Input id="academia-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </FormField>
         {mostrarLimiteProfessores && (
-          <FormField label="Max. Professores" htmlFor="academia-max">
+          <FormField label={t('Max. Professores')} htmlFor="academia-max">
             <Input id="academia-max" type="number" min={1} max={500} value={maxProfessores} onChange={(e) => setMaxProfessores(Number(e.target.value))} />
           </FormField>
         )}
-        <FormField label="Status" htmlFor="academia-status">
+        <FormField label={t('Status')} htmlFor="academia-status">
           <Select id="academia-status" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="PENDENTE">Pendente</option>
-            <option value="ATIVO">Ativo</option>
-            <option value="REJEITADO">Rejeitado</option>
+            <option value="PENDENTE">{t('Pendente')}</option>
+            <option value="ATIVO">{t('Ativo')}</option>
+            <option value="REJEITADO">{t('Rejeitado')}</option>
           </Select>
         </FormField>
         <div className="flex items-end justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className={btnGhost}>Cancelar</button>
+          <button type="button" onClick={onClose} className={btnGhost}>{t('Cancelar')}</button>
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">{t('Redefinir Senha do Usuário')}</h4>
         <div className="flex flex-wrap gap-2">
           <Input
             type="password"
-            placeholder="Nova senha (min. 8 caracteres)"
+            placeholder={t('Nova senha (min. 8 caracteres)')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="flex-1 min-w-[200px]"
@@ -777,7 +784,7 @@ function EditAcademiaModal({
             disabled={newPassword.length < 8}
             className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
-            Resetar
+            {t('Resetar')}
           </button>
         </div>
         {resetMsg && <p className="mt-1 text-xs font-medium text-success">{resetMsg}</p>}
@@ -797,6 +804,7 @@ function EditProfessorModal({
   onClose: () => void
   onSave: (data: any) => Promise<void>
 }) {
+  const { t } = useT()
   const [nome, setNome] = useState(professor.usuario.nome)
   const [email, setEmail] = useState(professor.usuario.email)
   const [cref, setCref] = useState(professor.cref || '')
@@ -811,11 +819,11 @@ function EditProfessorModal({
     if (newPassword.length < 8) return
     try {
       await api.resetPassword(professor.usuario.id, newPassword)
-      setResetMsg('Senha redefinida com sucesso!')
+      setResetMsg(t('Senha redefinida com sucesso!'))
       setNewPassword('')
       setTimeout(() => setResetMsg(''), 3000)
     } catch {
-      setResetMsg('Erro ao redefinir senha.')
+      setResetMsg(t('Erro ao redefinir senha.'))
     }
   }
 
@@ -842,21 +850,21 @@ function EditProfessorModal({
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="mb-4 text-lg font-bold text-text">Editar Professor</h2>
+      <h2 className="mb-4 text-lg font-bold text-text">{t('Editar Professor')}</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Nome" htmlFor="professor-nome" required>
+        <FormField label={t('Nome')} htmlFor="professor-nome" required>
           <Input id="professor-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
         </FormField>
-        <FormField label="E-mail" htmlFor="professor-email" required>
+        <FormField label={t('E-mail')} htmlFor="professor-email" required>
           <Input id="professor-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </FormField>
-        <FormField label="CREF" htmlFor="professor-cref">
-          <Input id="professor-cref" value={cref} onChange={(e) => setCref(e.target.value)} placeholder="Opcional" />
+        <FormField label={t('CREF')} htmlFor="professor-cref">
+          <Input id="professor-cref" value={cref} onChange={(e) => setCref(e.target.value)} placeholder={t('Opcional')} />
         </FormField>
         <div className="md:col-span-2">
-          <p className="mb-2 text-sm font-medium text-text">Academias vinculadas</p>
+          <p className="mb-2 text-sm font-medium text-text">{t('Academias vinculadas')}</p>
           <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-surface-input p-2">
-            {academias.length === 0 && <p className="text-xs text-text-muted">Nenhuma academia disponível.</p>}
+            {academias.length === 0 && <p className="text-xs text-text-muted">{t('Nenhuma academia disponível.')}</p>}
             {academias.map((a) => (
               <label key={a.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-text hover:bg-surface-input">
                 <input
@@ -871,16 +879,16 @@ function EditProfessorModal({
           </div>
         </div>
         <div className="flex items-end justify-end gap-2 pt-2 md:col-span-2">
-          <button type="button" onClick={onClose} className={btnGhost}>Cancelar</button>
+          <button type="button" onClick={onClose} className={btnGhost}>{t('Cancelar')}</button>
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">{t('Redefinir Senha do Usuário')}</h4>
         <div className="flex flex-wrap gap-2">
           <Input
             type="password"
-            placeholder="Nova senha (min. 8 caracteres)"
+            placeholder={t('Nova senha (min. 8 caracteres)')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="flex-1 min-w-[200px]"
@@ -891,7 +899,7 @@ function EditProfessorModal({
             disabled={newPassword.length < 8}
             className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
-            Resetar
+            {t('Resetar')}
           </button>
         </div>
         {resetMsg && <p className="mt-1 text-xs font-medium text-success">{resetMsg}</p>}
@@ -913,6 +921,7 @@ function EditAlunoModal({
   onClose: () => void
   onSave: (data: any) => Promise<void>
 }) {
+  const { t } = useT()
   const [nome, setNome] = useState(aluno.usuario.nome)
   const [email, setEmail] = useState(aluno.usuario.email)
   const [telefone, setTelefone] = useState(formatPhone(aluno.usuario.telefone || ''))
@@ -929,11 +938,11 @@ function EditAlunoModal({
     if (newPassword.length < 8) return
     try {
       await api.resetPassword(aluno.usuario.id, newPassword)
-      setResetMsg('Senha redefinida com sucesso!')
+      setResetMsg(t('Senha redefinida com sucesso!'))
       setNewPassword('')
       setTimeout(() => setResetMsg(''), 3000)
     } catch {
-      setResetMsg('Erro ao redefinir senha.')
+      setResetMsg(t('Erro ao redefinir senha.'))
     }
   }
 
@@ -955,53 +964,53 @@ function EditAlunoModal({
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="mb-4 text-lg font-bold text-text">Editar Aluno</h2>
+      <h2 className="mb-4 text-lg font-bold text-text">{t('Editar Aluno')}</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Nome" htmlFor="aluno-nome" required>
+        <FormField label={t('Nome')} htmlFor="aluno-nome" required>
           <Input id="aluno-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
         </FormField>
-        <FormField label="E-mail" htmlFor="aluno-email" required>
+        <FormField label={t('E-mail')} htmlFor="aluno-email" required>
           <Input id="aluno-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </FormField>
-        <FormField label="Telefone" htmlFor="aluno-telefone">
+        <FormField label={t('Telefone')} htmlFor="aluno-telefone">
           <Input id="aluno-telefone" value={telefone} onChange={(e) => setTelefone(formatPhone(e.target.value))} placeholder="(99) 99999-9999" type="tel" />
         </FormField>
-        <FormField label="Data de nascimento" htmlFor="aluno-nascimento">
+        <FormField label={t('Data de nascimento')} htmlFor="aluno-nascimento">
           <Input id="aluno-nascimento" type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} />
         </FormField>
-        <FormField label="Peso (kg)" htmlFor="aluno-peso">
+        <FormField label={t('Peso (kg)')} htmlFor="aluno-peso">
           <Input id="aluno-peso" type="number" step="0.1" min="0" value={pesoKg} onChange={(e) => setPesoKg(e.target.value)} placeholder="70.5" />
         </FormField>
-        <FormField label="Altura (cm)" htmlFor="aluno-altura">
+        <FormField label={t('Altura (cm)')} htmlFor="aluno-altura">
           <Input id="aluno-altura" type="number" step="1" min="0" value={alturaCm} onChange={(e) => setAlturaCm(e.target.value)} placeholder="175" />
         </FormField>
-        <FormField label="Academia" htmlFor="aluno-academia">
+        <FormField label={t('Academia')} htmlFor="aluno-academia">
           <Select id="aluno-academia" value={academiaId} onChange={(e) => setAcademiaId(e.target.value)}>
-            <option value="">Sem academia</option>
+            <option value="">{t('Sem academia')}</option>
             {academias.map((a) => (
               <option key={a.id} value={a.id}>{a.nome}</option>
             ))}
           </Select>
         </FormField>
-        <FormField label="Professor" htmlFor="aluno-professor">
+        <FormField label={t('Professor')} htmlFor="aluno-professor">
           <Select id="aluno-professor" value={professorId} onChange={(e) => setProfessorId(e.target.value)}>
-            <option value="">Autogestão</option>
+            <option value="">{t('Autogestão')}</option>
             {professores.map((p) => (
               <option key={p.id} value={p.id}>{p.usuario.nome}</option>
             ))}
           </Select>
         </FormField>
         <div className="flex items-end justify-end gap-2 pt-2 md:col-span-2">
-          <button type="button" onClick={onClose} className={btnGhost}>Cancelar</button>
+          <button type="button" onClick={onClose} className={btnGhost}>{t('Cancelar')}</button>
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Salvando...' : 'Salvar'}</button>
         </div>
       </form>
       <div className="mt-4 space-y-2 border-t border-surface-input pt-4">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">Redefinir Senha do Usuário</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted">{t('Redefinir Senha do Usuário')}</h4>
         <div className="flex flex-wrap gap-2">
           <Input
             type="password"
-            placeholder="Nova senha (min. 8 caracteres)"
+            placeholder={t('Nova senha (min. 8 caracteres)')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="flex-1 min-w-[200px]"
@@ -1012,7 +1021,7 @@ function EditAlunoModal({
             disabled={newPassword.length < 8}
             className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
-            Resetar
+            {t('Resetar')}
           </button>
         </div>
         {resetMsg && <p className="mt-1 text-xs font-medium text-success">{resetMsg}</p>}

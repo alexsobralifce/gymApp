@@ -6,7 +6,9 @@ import ConectarInstagramBanner from '../../components/social/ConectarInstagramBa
 import { SkeletonCard } from '../../components/ui/LoadingSpinner'
 import type { SocialPost } from '../../types/api'
 
+import { useT } from '../../i18n'
 export default function Mural() {
+  const { t } = useT()
   const [posts, setPosts] = useState<SocialPost[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -69,7 +71,7 @@ export default function Mural() {
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-4">
       <div className="flex items-center gap-3">
         <MessageCircleIcon className="h-6 w-6 text-primary" />
-        <h1 className="text-lg font-bold text-text">Feed Social</h1>
+        <h1 className="text-lg font-bold text-text">{t('Feed Social')}</h1>
       </div>
 
       {/* Banner de Conexão com Instagram */}
@@ -84,9 +86,9 @@ export default function Mural() {
       ) : posts.length === 0 ? (
         <div className="rounded-2xl bg-surface-card border border-surface-input p-10 text-center">
           <MessageCircleIcon className="h-10 w-10 text-text-muted mx-auto mb-3 opacity-30" />
-          <p className="text-sm text-text-muted mb-1">Nenhum post no Feed Social</p>
+          <p className="text-sm text-text-muted mb-1">{t('Nenhum post no Feed Social')}</p>
           <p className="text-xs text-text-muted">
-            Siga amigos e treine para ver a atividade deles aqui.
+            {t('Siga amigos e treine para ver a atividade deles aqui.')}
           </p>
         </div>
       ) : (
@@ -106,7 +108,7 @@ export default function Mural() {
           {nextCursor && (
             <div ref={observerRef} className="flex justify-center py-4">
               {loadingMore ? (
-                <span className="text-xs text-text-muted">Carregando...</span>
+                <span className="text-xs text-text-muted">{t('Carregando...')}</span>
               ) : (
                 <span className="text-xs text-text-muted opacity-0">.</span>
               )}
@@ -114,7 +116,7 @@ export default function Mural() {
           )}
 
           {!nextCursor && posts.length > 0 && (
-            <p className="text-center text-xs text-text-muted py-4">Você viu tudo!</p>
+            <p className="text-center text-xs text-text-muted py-4">{t('Você viu tudo!')}</p>
           )}
         </>
       )}

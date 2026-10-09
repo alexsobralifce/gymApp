@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import LoadingSpinner from './LoadingSpinner'
 
+import { useT } from '../../i18n'
 export default function WorkoutLoading() {
+  const { t } = useT()
   const [elapsed, setElapsed] = useState(0)
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function WorkoutLoading() {
       <LoadingSpinner size="lg" />
 
       <p className="text-sm text-text-muted text-center max-w-xs">
-        Aguardando carregar GIFs de treino...
+        {t('Aguardando carregar GIFs de treino...')}
       </p>
 
       {/* Progress bar */}

@@ -3,6 +3,7 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import FormField from '../../components/ui/FormField'
 
+import { useT } from '../../i18n'
 interface Step1BasicsProps {
   nome: string
   setNome: (v: string) => void
@@ -32,17 +33,18 @@ export default function Step1Basics({
   telefone, setTelefone, role, setRole,
   errors, touched, setTouched,
 }: Step1BasicsProps) {
+  const { t } = useT()
   const nomeError = touched?.nome ? errors?.nome : undefined
   const emailError = touched?.email ? errors?.email : undefined
   const senhaError = touched?.senha ? errors?.senha : undefined
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <FormField label="Nome completo" htmlFor="nome" error={nomeError} required>
+      <FormField label={t('Nome completo')} htmlFor="nome" error={nomeError} required>
         <Input
           id="nome"
           type="text"
-          placeholder="Nome completo"
+          placeholder={t('Nome completo')}
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           onBlur={() => setTouched?.((t: any) => ({ ...t, nome: true }))}
@@ -52,11 +54,11 @@ export default function Step1Basics({
         />
       </FormField>
 
-      <FormField label="Email" htmlFor="email" error={emailError} required>
+      <FormField label={t('Email')} htmlFor="email" error={emailError} required>
         <Input
           id="email"
           type="email"
-          placeholder="seu@email.com"
+          placeholder={t('seu@email.com')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onBlur={() => setTouched?.((t: any) => ({ ...t, email: true }))}
@@ -65,11 +67,11 @@ export default function Step1Basics({
         />
       </FormField>
 
-      <FormField label="Senha" htmlFor="senha" error={senhaError} required>
+      <FormField label={t('Senha')} htmlFor="senha" error={senhaError} required>
         <Input
           id="senha"
           type="password"
-          placeholder="Mínimo 8 caracteres (A-Z, a-z, 0-9)"
+          placeholder={t('Mínimo 8 caracteres (A-Z, a-z, 0-9)')}
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
           onBlur={() => setTouched?.((t: any) => ({ ...t, senha: true }))}
@@ -79,11 +81,11 @@ export default function Step1Basics({
         />
       </FormField>
 
-      <FormField label="WhatsApp (opcional)" htmlFor="whatsapp">
+      <FormField label={t('WhatsApp (opcional)')} htmlFor="whatsapp">
         <Input
           id="whatsapp"
           type="tel"
-          placeholder="WhatsApp (opcional)"
+          placeholder={t('WhatsApp (opcional)')}
           value={telefone}
           onChange={(e) => setTelefone(formatPhone(e.target.value))}
           maxLength={16}
@@ -91,15 +93,15 @@ export default function Step1Basics({
       </FormField>
 
       <div className="md:col-span-2">
-        <FormField label="Tipo de conta" htmlFor="role">
+        <FormField label={t('Tipo de conta')} htmlFor="role">
           <Select
             id="role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="ALUNO">Aluno</option>
-            <option value="PROFESSOR">Professor</option>
-            <option value="ACADEMIA">Academia</option>
+            <option value="ALUNO">{t('Aluno')}</option>
+            <option value="PROFESSOR">{t('Professor')}</option>
+            <option value="ACADEMIA">{t('Academia')}</option>
           </Select>
         </FormField>
       </div>

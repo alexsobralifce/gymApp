@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MessageCircleQuestion, X, Send, ArrowRight } from 'lucide-react'
 import { responder } from '../../lib/assistenteRespostas'
 
+import { useT } from '../../i18n'
 interface Mensagem {
   autor: 'usuario' | 'bot'
   texto: string
@@ -25,6 +26,7 @@ function prefereMovimentoReduzido(): boolean {
 }
 
 export default function AssistenteAjuda() {
+  const { t } = useT()
   const navigate = useNavigate()
   const [aberto, setAberto] = useState(false)
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
@@ -102,8 +104,8 @@ export default function AssistenteAjuda() {
       <button
         type="button"
         onClick={() => setAberto(true)}
-        aria-label="Abrir assistente de ajuda"
-        title="Assistente de ajuda"
+        aria-label={t('Abrir assistente de ajuda')}
+        title={t('Assistente de ajuda')}
         className="fixed right-4 bottom-[calc(4rem+env(safe-area-inset-bottom,0px)+0.75rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95 cursor-pointer md:right-6 md:bottom-6 xl:right-[15.5rem]"
       >
         <MessageCircleQuestion className="h-6 w-6" />
@@ -136,7 +138,7 @@ export default function AssistenteAjuda() {
               <button
                 type="button"
                 onClick={fechar}
-                aria-label="Fechar assistente de ajuda"
+                aria-label={t('Fechar assistente de ajuda')}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-input text-text-muted hover:text-text cursor-pointer"
               >
                 <X className="h-5 w-5" />
@@ -148,8 +150,7 @@ export default function AssistenteAjuda() {
               {mensagens.length === 0 && (
                 <div className="flex flex-col gap-3">
                   <p className="text-sm text-text-muted leading-relaxed">
-                    Olá! Pergunte como usar o app — por exemplo, como registrar séries ou onde ver
-                    sua evolução.
+                    {t('Olá! Pergunte como usar o app — por exemplo, como registrar séries ou onde ver sua evolução.')}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {SUGESTOES.map((sugestao) => (
@@ -170,20 +171,20 @@ export default function AssistenteAjuda() {
                 msg.autor === 'usuario' ? (
                   <div key={indice} className="flex justify-end">
                     <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground whitespace-pre-wrap">
-                      {msg.texto}
+                      {t(msg.texto)}
                     </div>
                   </div>
                 ) : (
                   <div key={indice} className="flex justify-start">
                     <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface border border-surface-input px-4 py-3 text-sm text-text leading-relaxed">
-                      <p className="whitespace-pre-wrap">{msg.texto}</p>
+                      <p className="whitespace-pre-wrap">{t(msg.texto)}</p>
                       {msg.acao && (
                         <button
                           type="button"
                           onClick={() => irPara(msg.acao!.rota)}
                           className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3.5 py-2 text-xs font-bold text-primary hover:bg-primary/15 transition-colors cursor-pointer"
                         >
-                          {msg.acao.label}
+                          {t(msg.acao.label)}
                           <ArrowRight className="h-3.5 w-3.5" />
                         </button>
                       )}
@@ -195,7 +196,7 @@ export default function AssistenteAjuda() {
               {digitando && (
                 <div className="flex justify-start">
                   <div className="rounded-2xl rounded-bl-md bg-surface border border-surface-input px-4 py-2.5 text-sm text-text-muted">
-                    Digitando…
+                    {t('Digitando…')}
                   </div>
                 </div>
               )}
@@ -214,15 +215,15 @@ export default function AssistenteAjuda() {
                 type="text"
                 value={texto}
                 onChange={(evento) => setTexto(evento.target.value)}
-                placeholder="Digite sua dúvida…"
-                aria-label="Digite sua dúvida"
+                placeholder={t('Digite sua dúvida…')}
+                aria-label={t('Digite sua dúvida')}
                 enterKeyHint="send"
                 className="min-h-11 flex-1 rounded-xl bg-surface-input px-4 py-3 text-sm text-text placeholder:text-text-disabled outline-none focus:ring-2 focus:ring-primary/40"
               />
               <button
                 type="submit"
                 disabled={!texto.trim() || digitando}
-                aria-label="Enviar mensagem"
+                aria-label={t('Enviar mensagem')}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground disabled:opacity-40 cursor-pointer active:scale-95 transition-all"
               >
                 <Send className="h-5 w-5" />

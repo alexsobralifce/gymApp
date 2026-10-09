@@ -1,5 +1,6 @@
 import { SearchIcon, XIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface BarraBuscaProps {
   value: string
   onChange: (valor: string) => void
@@ -18,6 +19,7 @@ export default function BarraBusca({
   filtrados,
   className = '',
 }: BarraBuscaProps) {
+  const { t } = useT()
   const ativa = value.trim().length > 0
   return (
     <div className={`mb-4 ${className}`}>
@@ -35,7 +37,7 @@ export default function BarraBusca({
           <button
             type="button"
             onClick={() => onChange('')}
-            aria-label="Limpar busca"
+            aria-label={t('Limpar busca')}
             className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-text-muted hover:text-text cursor-pointer"
           >
             <XIcon className="h-4 w-4" />
@@ -44,7 +46,7 @@ export default function BarraBusca({
       </div>
       {ativa && total !== undefined && filtrados !== undefined && (
         <p className="mt-1.5 text-xs text-text-muted" aria-live="polite">
-          {filtrados} de {total} resultado{total !== 1 ? 's' : ''}
+          {filtrados} {t('de')} {total} {t('resultado')}{total !== 1 ? 's' : ''}
         </p>
       )}
     </div>

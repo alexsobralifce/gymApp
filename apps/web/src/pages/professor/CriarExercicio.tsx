@@ -5,7 +5,9 @@ import Input from '../../components/ui/Input'
 import Textarea from '../../components/ui/Textarea'
 import FormField from '../../components/ui/FormField'
 
+import { useT } from '../../i18n'
 export default function ProfessorCriarExercicio() {
+  const { t } = useT()
   const [exercicios, setExercicios] = useState<Exercicio[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -32,44 +34,44 @@ export default function ProfessorCriarExercicio() {
     setMaquina('')
     setDica('')
     setImagemUrl('')
-    setFeedback('Exercício criado!')
+    setFeedback(t('Exercício criado!'))
     setTimeout(() => setFeedback(null), 2000)
   }
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-xl font-bold text-text">Biblioteca de Exercícios</h1>
+      <h1 className="mb-6 text-xl font-bold text-text">{t('Biblioteca de Exercícios')}</h1>
 
       {/* Formulário de criação */}
       <div className="mb-6 rounded-lg bg-surface-card p-4">
-        <h2 className="mb-3 text-sm font-semibold text-text-muted">Novo Exercício</h2>
+        <h2 className="mb-3 text-sm font-semibold text-text-muted">{t('Novo Exercício')}</h2>
         {feedback && <p className="mb-2 text-sm text-success">{feedback}</p>}
         <form onSubmit={handleCriar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Nome do exercício" htmlFor="ex-nome">
-            <Input id="ex-nome" type="text" placeholder="Nome do exercício" value={nome} onChange={(e) => setNome(e.target.value)} required />
+          <FormField label={t('Nome do exercício')} htmlFor="ex-nome">
+            <Input id="ex-nome" type="text" placeholder={t('Nome do exercício')} value={nome} onChange={(e) => setNome(e.target.value)} required />
           </FormField>
-          <FormField label="Máquina (opcional)" htmlFor="ex-maquina">
-            <Input id="ex-maquina" type="text" placeholder="Máquina (opcional)" value={maquina} onChange={(e) => setMaquina(e.target.value)} />
+          <FormField label={t('Máquina (opcional)')} htmlFor="ex-maquina">
+            <Input id="ex-maquina" type="text" placeholder={t('Máquina (opcional)')} value={maquina} onChange={(e) => setMaquina(e.target.value)} />
           </FormField>
           <div className="md:col-span-2">
-            <FormField label="Dica de execução (opcional)" htmlFor="ex-dica">
-              <Textarea id="ex-dica" placeholder="Dica de execução (opcional)" value={dica} onChange={(e) => setDica(e.target.value)} rows={2} />
+            <FormField label={t('Dica de execução (opcional)')} htmlFor="ex-dica">
+              <Textarea id="ex-dica" placeholder={t('Dica de execução (opcional)')} value={dica} onChange={(e) => setDica(e.target.value)} rows={2} />
             </FormField>
           </div>
           <div className="md:col-span-2">
-            <FormField label="URL da imagem (opcional)" htmlFor="ex-imagem">
-              <Input id="ex-imagem" type="url" placeholder="URL da imagem (opcional)" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} />
+            <FormField label={t('URL da imagem (opcional)')} htmlFor="ex-imagem">
+              <Input id="ex-imagem" type="url" placeholder={t('URL da imagem (opcional)')} value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} />
             </FormField>
           </div>
           <button type="submit" disabled={!nome}
-            className="md:col-span-2 w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">Criar</button>
+            className="md:col-span-2 w-full rounded bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">{t('Criar')}</button>
         </form>
       </div>
 
       {/* Lista */}
-      <h2 className="mb-3 text-sm font-semibold text-text-muted">{exercicios.length} exercícios</h2>
+      <h2 className="mb-3 text-sm font-semibold text-text-muted">{exercicios.length} {t('exercícios')}</h2>
       {loading ? (
-        <p className="text-text-muted text-sm">Carregando...</p>
+        <p className="text-text-muted text-sm">{t('Carregando...')}</p>
       ) : (
         <div className="space-y-2">
           {exercicios.map((e) => (

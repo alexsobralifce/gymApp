@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { TrendingUpIcon, TrendingDownIcon, MinusIcon, ChevronRightIcon } from '../icons/Icon'
 
+import { useT } from '../../i18n'
 interface EvolucaoResumo {
   treinosConcluidos: number
   meta: number
@@ -14,6 +15,7 @@ interface HeroEvolucaoProps {
 }
 
 export default function HeroEvolucao({ resumo, loading }: HeroEvolucaoProps) {
+  const { t } = useT()
   const navigate = useNavigate()
 
   if (loading) {
@@ -47,17 +49,17 @@ export default function HeroEvolucao({ resumo, loading }: HeroEvolucaoProps) {
             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
               <TrendingUpIcon className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-xs font-bold text-primary uppercase tracking-wider">Sua Evolução</span>
+            <span className="text-xs font-bold text-primary uppercase tracking-wider">{t('Sua Evolução')}</span>
           </div>
           <ChevronRightIcon className="h-4 w-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
         </div>
 
         {temDados ? (
           <>
-            <p className="text-xs text-text-muted mb-1">Neste mês</p>
+            <p className="text-xs text-text-muted mb-1">{t('Neste mês')}</p>
             <div className="flex items-baseline gap-2 mb-3">
               <span className="text-3xl font-bold text-text">{resumo!.treinosConcluidos}</span>
-              <span className="text-xs text-text-muted">/ {resumo!.meta} treinos</span>
+              <span className="text-xs text-text-muted">/ {resumo!.meta} {t('treinos')}</span>
             </div>
 
             <div className="h-1.5 bg-border rounded-full overflow-hidden mb-4">
@@ -69,12 +71,12 @@ export default function HeroEvolucao({ resumo, loading }: HeroEvolucaoProps) {
 
             <div className="grid grid-cols-3 gap-2">
               <StatItem
-                label="Meta"
+                label={t('Meta')}
                 value={`${pctMeta}%`}
                 color="text-primary"
               />
               <StatItem
-                label="Volume"
+                label={t('Volume')}
                 value={`${Math.round(resumo!.volumeKg)}kg`}
                 color="text-blue-400"
               />
@@ -83,12 +85,12 @@ export default function HeroEvolucao({ resumo, loading }: HeroEvolucaoProps) {
           </>
         ) : (
           <div className="py-2">
-            <p className="text-sm font-bold text-text mb-1">Acompanhe cada progresso</p>
+            <p className="text-sm font-bold text-text mb-1">{t('Acompanhe cada progresso')}</p>
             <p className="text-xs text-text-muted leading-relaxed">
-              Gráficos de volume, cargas, peso corporal, IMC e correlações científicas da sua performance.
+              {t('Gráficos de volume, cargas, peso corporal, IMC e correlações científicas da sua performance.')}
             </p>
             <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              Comece a treinar para ver sua evolução →
+              {t('Comece a treinar para ver sua evolução →')}
             </div>
           </div>
         )}
@@ -107,6 +109,7 @@ function StatItem({ label, value, color }: { label: string; value: string; color
 }
 
 function StatItemVariacao({ value }: { value: number | null }) {
+  const { t } = useT()
   let icon = <MinusIcon className="h-3 w-3" />
   let color = 'text-text-muted'
   let label = 'Sem dados'
@@ -127,7 +130,7 @@ function StatItemVariacao({ value }: { value: number | null }) {
 
   return (
     <div className="rounded-lg bg-white/5 border border-white/5 p-2">
-      <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Variação</p>
+      <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">{t('Variação')}</p>
       <p className={`text-sm font-bold flex items-center gap-1 ${color}`}>
         {icon}
         {label}

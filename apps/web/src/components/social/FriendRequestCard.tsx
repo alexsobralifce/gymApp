@@ -2,12 +2,14 @@ import { XIcon, CheckIcon } from '../icons/Icon'
 import type { AmizadePendente } from '../../types/api'
 import { getInitials } from '../../lib/initials'
 
+import { useT } from '../../i18n'
 interface FriendRequestCardProps {
   amizade: AmizadePendente
   onResponder: (id: string, acao: 'ACEITAR' | 'RECUSAR') => void
 }
 
 export default function FriendRequestCard({ amizade, onResponder }: FriendRequestCardProps) {
+  const { t } = useT()
   return (
     <div className="flex items-center gap-3 rounded-xl bg-surface-card border border-surface-input p-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground">
@@ -15,7 +17,7 @@ export default function FriendRequestCard({ amizade, onResponder }: FriendReques
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-text">{amizade.nome}</p>
-        <p className="text-xs text-text-muted">Quer ser seu amigo</p>
+        <p className="text-xs text-text-muted">{t('Quer ser seu amigo')}</p>
       </div>
       <div className="flex gap-2">
         <button

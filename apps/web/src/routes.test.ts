@@ -31,6 +31,6 @@ describe('Feed Social Navigation & Routes Verification', () => {
   })
 
   it('should render page title Feed Social in Mural.tsx', () => {
-    expect(muralContent).toContain('<h1 className="text-lg font-bold text-text">Feed Social</h1>')
+    expect(muralContent).toContain(`<h1 className="text-lg font-bold text-text">{t('Feed Social')}</h1>`)
   })
 })

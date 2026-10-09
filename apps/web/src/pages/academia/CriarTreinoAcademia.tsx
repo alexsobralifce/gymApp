@@ -11,6 +11,7 @@ import Select from '../../components/ui/Select'
 import { filterByMuscleCategory, type MuscleCategoryKey } from '../../lib/muscleCategories'
 import WorkoutLoading from '../../components/ui/WorkoutLoading'
 
+import { useT } from '../../i18n'
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 interface ExercicioTreino {
@@ -37,6 +38,7 @@ interface AlunoAcademia {
 }
 
 function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void }) {
+  const { t } = useT()
   const [hovered, setHovered] = useState(false)
   const [imgFailed, setImgFailed] = useState(false)
 
@@ -80,13 +82,14 @@ function BuilderExerciseRow({ ex, onAdd }: { ex: Exercicio; onAdd: () => void })
         onClick={onAdd}
         className="rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer"
       >
-        + Add
+        {t('+ Add')}
       </button>
     </div>
   )
 }
 
 export default function AcademiaCriarTreino() {
+  const { t } = useT()
   const [alunos, setAlunos] = useState<AlunoAcademia[]>([])
   const [todosExercicios, setTodosExercicios] = useState<Exercicio[]>([])
   const [loading, setLoading] = useState(true)
@@ -216,7 +219,7 @@ export default function AcademiaCriarTreino() {
 
     const fichasValidas = fichas.filter((f) => f.exercicios.length > 0 && f.diasSemana.length > 0)
     if (fichasValidas.length === 0) {
-      setFeedback('Configure pelo menos uma ficha com exercícios e dias da semana.')
+      setFeedback(t('Configure pelo menos uma ficha com exercícios e dias da semana.'))
       return
     }
 
@@ -242,11 +245,11 @@ export default function AcademiaCriarTreino() {
 
       await Promise.all(treinos.map((t) => api.enviarTreino(t.id)))
 
-      setFeedback(`${treinos.length} ficha(s) criada(s) e enviada(s) com sucesso!`)
+      setFeedback(t('{length} ficha(s) criada(s) e enviada(s) com sucesso!', { length: treinos.length }))
       setTimeout(() => navigate('/treinos'), 2000)
     } catch (err) {
       console.error(err)
-      setFeedback('Erro ao criar fichas.')
+      setFeedback(t('Erro ao criar fichas.'))
     } finally {
       setEnviando(false)
     }
@@ -259,8 +262,8 @@ export default function AcademiaCriarTreino() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text">Montar Treinos (Academia)</h1>
-        <p className="text-sm text-text-muted">Monte as fichas de treino para os alunos matriculados na sua academia</p>
+        <h1 className="text-2xl font-bold text-text">{t('Montar Treinos (Academia)')}</h1>
+        <p className="text-sm text-text-muted">{t('Monte as fichas de treino para os alunos matriculados na sua academia')}</p>
       </div>
 
       {feedback && (
@@ -273,14 +276,14 @@ export default function AcademiaCriarTreino() {
 
       {/* Seletor de Aluno */}
       <div className="max-w-md bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm">
-        <FormField label="Aluno da Academia" htmlFor="aluno-academia" required>
+        <FormField label={t('Aluno da Academia')} htmlFor="aluno-academia" required>
           <Select
             id="aluno-academia"
             value={alunoId}
             onChange={(e) => setAlunoId(e.target.value)}
             required
           >
-            <option value="">Selecionar aluno...</option>
+            <option value="">{t('Selecionar aluno...')}</option>
             {alunos.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.usuario.nome} ({a.usuario.email})
@@ -322,26 +325,26 @@ export default function AcademiaCriarTreino() {
                 onClick={adicionarFicha}
                 className="rounded-xl border border-dashed border-surface-input px-3.5 py-2 text-xs font-semibold text-text-muted hover:text-text hover:border-text-muted transition-colors cursor-pointer"
               >
-                + Adicionar Treino
+                {t('+ Adicionar Treino')}
               </button>
             </div>
 
             <div className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <FormField label="Identificação do Treino" htmlFor={`ficha-nome-${fichaAtiva}`}>
+                  <FormField label={t('Identificação do Treino')} htmlFor={`ficha-nome-${fichaAtiva}`}>
                     <Input
                       id={`ficha-nome-${fichaAtiva}`}
                       type="text"
                       value={ficha.nome}
                       onChange={(e) => atualizarFicha(fichaAtiva, { nome: e.target.value })}
-                      placeholder="Ex: Treino A — Peito e Tríceps"
+                      placeholder={t('Ex: Treino A — Peito e Tríceps')}
                     />
                   </FormField>
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">Dias da Semana</label>
+                  <label className="mb-1 block text-xs font-semibold text-text-muted uppercase tracking-wider">{t('Dias da Semana')}</label>
                   <div className="flex gap-1 flex-wrap">
                     {DIAS.map((d, i) => (
                       <button
@@ -352,7 +355,7 @@ export default function AcademiaCriarTreino() {
                           ficha.diasSemana.includes(i) ? 'bg-primary text-primary-foreground' : 'bg-surface text-text-muted border border-surface-input'
                         }`}
                       >
-                        {d}
+                        {t(d)}
                       </button>
                     ))}
                   </div>
@@ -360,11 +363,11 @@ export default function AcademiaCriarTreino() {
               </div>
 
               <div className="pt-2">
-                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">Exercícios do Treino ({ficha.exercicios.length})</h3>
+                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">{t('Exercícios do Treino (')}{ficha.exercicios.length})</h3>
                 
                 {ficha.exercicios.length === 0 ? (
                   <p className="text-sm text-text-muted py-6 text-center border border-dashed border-surface-input rounded-xl">
-                    Selecione exercícios na biblioteca ao lado para montar a ficha.
+                    {t('Selecione exercícios na biblioteca ao lado para montar a ficha.')}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -394,7 +397,7 @@ export default function AcademiaCriarTreino() {
                           <div className="flex items-center gap-3.5">
                             <div className="flex gap-1.5 max-w-[200px]">
                               <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase">Séries</label>
+                                <label className="block text-xs font-bold text-text-muted uppercase">{t('Séries')}</label>
                                 <Input
                                   type="number"
                                   min={1}
@@ -404,7 +407,7 @@ export default function AcademiaCriarTreino() {
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase">Reps</label>
+                                <label className="block text-xs font-bold text-text-muted uppercase">{t('Reps')}</label>
                                 <Input
                                   type="number"
                                   min={1}
@@ -414,11 +417,11 @@ export default function AcademiaCriarTreino() {
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase">Carga (kg)</label>
+                                <label className="block text-xs font-bold text-text-muted uppercase">{t('Carga (kg)')}</label>
                                 <Input
                                   type="number"
                                   min={0}
-                                  placeholder="Auto"
+                                  placeholder={t('Auto')}
                                   value={ex.cargaSugeridaKg ?? ''}
                                   onChange={(e) =>
                                     atualizarExercicio(idx, 'cargaSugeridaKg', Number(e.target.value) || 0)
@@ -468,15 +471,15 @@ export default function AcademiaCriarTreino() {
               disabled={!alunoId || enviando || fichas.every((f) => f.exercicios.length === 0)}
               className="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-md disabled:opacity-40 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
-              {enviando ? 'Gravando Fichas...' : 'Salvar Treino Completo'}
+              {enviando ? t('Gravando Fichas...') : t('Salvar Treino Completo')}
             </button>
           </div>
 
           {/* Coluna Direita: Biblioteca de Exercícios */}
           <div className="lg:col-span-5 bg-surface-card border border-surface-input rounded-2xl p-4 shadow-sm space-y-4">
             <div>
-              <h2 className="text-base font-bold text-text">Biblioteca de Exercícios</h2>
-              <p className="text-xs text-text-muted">Mais de 900 exercícios com GIFs animados categorizados</p>
+              <h2 className="text-base font-bold text-text">{t('Biblioteca de Exercícios')}</h2>
+              <p className="text-xs text-text-muted">{t('Mais de 900 exercícios com GIFs animados categorizados')}</p>
             </div>
 
             <MuscleCategoryGrid
@@ -485,25 +488,25 @@ export default function AcademiaCriarTreino() {
             />
 
             <div className="space-y-2 pt-2 border-t border-surface-input">
-              <FormField label="Buscar Exercício" htmlFor="busca-exercicio">
+              <FormField label={t('Buscar Exercício')} htmlFor="busca-exercicio">
                 <Input
                   id="busca-exercicio"
                   type="text"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  placeholder="🔍 Pesquisar por nome do exercício..."
+                  placeholder={t('🔍 Pesquisar por nome do exercício...')}
                 />
               </FormField>
 
-              <FormField label="Equipamento" htmlFor="filtro-equip">
+              <FormField label={t('Equipamento')} htmlFor="filtro-equip">
                 <Select
                   id="filtro-equip"
                   value={filtroEquip}
                   onChange={(e) => setFiltroEquip(e.target.value)}
                 >
-                  <option value="">Todos Equipamentos</option>
+                  <option value="">{t('Todos Equipamentos')}</option>
                   {EQUIPAMENTOS.map((eq) => (
-                    <option key={eq.value} value={eq.value}>{eq.label}</option>
+                    <option key={eq.value} value={eq.value}>{t(eq.label)}</option>
                   ))}
                 </Select>
               </FormField>
@@ -511,7 +514,7 @@ export default function AcademiaCriarTreino() {
 
             <div className="max-h-[500px] overflow-y-auto divide-y divide-surface-input pr-1 space-y-1.5">
               {exercicios.length === 0 ? (
-                <p className="text-xs text-text-muted py-6 text-center">Nenhum exercício correspondente.</p>
+                <p className="text-xs text-text-muted py-6 text-center">{t('Nenhum exercício correspondente.')}</p>
               ) : (
                 exercicios.map((ex) => (
                   <BuilderExerciseRow

@@ -4,7 +4,9 @@ import { api } from '../../api/client'
 import Input from '../../components/ui/Input'
 import FormField from '../../components/ui/FormField'
 
+import { useT } from '../../i18n'
 export default function AlterarSenha() {
+  const { t } = useT()
   const [senhaAtual, setSenhaAtual] = useState('')
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
@@ -17,19 +19,19 @@ export default function AlterarSenha() {
     setFeedback(null)
 
     if (novaSenha.length < 8) {
-      setFeedback({ tipo: 'erro', texto: 'A nova senha deve conter pelo menos 8 caracteres.' })
+      setFeedback({ tipo: 'erro', texto: t('A nova senha deve conter pelo menos 8 caracteres.') })
       return
     }
 
     if (novaSenha !== confirmarSenha) {
-      setFeedback({ tipo: 'erro', texto: 'A confirmação de senha não coincide.' })
+      setFeedback({ tipo: 'erro', texto: t('A confirmação de senha não coincide.') })
       return
     }
 
     try {
       setSaving(true)
       await api.alterarSenha(senhaAtual, novaSenha)
-      setFeedback({ tipo: 'sucesso', texto: 'Senha alterada com sucesso! Redirecionando...' })
+      setFeedback({ tipo: 'sucesso', texto: t('Senha alterada com sucesso! Redirecionando...') })
       setTimeout(() => navigate('/'), 2000)
     } catch (err: any) {
       console.error(err)
@@ -43,48 +45,48 @@ export default function AlterarSenha() {
   return (
     <div className="p-4 md:p-6 max-w-md mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text">Alterar Senha</h1>
-        <p className="text-sm text-text-muted">Mantenha sua conta segura atualizando sua senha de acesso</p>
+        <h1 className="text-2xl font-bold text-text">{t('Alterar Senha')}</h1>
+        <p className="text-sm text-text-muted">{t('Mantenha sua conta segura atualizando sua senha de acesso')}</p>
       </div>
 
       {feedback && (
         <div className={`rounded-xl p-4 text-sm font-semibold border ${
           feedback.tipo === 'erro' ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-success/10 text-success border-success/20'
         }`}>
-          {feedback.texto}
+          {t(feedback.texto)}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="bg-surface-card border border-surface-input rounded-2xl p-5 shadow-sm space-y-4">
-        <FormField label="Senha Atual" htmlFor="senhaAtual">
+        <FormField label={t('Senha Atual')} htmlFor="senhaAtual">
           <Input
             id="senhaAtual"
             type="password"
             value={senhaAtual}
             onChange={(e) => setSenhaAtual(e.target.value)}
-            placeholder="Digite sua senha atual"
+            placeholder={t('Digite sua senha atual')}
             required
           />
         </FormField>
 
-        <FormField label="Nova Senha" htmlFor="novaSenha">
+        <FormField label={t('Nova Senha')} htmlFor="novaSenha">
           <Input
             id="novaSenha"
             type="password"
             value={novaSenha}
             onChange={(e) => setNovaSenha(e.target.value)}
-            placeholder="Nova senha (mínimo 8 caracteres)"
+            placeholder={t('Nova senha (mínimo 8 caracteres)')}
             required
           />
         </FormField>
 
-        <FormField label="Confirmar Nova Senha" htmlFor="confirmarSenha">
+        <FormField label={t('Confirmar Nova Senha')} htmlFor="confirmarSenha">
           <Input
             id="confirmarSenha"
             type="password"
             value={confirmarSenha}
             onChange={(e) => setConfirmarSenha(e.target.value)}
-            placeholder="Confirme a nova senha"
+            placeholder={t('Confirme a nova senha')}
             required
           />
         </FormField>
@@ -95,14 +97,14 @@ export default function AlterarSenha() {
             onClick={() => navigate('/')}
             className="flex-1 rounded-xl border border-surface-input py-3 text-sm font-bold text-text-muted hover:text-text transition-colors cursor-pointer"
           >
-            Cancelar
+            {t('Cancelar')}
           </button>
           <button
             type="submit"
             disabled={saving}
             className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
-            {saving ? 'Salvando...' : 'Salvar Senha'}
+            {saving ? 'Salvando...' : t('Salvar Senha')}
           </button>
         </div>
       </form>

@@ -6,7 +6,9 @@ import { ChevronLeftIcon } from '../../components/icons/Icon'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Toast from '../../components/ui/Toast'
 
+import { useT } from '../../i18n'
 export default function BibliotecaPlanos() {
+  const { t } = useT()
   const navigate = useNavigate()
   const [planos, setPlanos] = useState<PlanoBiblioteca[]>([])
   const [recomendados, setRecomendados] = useState<PlanoBiblioteca[]>([])
@@ -40,7 +42,7 @@ export default function BibliotecaPlanos() {
       setPlanos(todosData)
       setRecomendados(recData)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao carregar biblioteca de planos', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao carregar biblioteca de planos'), type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -52,7 +54,7 @@ export default function BibliotecaPlanos() {
       const detalhe = await api.getPlanoDetalhe(id)
       setPlanoSelecionado(detalhe)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao carregar detalhes do plano', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao carregar detalhes do plano'), type: 'error' })
     } finally {
       setLoadingDetalhe(false)
     }
@@ -63,14 +65,14 @@ export default function BibliotecaPlanos() {
     try {
       const res = await api.adotarPlano(planoId)
       setToast({
-        message: `🎉 Plano "${res.plano.nome}" adotado! ${res.treinosCriadosCount} treinos criados.`,
+        message: t('🎉 Plano "{nome}" adotado! {treinosCriadosCount} treinos criados.', { nome: res.plano.nome, treinosCriadosCount: res.treinosCriadosCount }),
         type: 'success',
       })
       setTimeout(() => {
         navigate('/meus-treinos')
       }, 1500)
     } catch (err: any) {
-      setToast({ message: err.message || 'Erro ao adotar plano', type: 'error' })
+      setToast({ message: t(err.message) || t('Erro ao adotar plano'), type: 'error' })
     } finally {
       setAdotandoId(null)
     }
@@ -88,7 +90,7 @@ export default function BibliotecaPlanos() {
 
   return (
     <div className="px-4 py-4 md:p-6 pb-24 md:pb-12 max-w-6xl mx-auto space-y-5">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && <Toast message={t(toast.message)} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-input pb-4">
@@ -99,78 +101,78 @@ export default function BibliotecaPlanos() {
             className="flex items-center gap-1 text-xs text-text-muted hover:text-text mb-2 transition-colors cursor-pointer min-h-[36px]"
           >
             <ChevronLeftIcon className="w-4 h-4" />
-            Voltar para Meus Treinos
+            {t('Voltar para Meus Treinos')}
           </button>
           <h1 className="text-xl sm:text-3xl font-extrabold text-text flex items-center gap-2">
-            📚 Biblioteca de Planos de Treino
+            {t('📚 Biblioteca de Planos de Treino')}
           </h1>
           <p className="text-xs sm:text-sm text-text-muted mt-1 leading-relaxed">
-            Escolha um plano pronto alinhado ao seu objetivo, nível e rotina semanal.
+            {t('Escolha um plano pronto alinhado ao seu objetivo, nível e rotina semanal.')}
           </p>
         </div>
       </div>
 
       {/* Barra de Filtros */}
       <div className="bg-surface rounded-2xl p-4 border border-surface-input space-y-3">
-        <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Filtrar por Perfil</p>
+        <p className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Filtrar por Perfil')}</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Objetivo */}
           <div>
-            <label className="text-xs text-text-muted font-medium block mb-1">Objetivo</label>
+            <label className="text-xs text-text-muted font-medium block mb-1">{t('Objetivo')}</label>
             <select
               value={filtroObjetivo}
               onChange={(e) => setFiltroObjetivo(e.target.value)}
               className="w-full bg-surface-input text-text text-xs rounded-xl px-3 py-2 border border-surface-input focus:outline-none focus:border-primary"
             >
-              <option value="TODOS">Todos os objetivos</option>
-              <option value="HIPERTROFIA">🔥 Hipertrofia</option>
-              <option value="FORCA">💪 Força</option>
-              <option value="EMAGRECIMENTO">⚡ Emagrecimento</option>
-              <option value="SAUDE">❤️ Saúde & Bem-estar</option>
+              <option value="TODOS">{t('Todos os objetivos')}</option>
+              <option value="HIPERTROFIA">{t('🔥 Hipertrofia')}</option>
+              <option value="FORCA">{t('💪 Força')}</option>
+              <option value="EMAGRECIMENTO">{t('⚡ Emagrecimento')}</option>
+              <option value="SAUDE">{t('❤️ Saúde & Bem-estar')}</option>
             </select>
           </div>
 
           {/* Nível */}
           <div>
-            <label className="text-xs text-text-muted font-medium block mb-1">Nível</label>
+            <label className="text-xs text-text-muted font-medium block mb-1">{t('Nível')}</label>
             <select
               value={filtroNivel}
               onChange={(e) => setFiltroNivel(e.target.value)}
               className="w-full bg-surface-input text-text text-xs rounded-xl px-3 py-2 border border-surface-input focus:outline-none focus:border-primary"
             >
-              <option value="TODOS">Todos os níveis</option>
-              <option value="INICIANTE">🌱 Iniciante</option>
-              <option value="INTERMEDIARIO">⚡ Intermediário</option>
-              <option value="AVANCADO">🚀 Avançado</option>
+              <option value="TODOS">{t('Todos os níveis')}</option>
+              <option value="INICIANTE">{t('🌱 Iniciante')}</option>
+              <option value="INTERMEDIARIO">{t('⚡ Intermediário')}</option>
+              <option value="AVANCADO">{t('🚀 Avançado')}</option>
             </select>
           </div>
 
           {/* Sexo */}
           <div>
-            <label className="text-xs text-text-muted font-medium block mb-1">Público / Sexo</label>
+            <label className="text-xs text-text-muted font-medium block mb-1">{t('Público / Sexo')}</label>
             <select
               value={filtroSexo}
               onChange={(e) => setFiltroSexo(e.target.value)}
               className="w-full bg-surface-input text-text text-xs rounded-xl px-3 py-2 border border-surface-input focus:outline-none focus:border-primary"
             >
-              <option value="TODOS">Todos os públicos</option>
-              <option value="FEMININO">♀ Feminino (Foco Glúteos/Pernas)</option>
-              <option value="MASCULINO">♂ Masculino</option>
+              <option value="TODOS">{t('Todos os públicos')}</option>
+              <option value="FEMININO">{t('♀ Feminino (Foco Glúteos/Pernas)')}</option>
+              <option value="MASCULINO">{t('♂ Masculino')}</option>
             </select>
           </div>
 
           {/* Divisão / Split */}
           <div>
-            <label className="text-xs text-text-muted font-medium block mb-1">Divisão (Split)</label>
+            <label className="text-xs text-text-muted font-medium block mb-1">{t('Divisão (Split)')}</label>
             <select
               value={filtroSplit}
               onChange={(e) => setFiltroSplit(e.target.value)}
               className="w-full bg-surface-input text-text text-xs rounded-xl px-3 py-2 border border-surface-input focus:outline-none focus:border-primary"
             >
-              <option value="TODOS">Todas as divisões</option>
-              <option value="ABC">ABC (3-4 dias)</option>
-              <option value="ABCD">ABCD (4-5 dias)</option>
-              <option value="FULL_BODY">Full Body (2-3 dias)</option>
+              <option value="TODOS">{t('Todas as divisões')}</option>
+              <option value="ABC">{t('ABC (3-4 dias)')}</option>
+              <option value="ABCD">{t('ABCD (4-5 dias)')}</option>
+              <option value="FULL_BODY">{t('Full Body (2-3 dias)')}</option>
             </select>
           </div>
         </div>
@@ -181,7 +183,7 @@ export default function BibliotecaPlanos() {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-            <h2 className="text-sm font-bold text-text uppercase tracking-wider">Recomendados para o seu perfil</h2>
+            <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Recomendados para o seu perfil')}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recomendados.slice(0, 2).map((rec) => (
@@ -190,11 +192,11 @@ export default function BibliotecaPlanos() {
                 className="bg-gradient-to-br from-primary/10 via-surface to-surface border border-primary/30 rounded-2xl p-5 shadow-sm hover:border-primary transition-all relative overflow-hidden flex flex-col justify-between"
               >
                 <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Recomendado ★
+                  {t('Recomendado ★')}
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-text pr-20">{rec.nome}</h3>
-                  <p className="text-xs text-text-muted mt-1.5 line-clamp-2">{rec.descricao}</p>
+                  <p className="text-xs text-text-muted mt-1.5 line-clamp-2">{t(rec.descricao)}</p>
                   
                   <div className="flex flex-wrap gap-1.5 mt-3">
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text border border-surface-input">
@@ -204,7 +206,7 @@ export default function BibliotecaPlanos() {
                       {rec.nivel}
                     </span>
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
-                      📅 {rec.dias_por_semana}x / semana ({rec.split_tipo})
+                      📅 {rec.dias_por_semana}{t('x / semana (')}{rec.split_tipo})
                     </span>
                   </div>
                 </div>
@@ -215,7 +217,7 @@ export default function BibliotecaPlanos() {
                     onClick={() => abrirDetalhesPlano(rec.id)}
                     className="flex-1 py-2 px-3 bg-surface-input hover:bg-surface-input/80 text-text text-xs font-bold rounded-xl transition-all text-center cursor-pointer"
                   >
-                    Ver Exercícios
+                    {t('Ver Exercícios')}
                   </button>
                   <button
                     type="button"
@@ -223,7 +225,7 @@ export default function BibliotecaPlanos() {
                     disabled={adotandoId === rec.id}
                     className="flex-1 py-2 px-3 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl transition-all text-center cursor-pointer disabled:opacity-50"
                   >
-                    {adotandoId === rec.id ? 'Adotando...' : 'Adotar Plano'}
+                    {adotandoId === rec.id ? 'Adotando...' : t('Adotar Plano')}
                   </button>
                 </div>
               </div>
@@ -240,15 +242,15 @@ export default function BibliotecaPlanos() {
       ) : planosFiltrados.length === 0 ? (
         <div className="bg-surface rounded-2xl p-12 text-center border border-surface-input space-y-3">
           <span className="text-4xl block">🔍</span>
-          <h3 className="text-base font-bold text-text">Nenhum plano encontrado</h3>
+          <h3 className="text-base font-bold text-text">{t('Nenhum plano encontrado')}</h3>
           <p className="text-xs text-text-muted max-w-md mx-auto">
-            Tente remover alguns filtros para visualizar mais alternativas de treinos na biblioteca.
+            {t('Tente remover alguns filtros para visualizar mais alternativas de treinos na biblioteca.')}
           </p>
         </div>
       ) : (
         <div className="space-y-3">
           <h2 className="text-sm font-bold text-text uppercase tracking-wider">
-            Todos os Planos ({planosFiltrados.length})
+            {t('Todos os Planos (')}{planosFiltrados.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {planosFiltrados.map((plano) => (
@@ -261,17 +263,17 @@ export default function BibliotecaPlanos() {
                     <h3 className="text-base font-bold text-text leading-tight">{plano.nome}</h3>
                     {plano.sexo_alvo === 'FEMININO' && (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-500 font-bold border border-pink-500/20 shrink-0">
-                        ♀ Feminino
+                        {t('♀ Feminino')}
                       </span>
                     )}
                     {plano.sexo_alvo === 'MASCULINO' && (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 font-bold border border-blue-500/20 shrink-0">
-                        ♂ Masculino
+                        {t('♂ Masculino')}
                       </span>
                     )}
                   </div>
 
-                  <p className="text-xs text-text-muted mt-2 line-clamp-3">{plano.descricao}</p>
+                  <p className="text-xs text-text-muted mt-2 line-clamp-3">{t(plano.descricao)}</p>
 
                   <div className="flex flex-wrap gap-1.5 mt-4">
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted border border-surface-input uppercase">
@@ -281,7 +283,7 @@ export default function BibliotecaPlanos() {
                       {plano.nivel}
                     </span>
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-primary border border-surface-input">
-                      {plano.dias_por_semana}x / sem
+                      {plano.dias_por_semana}{t('x / sem')}
                     </span>
                   </div>
                 </div>
@@ -292,7 +294,7 @@ export default function BibliotecaPlanos() {
                     onClick={() => abrirDetalhesPlano(plano.id)}
                     className="flex-1 py-2 text-center text-xs font-bold text-text bg-surface-input hover:bg-surface-input/80 rounded-xl transition-all cursor-pointer"
                   >
-                    Ver Detalhes
+                    {t('Ver Detalhes')}
                   </button>
                   <button
                     type="button"
@@ -323,7 +325,7 @@ export default function BibliotecaPlanos() {
                 <div className="p-5 border-b border-surface-input flex items-start justify-between gap-4 bg-surface">
                   <div>
                     <h2 className="text-xl font-bold text-text">{planoSelecionado.nome}</h2>
-                    <p className="text-xs text-text-muted mt-1">{planoSelecionado.descricao}</p>
+                    <p className="text-xs text-text-muted mt-1">{t(planoSelecionado.descricao)}</p>
                     <div className="flex flex-wrap gap-2 mt-2">
                       <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                         {planoSelecionado.objetivo}
@@ -332,7 +334,7 @@ export default function BibliotecaPlanos() {
                         {planoSelecionado.nivel}
                       </span>
                       <span className="text-xs font-bold px-2 py-0.5 rounded bg-surface-input text-text-muted">
-                        {planoSelecionado.dias_por_semana}x por semana ({planoSelecionado.split_tipo})
+                        {planoSelecionado.dias_por_semana}{t('x por semana (')}{planoSelecionado.split_tipo})
                       </span>
                     </div>
                   </div>
@@ -387,7 +389,7 @@ export default function BibliotecaPlanos() {
                                     )}
                                     {exItem.restricoes_incompativeis && exItem.restricoes_incompativeis.length > 0 && (
                                       <span className="text-xs font-semibold text-amber-500 bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20">
-                                        ⚠️ Substituto p/ {exItem.restricoes_incompativeis.join(', ')}
+                                        {t('⚠️ Substituto p/')} {exItem.restricoes_incompativeis.join(', ')}
                                       </span>
                                     )}
                                   </div>
@@ -396,7 +398,7 @@ export default function BibliotecaPlanos() {
 
                               <div className="text-right shrink-0">
                                 <span className="text-xs font-bold text-text block">
-                                  {exItem.series} séries × {exItem.repeticoes_min}–{exItem.repeticoes_max} reps
+                                  {exItem.series} {t('séries ×')} {exItem.repeticoes_min}–{exItem.repeticoes_max} {t('reps')}
                                 </span>
                                 <span className="text-xs text-text-muted uppercase">
                                   {exItem.tipo || 'PRINCIPAL'}
@@ -417,7 +419,7 @@ export default function BibliotecaPlanos() {
                     onClick={() => setPlanoSelecionado(null)}
                     className="px-4 py-2 text-xs font-bold text-text-muted hover:text-text transition-colors cursor-pointer"
                   >
-                    Fechar
+                    {t('Fechar')}
                   </button>
                   <button
                     type="button"
@@ -428,7 +430,7 @@ export default function BibliotecaPlanos() {
                     }}
                     className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md"
                   >
-                    Adotar este Plano
+                    {t('Adotar este Plano')}
                   </button>
                 </div>
               </>

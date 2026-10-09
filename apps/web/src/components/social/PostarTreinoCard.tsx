@@ -5,6 +5,8 @@ import { CheckIcon, XIcon, CameraIcon } from '../icons/Icon'
 import { baixarBlobComoArquivo, type StoryData } from '../../utils/instagramStoryGenerator'
 import { gerarCardTreinoFoto, type CardTreinoFotoData } from '../../utils/cardTreinoFotoGenerator'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 interface PostarTreinoCardProps {
   postId?: string | null
   storyData: StoryData
@@ -13,6 +15,7 @@ interface PostarTreinoCardProps {
 }
 
 export default function PostarTreinoCard({ postId, storyData, cardTreino }: PostarTreinoCardProps) {
+  const { t } = useT()
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [fotoFile, setFotoFile] = useState<File | null>(null)
   const [gerandoCard, setGerandoCard] = useState(false)
@@ -132,7 +135,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
     }, 'image/png')
 
     fecharCameraAoVivo()
-    setFeedbackMsg({ tipo: 'success', texto: 'Foto capturada com sucesso!' })
+    setFeedbackMsg({ tipo: 'success', texto: t('Foto capturada com sucesso!') })
   }
 
   // Compartilha o card (folha nativa no celular: Instagram, WhatsApp...) ou salva o arquivo no computador
@@ -150,7 +153,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
             title: `Treino - ${storyData.treinoNome}`,
             text: 'Treino concluído com o @endorfinapp! 💪 #Endorfinapp',
           })
-          setFeedbackMsg({ tipo: 'success', texto: 'Compartilhamento iniciado! Selecione o Instagram nos seus apps.' })
+          setFeedbackMsg({ tipo: 'success', texto: t('Compartilhamento iniciado! Selecione o Instagram nos seus apps.') })
           return
         } catch (err: any) {
           if (err?.name === 'AbortError') return
@@ -159,11 +162,11 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
       baixarBlobComoArquivo(blob, nome)
       setFeedbackMsg({
         tipo: 'info',
-        texto: 'Card salvo em Downloads! Envie a imagem para o seu celular ou use o Instagram Web.',
+        texto: t('Card salvo em Downloads! Envie a imagem para o seu celular ou use o Instagram Web.'),
       })
     } catch (err) {
       console.error('Erro ao compartilhar o card do treino:', err)
-      setFeedbackMsg({ tipo: 'error', texto: 'Não foi possível gerar a imagem.' })
+      setFeedbackMsg({ tipo: 'error', texto: t('Não foi possível gerar a imagem.') })
     } finally {
       setGerandoCard(false)
     }
@@ -174,10 +177,10 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
       setGerandoCard(true)
       const blob = await gerarCardTreinoFoto(cardTreino, fotoPreview)
       baixarBlobComoArquivo(blob, `treino-endorfinapp-${Date.now()}.jpg`)
-      setFeedbackMsg({ tipo: 'success', texto: 'Imagem salva em alta resolução!' })
+      setFeedbackMsg({ tipo: 'success', texto: t('Imagem salva em alta resolução!') })
     } catch (err) {
       console.error('Erro ao baixar o card do treino:', err)
-      setFeedbackMsg({ tipo: 'error', texto: 'Erro ao baixar a imagem.' })
+      setFeedbackMsg({ tipo: 'error', texto: t('Erro ao baixar a imagem.') })
     } finally {
       setGerandoCard(false)
     }
@@ -227,9 +230,9 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
       })
 
       setMuralPublicado(true)
-      setFeedbackMsg({ tipo: 'success', texto: 'Foto publicada no Mural da Academia!' })
+      setFeedbackMsg({ tipo: 'success', texto: t('Foto publicada no Mural da Academia!') })
     } catch (err: any) {
-      setFeedbackMsg({ tipo: 'error', texto: err.message || 'Erro ao publicar no mural.' })
+      setFeedbackMsg({ tipo: 'error', texto: t(err.message) || t('Erro ao publicar no mural.') })
     } finally {
       setUploadingMural(false)
     }
@@ -239,10 +242,10 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
     <div className="w-full max-w-sm rounded-3xl bg-surface-card border border-surface-input p-5 shadow-xl space-y-4 animate-slide-up">
       <div className="text-center space-y-1">
         <h3 className="text-base font-black text-text flex items-center justify-center gap-2">
-          <span>📸</span> Poste seu Treino
+          <span>📸</span> {t('Poste seu Treino')}
         </h3>
         <p className="text-xs text-text-muted">
-          Tire uma foto e compartilhe seu treino concluído
+          {t('Tire uma foto e compartilhe seu treino concluído')}
         </p>
       </div>
 
@@ -277,17 +280,17 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
           </div>
           {storyData.calorias && (
             <div className="flex items-center gap-1.5 text-amber-500">
-              <span>🔥</span> <span>{storyData.calorias} kcal</span>
+              <span>🔥</span> <span>{storyData.calorias} {t('kcal')}</span>
             </div>
           )}
           {storyData.volumeKg && (
             <div className="flex items-center gap-1.5 text-emerald-500">
-              <span>🏋️</span> <span>{storyData.volumeKg.toLocaleString('pt-BR')} kg</span>
+              <span>🏋️</span> <span>{storyData.volumeKg.toLocaleString(localeAtual())} {t('kg')}</span>
             </div>
           )}
           {storyData.seriesConcluidas && (
             <div className="flex items-center gap-1.5 text-purple-400">
-              <span>⚡</span> <span>{storyData.seriesConcluidas} séries</span>
+              <span>⚡</span> <span>{storyData.seriesConcluidas} {t('séries')}</span>
             </div>
           )}
         </div>
@@ -298,14 +301,14 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
         {cardPreviewUrl ? (
           <div className="flex flex-col items-center gap-1.5" data-testid="card-preview">
             <div className="relative w-52 aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30 bg-black">
-              <img src={cardPreviewUrl} alt="Prévia do card do treino" className="w-full h-full object-cover" />
+              <img src={cardPreviewUrl} alt={t('Prévia do card do treino')} className="w-full h-full object-cover" />
               {gerandoCard && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
               )}
             </div>
-            <span className="text-[10px] font-bold text-text-muted">Este é o card que será compartilhado</span>
+            <span className="text-[10px] font-bold text-text-muted">{t('Este é o card que será compartilhado')}</span>
           </div>
         ) : (
           <div className="w-52 aspect-[4/5] rounded-2xl bg-surface-input flex items-center justify-center border border-dashed border-border">
@@ -327,7 +330,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
             className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
           >
             <CameraIcon className="h-4 w-4" />
-            {fotoPreview ? 'Tirar Outra Foto' : 'Tirar Foto no Treino'}
+            {fotoPreview ? t('Tirar Outra Foto') : t('Tirar Foto no Treino')}
           </button>
 
           <button
@@ -335,7 +338,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-1 rounded-xl bg-surface px-3 py-2 text-xs font-semibold text-text-muted border border-surface-input hover:text-text hover:border-primary transition-all cursor-pointer"
           >
-            <span>🖼️</span> Galeria
+            <span>🖼️</span> {t('Galeria')}
           </button>
 
           {fotoPreview && (
@@ -343,7 +346,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
               type="button"
               onClick={handleRemoverFoto}
               className="rounded-xl bg-destructive/10 p-2 text-xs font-bold text-destructive hover:bg-destructive/20 transition-all cursor-pointer"
-              title="Remover foto e usar fundo padrão"
+              title={t('Remover foto e usar fundo padrão')}
             >
               <XIcon className="h-4 w-4" />
             </button>
@@ -363,7 +366,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
           <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
           </svg>
-          Postar no Instagram Stories
+          {t('Postar no Instagram Stories')}
         </button>
 
         {/* 2. Publicar no Mural GymApp (se tiver foto) */}
@@ -372,7 +375,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
             {muralPublicado ? (
               <div className="flex items-center justify-center gap-2 rounded-xl bg-success/10 border border-success/20 p-2.5 text-xs font-bold text-success">
                 <CheckIcon className="h-4 w-4" />
-                Publicado no Mural GymApp
+                {t('Publicado no Mural GymApp')}
               </div>
             ) : uploadingMural ? (
               <div className="space-y-1.5 p-2 bg-surface rounded-xl border border-surface-input">
@@ -382,7 +385,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
                     style={{ width: `${muralProgress}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-text-muted text-center font-bold">Publicando no mural... {muralProgress}%</p>
+                <p className="text-[10px] text-text-muted text-center font-bold">{t('Publicando no mural...')} {muralProgress}%</p>
               </div>
             ) : (
               <button
@@ -390,7 +393,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
                 onClick={handlePublicarMural}
                 className="w-full rounded-xl border border-primary/30 bg-primary/10 py-2.5 text-xs font-bold text-primary hover:bg-primary/20 active:scale-[0.98] transition-all cursor-pointer"
               >
-                🌐 Postar Treino no Mural
+                {t('🌐 Postar Treino no Mural')}
               </button>
             )}
           </div>
@@ -403,7 +406,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
           disabled={gerandoCard}
           className="w-full rounded-xl border border-surface-input bg-surface py-2.5 text-xs font-bold text-text-muted hover:text-text hover:bg-surface-input/50 active:scale-[0.98] transition-all cursor-pointer"
         >
-          💾 Salvar Imagem na Galeria (1080x1350)
+          {t('💾 Salvar Imagem na Galeria (1080x1350)')}
         </button>
       </div>
 
@@ -418,7 +421,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
               : 'bg-destructive/10 text-destructive border border-destructive/20'
           }`}
         >
-          {feedbackMsg.texto}
+          {t(feedbackMsg.texto)}
         </div>
       )}
 
@@ -428,7 +431,7 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
           <div className="relative w-full max-w-sm bg-surface-card border border-surface-input rounded-3xl p-5 space-y-4 shadow-2xl text-center">
             <div className="flex items-center justify-between border-b border-surface-input pb-2">
               <h4 className="text-sm font-bold text-text flex items-center gap-2">
-                <CameraIcon className="h-4 w-4 text-primary" /> Tirar Foto do Treino
+                <CameraIcon className="h-4 w-4 text-primary" /> {t('Tirar Foto do Treino')}
               </h4>
               <button
                 type="button"
@@ -455,14 +458,14 @@ export default function PostarTreinoCard({ postId, storyData, cardTreino }: Post
                 onClick={fecharCameraAoVivo}
                 className="flex-1 py-3 rounded-xl border border-surface-input bg-surface text-xs font-semibold text-text-muted"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
               <button
                 type="button"
                 onClick={capturarFotoAoVivo}
                 className="flex-1 py-3 rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110"
               >
-                📸 Tirar Foto
+                {t('📸 Tirar Foto')}
               </button>
             </div>
           </div>

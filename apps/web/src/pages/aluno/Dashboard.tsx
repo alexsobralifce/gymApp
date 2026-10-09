@@ -25,6 +25,8 @@ import FeatureTour, { type FeatureTourStep } from '../../components/ui/FeatureTo
 import { hasSeenFeatureTour, markFeatureTourSeen } from '../../components/ui/FeatureTour'
 
 
+import { useT } from '../../i18n'
+import { t as tx } from '../../i18n'
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 const TOUR_STEPS: FeatureTourStep[] = [
@@ -78,16 +80,16 @@ function proximoTreino(treinos: Treino[], hoje: number): Treino | null {
 }
 
 // Duração estimada: ~2,5min por série, arredondada para os 5 min mais próximos.
-function estimativaDuracaoMin(t: Treino): number | null {
-  const totalSeries = t.exercicios?.reduce((acc, e) => acc + (e.series ?? 0), 0) ?? 0
+function estimativaDuracaoMin(tr: Treino): number | null {
+  const totalSeries = tr.exercicios?.reduce((acc, e) => acc + (e.series ?? 0), 0) ?? 0
   if (totalSeries <= 0) return null
   return Math.max(5, Math.round((totalSeries * 2.5) / 5) * 5)
 }
 
 // Foco muscular: grupos musculares dos exercícios (até 3), omitido se indisponível.
-function focoMuscular(t: Treino): string[] {
+function focoMuscular(tr: Treino): string[] {
   const set = new Set<string>()
-  t.exercicios?.forEach((e) => {
+  tr.exercicios?.forEach((e) => {
     const g = e.exercicio?.grupo_muscular || e.exercicio?.musculo_alvo
     if (g) set.add(g)
   })
@@ -95,6 +97,7 @@ function focoMuscular(t: Treino): string[] {
 }
 
 export default function AlunoDashboard() {
+  const { t } = useT()
   const [treinos, setTreinos] = useState<Treino[]>([])
   const [perfil, setPerfil] = useState<PerfilAluno | null>(null)
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
@@ -202,11 +205,11 @@ export default function AlunoDashboard() {
   async function handleResponder(treinoId: string, acao: 'ACEITAR' | 'RECUSAR') {
     try {
       await api.responderTreino(treinoId, acao)
-      setFeedback(acao === 'ACEITAR' ? 'Treino aceito com sucesso! Bons treinos!' : 'Treino recusado.')
+      setFeedback(acao === 'ACEITAR' ? t('Treino aceito com sucesso! Bons treinos!') : t('Treino recusado.'))
       await carregarDados()
       setTimeout(() => setFeedback(null), 3000)
     } catch {
-      setFeedback('Erro ao responder ao treino.')
+      setFeedback(t('Erro ao responder ao treino.'))
     }
   }
 
@@ -228,16 +231,16 @@ export default function AlunoDashboard() {
     )
   }
 
-  const pendentes = treinos.filter((t) => t.status === 'ENVIADO')
+  const pendentes = treinos.filter((tr) => tr.status === 'ENVIADO')
   const disponiveis = treinos.filter(
-    (t) => t.status === 'ACEITO' || t.status === 'EM_ABERTO'
+    (tr) => tr.status === 'ACEITO' || tr.status === 'EM_ABERTO'
   )
-  const concluidos = treinos.filter((t) => t.status === 'CONCLUIDO')
+  const concluidos = treinos.filter((tr) => tr.status === 'CONCLUIDO')
 
   // — Treino de Hoje (hero) —
   const hoje = new Date().getDay()
-  const emExecucao = treinos.filter((t) => t.status === 'EM_EXECUCAO')
-  const doDia = disponiveis.filter((t) => t.dias_semana?.includes(hoje))
+  const emExecucao = treinos.filter((tr) => tr.status === 'EM_EXECUCAO')
+  const doDia = disponiveis.filter((tr) => tr.dias_semana?.includes(hoje))
 
   let heroTreino: Treino | null = null
   let heroVariant: 'execucao' | 'iniciar' | 'proximo' | 'pendentes' | 'criar' = 'criar'
@@ -287,7 +290,7 @@ export default function AlunoDashboard() {
                 )}
               </div>
               <h3 className="text-lg font-bold text-text">
-                {modalNotificacao.tipo === 'NOVO_TREINO' ? 'Nova Ficha de Treino!' : 'Professor Atribuído!'}
+                {modalNotificacao.tipo === 'NOVO_TREINO' ? t('Nova Ficha de Treino!') : t('Professor Atribuído!')}
               </h3>
               <p className="mt-2 text-sm text-text-muted">{modalNotificacao.mensagem}</p>
             </div>
@@ -297,7 +300,7 @@ export default function AlunoDashboard() {
                   onClick={() => { handleFecharNotificacao(); navigate('/meus-treinos') }}
                   className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  Ver Treinos
+                  {t('Ver Treinos')}
                 </button>
               )}
               <button
@@ -336,12 +339,12 @@ export default function AlunoDashboard() {
                 {idade && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs text-text-muted">
                     <ActivityIcon className="h-3 w-3" />
-                    {idade} anos
+                    {idade} {t('anos')}
                   </span>
                 )}
                 {perfil?.professor?.usuario?.nome && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs text-blue-400 font-semibold">
-                    🏋️ Treinador: {perfil.professor.usuario.nome}
+                    {t('🏋️ Treinador:')} {perfil.professor.usuario.nome}
                   </span>
                 )}
                 {perfil?.academia && (
@@ -350,7 +353,7 @@ export default function AlunoDashboard() {
                   </span>
                 )}
                 {!perfil?.professor && !perfil?.academia && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Autogestão</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{t('Autogestão')}</span>
                 )}
               </div>
             </div>
@@ -362,13 +365,13 @@ export default function AlunoDashboard() {
               <RulerIcon className="h-5 w-5 text-text-muted shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-text-muted">Seu IMC</span>
-                  <span className={`text-xs font-bold ${classificacao.cor}`}>{classificacao.label}</span>
+                  <span className="text-xs text-text-muted">{t('Seu IMC')}</span>
+                  <span className={`text-xs font-bold ${classificacao.cor}`}>{t(classificacao.label)}</span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-0.5">
                   <span className="text-xl font-bold text-text">{imc}</span>
                   <span className="text-xs text-text-muted">
-                    {perfil?.peso_kg}kg · {perfil?.altura_cm}cm{idade ? ` · ${idade} anos` : ''}
+                    {perfil?.peso_kg}{t('kg ·')} {perfil?.altura_cm}{t('cm')}{idade ? t(' · {idade} anos', { idade }) : ''}
                   </span>
                 </div>
               </div>
@@ -393,9 +396,9 @@ export default function AlunoDashboard() {
           <div className="flex items-center gap-2 mb-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 text-primary px-3 py-1 text-xs font-bold uppercase tracking-wider">
               <DumbbellIcon className="h-3.5 w-3.5" />
-              Treino de Hoje
+              {t('Treino de Hoje')}
             </span>
-            <span className="text-xs font-semibold text-text-muted capitalize">{DIAS[hoje]}</span>
+            <span className="text-xs font-semibold text-text-muted capitalize">{t(DIAS[hoje])}</span>
           </div>
 
           {(heroVariant === 'execucao' || heroVariant === 'iniciar') && heroTreino && (
@@ -405,7 +408,7 @@ export default function AlunoDashboard() {
                 {heroDuracao !== null && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-text-muted">
                     <TimerIcon className="h-3.5 w-3.5" />
-                    ≈ {heroDuracao} min
+                    ≈ {heroDuracao} {t('min')}
                   </span>
                 )}
                 {heroFoco.length > 0 && (
@@ -416,27 +419,27 @@ export default function AlunoDashboard() {
                 )}
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-text-muted">
                   <ClipboardListIcon className="h-3.5 w-3.5" />
-                  {heroTreino.exercicios?.length ?? 0} exercícios
+                  {heroTreino.exercicios?.length ?? 0} {t('exercícios')}
                 </span>
               </div>
               <button
                 onClick={() => navigate(heroVariant === 'execucao' ? `/treino/${heroTreino.id}/execucao` : `/treino/${heroTreino.id}/inicio`)}
                 className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl gradient-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
               >
-                {heroVariant === 'execucao' ? 'Continuar Treino' : 'Iniciar Treino'}
+                {heroVariant === 'execucao' ? t('Continuar Treino') : t('Iniciar Treino')}
                 <ChevronRightIcon className="h-5 w-5" />
               </button>
               {tambemHoje.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-white/10">
-                  <p className="text-xs text-text-muted mb-1.5">Também hoje:</p>
+                  <p className="text-xs text-text-muted mb-1.5">{t('Também hoje:')}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {tambemHoje.map((t) => (
+                    {tambemHoje.map((tr) => (
                       <button
-                        key={t.id}
-                        onClick={() => navigate(`/treino/${t.id}/inicio`)}
+                        key={tr.id}
+                        onClick={() => navigate(`/treino/${tr.id}/inicio`)}
                         className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-text hover:bg-white/20 transition-colors cursor-pointer"
                       >
-                        {t.nome}
+                        {tr.nome}
                       </button>
                     ))}
                   </div>
@@ -447,18 +450,18 @@ export default function AlunoDashboard() {
 
           {heroVariant === 'proximo' && heroTreino && (
             <>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">Próximo treino</p>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">{t('Próximo treino')}</p>
               <h2 className="text-xl font-bold text-text">{heroTreino.nome}</h2>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {heroTreino.dias_semana.map((d) => (
-                  <span key={d} className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-text-muted">{DIAS[d]}</span>
+                  <span key={d} className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-text-muted">{t(DIAS[d])}</span>
                 ))}
               </div>
               <button
                 onClick={() => navigate('/meus-treinos')}
                 className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 py-3.5 text-base font-bold text-primary hover:bg-primary/20 active:scale-[0.98] transition-all cursor-pointer"
               >
-                Ver Meus Treinos
+                {t('Ver Meus Treinos')}
                 <ChevronRightIcon className="h-5 w-5" />
               </button>
             </>
@@ -466,13 +469,13 @@ export default function AlunoDashboard() {
 
           {heroVariant === 'pendentes' && (
             <>
-              <h2 className="text-xl font-bold text-text">{pendentes.length} {pendentes.length === 1 ? 'ficha recebida' : 'fichas recebidas'}</h2>
-              <p className="mt-1 text-sm text-text-muted">Você tem novas fichas de treino para aceitar.</p>
+              <h2 className="text-xl font-bold text-text">{pendentes.length} {pendentes.length === 1 ? t('ficha recebida') : t('fichas recebidas')}</h2>
+              <p className="mt-1 text-sm text-text-muted">{t('Você tem novas fichas de treino para aceitar.')}</p>
               <button
                 onClick={() => navigate('/meus-treinos')}
                 className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl gradient-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
               >
-                Aceitar agora
+                {t('Aceitar agora')}
                 <ChevronRightIcon className="h-5 w-5" />
               </button>
             </>
@@ -481,13 +484,13 @@ export default function AlunoDashboard() {
           {heroVariant === 'criar' && (
             <div className="text-center py-2">
               <DumbbellIcon className="h-10 w-10 text-primary mx-auto opacity-80" />
-              <h2 className="mt-3 text-xl font-bold text-text">Nenhum treino ainda</h2>
-              <p className="mt-1 text-sm text-text-muted">Crie seu primeiro treino e comece sua jornada!</p>
+              <h2 className="mt-3 text-xl font-bold text-text">{t('Nenhum treino ainda')}</h2>
+              <p className="mt-1 text-sm text-text-muted">{t('Crie seu primeiro treino e comece sua jornada!')}</p>
               <button
                 onClick={() => navigate('/treino/novo')}
                 className="mt-5 w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl gradient-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
               >
-                Criar meu primeiro treino
+                {t('Criar meu primeiro treino')}
                 <ChevronRightIcon className="h-5 w-5" />
               </button>
             </div>
@@ -500,26 +503,26 @@ export default function AlunoDashboard() {
 
       {/* Visão Geral — estatísticas secundárias */}
       <div className="space-y-2">
-        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">Visão Geral</h2>
+        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Visão Geral')}</h2>
         <div className="grid grid-cols-3 gap-3">
         <StatCard
           icon={<DumbbellIcon className="h-5 w-5" />}
           value={disponiveis.length}
-          label="Ativos"
+          label={t('Ativos')}
           color="text-primary"
           bg="bg-primary/10"
         />
         <StatCard
           icon={<TimerIcon className="h-5 w-5" />}
           value={pendentes.length}
-          label="Pendentes"
+          label={t('Pendentes')}
           color="text-blue-400"
           bg="bg-blue-500/10"
         />
         <StatCard
           icon={<TrophyIcon className="h-5 w-5" />}
           value={concluidos.length}
-          label="Concluídos"
+          label={t('Concluídos')}
           color="text-success"
           bg="bg-success/10"
         />
@@ -528,7 +531,7 @@ export default function AlunoDashboard() {
 
       {/* Atalhos de Acesso Rápido */}
       <div className="space-y-2">
-        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">Acesso Rápido</h2>
+        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Acesso Rápido')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <button
             type="button"
@@ -539,8 +542,8 @@ export default function AlunoDashboard() {
               📚
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-text truncate">Biblioteca</p>
-              <p className="text-xs text-text-muted truncate">30+ planos</p>
+              <p className="text-xs font-bold text-text truncate">{t('Biblioteca')}</p>
+              <p className="text-xs text-text-muted truncate">{t('30+ planos')}</p>
             </div>
           </button>
 
@@ -553,8 +556,8 @@ export default function AlunoDashboard() {
               🏋️
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-text truncate">Meus Treinos</p>
-              <p className="text-xs text-text-muted truncate">Fichas ativas</p>
+              <p className="text-xs font-bold text-text truncate">{t('Meus Treinos')}</p>
+              <p className="text-xs text-text-muted truncate">{t('Fichas ativas')}</p>
             </div>
           </button>
 
@@ -567,8 +570,8 @@ export default function AlunoDashboard() {
               📏
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-text truncate">Medidas</p>
-              <p className="text-xs text-text-muted truncate">Histórico físico</p>
+              <p className="text-xs font-bold text-text truncate">{t('Medidas')}</p>
+              <p className="text-xs text-text-muted truncate">{t('Histórico físico')}</p>
             </div>
           </button>
 
@@ -581,8 +584,8 @@ export default function AlunoDashboard() {
               📊
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-text truncate">Evolução</p>
-              <p className="text-xs text-text-muted truncate">Performance</p>
+              <p className="text-xs font-bold text-text truncate">{t('Evolução')}</p>
+              <p className="text-xs text-text-muted truncate">{t('Performance')}</p>
             </div>
           </button>
         </div>
@@ -596,48 +599,48 @@ export default function AlunoDashboard() {
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse-soft" />
             <h2 className="text-sm font-bold text-text uppercase tracking-wider">
-              Fichas Recebidas ({pendentes.length})
+              {t('Fichas Recebidas (')}{pendentes.length})
             </h2>
           </div>
           <div className="space-y-3">
-            {pendentes.map((t) => (
-              <div key={t.id} className="rounded-2xl border border-blue-500/10 bg-blue-500/5 p-4 shadow-sm space-y-3">
+            {pendentes.map((tr) => (
+              <div key={tr.id} className="rounded-2xl border border-blue-500/10 bg-blue-500/5 p-4 shadow-sm space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-text">{t.nome}</h3>
+                    <h3 className="text-base font-bold text-text">{tr.nome}</h3>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      {t.dias_semana.map((d) => (
+                      {tr.dias_semana.map((d) => (
                         <span key={d} className="rounded-md bg-surface-input/50 px-1.5 py-0.5 text-xs font-medium text-text-muted">
-                          {DIAS[d]}
+                          {t(DIAS[d])}
                         </span>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {t.exercicios && t.exercicios.length > 0 && (
+                {tr.exercicios && tr.exercicios.length > 0 && (
                   <div className="rounded-xl bg-surface/50 p-3">
                     <p className="text-xs font-bold text-text-muted mb-1.5 uppercase tracking-wider">
-                      {t.exercicios.length} exercicios
+                      {tr.exercicios.length} {t('exercicios')}
                     </p>
                     <p className="text-xs text-text leading-relaxed line-clamp-2">
-                      {t.exercicios.map((ex) => ex.exercicio.nome).join(', ')}
+                      {tr.exercicios.map((ex) => ex.exercicio.nome).join(', ')}
                     </p>
                   </div>
                 )}
 
                 <div className="flex gap-2 pt-1">
                   <button
-                    onClick={() => handleResponder(t.id, 'RECUSAR')}
+                    onClick={() => handleResponder(tr.id, 'RECUSAR')}
                     className="flex-1 rounded-xl border border-primary/20 py-2.5 text-sm font-semibold text-primary-light hover:bg-primary/10 active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    Recusar
+                    {t('Recusar')}
                   </button>
                   <button
-                    onClick={() => handleResponder(t.id, 'ACEITAR')}
+                    onClick={() => handleResponder(tr.id, 'ACEITAR')}
                     className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-500 active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    Aceitar
+                    {t('Aceitar')}
                   </button>
                 </div>
               </div>
@@ -648,49 +651,49 @@ export default function AlunoDashboard() {
 
       {/* Treinos Ativos */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold text-text uppercase tracking-wider">Meus Treinos Ativos</h2>
+        <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Meus Treinos Ativos')}</h2>
         {disponiveis.length === 0 ? (
           <div className="rounded-2xl bg-surface-card border border-surface-input p-6 text-center space-y-3">
             <DumbbellIcon className="h-8 w-8 text-text-muted mx-auto opacity-30" />
             <p className="text-sm text-text-muted">
-              Nenhum treino ativo disponível. Aguarde o envio do seu professor ou crie sua própria ficha agora!
+              {t('Nenhum treino ativo disponível. Aguarde o envio do seu professor ou crie sua própria ficha agora!')}
             </p>
             <button
               onClick={() => navigate('/treino/novo')}
               className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
             >
-              Criar Treino
+              {t('Criar Treino')}
             </button>
           </div>
         ) : (
           <div className="grid gap-3">
-            {disponiveis.map((t) => (
-              <div key={t.id} className="rounded-2xl border border-surface-input bg-surface-card p-4 shadow-sm hover:border-primary/30 transition-all duration-300">
+            {disponiveis.map((tr) => (
+              <div key={tr.id} className="rounded-2xl border border-surface-input bg-surface-card p-4 shadow-sm hover:border-primary/30 transition-all duration-300">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-text">{t.nome}</h3>
+                    <h3 className="text-base font-bold text-text">{tr.nome}</h3>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      {t.dias_semana.map((d) => (
+                      {tr.dias_semana.map((d) => (
                         <span key={d} className="rounded-md bg-surface-input/50 px-1.5 py-0.5 text-xs font-medium text-text-muted">
-                          {DIAS[d]}
+                          {t(DIAS[d])}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <StatusBadge label={getTreinoStatusLabel(t.status)} variant={getTreinoStatusVariant(t.status)} />
+                  <StatusBadge label={getTreinoStatusLabel(tr.status)} variant={getTreinoStatusVariant(tr.status)} />
                 </div>
 
-                {t.exercicios && t.exercicios.length > 0 && (
+                {tr.exercicios && tr.exercicios.length > 0 && (
                   <p className="mt-3 text-xs text-text-muted line-clamp-1">
-                    {t.exercicios.map((ex) => ex.exercicio.nome).join(' · ')}
+                    {tr.exercicios.map((ex) => ex.exercicio.nome).join(' · ')}
                   </p>
                 )}
 
                 <button
-                  onClick={() => navigate(`/treino/${t.id}/inicio`)}
+                  onClick={() => navigate(`/treino/${tr.id}/inicio`)}
                   className="mt-4 w-full rounded-xl border border-surface-input bg-surface py-3 text-sm font-bold text-primary hover:border-primary/40 hover:bg-primary/5 active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  Iniciar Treino
+                  {t('Iniciar Treino')}
                 </button>
               </div>
             ))}
@@ -700,7 +703,7 @@ export default function AlunoDashboard() {
 
       {/* Sua Comunidade — Mobile First */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold text-text uppercase tracking-wider">Sua Comunidade</h2>
+        <h2 className="text-sm font-bold text-text uppercase tracking-wider">{t('Sua Comunidade')}</h2>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -710,8 +713,8 @@ export default function AlunoDashboard() {
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform mb-2">
               <UsersIcon className="h-5 w-5" />
             </div>
-            <p className="text-xs font-bold text-text">Amigos</p>
-            <p className="text-xs text-text-muted">Conecte-se e treine junto</p>
+            <p className="text-xs font-bold text-text">{t('Amigos')}</p>
+            <p className="text-xs text-text-muted">{t('Conecte-se e treine junto')}</p>
           </button>
 
           <button
@@ -722,8 +725,8 @@ export default function AlunoDashboard() {
             <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform mb-2">
               <TrophyIcon className="h-5 w-5" />
             </div>
-            <p className="text-xs font-bold text-text">Clubes</p>
-            <p className="text-xs text-text-muted">Crie ou entre em clubes</p>
+            <p className="text-xs font-bold text-text">{t('Clubes')}</p>
+            <p className="text-xs text-text-muted">{t('Crie ou entre em clubes')}</p>
           </button>
         </div>
 
@@ -736,8 +739,8 @@ export default function AlunoDashboard() {
             <MessageCircleIcon className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-text">Feed Social</p>
-            <p className="text-xs text-text-muted truncate">Veja o que seus amigos estão fazendo</p>
+            <p className="text-xs font-bold text-text">{t('Feed Social')}</p>
+            <p className="text-xs text-text-muted truncate">{t('Veja o que seus amigos estão fazendo')}</p>
           </div>
           <ChevronRightIcon className="h-4 w-4 text-text-muted shrink-0" />
         </button>
@@ -745,18 +748,18 @@ export default function AlunoDashboard() {
 
       {/* Ciencia & Bem-estar */}
       <div className="rounded-2xl bg-surface-card border border-surface-input p-5 shadow-sm">
-        <h2 className="text-sm font-bold text-text uppercase tracking-wider mb-3">Ciencia & Bem-estar</h2>
+        <h2 className="text-sm font-bold text-text uppercase tracking-wider mb-3">{t('Ciencia & Bem-estar')}</h2>
         <div className="space-y-3">
           <InfoCard
-            title="Por que o aquecimento e essencial?"
+            title={t('Por que o aquecimento e essencial?')}
             body="Estudos mostram que 5-10 minutos de aquecimento reduzem o risco de lesões em até 40% e melhoram o desempenho nas primeiras séries."
           />
           <InfoCard
-            title="Consistencia &gt; Intensidade"
+            title={t('Consistencia &gt; Intensidade')}
             body="Pesquisas longitudinais mostram que a frequencia semanal de treino e o maior preditor de ganhos de forca, acima da carga absoluta."
           />
           <InfoCard
-            title="Proteina pos-treino"
+            title={t('Proteina pos-treino')}
             body="A janela anabolica de 30-60 minutos apos o treino e o momento ideal para consumir proteina, maximizando a sintese muscular."
           />
         </div>
@@ -785,9 +788,9 @@ export default function AlunoDashboard() {
 
 function getSaudacao(): string {
   const h = new Date().getHours()
-  if (h < 12) return 'Bom dia,'
-  if (h < 18) return 'Boa tarde,'
-  return 'Boa noite,'
+  if (h < 12) return tx('Bom dia,')
+  if (h < 18) return tx('Boa tarde,')
+  return tx('Boa noite,')
 }
 
 function StatCard({ icon, value, label, color, bg }: { icon: React.ReactNode; value: number; label: string; color: string; bg: string }) {

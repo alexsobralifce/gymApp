@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
+import { useT } from '../../i18n'
 export interface FeatureTourStep {
   id: string
   emoji: string
@@ -34,6 +35,7 @@ interface FeatureTourProps {
 }
 
 export default function FeatureTour({ steps, open, onClose }: FeatureTourProps) {
+  const { t } = useT()
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
@@ -64,13 +66,13 @@ export default function FeatureTour({ steps, open, onClose }: FeatureTourProps) 
       <div className="w-full max-w-md mx-4 mb-4 sm:mb-0 rounded-3xl bg-surface-card border border-primary/20 shadow-2xl overflow-hidden animate-[slide-up_0.4s_ease]">
         <div className="relative h-32 gradient-primary flex items-center justify-center">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-transparent to-blue-500/30" />
-          <span className="text-6xl drop-shadow-lg" role="img" aria-label={step.title}>
+          <span className="text-6xl drop-shadow-lg" role="img" aria-label={t(step.title)}>
             {step.emoji}
           </span>
           <button
             onClick={skip}
             className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/30 text-white/80 hover:text-white hover:bg-black/50 transition-colors text-sm font-bold"
-            aria-label="Fechar tour"
+            aria-label={t('Fechar tour')}
           >
             ✕
           </button>
@@ -87,21 +89,21 @@ export default function FeatureTour({ steps, open, onClose }: FeatureTourProps) 
               />
             ))}
           </div>
-          <h3 className="text-lg font-bold text-text mb-2">{step.title}</h3>
-          <p className="text-sm text-text-muted leading-relaxed">{step.message}</p>
+          <h3 className="text-lg font-bold text-text mb-2">{t(step.title)}</h3>
+          <p className="text-sm text-text-muted leading-relaxed">{t(step.message)}</p>
 
           <div className="flex items-center justify-between mt-5 gap-3">
             <button
               onClick={skip}
               className="text-xs text-text-muted hover:text-text font-medium cursor-pointer"
             >
-              Pular tour
+              {t('Pular tour')}
             </button>
             <button
               onClick={next}
               className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
-              {step.cta ?? (isLast ? 'Começar a usar' : 'Próximo')}
+              {step.cta ?? (isLast ? t('Começar a usar') : t('Próximo'))}
             </button>
           </div>
         </div>

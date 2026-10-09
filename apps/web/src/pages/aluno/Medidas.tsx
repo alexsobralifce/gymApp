@@ -11,6 +11,8 @@ import { calcularIdade } from '../../lib/health'
 import type { MedidaCorporal, PerfilAluno } from '../../types/api'
 import { ClipboardListIcon } from '../../components/icons/Icon'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 interface IMCClassification {
   label: string
   min: number | null
@@ -48,6 +50,7 @@ function pesoAlturaDoPerfil(perfil: PerfilAluno | null, ultimaMedida: MedidaCorp
 }
 
 export default function AlunoMedidas() {
+  const { t } = useT()
   const user = useAuthStore((s) => s.user)
   const [medidas, setMedidas] = useState<MedidaCorporal[]>([])
   const [perfil, setPerfil] = useState<PerfilAluno | null>(null)
@@ -110,7 +113,7 @@ export default function AlunoMedidas() {
     const nomeAluno = user?.nome || perfil?.usuario?.nome || 'Aluno'
     const avaliadorNome = av.avaliador?.nome || 'Professor / Avaliador'
     const avaliadorCref = av.avaliador?.professor?.cref || null
-    const dataFormatada = new Date(av.data).toLocaleDateString('pt-BR')
+    const dataFormatada = new Date(av.data).toLocaleDateString(localeAtual())
 
     let target = document.getElementById('avaliacao-pdf-target')
     if (!target) {
@@ -248,11 +251,11 @@ export default function AlunoMedidas() {
         massaMagraKg: massaMagraKg ? Number(massaMagraKg) : undefined,
         observacao: observacao || undefined,
       })
-      setSucesso('Medida registrada com sucesso!')
+      setSucesso(t('Medida registrada com sucesso!'))
       resetForm()
       await carregarDados()
     } catch {
-      setSucesso('Erro ao registrar medida.')
+      setSucesso(t('Erro ao registrar medida.'))
     } finally {
       setSaving(false)
       setTimeout(() => setSucesso(null), 3000)
@@ -271,11 +274,11 @@ export default function AlunoMedidas() {
         massaMagraKg: massaMagraKg ? Number(massaMagraKg) : undefined,
         observacao: observacao || undefined,
       })
-      setSucesso('Medida atualizada com sucesso!')
+      setSucesso(t('Medida atualizada com sucesso!'))
       resetForm()
       await carregarDados()
     } catch {
-      setSucesso('Erro ao atualizar medida.')
+      setSucesso(t('Erro ao atualizar medida.'))
     } finally {
       setSaving(false)
       setTimeout(() => setSucesso(null), 3000)
@@ -283,7 +286,7 @@ export default function AlunoMedidas() {
   }
 
   function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('pt-BR')
+    return new Date(iso).toLocaleDateString(localeAtual())
   }
 
   async function executeBatchDelete() {
@@ -299,18 +302,18 @@ export default function AlunoMedidas() {
     }
   }
 
-  if (loading) return <div className="p-4 text-text-muted">Carregando...</div>
+  if (loading) return <div className="p-4 text-text-muted">{t('Carregando...')}</div>
 
   return (
     <div className="px-4 py-6 max-w-xl mx-auto w-full space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-text">Medidas Corporais</h1>
+        <h1 className="text-xl font-bold text-text">{t('Medidas Corporais')}</h1>
         {!mostrarNovo && !editando && (
           <button
             onClick={abrirNovo}
             className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:brightness-110 transition-all cursor-pointer"
           >
-            + Nova
+            {t('+ Nova')}
           </button>
         )}
       </div>
@@ -328,16 +331,16 @@ export default function AlunoMedidas() {
         <div className="rounded-2xl bg-surface-card border border-surface-input p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Seu IMC</p>
+              <p className="text-xs text-text-muted font-medium uppercase tracking-wider">{t('Seu IMC')}</p>
               <p className="text-3xl font-bold text-text mt-0.5">
                 {ultimaMedida.imc?.toFixed(1)}
               </p>
               <p className="text-xs text-text-muted mt-0.5">
-                {ultimaMedida.peso_kg} kg &middot; {ultimaMedida.altura_cm} cm{idade ? ` &middot; ${idade} anos` : ''}
+                {ultimaMedida.peso_kg} kg &middot; {ultimaMedida.altura_cm} {t('cm')}{idade ? t(' &middot; {idade} anos', { idade }) : ''}
               </p>
             </div>
             <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${classificacao.bgClass}`}>
-              {classificacao.label}
+              {t(classificacao.label)}
             </div>
           </div>
 
@@ -375,35 +378,35 @@ export default function AlunoMedidas() {
           <div>
             <h2 className="text-base font-bold text-text flex items-center gap-2">
               <ClipboardListIcon className="h-5 w-5 text-primary" />
-              Avaliações do Professor
+              {t('Avaliações do Professor')}
             </h2>
             <p className="text-xs text-text-muted mt-0.5">
-              Histórico de laudos, testes funcionais e fotos das suas avaliações físicas
+              {t('Histórico de laudos, testes funcionais e fotos das suas avaliações físicas')}
             </p>
           </div>
           {avaliacoesProf.length > 0 && (
             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/20 text-primary">
-              {avaliacoesProf.length} avaliação(ões)
+              {avaliacoesProf.length} {t('avaliação(ões)')}
             </span>
           )}
         </div>
 
         {avaliacoesProf.length === 0 ? (
           <div className="py-6 text-center text-xs text-text-muted bg-surface/40 rounded-xl border border-dashed border-border">
-            Nenhuma avaliação física registrada pelo seu professor ainda.
+            {t('Nenhuma avaliação física registrada pelo seu professor ainda.')}
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-surface-input">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
                 <tr className="border-b border-surface-input bg-surface/50 text-xs font-semibold text-text-muted uppercase tracking-wider">
-                  <th className="p-3">Data</th>
-                  <th className="p-3">Avaliador</th>
-                  <th className="p-3">Peso</th>
-                  <th className="p-3">IMC</th>
-                  <th className="p-3">% BF</th>
-                  <th className="p-3">Fotos</th>
-                  <th className="p-3 text-right">Ação</th>
+                  <th className="p-3">{t('Data')}</th>
+                  <th className="p-3">{t('Avaliador')}</th>
+                  <th className="p-3">{t('Peso')}</th>
+                  <th className="p-3">{t('IMC')}</th>
+                  <th className="p-3">{t('% BF')}</th>
+                  <th className="p-3">{t('Fotos')}</th>
+                  <th className="p-3 text-right">{t('Ação')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-input">
@@ -417,7 +420,7 @@ export default function AlunoMedidas() {
                       className="hover:bg-surface/50 transition-colors cursor-pointer"
                     >
                       <td className="p-3 text-xs font-semibold text-text">
-                        {new Date(av.data).toLocaleDateString('pt-BR')}
+                        {new Date(av.data).toLocaleDateString(localeAtual())}
                       </td>
                       <td className="p-3 text-xs text-text-muted">
                         {av.avaliador?.nome || 'Professor'}
@@ -440,7 +443,7 @@ export default function AlunoMedidas() {
                           <div className="flex items-center gap-1.5">
                             <img
                               src={resolveMediaUrl(av.fotos[0].url) || ''}
-                              alt="Miniatura"
+                              alt={t('Miniatura')}
                               className="h-6 w-6 rounded-md object-cover border border-border"
                             />
                             <span className="text-[10px] font-bold text-text-muted">
@@ -459,7 +462,7 @@ export default function AlunoMedidas() {
                           }}
                           className="px-2.5 py-1 rounded-lg bg-surface border border-border text-xs font-semibold text-text hover:border-primary transition-colors cursor-pointer"
                         >
-                          Ver Detalhes ↗
+                          {t('Ver Detalhes ↗')}
                         </button>
                       </td>
                     </tr>
@@ -476,14 +479,14 @@ export default function AlunoMedidas() {
         <form onSubmit={editando ? handleAtualizar : handleCriar} className="rounded-2xl bg-surface-card border border-surface-input p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
             <h3 className="text-sm font-bold text-text">
-              {editando ? 'Editar Medida' : 'Nova Medida'}
+              {editando ? t('Editar Medida') : t('Nova Medida')}
             </h3>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={resetForm} className="text-text-muted hover:text-text text-sm cursor-pointer">Cancelar</button>
+              <button type="button" onClick={resetForm} className="text-text-muted hover:text-text text-sm cursor-pointer">{t('Cancelar')}</button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Peso (kg)" htmlFor="medida-peso">
+            <FormField label={t('Peso (kg)')} htmlFor="medida-peso">
               <Input
                 id="medida-peso"
                 type="number"
@@ -493,7 +496,7 @@ export default function AlunoMedidas() {
                 onChange={(e) => setPesoKg(e.target.value)}
               />
             </FormField>
-            <FormField label="Altura (cm)" htmlFor="medida-altura">
+            <FormField label={t('Altura (cm)')} htmlFor="medida-altura">
               <Input
                 id="medida-altura"
                 type="number"
@@ -503,7 +506,7 @@ export default function AlunoMedidas() {
                 onChange={(e) => setAlturaCm(e.target.value)}
               />
             </FormField>
-            <FormField label="% Gordura (BF)" htmlFor="medida-bf">
+            <FormField label={t('% Gordura (BF)')} htmlFor="medida-bf">
               <Input
                 id="medida-bf"
                 type="number"
@@ -513,7 +516,7 @@ export default function AlunoMedidas() {
                 onChange={(e) => setPercentualBf(e.target.value)}
               />
             </FormField>
-            <FormField label="Massa Magra (kg)" htmlFor="medida-massa">
+            <FormField label={t('Massa Magra (kg)')} htmlFor="medida-massa">
               <Input
                 id="medida-massa"
                 type="number"
@@ -524,18 +527,18 @@ export default function AlunoMedidas() {
               />
             </FormField>
           </div>
-          <FormField label="Observação" htmlFor="medida-obs">
+          <FormField label={t('Observação')} htmlFor="medida-obs">
             <Input
               id="medida-obs"
               type="text"
-              placeholder="Observação (opcional)"
+              placeholder={t('Observação (opcional)')}
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
             />
           </FormField>
           <button type="submit" disabled={saving || (!pesoKg && !alturaCm && !percentualBf && !massaMagraKg)}
             className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-40 transition-all cursor-pointer">
-            {saving ? 'Salvando...' : editando ? 'Atualizar medida' : 'Registrar medida'}
+            {saving ? 'Salvando...' : editando ? t('Atualizar medida') : t('Registrar medida')}
           </button>
         </form>
       )}
@@ -545,7 +548,7 @@ export default function AlunoMedidas() {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Buscar por data, peso ou observação..."
+            placeholder={t('Buscar por data, peso ou observação...')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded border border-surface-input bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
@@ -563,7 +566,7 @@ export default function AlunoMedidas() {
       {/* Tabela / Lista de Medidas */}
       {medidas.length === 0 && !(mostrarNovo || editando) ? (
         <p className="text-sm text-text-muted bg-surface-card rounded-2xl p-6 border border-surface-input text-center">
-          Nenhuma medida registrada ainda. Clique em "+ Nova" para começar.
+          {t('Nenhuma medida registrada ainda. Clique em "+ Nova" para começar.')}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg bg-surface-card border border-surface-input">
@@ -602,12 +605,12 @@ export default function AlunoMedidas() {
                     className="rounded border-surface-input text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                   />
                 </th>
-                <th className="p-3">Data</th>
-                <th className="p-3">Peso</th>
-                <th className="p-3">Altura</th>
-                <th className="p-3">IMC</th>
-                <th className="p-3">% BF</th>
-                <th className="p-3 text-right">Ações</th>
+                <th className="p-3">{t('Data')}</th>
+                <th className="p-3">{t('Peso')}</th>
+                <th className="p-3">{t('Altura')}</th>
+                <th className="p-3">{t('IMC')}</th>
+                <th className="p-3">{t('% BF')}</th>
+                <th className="p-3 text-right">{t('Ações')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-input">
@@ -661,7 +664,7 @@ export default function AlunoMedidas() {
                           onClick={() => preencherEdicao(m)}
                           className="text-xs text-primary hover:underline cursor-pointer"
                         >
-                          Editar
+                          {t('Editar')}
                         </button>
                       </td>
                     </tr>
@@ -675,7 +678,7 @@ export default function AlunoMedidas() {
       {/* Tabela de Classificação IMC (OMS) */}
       <div className="rounded-2xl bg-surface-card border border-surface-input overflow-hidden">
         <div className="px-4 py-3 border-b border-surface-input bg-surface/50">
-          <h3 className="text-sm font-bold text-text">Classificação IMC (OMS)</h3>
+          <h3 className="text-sm font-bold text-text">{t('Classificação IMC (OMS)')}</h3>
         </div>
         <div className="divide-y divide-surface-input">
           {IMC_TABLE.map((cat) => {
@@ -693,9 +696,9 @@ export default function AlunoMedidas() {
                 <div className="flex items-center gap-3">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
                   <span className={`${isActive ? 'text-text font-semibold' : 'text-text-muted'}`}>
-                    {cat.label}
+                    {t(cat.label)}
                     {isActive && (
-                      <span className="ml-1.5 text-xs text-text-muted font-normal">(você)</span>
+                      <span className="ml-1.5 text-xs text-text-muted font-normal">{t('(você)')}</span>
                     )}
                   </span>
                 </div>
@@ -710,8 +713,8 @@ export default function AlunoMedidas() {
 
       <ConfirmModal
         open={confirmDeleteOpen}
-        title="Excluir medidas"
-        message={`Tem certeza que deseja excluir ${selectedIds.length} medida(s) selecionada(s)?`}
+        title={t('Excluir medidas')}
+        message={t('Tem certeza que deseja excluir {length} medida(s) selecionada(s)?', { length: selectedIds.length })}
         onConfirm={() => {
           setConfirmDeleteOpen(false)
           executeBatchDelete()
@@ -729,11 +732,11 @@ export default function AlunoMedidas() {
               <div>
                 <h3 className="text-xl font-bold text-text flex items-center gap-2">
                   <ClipboardListIcon className="h-6 w-6 text-primary" />
-                  Avaliação Física — {new Date(selectedAvaliacao.data).toLocaleDateString('pt-BR')}
+                  {t('Avaliação Física —')} {new Date(selectedAvaliacao.data).toLocaleDateString(localeAtual())}
                 </h3>
                 <p className="text-xs text-text-muted mt-1">
-                  Avaliador: <span className="text-text font-semibold">{selectedAvaliacao.avaliador?.nome || 'Professor'}</span>
-                  {selectedAvaliacao.avaliador?.professor?.cref && ` (CREF: ${selectedAvaliacao.avaliador.professor.cref})`}
+                  {t('Avaliador:')} <span className="text-text font-semibold">{selectedAvaliacao.avaliador?.nome || 'Professor'}</span>
+                  {selectedAvaliacao.avaliador?.professor?.cref && t(' (CREF: {cref})', { cref: selectedAvaliacao.avaliador.professor.cref })}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -741,7 +744,7 @@ export default function AlunoMedidas() {
                   onClick={() => gerarPDF(selectedAvaliacao)}
                   className="flex items-center gap-1.5 px-3.5 py-2 bg-primary text-primary-foreground font-semibold rounded-xl text-xs hover:opacity-90 transition-all min-h-[44px] shadow-md shadow-primary/20 cursor-pointer"
                 >
-                  📄 Gerar PDF
+                  {t('📄 Gerar PDF')}
                 </button>
                 <button
                   onClick={() => setSelectedAvaliacao(null)}
@@ -754,38 +757,38 @@ export default function AlunoMedidas() {
 
             {/* Grid de Composição Corporal */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Composição Corporal & Antropometria</h4>
+              <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Composição Corporal & Antropometria')}</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">Peso</p>
+                  <p className="text-xs text-text-muted">{t('Peso')}</p>
                   <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.peso_kg ? `${selectedAvaliacao.peso_kg} kg` : '—'}</p>
                 </div>
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">Estatura</p>
+                  <p className="text-xs text-text-muted">{t('Estatura')}</p>
                   <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.estatura_m ? `${selectedAvaliacao.estatura_m} m` : '—'}</p>
                 </div>
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">IMC</p>
+                  <p className="text-xs text-text-muted">{t('IMC')}</p>
                   <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.imc ? selectedAvaliacao.imc.toFixed(1) : '—'}</p>
                 </div>
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">% Gordura</p>
+                  <p className="text-xs text-text-muted">{t('% Gordura')}</p>
                   <p className="font-bold text-primary text-base mt-0.5">{selectedAvaliacao.percentual_gordura ? `${selectedAvaliacao.percentual_gordura}%` : '—'}</p>
                 </div>
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">Massa Magra</p>
+                  <p className="text-xs text-text-muted">{t('Massa Magra')}</p>
                   <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.massa_magra_kg ? `${selectedAvaliacao.massa_magra_kg} kg` : '—'}</p>
                 </div>
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">Massa Gorda</p>
+                  <p className="text-xs text-text-muted">{t('Massa Gorda')}</p>
                   <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.massa_gorda_kg ? `${selectedAvaliacao.massa_gorda_kg} kg` : '—'}</p>
                 </div>
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">PA Repouso</p>
+                  <p className="text-xs text-text-muted">{t('PA Repouso')}</p>
                   <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.pas && selectedAvaliacao.pad ? `${selectedAvaliacao.pas}/${selectedAvaliacao.pad}` : '—'}</p>
                 </div>
                 <div className="p-3 bg-surface rounded-xl border border-border">
-                  <p className="text-xs text-text-muted">FC Repouso</p>
+                  <p className="text-xs text-text-muted">{t('FC Repouso')}</p>
                   <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.fc_repouso ? `${selectedAvaliacao.fc_repouso} bpm` : '—'}</p>
                 </div>
               </div>
@@ -794,18 +797,18 @@ export default function AlunoMedidas() {
             {/* Testes Funcionais */}
             {(selectedAvaliacao.cardio_json?.vo2max || selectedAvaliacao.neuro_json?.oneRmEstimada || selectedAvaliacao.flexibilidade_json?.bancoWellsCm) && (
               <div className="space-y-2 pt-2 border-t border-border/60">
-                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Testes Funcionais & Capacidade</h4>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Testes Funcionais & Capacidade')}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                   <div className="p-3 bg-surface rounded-xl border border-border">
-                    <p className="text-xs text-text-muted">VO₂máx (Cooper)</p>
+                    <p className="text-xs text-text-muted">{t('VO₂máx (Cooper)')}</p>
                     <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.cardio_json?.vo2max ? `${selectedAvaliacao.cardio_json.vo2max} ml/kg/min` : '—'}</p>
                   </div>
                   <div className="p-3 bg-surface rounded-xl border border-border">
-                    <p className="text-xs text-text-muted">1RM Estimada (Brzycki)</p>
+                    <p className="text-xs text-text-muted">{t('1RM Estimada (Brzycki)')}</p>
                     <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.neuro_json?.oneRmEstimada ? `${selectedAvaliacao.neuro_json.oneRmEstimada} kg` : '—'}</p>
                   </div>
                   <div className="p-3 bg-surface rounded-xl border border-border">
-                    <p className="text-xs text-text-muted">Flexibilidade (Wells)</p>
+                    <p className="text-xs text-text-muted">{t('Flexibilidade (Wells)')}</p>
                     <p className="font-bold text-text text-base mt-0.5">{selectedAvaliacao.flexibilidade_json?.bancoWellsCm ? `${selectedAvaliacao.flexibilidade_json.bancoWellsCm} cm` : '—'}</p>
                   </div>
                 </div>
@@ -814,7 +817,7 @@ export default function AlunoMedidas() {
 
             {/* Fotos da Avaliação */}
             <div className="space-y-2 pt-2 border-t border-border/60">
-              <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Fotos da Avaliação</h4>
+              <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Fotos da Avaliação')}</h4>
               {selectedAvaliacao.fotos && selectedAvaliacao.fotos.length > 0 ? (
                 <div className="grid grid-cols-4 gap-2">
                   {selectedAvaliacao.fotos.map((f: any, fIdx: number) => (
@@ -835,7 +838,7 @@ export default function AlunoMedidas() {
                           downloadMediaFile(f.url, f.nome_arquivo)
                         }}
                         className="absolute top-1 right-1 p-1.5 bg-black/70 text-white hover:text-primary rounded-lg transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer opacity-90 sm:opacity-0 group-hover:opacity-100"
-                        title="Baixar foto"
+                        title={t('Baixar foto')}
                       >
                         📥
                       </button>
@@ -844,7 +847,7 @@ export default function AlunoMedidas() {
                 </div>
               ) : (
                 <p className="text-xs text-text-muted italic bg-surface/50 p-3 rounded-xl border border-dashed border-border text-center">
-                  Nenhuma foto registrada nesta avaliação.
+                  {t('Nenhuma foto registrada nesta avaliação.')}
                 </p>
               )}
             </div>
@@ -852,7 +855,7 @@ export default function AlunoMedidas() {
             {/* Laudo Markdown */}
             {selectedAvaliacao.laudo_markdown && (
               <div className="space-y-2 pt-2 border-t border-border/60">
-                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Laudo Técnico</h4>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">{t('Laudo Técnico')}</h4>
                 <div className="prose prose-sm dark:prose-invert max-w-none text-text bg-surface p-4 rounded-xl border border-border overflow-x-auto">
                   <ReactMarkdown>{selectedAvaliacao.laudo_markdown}</ReactMarkdown>
                 </div>
@@ -864,7 +867,7 @@ export default function AlunoMedidas() {
                 onClick={() => setSelectedAvaliacao(null)}
                 className="px-5 py-2 bg-surface border border-border text-text font-semibold rounded-xl hover:border-primary transition-all min-h-[44px] cursor-pointer"
               >
-                Fechar
+                {t('Fechar')}
               </button>
             </div>
           </div>
@@ -877,27 +880,27 @@ export default function AlunoMedidas() {
           <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center justify-center space-y-3">
             <div className="w-full flex justify-between items-center text-white">
               <span className="text-sm font-medium text-white/80">
-                Foto {activePhotoIndex + 1} de {activePhotoList.length}
+                {t('Foto')} {activePhotoIndex + 1} {t('de')} {activePhotoList.length}
               </span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => downloadMediaFile(activePhotoList[activePhotoIndex], `foto_avaliacao_${activePhotoIndex + 1}.jpg`)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-semibold transition-colors min-h-[44px] cursor-pointer"
                 >
-                  📥 Baixar Foto
+                  {t('📥 Baixar Foto')}
                 </button>
                 <button
                   onClick={() => { setActivePhotoList(null); setActivePhotoIndex(null); }}
                   className="text-white hover:text-primary font-bold text-lg min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                 >
-                  ✕ Fechar
+                  {t('✕ Fechar')}
                 </button>
               </div>
             </div>
 
             <img
               src={activePhotoList[activePhotoIndex]}
-              alt="Foto da avaliação ampliada"
+              alt={t('Foto da avaliação ampliada')}
               className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10"
             />
 
@@ -907,13 +910,13 @@ export default function AlunoMedidas() {
                   onClick={() => setActivePhotoIndex((prev) => (prev! > 0 ? prev! - 1 : activePhotoList.length - 1))}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold transition-colors min-h-[44px] cursor-pointer"
                 >
-                  ← Anterior
+                  {t('← Anterior')}
                 </button>
                 <button
                   onClick={() => setActivePhotoIndex((prev) => (prev! < activePhotoList.length - 1 ? prev! + 1 : 0))}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold transition-colors min-h-[44px] cursor-pointer"
                 >
-                  Próxima →
+                  {t('Próxima →')}
                 </button>
               </div>
             )}

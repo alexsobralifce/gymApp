@@ -1,5 +1,6 @@
 import { Building2Icon } from '../../components/icons/Icon'
 
+import { useT } from '../../i18n'
 interface Partner {
   id: string
   logo: string
@@ -83,16 +84,16 @@ const PARTNERS: Partner[] = [
 ]
 
 export default function Parceiros() {
+  const { t } = useT()
   return (
     <div className="flex h-full flex-col p-4 md:p-6 lg:p-8 space-y-8 animate-fade-in pb-24 md:pb-8">
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl md:text-3xl font-bold text-text flex items-center gap-3">
-          <span className="text-3xl">🤝</span> Parceiros EndorfinApp
+          <span className="text-3xl">🤝</span> {t('Parceiros EndorfinApp')}
         </h1>
         <p className="text-sm md:text-base text-text-muted">
-          Uma seleção exclusiva de marcas, produtos e serviços para acelerar os seus resultados.
-          Descontos e vantagens especiais para os nossos alunos.
+          {t('Uma seleção exclusiva de marcas, produtos e serviços para acelerar os seus resultados. Descontos e vantagens especiais para os nossos alunos.')}
         </p>
       </div>
 
@@ -114,24 +115,24 @@ export default function Parceiros() {
                 </div>
                 {partner.featured && (
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary border border-primary/20">
-                    DESTAQUE
+                    {t('DESTAQUE')}
                   </span>
                 )}
               </div>
 
               <div>
                 <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold mb-2 ${partner.badgeColor || 'bg-secondary text-text'}`}>
-                  {partner.category}
+                  {t(partner.category)}
                 </span>
                 <h3 className="text-lg font-bold text-text">{partner.name}</h3>
                 <p className="mt-2 text-sm text-text-muted line-clamp-3">
-                  {partner.description}
+                  {t(partner.description)}
                 </p>
               </div>
 
               {partner.discount && (
                 <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-bold text-success bg-success/5 p-3 rounded-xl border border-success/10">
-                  <span className="text-base">🎁</span> {partner.discount}
+                  <span className="text-base">🎁</span> {t(partner.discount)}
                 </div>
               )}
             </div>
@@ -147,7 +148,7 @@ export default function Parceiros() {
                     : 'bg-surface-input text-text hover:bg-surface-input/80'
                 }`}
               >
-                {partner.ctaLabel}
+                {t(partner.ctaLabel)}
               </a>
             </div>
           </div>
@@ -162,11 +163,10 @@ export default function Parceiros() {
         <div className="relative z-10 flex flex-col gap-2 max-w-lg text-center sm:text-left">
           <div className="flex items-center gap-3 justify-center sm:justify-start">
             <Building2Icon className="h-6 w-6 text-primary" />
-            <h3 className="text-lg md:text-xl font-bold text-text">Quer ser um parceiro?</h3>
+            <h3 className="text-lg md:text-xl font-bold text-text">{t('Quer ser um parceiro?')}</h3>
           </div>
           <p className="text-sm text-text-muted">
-            Divulgue sua marca, produto ou serviço fitness para nossa comunidade. 
-            Entre em contato para discutirmos oportunidades.
+            {t('Divulgue sua marca, produto ou serviço fitness para nossa comunidade. Entre em contato para discutirmos oportunidades.')}
           </p>
         </div>
         
@@ -176,7 +176,7 @@ export default function Parceiros() {
           rel="noopener noreferrer"
           className="relative z-10 shrink-0 whitespace-nowrap rounded-xl bg-surface border border-surface-input px-6 py-3 text-sm font-bold text-text hover:border-primary/50 hover:text-primary transition-all active:scale-95 shadow-sm"
         >
-          Falar com Comercial
+          {t('Falar com Comercial')}
         </a>
       </div>
     </div>

@@ -4,6 +4,8 @@ import StatusBadge from '../../components/ui/StatusBadge'
 import UsoSite from '../../components/root/UsoSite'
 import UsoApp from '../../components/root/UsoApp'
 
+import { useT } from '../../i18n'
+import { localeAtual } from '../../i18n'
 type Aba = 'assinaturas' | 'faturas' | 'site' | 'app'
 
 interface Resumo {
@@ -56,7 +58,7 @@ function formatMoney(cents: number): string {
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('pt-BR')
+  return new Date(iso).toLocaleDateString(localeAtual())
 }
 
 function assinaturaStatusVariant(status: string): 'pending' | 'active' | 'success' | 'danger' | 'warning' | 'info' | 'neutral' {
@@ -93,6 +95,7 @@ function StatCard({ label, value, hint }: { label: string; value: string; hint?:
 }
 
 function SimplePagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
+  const { t } = useT()
   if (totalPages <= 1) return null
   return (
     <div className="mt-3 flex items-center justify-center gap-3 text-sm text-text-muted">
@@ -101,21 +104,22 @@ function SimplePagination({ page, totalPages, onChange }: { page: number; totalP
         disabled={page <= 1}
         className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
       >
-        Anterior
+        {t('Anterior')}
       </button>
-      <span>Página {page} de {totalPages}</span>
+      <span>{t('Página')} {page} {t('de')} {totalPages}</span>
       <button
         onClick={() => onChange(Math.min(totalPages, page + 1))}
         disabled={page >= totalPages}
         className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
       >
-        Próxima
+        {t('Próxima')}
       </button>
     </div>
   )
 }
 
 export default function Financeiro() {
+  const { t } = useT()
   const [tab, setTab] = useState<Aba>('assinaturas')
   const cobranca = tab === 'assinaturas' || tab === 'faturas'
   const [resumo, setResumo] = useState<Resumo | null>(null)
@@ -166,23 +170,23 @@ export default function Financeiro() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text">Financeiro e acessos</h1>
-        <p className="text-sm text-text-muted">Assinaturas, cobranças e receita recorrente (MRR), além de quem acessa o site e usa o app.</p>
+        <h1 className="text-2xl font-bold text-text">{t('Financeiro e acessos')}</h1>
+        <p className="text-sm text-text-muted">{t('Assinaturas, cobranças e receita recorrente (MRR), além de quem acessa o site e usa o app.')}</p>
       </div>
 
       {cobranca && resumo && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <StatCard label="MRR" value={formatMoney(resumo.mrrCents)} hint="Receita mensal recorrente" />
-          <StatCard label="Assinantes pagantes" value={String(resumo.assinantesPagantes)} />
-          <StatCard label="Ativas" value={String(resumo.porStatus.ATIVA ?? 0)} />
-          <StatCard label="Faturas pendentes" value={String(resumo.faturasPendentes)} />
-          <StatCard label="Faturas vencidas" value={String(resumo.faturasVencidas)} hint={resumo.faturasVencidas > 0 ? 'Requer atenção' : undefined} />
+          <StatCard label={t('MRR')} value={formatMoney(resumo.mrrCents)} hint={t('Receita mensal recorrente')} />
+          <StatCard label={t('Assinantes pagantes')} value={String(resumo.assinantesPagantes)} />
+          <StatCard label={t('Ativas')} value={String(resumo.porStatus.ATIVA ?? 0)} />
+          <StatCard label={t('Faturas pendentes')} value={String(resumo.faturasPendentes)} />
+          <StatCard label={t('Faturas vencidas')} value={String(resumo.faturasVencidas)} hint={resumo.faturasVencidas > 0 ? t('Requer atenção') : undefined} />
         </div>
       )}
 
       {cobranca && resumo && Object.keys(resumo.mrrPorPapel).length > 0 && (
         <div className="rounded-xl border border-border bg-surface-card p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">MRR por papel</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('MRR por papel')}</p>
           <div className="flex flex-wrap gap-4">
             {Object.entries(resumo.mrrPorPapel).map(([papel, cents]) => (
               <div key={papel} className="text-sm">
@@ -199,25 +203,25 @@ export default function Financeiro() {
           onClick={() => switchTab('assinaturas')}
           className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'assinaturas' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
         >
-          Assinaturas
+          {t('Assinaturas')}
         </button>
         <button
           onClick={() => switchTab('faturas')}
           className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'faturas' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
         >
-          Faturas
+          {t('Faturas')}
         </button>
         <button
           onClick={() => switchTab('site')}
           className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'site' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
         >
-          Acessos do site
+          {t('Acessos do site')}
         </button>
         <button
           onClick={() => switchTab('app')}
           className={`shrink-0 px-3 py-2 text-sm font-semibold ${tab === 'app' ? 'border-b-2 border-primary text-primary' : 'text-text-muted'}`}
         >
-          Uso do app
+          {t('Uso do app')}
         </button>
       </div>
 
@@ -229,7 +233,7 @@ export default function Financeiro() {
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            placeholder="Buscar por nome ou e-mail..."
+            placeholder={t('Buscar por nome ou e-mail...')}
             className="flex-1 min-w-[200px] rounded-lg border border-border bg-surface-input px-3 py-2 text-sm text-text"
           />
           <select
@@ -237,13 +241,13 @@ export default function Financeiro() {
             onChange={(e) => { setStatusFiltro(e.target.value); setPage(1) }}
             className="rounded-lg border border-border bg-surface-input px-3 py-2 text-sm text-text"
           >
-            <option value="">Todos os status</option>
-            <option value="ATIVA">Ativa</option>
-            <option value="PENDENTE">Pendente</option>
-            <option value="EM_CARENCIA">Em carência</option>
-            <option value="EXPIRADA">Expirada</option>
-            <option value="CANCELADA">Cancelada</option>
-            <option value="REVOGADA">Revogada</option>
+            <option value="">{t('Todos os status')}</option>
+            <option value="ATIVA">{t('Ativa')}</option>
+            <option value="PENDENTE">{t('Pendente')}</option>
+            <option value="EM_CARENCIA">{t('Em carência')}</option>
+            <option value="EXPIRADA">{t('Expirada')}</option>
+            <option value="CANCELADA">{t('Cancelada')}</option>
+            <option value="REVOGADA">{t('Revogada')}</option>
           </select>
         </div>
       )}
@@ -254,30 +258,30 @@ export default function Financeiro() {
           onChange={(e) => { setStatusFiltro(e.target.value); setPage(1) }}
           className="rounded-lg border border-border bg-surface-input px-3 py-2 text-sm text-text"
         >
-          <option value="">Todos os status</option>
-          <option value="PENDENTE">Pendente</option>
-          <option value="PAGA">Paga</option>
-          <option value="VENCIDA">Vencida</option>
-          <option value="ESTORNADA">Estornada</option>
-          <option value="CANCELADA">Cancelada</option>
+          <option value="">{t('Todos os status')}</option>
+          <option value="PENDENTE">{t('Pendente')}</option>
+          <option value="PAGA">{t('Paga')}</option>
+          <option value="VENCIDA">{t('Vencida')}</option>
+          <option value="ESTORNADA">{t('Estornada')}</option>
+          <option value="CANCELADA">{t('Cancelada')}</option>
         </select>
       )}
 
       {!cobranca ? null : loading ? (
-        <p className="text-text-muted">Carregando...</p>
+        <p className="text-text-muted">{t('Carregando...')}</p>
       ) : tab === 'assinaturas' && assinaturas ? (
         <>
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="bg-surface-input text-left text-xs uppercase text-text-muted">
                 <tr>
-                  <th className="px-3 py-2">Usuário</th>
-                  <th className="px-3 py-2">Papel</th>
-                  <th className="px-3 py-2">Plano</th>
-                  <th className="px-3 py-2">Valor/mês</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Origem</th>
-                  <th className="px-3 py-2">Próx. cobrança</th>
+                  <th className="px-3 py-2">{t('Usuário')}</th>
+                  <th className="px-3 py-2">{t('Papel')}</th>
+                  <th className="px-3 py-2">{t('Plano')}</th>
+                  <th className="px-3 py-2">{t('Valor/mês')}</th>
+                  <th className="px-3 py-2">{t('Status')}</th>
+                  <th className="px-3 py-2">{t('Origem')}</th>
+                  <th className="px-3 py-2">{t('Próx. cobrança')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -296,7 +300,7 @@ export default function Financeiro() {
                   </tr>
                 ))}
                 {assinaturas.items.length === 0 && (
-                  <tr><td colSpan={7} className="px-3 py-6 text-center text-text-muted">Nenhuma assinatura encontrada.</td></tr>
+                  <tr><td colSpan={7} className="px-3 py-6 text-center text-text-muted">{t('Nenhuma assinatura encontrada.')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -309,13 +313,13 @@ export default function Financeiro() {
             <table className="w-full text-sm">
               <thead className="bg-surface-input text-left text-xs uppercase text-text-muted">
                 <tr>
-                  <th className="px-3 py-2">Usuário</th>
-                  <th className="px-3 py-2">Plano</th>
-                  <th className="px-3 py-2">Competência</th>
-                  <th className="px-3 py-2">Valor</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Vencimento</th>
-                  <th className="px-3 py-2">Pago em</th>
+                  <th className="px-3 py-2">{t('Usuário')}</th>
+                  <th className="px-3 py-2">{t('Plano')}</th>
+                  <th className="px-3 py-2">{t('Competência')}</th>
+                  <th className="px-3 py-2">{t('Valor')}</th>
+                  <th className="px-3 py-2">{t('Status')}</th>
+                  <th className="px-3 py-2">{t('Vencimento')}</th>
+                  <th className="px-3 py-2">{t('Pago em')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -334,7 +338,7 @@ export default function Financeiro() {
                   </tr>
                 ))}
                 {faturas.items.length === 0 && (
-                  <tr><td colSpan={7} className="px-3 py-6 text-center text-text-muted">Nenhuma fatura encontrada.</td></tr>
+                  <tr><td colSpan={7} className="px-3 py-6 text-center text-text-muted">{t('Nenhuma fatura encontrada.')}</td></tr>
                 )}
               </tbody>
             </table>

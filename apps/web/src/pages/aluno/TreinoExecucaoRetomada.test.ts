@@ -30,7 +30,7 @@ describe('TreinoExecucao — retomada de sessão (BUG-003)', () => {
 
     // Mensagem de erro exibida quando a sessão carregou mas a atualização falhou
     expect(src).toContain("'Não foi possível atualizar a sessão — tente novamente'")
-    expect(src).toContain("showToast('Não foi possível atualizar a sessão — tente novamente', 'error')")
+    expect(src).toContain("showToast(t('Não foi possível atualizar a sessão — tente novamente'), 'error')")
   })
 
   it('navega para /inicio apenas quando NÃO há sessão carregada (blocker não dispara)', () => {
