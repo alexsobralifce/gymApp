@@ -49,6 +49,8 @@ const envSchema = z.object({
   SITE_URL: z.string().url().optional().default('https://endorfinapp.com.br'),
   // Segredo que o GitHub Actions envia (x-curadoria-token) para disparar a curadoria semanal.
   CURADORIA_TOKEN: z.string().optional().default(''),
+  // Segredo do hubMonitor (header x-interno-token) para ler GET /interno/uso. Vazio = rota fechada.
+  INTERNO_TOKEN: z.string().optional().default(''),
   CURADORIA_AGENDADA: z.enum(['true', 'false']).optional().default('false').transform((v) => v === 'true'),
   RAILWAY_PROJECT_TOKEN: z.string().optional().default(''),
   RAILWAY_WEB_SERVICE_ID: z.string().optional().default(''),
