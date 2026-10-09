@@ -17,8 +17,13 @@ function seoPlugin(siteUrl: string): Plugin {
   const base = siteUrl.replace(/\/+$/, '')
   return {
     name: 'endorfinapp-seo',
-    transformIndexHtml(html) {
-      const jsonLd = {
+    // Pré-carrega a fonte do texto (DM Sans latin) para o LCP não esperar o CSS terminar de descobri-la.
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        const fonte = Object.keys(ctx.bundle ?? {}).find((f) => /dm-sans-latin-wght-normal.*\.woff2$/.test(f))
+        if (fonte) html = html.replace('</title>', `</title>\n    <link rel="preload" href="/${fonte}" as="font" type="font/woff2" crossorigin />`)
+        const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
         name: 'ENDORFINAPP',
@@ -31,6 +36,7 @@ function seoPlugin(siteUrl: string): Plugin {
       return html
         .replace('<!-- %SEO_OG_IMAGE% -->', base ? `<meta property="og:image" content="${base}/feature-graphic.png" />\n    <meta name="twitter:image" content="${base}/feature-graphic.png" />` : '')
         .replace('<!-- %SEO_JSONLD% -->', `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`)
+      },
     },
     generateBundle() {
       const robots = [
