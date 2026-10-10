@@ -379,7 +379,7 @@ export async function treinoRoutes(app: FastifyInstance) {
       const ownsViaSelf = selfAluno && treinoBase.aluno_id === selfAluno.id
       const ownsViaStudent = professor && treinoBase.aluno.professor_id === professor.id
       if (!ownsViaSelf && !ownsViaStudent) throw new TenantAccessError()
-    } else {
+    } else if (role !== Role.ROOT) {
       throw new TenantAccessError()
     }
 
@@ -578,7 +578,8 @@ export async function treinoRoutes(app: FastifyInstance) {
       }
     } else if (role === Role.ACADEMIA) {
       if (!tenantId || treino.aluno.academia_id !== tenantId) throw new TenantAccessError()
-    } else {
+    } else if (role !== Role.ROOT) {
+      // ROOT (administrador da plataforma) pode editar qualquer treino
       throw new TenantAccessError()
     }
 
