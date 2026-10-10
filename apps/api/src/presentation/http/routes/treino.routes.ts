@@ -553,6 +553,11 @@ export async function treinoRoutes(app: FastifyInstance) {
         series: z.number().int().min(1).default(3),
         repeticoes: z.number().int().min(1).default(12),
         cargaSugeridaKg: z.number().optional(),
+        tipo: z.string().optional(),
+        metodo: z.string().optional(),
+        blocoGrupo: z.number().int().optional(),
+        tempoDescansoSegundos: z.number().int().optional(),
+        observacoes: z.string().optional(),
       })).min(1).optional(),
     }).parse(request.body)
 
@@ -607,6 +612,11 @@ export async function treinoRoutes(app: FastifyInstance) {
             series: e.series,
             repeticoes: e.repeticoes,
             carga_sugerida_kg: e.cargaSugeridaKg,
+            tipo: e.tipo ?? 'PRINCIPAL',
+            metodo: e.metodo ?? 'TRADICIONAL',
+            bloco_grupo: e.blocoGrupo,
+            tempo_descanso_segundos: e.tempoDescansoSegundos ?? 60,
+            observacoes: e.observacoes,
           })),
         })
       }

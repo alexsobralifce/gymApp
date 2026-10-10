@@ -184,7 +184,7 @@ export default function AcademiaCriarTreino() {
     atualizarFicha(fichaAtiva, { exercicios: [...ficha.exercicios, novoExercicio] })
   }
 
-  function atualizarExercicio(idx: number, campo: string, valor: number) {
+  function atualizarExercicio(idx: number, campo: string, valor: number | undefined) {
     const ficha = fichas[fichaAtiva]
     const novosExercicios = ficha.exercicios.map((e, i) =>
       i === idx ? { ...e, [campo]: valor } : e
@@ -407,16 +407,7 @@ export default function AcademiaCriarTreino() {
                               </div>
                               <div>
                                 <label className="block text-xs font-bold text-text-muted uppercase">{t('Carga (kg)')}</label>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  placeholder={t('Auto')}
-                                  value={ex.cargaSugeridaKg ?? ''}
-                                  onChange={(e) =>
-                                    atualizarExercicio(idx, 'cargaSugeridaKg', Number(e.target.value) || 0)
-                                  }
-                                  className="w-16 px-1.5 py-1 text-xs text-center font-semibold"
-                                />
+                                <CampoInteiro opcional decimal min={0} max={999} placeholder={t('Auto')} value={ex.cargaSugeridaKg} onChange={(v) => atualizarExercicio(idx, 'cargaSugeridaKg', v)} className="w-16 px-1.5 py-1 text-xs text-center font-semibold rounded-lg border border-surface-input bg-surface-input text-text" />
                               </div>
                             </div>
 

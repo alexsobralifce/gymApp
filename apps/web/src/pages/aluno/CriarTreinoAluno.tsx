@@ -592,21 +592,7 @@ export default function AlunoCriarTreino() {
                       <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
                         {t('Carga (kg)')}
                       </label>
-                      <input
-                        type="tel"
-                        inputMode="numeric"
-                        min={0}
-                        placeholder={t('Opcional')}
-                        value={ex.cargaSugeridaKg ?? ''}
-                        onChange={(e) =>
-                          atualizarExercicio(
-                            idx,
-                            'cargaSugeridaKg',
-                            Math.max(0, Number(e.target.value) || 0),
-                          )
-                        }
-                        className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
-                      />
+                      <CampoInteiro opcional decimal min={0} max={999} placeholder={t('Opcional')} value={ex.cargaSugeridaKg} onChange={(v) => atualizarExercicio(idx, 'cargaSugeridaKg', v)} className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary" />
                     </div>
                   </div>
 
