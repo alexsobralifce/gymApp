@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import CampoInteiro from '../../components/ui/CampoInteiro'
 import { api } from '../../api/client'
 import type { Exercicio } from '../../types/api'
 import { EQUIPAMENTOS, filtrarExercicios } from '../../lib/exerciseFilters'
@@ -398,23 +399,11 @@ export default function AcademiaCriarTreino() {
                             <div className="flex gap-1.5 max-w-[200px]">
                               <div>
                                 <label className="block text-xs font-bold text-text-muted uppercase">{t('Séries')}</label>
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  value={ex.series}
-                                  onChange={(e) => atualizarExercicio(idx, 'series', Number(e.target.value))}
-                                  className="w-12 px-1.5 py-1 text-xs text-center font-semibold"
-                                />
+                                <CampoInteiro value={ex.series} onChange={(v) => atualizarExercicio(idx, 'series', v)} className="w-12 px-1.5 py-1 text-xs text-center font-semibold rounded-lg border border-surface-input bg-surface-input text-text" />
                               </div>
                               <div>
                                 <label className="block text-xs font-bold text-text-muted uppercase">{t('Reps')}</label>
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  value={ex.repeticoes}
-                                  onChange={(e) => atualizarExercicio(idx, 'repeticoes', Number(e.target.value))}
-                                  className="w-12 px-1.5 py-1 text-xs text-center font-semibold"
-                                />
+                                <CampoInteiro value={ex.repeticoes} onChange={(v) => atualizarExercicio(idx, 'repeticoes', v)} className="w-12 px-1.5 py-1 text-xs text-center font-semibold rounded-lg border border-surface-input bg-surface-input text-text" />
                               </div>
                               <div>
                                 <label className="block text-xs font-bold text-text-muted uppercase">{t('Carga (kg)')}</label>

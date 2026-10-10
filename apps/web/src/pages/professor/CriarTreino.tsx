@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import CampoInteiro from '../../components/ui/CampoInteiro'
 import { api } from '../../api/client'
 import type { Exercicio, ProfessorDashboard, Treino, Vinculo, WorkoutMethod } from '../../types/api'
 import { resolveMediaUrl } from '../../lib/media'
@@ -657,40 +658,14 @@ export default function CriarTreino() {
                             <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
                               {t('Séries')}
                             </label>
-                            <input
-                              type="tel"
-                              inputMode="numeric"
-                              min={1}
-                              value={ex.series}
-                              onChange={(e) =>
-                                atualizarExercicio(
-                                  idx,
-                                  'series',
-                                  Math.max(1, Number(e.target.value) || 1),
-                                )
-                              }
-                              className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
-                            />
+                            <CampoInteiro value={ex.series} onChange={(v) => atualizarExercicio(idx, 'series', v)} className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary" />
                           </div>
 
                           <div>
                             <label className="block text-[10px] font-extrabold text-text-muted uppercase mb-1">
                               {t('Repetições')}
                             </label>
-                            <input
-                              type="tel"
-                              inputMode="numeric"
-                              min={1}
-                              value={ex.repeticoes}
-                              onChange={(e) =>
-                                atualizarExercicio(
-                                  idx,
-                                  'repeticoes',
-                                  Math.max(1, Number(e.target.value) || 1),
-                                )
-                              }
-                              className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary"
-                            />
+                            <CampoInteiro value={ex.repeticoes} onChange={(v) => atualizarExercicio(idx, 'repeticoes', v)} className="w-full bg-surface-input text-text text-center text-xs sm:text-sm font-black rounded-xl py-2 border border-surface-input focus:outline-hidden focus:border-primary" />
                           </div>
 
                           <div>
