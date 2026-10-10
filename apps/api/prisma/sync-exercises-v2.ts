@@ -13,6 +13,11 @@ const prisma = new PrismaClient()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+// Nomes revisados à mão (id do dataset -> nome PT-BR); têm prioridade sobre translateName.
+const NOMES_CURADOS: Record<string, string> = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'data', 'exercicios-nomes-ptbr.json'), 'utf-8'),
+)
+
 function findDatasetPath(): string {
   const candidates = [
     path.join(__dirname, 'data', 'exercises.json'),
@@ -1059,7 +1064,7 @@ async function sync() {
     const batch = exercises.slice(i, i + BATCH)
     await Promise.all(batch.map(async (ex) => {
       try {
-        const nomePT = translateName(ex.name)
+        const nomePT = NOMES_CURADOS[String(ex.id)] ?? translateName(ex.name)
         const imagemUrl = ex.image ? `/exercises/${ex.image}` : null
         const gifUrl = ex.gif_url ? `/exercises/${ex.gif_url}` : null
         const grupoMuscular = muscleGroupPT[ex.body_part?.toLowerCase()] || muscleGroupPT[ex.muscle_group?.toLowerCase()] || ex.body_part || ex.muscle_group || ''
