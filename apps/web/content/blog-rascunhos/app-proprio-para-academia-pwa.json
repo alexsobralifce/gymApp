@@ -1,0 +1,318 @@
+{
+  "titulo": "App próprio para academia: o guia completo (sem App Store)",
+  "descricao": "Entenda o que é um PWA, como o aluno instala o app da academia em 2 toques, o que ele economiza de espaço e quais são os limites no iPhone e no Android.",
+  "categoria": "Academia",
+  "autor": "Equipe ENDORFINAPP",
+  "publicadoEm": "2026-10-10",
+  "atualizadoEm": "2026-10-10",
+  "manual": true,
+  "resumo": "Oferecer um app da academia costuma significar publicar nas duas lojas, pagar por isso e torcer para o aluno baixar. Um PWA (Progressive Web App) entrega o mesmo acesso por um link, instalado em 2 toques, sem loja. Este guia explica como funciona, o que muda para o aluno e para a academia, e onde estão os limites.",
+  "secoes": [
+    {
+      "titulo": "Por que o aluno não usa o app da academia",
+      "paragrafos": [
+        "A maior parte dos apps de academia perde o aluno antes do primeiro treino: é preciso achar o app na loja, esperar o download, criar conta, liberar permissões e só então ver a ficha. Cada etapa extra é mais uma chance de o aluno desistir antes de começar.",
+        "Depois da instalação, o problema continua. Levantamentos de mercado indicam que a retenção de apps nativos no dia 30 fica entre 1,2% e 5% na maioria das categorias [1]. São médias gerais, não de apps de fitness, mas mostram que baixar o app está longe de significar usar o app."
+      ],
+      "subsecoes": [
+        {
+          "titulo": "O ciclo do abandono: baixar, cadastrar, esquecer",
+          "paragrafos": [
+            "No começo do ano a academia lota e o aluno baixa o app por empolgação. Na terceira semana, a ficha ainda está lá, mas o ícone ficou perdido numa pasta. Quanto mais passos entre o aluno e o treino, mais fácil é pular o dia."
+          ]
+        },
+        {
+          "titulo": "O custo oculto do app nativo para a academia",
+          "paragrafos": [
+            "Um app nativo exige publicação e manutenção em duas lojas, aprovação a cada atualização e, em muitos casos, uma versão para Android e outra para iPhone. Vale perguntar ao fornecedor como esse custo entra na mensalidade."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "O que é um PWA, em português claro",
+      "paragrafos": [
+        "PWA (Progressive Web App) é um site construído para se comportar como aplicativo: tem ícone na tela inicial, abre em tela cheia, pode funcionar com internet fraca e receber notificações. A diferença é que ele chega por um link, não por uma loja."
+      ],
+      "tabela": {
+        "legenda": "Comparação geral entre site comum, PWA e app nativo.",
+        "colunas": [
+          "Critério",
+          "Site comum",
+          "PWA",
+          "App nativo"
+        ],
+        "linhas": [
+          [
+            "Como o aluno instala",
+            "Não instala",
+            "Link ou QR code, 2 toques",
+            "Busca na loja, download, cadastro"
+          ],
+          [
+            "Ícone na tela inicial",
+            "Não",
+            "Sim",
+            "Sim"
+          ],
+          [
+            "Tamanho no primeiro acesso",
+            "Baixa só a página",
+            "Cerca de 0,3 MB transferidos (JS e CSS comprimidos) no EndorfinApp",
+            "Varia por app: veja a tabela de tamanhos mais abaixo"
+          ],
+          [
+            "Atualização",
+            "Imediata",
+            "Imediata, sem aprovação de loja",
+            "Depende de aprovação e de o aluno atualizar"
+          ],
+          [
+            "Notificações push",
+            "Não",
+            "Sim, no Android; no iPhone só com o app instalado (iOS 16.4 ou superior) [2]",
+            "Sim"
+          ],
+          [
+            "Acesso a recursos do aparelho",
+            "Limitado",
+            "Parcial",
+            "Completo"
+          ]
+        ]
+      },
+      "subsecoes": [
+        {
+          "titulo": "Como o aluno instala: 2 toques, sem loja, sem senha da Apple ou do Google",
+          "lista": [
+            "Android (Chrome): abrir o link e tocar em \"Instalar app\" ou \"Adicionar à tela inicial\".",
+            "iPhone (Safari): tocar em Compartilhar e depois em \"Adicionar à Tela de Início\". O iOS não mostra um aviso automático de instalação, então vale deixar essa instrução à vista [2]."
+          ]
+        },
+        {
+          "titulo": "O PWA funciona sem internet?",
+          "paragrafos": [
+            "Em parte. A estrutura do app fica guardada no aparelho e abre mesmo sem sinal, mas os dados que dependem do servidor, como salvar um treino concluído, precisam de conexão. Confira como o seu sistema trata esse caso antes de prometer \"treino offline\" ao aluno."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "Como o PWA reduz a fricção do aluno",
+      "paragrafos": [
+        "A promessa do PWA é encurtar o caminho entre a decisão de treinar e a ficha aberta. Menos etapas costumam significar mais aberturas, mas é preciso medir isso na sua academia: o efeito depende de como o app é apresentado e de quem o usa."
+      ],
+      "subsecoes": [
+        {
+          "titulo": "Do QR code na recepção ao treino aberto",
+          "paragrafos": [
+            "Um QR code no balcão ou no vestiário leva direto ao app. Um bom indicador para acompanhar na sua academia é o tempo entre ler o código e ter a ficha do dia aberta: quanto menor, menos chance de o aluno desistir no caminho."
+          ]
+        },
+        {
+          "titulo": "Atualizações sem esperar a loja",
+          "paragrafos": [
+            "Como o PWA é servido pela web, uma correção ou ficha nova chega a todos os alunos ao mesmo tempo, sem passar pela aprovação das lojas e sem depender de o aluno atualizar."
+          ]
+        },
+        {
+          "titulo": "Android e iPhone com o mesmo link",
+          "paragrafos": [
+            "A academia mantém um único app. O que muda entre os sistemas é só o jeito de instalar, e essa diferença cabe em uma instrução de duas linhas."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "Menos espaço ocupado no celular",
+      "paragrafos": [
+        "Na medição do build do EndorfinApp em 10/10/2026, o primeiro carregamento transfere cerca de 268 KB de JavaScript e CSS comprimidos (aproximadamente 0,3 MB). O restante das telas e as imagens são baixados conforme o aluno navega.",
+        "Esse número é de transferência de rede, não de espaço final no aparelho. A tabela abaixo mostra o tamanho de download informado nas lojas para alguns apps conhecidos. O tamanho da loja é o do download e pode crescer depois da instalação, e a comparação tem limites: são apps com funções diferentes. O ganho do PWA não está só no peso: está em dispensar a ida à loja, o download e a conta antes do primeiro treino."
+      ],
+      "tabela": {
+        "legenda": "Tamanhos consultados em 10/10/2026. O do EndorfinApp é o primeiro carregamento transferido; os demais são o download informado na loja.",
+        "colunas": [
+          "App",
+          "Tipo",
+          "Onde",
+          "Tamanho"
+        ],
+        "linhas": [
+          [
+            "EndorfinApp",
+            "PWA para alunos e personais",
+            "Navegador",
+            "Cerca de 0,3 MB no primeiro acesso"
+          ],
+          [
+            "Befit: Plano e Treino Academia",
+            "App de treino",
+            "Play Store",
+            "58 MB"
+          ],
+          [
+            "MFIT Personal",
+            "App de treino",
+            "Play Store",
+            "49 MB"
+          ],
+          [
+            "Personal Virtual",
+            "App de treino",
+            "Play Store",
+            "2,6 MB"
+          ],
+          [
+            "Tecnofit Gestão 2.0",
+            "App para gestores (não para alunos)",
+            "App Store",
+            "Cerca de 77 MB (versão 1.1.0)"
+          ]
+        ]
+      }
+    },
+    {
+      "titulo": "PWA e adesão ao treino: o que a evidência mostra",
+      "paragrafos": [
+        "Estudos de caso publicados pelo Google (web.dev) relatam ganhos quando o PWA é instalável. A Rakuten 24 registrou, em um mês e comparando com o fluxo anterior de web móvel, aumento de 450% na retenção de visitantes e de 310% na frequência de visitas [3]. A Weekendesk viu conversão 2,5 vezes maior entre usuários que instalaram o PWA [4].",
+        "Um cuidado importante: são resultados de empresas de comércio eletrônico e de viagens, e quem instala já costuma ser mais engajado. Servem como indício de que a instalação aproxima o usuário do serviço, não como promessa de resultado para a sua academia."
+      ],
+      "subsecoes": [
+        {
+          "titulo": "Notificações push: o que dá para fazer e o que não dá",
+          "paragrafos": [
+            "No Android, o push funciona pelo navegador. No iPhone, só funciona para sites instalados na Tela de Início, a partir do iOS 16.4, e o pedido de permissão precisa partir de uma ação do aluno [2]. Planeje o lembrete de treino como um convite depois da instalação, não como algo automático."
+          ]
+        },
+        {
+          "titulo": "Ficha, histórico de carga e evolução sempre à mão",
+          "paragrafos": [
+            "O ganho prático para o aluno é abrir a ficha do dia no meio do treino sem procurar o app. É esse hábito, não a tecnologia em si, que sustenta a adesão."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "PWA ou app nativo: quando cada um faz sentido",
+      "paragrafos": [
+        "O app nativo continua sendo a melhor escolha quando o aluno precisa de recursos profundos do aparelho, como integração com os dados de saúde do sistema operacional, ou quando presença na loja é parte da estratégia de divulgação.",
+        "O PWA costuma servir melhor quando o objetivo é acesso rápido à ficha, ao histórico e aos avisos da academia, com custo e manutenção menores. Pergunte ao fornecedor o que o app inclui, quanto custa e o que acontece com os dados dos alunos se você trocar de sistema."
+      ],
+      "tabela": {
+        "legenda": "Perguntas para fazer a qualquer fornecedor antes de escolher.",
+        "colunas": [
+          "Pergunta ao fornecedor",
+          "Por que importa"
+        ],
+        "linhas": [
+          [
+            "Qual é o custo inicial e mensal do app?",
+            "O app pode estar incluso no plano ou ser cobrado à parte. No EndorfinApp, os planos para academias começam em R$ 199 por mês (10/10/2026), com 15 dias grátis."
+          ],
+          [
+            "Em quanto tempo o app fica no ar?",
+            "Apps nativos dependem de aprovação das lojas; peça um prazo por escrito."
+          ],
+          [
+            "O app leva o nome e as cores da academia?",
+            "Define se o aluno vê a sua marca ou a do fornecedor."
+          ],
+          [
+            "O aluno precisa passar pela loja?",
+            "Em um PWA, não: ele instala pelo link. Em app nativo, sim."
+          ],
+          [
+            "Como funcionam as notificações no iPhone?",
+            "No PWA, só com o app instalado [2]. Pergunte como o sistema trata isso."
+          ]
+        ]
+      }
+    },
+    {
+      "titulo": "Passo a passo para lançar o app da sua academia como PWA",
+      "subsecoes": [
+        {
+          "titulo": "1. Escolha o sistema",
+          "lista": [
+            "Confirme que o app é instalável (manifest e service worker) e abre em tela cheia.",
+            "Teste a instalação em um Android e em um iPhone reais.",
+            "Peça os números de peso e de abertura do app ao fornecedor.",
+            "Pergunte sobre exportação dos dados dos alunos."
+          ]
+        },
+        {
+          "titulo": "2. Cadastre alunos e treinos",
+          "paragrafos": [
+            "Comece por uma turma pequena. A ficha precisa estar pronta antes do convite, para que o primeiro acesso já mostre o treino."
+          ]
+        },
+        {
+          "titulo": "3. Divulgue com QR code, WhatsApp e Instagram",
+          "paragrafos": [
+            "Coloque o QR code na recepção e no vestiário, e envie o link com a instrução de instalação para Android e iPhone. Mostre o caminho em um vídeo curto de 15 segundos."
+          ]
+        },
+        {
+          "titulo": "4. Meça instalações e acessos",
+          "paragrafos": [
+            "Acompanhe quantos alunos instalaram, quantos abrem o app por semana e quantos treinos são concluídos. O evento appinstalled e o modo standalone do navegador permitem separar quem instalou de quem só visitou [4]."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "Para personal trainers: ficha por link, sem PDF no WhatsApp",
+      "paragrafos": [
+        "O personal que hoje manda a ficha em PDF ganha com um app instalável: o aluno abre sempre a versão atual, registra as cargas e o treinador acompanha a evolução. É o caso de uso do app para personal trainer do EndorfinApp."
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "pergunta": "PWA funciona no iPhone?",
+      "resposta": "Sim. O aluno abre o link no Safari e escolhe Compartilhar > Adicionar à Tela de Início. Notificações push só funcionam com o app instalado e a partir do iOS 16.4."
+    },
+    {
+      "pergunta": "O PWA precisa de internet?",
+      "resposta": "A estrutura do app abre sem sinal, mas ações que dependem do servidor, como salvar um treino concluído, exigem conexão. O comportamento exato depende do sistema escolhido."
+    },
+    {
+      "pergunta": "O PWA aparece na App Store ou na Play Store?",
+      "resposta": "Não por padrão: ele é instalado a partir do link. Por isso a academia precisa divulgar o link ou o QR code."
+    },
+    {
+      "pergunta": "Um PWA é seguro?",
+      "resposta": "O PWA só funciona em conexão segura (HTTPS), como qualquer site moderno. A segurança dos dados dos alunos depende também do sistema por trás, como login, controle de acesso e a política de privacidade."
+    },
+    {
+      "pergunta": "Dá para enviar notificações aos alunos?",
+      "resposta": "Sim, com limites: no Android pelo navegador e no iPhone só com o app instalado (iOS 16.4 ou superior), com permissão do aluno."
+    },
+    {
+      "pergunta": "Quanto custa ter o app da academia como PWA?",
+      "resposta": "No EndorfinApp, os planos para academias (em 10/10/2026) começam em R$ 199 por mês (Essencial, até 150 alunos ativos e 5 professores) e vão a R$ 399 (Crescimento, até 400 alunos), R$ 749 (Performance, até 1.000) e R$ 1.499 (Rede, até 2.500 alunos e 5 unidades). Há também um plano Enterprise sob consulta. Há 15 dias grátis para testar. Os valores podem mudar: confira a página de planos."
+    }
+  ],
+  "fontes": [
+    {
+      "titulo": "Braze. App retention: how to measure, benchmark, and improve it",
+      "url": "https://www.braze.com/resources/articles/mobile-app-retention"
+    },
+    {
+      "titulo": "Pushpad. iOS special requirements for web push notifications",
+      "url": "https://pushpad.xyz/blog/ios-special-requirements-for-web-push-notifications"
+    },
+    {
+      "titulo": "web.dev. Rakuten 24's investment in PWA increases user retention by 450%",
+      "url": "https://web.dev/case-studies/rakuten-24"
+    },
+    {
+      "titulo": "web.dev. How Progressive Web Apps can drive business success",
+      "url": "https://web.dev/articles/drive-business-success"
+    }
+  ],
+  "cta": {
+    "texto": "Conhecer o EndorfinApp para academias",
+    "href": "/software-para-academia"
+  }
+}

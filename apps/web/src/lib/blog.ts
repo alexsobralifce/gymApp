@@ -23,6 +23,8 @@ export interface SecaoArtigo {
   lista?: string[]
   tabela?: TabelaArtigo
   subsecoes?: SubsecaoArtigo[]
+  /** Botão de download ou link de destaque ao fim da seção (arquivo em /downloads/). */
+  link?: { texto: string; href: string }
 }
 
 export interface Artigo {

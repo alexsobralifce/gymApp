@@ -161,6 +161,13 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
                   )}
                 </div>
               ))}
+              {s.link && (
+                <p className="mt-4">
+                  <a href={s.link.href} download className="inline-block px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold hover:brightness-110">
+                    {s.link.texto}
+                  </a>
+                </p>
+              )}
             </section>
           ))}
 

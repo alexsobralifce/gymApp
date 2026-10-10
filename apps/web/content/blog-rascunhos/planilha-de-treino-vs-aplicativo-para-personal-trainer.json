@@ -1,0 +1,172 @@
+{
+  "titulo": "Planilha de treino vs aplicativo para personal trainer: quando migrar (e por que um PWA basta)",
+  "descricao": "Compare planilha, PDF no WhatsApp e aplicativo para personal trainer: custos, riscos, tempo gasto e o ponto em que vale migrar. Inclui o que muda com um PWA.",
+  "categoria": "Personal trainer",
+  "autor": "Equipe ENDORFINAPP",
+  "publicadoEm": "2026-10-10",
+  "atualizadoEm": "2026-10-10",
+  "manual": true,
+  "resumo": "A planilha funciona bem para poucos alunos e fica pesada quando a carteira cresce. Este guia mostra os sinais de que chegou a hora de migrar para um aplicativo, o que comparar antes de escolher e por que um PWA, que dispensa a loja de aplicativos, costuma ser o caminho mais simples para o aluno.",
+  "secoes": [
+    {
+      "titulo": "A planilha ainda serve? Sim, até certo ponto",
+      "paragrafos": [
+        "Planilha e PDF têm vantagens reais: custo zero, controle total e nenhuma curva de aprendizado. Para quem atende poucos alunos e muda a ficha de vez em quando, resolvem. O problema aparece com o volume: cada aluno vira um arquivo, cada ajuste vira uma nova versão e a versão certa passa a depender de quem lembrou de reenviar."
+      ],
+      "subsecoes": [
+        {
+          "titulo": "Quando a planilha ainda é suficiente",
+          "lista": [
+            "Poucos alunos, com fichas que mudam a cada 1 ou 2 meses.",
+            "Alunos presenciais, que treinam com você ao lado.",
+            "Você não precisa acompanhar histórico de carga entre uma ficha e outra."
+          ]
+        },
+        {
+          "titulo": "Os custos que não aparecem na planilha",
+          "paragrafos": [
+            "O tempo gasto montando, formatando e reenviando é o custo real. Some também o risco de o aluno treinar com uma ficha antiga e a falta de histórico: sem registro, é difícil mostrar evolução para o aluno e justificar o seu valor."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "7 sinais de que chegou a hora de migrar",
+      "lista": [
+        "Você passa mais tempo atualizando fichas do que atendendo.",
+        "Alunos perguntam \"qual é a versão certa?\" ou treinam com a ficha antiga.",
+        "Você não consegue mostrar a evolução de carga de um aluno em 1 minuto.",
+        "Atende alunos online, que precisam receber a ficha à distância.",
+        "Os pagamentos e renovações vivem em outro lugar, sem relação com o treino.",
+        "Um aluno some e você só percebe semanas depois.",
+        "Você quer crescer a carteira sem crescer a carga de trabalho administrativo."
+      ]
+    },
+    {
+      "titulo": "Planilha, PDF, aplicativo nativo e PWA lado a lado",
+      "tabela": {
+        "legenda": "Comparação geral. Os custos dependem do fornecedor: confira os planos antes de decidir.",
+        "colunas": ["Critério", "Planilha / PDF", "Aplicativo nativo", "PWA"],
+        "linhas": [
+          ["Custo", "Zero", "Mensalidade do sistema", "Mensalidade do sistema"],
+          ["Ficha sempre atualizada para o aluno", "Depende de reenviar", "Sim", "Sim, sem aprovação de loja"],
+          ["Histórico de carga e evolução", "Manual", "Sim", "Sim"],
+          ["Instalação pelo aluno", "Nenhuma", "Loja, download e cadastro", "Link ou QR code, 2 toques"],
+          ["Funciona no Android e no iPhone", "Sim", "Versões separadas, em geral", "Sim, o mesmo link"],
+          ["Notificações", "Não", "Sim", "Sim; no iPhone só com o app instalado (iOS 16.4 ou superior) [1]"],
+          ["Tempo para o aluno começar", "Imediato", "Passos até o primeiro treino", "Poucos passos"]
+        ]
+      },
+      "paragrafos": [
+        "A conclusão não é que o PWA vence em tudo. Notificações e integração profunda com o aparelho favorecem o app nativo. Para a maioria dos personais, porém, o essencial é a ficha atualizada, o histórico e a facilidade de acesso, e nisso o PWA entrega com menos atrito."
+      ]
+    },
+    {
+      "titulo": "O que um aplicativo para personal trainer precisa ter",
+      "paragrafos": [
+        "Antes de escolher, defina o que você vai usar todo dia. Um aplicativo com dezenas de recursos que você não abre vira mais uma planilha esquecida."
+      ],
+      "subsecoes": [
+        {
+          "titulo": "Essenciais",
+          "lista": [
+            "Cadastro de alunos e vínculo com você.",
+            "Montagem de treino com séries, repetições e carga sugerida.",
+            "Envio da ficha para o aluno, com aceite ou recusa.",
+            "Registro de execução e histórico de carga.",
+            "Medidas corporais e evolução, para mostrar resultado."
+          ]
+        },
+        {
+          "titulo": "Bom ter",
+          "lista": [
+            "Biblioteca de exercícios com imagem e dica.",
+            "Avaliação de dificuldade do treino pelo aluno.",
+            "Notificações de lembrete.",
+            "Exportação dos dados do aluno."
+          ]
+        },
+        {
+          "titulo": "Perguntas para o fornecedor",
+          "lista": [
+            "O aluno precisa baixar o aplicativo em uma loja?",
+            "Quanto custa por aluno e quais são os limites do plano?",
+            "Eu consigo exportar os dados se quiser trocar de sistema?",
+            "Como os dados dos alunos são protegidos?"
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "Por que um PWA costuma bastar para o aluno",
+      "paragrafos": [
+        "O maior risco de qualquer aplicativo é o aluno não usar. Retenção de apps nativos no dia 30 fica entre 1,2% e 5% na maioria das categorias, segundo levantamento de mercado [2]. São médias gerais, mas indicam que baixar não garante usar.",
+        "Um PWA tira etapas do caminho: o aluno recebe um link, instala em 2 toques e abre a ficha do dia. No Android, o navegador oferece a instalação. No iPhone, ele toca em Compartilhar e em \"Adicionar à Tela de Início\", e as notificações só funcionam com o app instalado [1]."
+      ]
+    },
+    {
+      "titulo": "Como migrar da planilha em uma semana",
+      "subsecoes": [
+        {
+          "titulo": "Dia 1: escolha 3 a 5 alunos para o piloto",
+          "paragrafos": [
+            "Comece por quem já usa bem o celular e treina com frequência. Eles encontram os problemas antes de você levar o sistema a toda a carteira."
+          ]
+        },
+        {
+          "titulo": "Dias 2 e 3: transfira as fichas atuais",
+          "paragrafos": [
+            "Reaproveite o que existe. Cadastre os exercícios e as cargas atuais, sem tentar \"melhorar\" tudo ao mesmo tempo."
+          ]
+        },
+        {
+          "titulo": "Dia 4: convide o piloto",
+          "paragrafos": [
+            "Envie o link com a instrução de instalação para Android e iPhone. Peça o primeiro treino registrado em até 3 dias."
+          ]
+        },
+        {
+          "titulo": "Dias 5 a 7: ajuste e expanda",
+          "paragrafos": [
+            "Corrija o que travou, migre o restante da carteira em lotes e mantenha a planilha como arquivo de consulta, sem apagar nada de imediato."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "Modelo de planilha de treino grátis",
+      "paragrafos": [
+        "Se você ainda não vai migrar, uma boa planilha já ajuda. O modelo abaixo tem uma aba de ficha (exercício, séries, repetições, carga sugerida, descanso e observações), uma de histórico de carga com cálculo automático de volume (séries x repetições x carga) e uma de medidas com IMC. Basta baixar e preencher as células amarelas.",
+        "Quando a carteira crescer, o próprio histórico da planilha pode ser transferido para o aplicativo."
+      ],
+      "link": { "texto": "Baixar modelo de planilha (Excel)", "href": "/downloads/modelo-planilha-de-treino-endorfinapp.xlsx" }
+    }
+  ],
+  "faq": [
+    {
+      "pergunta": "Posso continuar usando planilha para alguns alunos?",
+      "resposta": "Pode. Muitos personais migram em etapas, deixando a planilha para poucos alunos até a transição terminar."
+    },
+    {
+      "pergunta": "O aluno precisa baixar o aplicativo em uma loja?",
+      "resposta": "Depende do sistema. Em um PWA, o aluno instala a partir de um link, sem passar pela App Store ou pela Play Store."
+    },
+    {
+      "pergunta": "PWA funciona no iPhone?",
+      "resposta": "Sim, pelo Safari, com Compartilhar > Adicionar à Tela de Início. As notificações só funcionam com o app instalado, a partir do iOS 16.4."
+    },
+    {
+      "pergunta": "Quanto custa um aplicativo para personal trainer?",
+      "resposta": "No EndorfinApp, os planos para personal trainers (em 10/10/2026) são: Starter, R$ 49 por mês para até 10 alunos ativos; Pro, R$ 89 por mês para até 30; e Plus, R$ 149 por mês para até 60. Há 15 dias grátis para testar. Os valores podem mudar: confira a página de planos."
+    },
+    {
+      "pergunta": "Perco o histórico dos meus alunos ao migrar?",
+      "resposta": "Não precisa perder. Mantenha a planilha como arquivo de consulta e transfira o essencial (exercícios e cargas atuais) para o novo sistema."
+    }
+  ],
+  "fontes": [
+    { "titulo": "Pushpad. iOS special requirements for web push notifications", "url": "https://pushpad.xyz/blog/ios-special-requirements-for-web-push-notifications" },
+    { "titulo": "Braze. App retention: how to measure, benchmark, and improve it", "url": "https://www.braze.com/resources/articles/mobile-app-retention" }
+  ],
+  "cta": { "texto": "Conhecer o app para personal trainer", "href": "/app-para-personal-trainer" }
+}
