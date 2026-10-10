@@ -17,6 +17,10 @@ const __dirname = path.dirname(__filename)
 const NOMES_CURADOS: Record<string, string> = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'data', 'exercicios-nomes-ptbr.json'), 'utf-8'),
 )
+// Passos revisados (id do dataset -> passos PT-BR); a descrição é a junção deles.
+const PASSOS_CURADOS: Record<string, string[]> = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'data', 'exercicios-passos-ptbr.json'), 'utf-8'),
+)
 
 function findDatasetPath(): string {
   const candidates = [
@@ -1072,9 +1076,9 @@ async function sync() {
         const musculoAlvo = muscleGroupPT[ex.target?.toLowerCase()] || muscleGroupPT[ex.muscle_group?.toLowerCase()] || ex.target || ex.muscle_group || ''
         const musculosSecundarios = (ex.secondary_muscles || []).map((m: string) => muscleGroupPT[m.toLowerCase()] || m)
         const passosEN: string[] = ex.instruction_steps?.en || []
-        const passosPT = passosEN.map(translateStep)
+        const passosPT = PASSOS_CURADOS[String(ex.id)] ?? passosEN.map(translateStep)
         const descricaoEN: string = ex.instructions?.en || ''
-        const descricaoPT = descricaoEN ? translateStep(descricaoEN) : passosPT.join(' ')
+        const descricaoPT = PASSOS_CURADOS[String(ex.id)] ? passosPT.join(' ') : descricaoEN ? translateStep(descricaoEN) : passosPT.join(' ')
         const dica = `${bodyPartPT[ex.body_part?.toLowerCase()] || ex.body_part || ''} | ${grupoMuscular}`
         const exercicioId = `ds-${ex.id}`
         const nivel = getLevel(equipamento)
