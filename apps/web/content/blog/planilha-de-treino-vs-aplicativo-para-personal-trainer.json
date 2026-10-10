@@ -5,6 +5,10 @@
   "autor": "Equipe ENDORFINAPP",
   "publicadoEm": "2026-10-10",
   "atualizadoEm": "2026-10-10",
+  "imagem": {
+    "url": "/blog-img/app-personal-treino-telas.webp",
+    "alt": "Três telas do aplicativo ENDORFINAPP no celular: execução do treino com cargas e descanso, avaliação do treino com percepção de esforço e tela de treino concluído para compartilhar"
+  },
   "manual": true,
   "resumo": "A planilha funciona bem para poucos alunos e fica pesada quando a carteira cresce. Este guia mostra os sinais de que chegou a hora de migrar para um aplicativo, o que comparar antes de escolher e por que um PWA, que dispensa a loja de aplicativos, costuma ser o caminho mais simples para o aluno.",
   "secoes": [
@@ -46,15 +50,55 @@
       "titulo": "Planilha, PDF, aplicativo nativo e PWA lado a lado",
       "tabela": {
         "legenda": "Comparação geral. Os custos dependem do fornecedor: confira os planos antes de decidir.",
-        "colunas": ["Critério", "Planilha / PDF", "Aplicativo nativo", "PWA"],
+        "colunas": [
+          "Critério",
+          "Planilha / PDF",
+          "Aplicativo nativo",
+          "PWA"
+        ],
         "linhas": [
-          ["Custo", "Zero", "Mensalidade do sistema", "Mensalidade do sistema"],
-          ["Ficha sempre atualizada para o aluno", "Depende de reenviar", "Sim", "Sim, sem aprovação de loja"],
-          ["Histórico de carga e evolução", "Manual", "Sim", "Sim"],
-          ["Instalação pelo aluno", "Nenhuma", "Loja, download e cadastro", "Link ou QR code, 2 toques"],
-          ["Funciona no Android e no iPhone", "Sim", "Versões separadas, em geral", "Sim, o mesmo link"],
-          ["Notificações", "Não", "Sim", "Sim; no iPhone só com o app instalado (iOS 16.4 ou superior) [1]"],
-          ["Tempo para o aluno começar", "Imediato", "Passos até o primeiro treino", "Poucos passos"]
+          [
+            "Custo",
+            "Zero",
+            "Mensalidade do sistema",
+            "Mensalidade do sistema"
+          ],
+          [
+            "Ficha sempre atualizada para o aluno",
+            "Depende de reenviar",
+            "Sim",
+            "Sim, sem aprovação de loja"
+          ],
+          [
+            "Histórico de carga e evolução",
+            "Manual",
+            "Sim",
+            "Sim"
+          ],
+          [
+            "Instalação pelo aluno",
+            "Nenhuma",
+            "Loja, download e cadastro",
+            "Link ou QR code, 2 toques"
+          ],
+          [
+            "Funciona no Android e no iPhone",
+            "Sim",
+            "Versões separadas, em geral",
+            "Sim, o mesmo link"
+          ],
+          [
+            "Notificações",
+            "Não",
+            "Sim",
+            "Sim; no iPhone só com o app instalado (iOS 16.4 ou superior) [1]"
+          ],
+          [
+            "Tempo para o aluno começar",
+            "Imediato",
+            "Passos até o primeiro treino",
+            "Poucos passos"
+          ]
         ]
       },
       "paragrafos": [
@@ -139,7 +183,10 @@
         "Se você ainda não vai migrar, uma boa planilha já ajuda. O modelo abaixo tem uma aba de ficha (exercício, séries, repetições, carga sugerida, descanso e observações), uma de histórico de carga com cálculo automático de volume (séries x repetições x carga) e uma de medidas com IMC. Basta baixar e preencher as células amarelas.",
         "Quando a carteira crescer, o próprio histórico da planilha pode ser transferido para o aplicativo."
       ],
-      "link": { "texto": "Baixar modelo de planilha (Excel)", "href": "/downloads/modelo-planilha-de-treino-endorfinapp.xlsx" }
+      "link": {
+        "texto": "Baixar modelo de planilha (Excel)",
+        "href": "/downloads/modelo-planilha-de-treino-endorfinapp.xlsx"
+      }
     }
   ],
   "faq": [
@@ -165,8 +212,17 @@
     }
   ],
   "fontes": [
-    { "titulo": "Pushpad. iOS special requirements for web push notifications", "url": "https://pushpad.xyz/blog/ios-special-requirements-for-web-push-notifications" },
-    { "titulo": "Braze. App retention: how to measure, benchmark, and improve it", "url": "https://www.braze.com/resources/articles/mobile-app-retention" }
+    {
+      "titulo": "Pushpad. iOS special requirements for web push notifications",
+      "url": "https://pushpad.xyz/blog/ios-special-requirements-for-web-push-notifications"
+    },
+    {
+      "titulo": "Braze. App retention: how to measure, benchmark, and improve it",
+      "url": "https://www.braze.com/resources/articles/mobile-app-retention"
+    }
   ],
-  "cta": { "texto": "Conhecer o app para personal trainer", "href": "/app-para-personal-trainer" }
+  "cta": {
+    "texto": "Conhecer o app para personal trainer",
+    "href": "/app-para-personal-trainer"
+  }
 }

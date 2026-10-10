@@ -5,6 +5,10 @@
   "autor": "Equipe ENDORFINAPP",
   "publicadoEm": "2026-10-10",
   "atualizadoEm": "2026-10-10",
+  "imagem": {
+    "url": "/blog-img/app-pwa-academia-telas.webp",
+    "alt": "Três telas do aplicativo ENDORFINAPP no celular: calendário com a lista de treinos, execução do treino com cargas e cronômetro de descanso, e avaliação do treino ao final"
+  },
   "manual": true,
   "resumo": "Oferecer um app da academia costuma significar publicar nas duas lojas, pagar por isso e torcer para o aluno baixar. Um PWA (Progressive Web App) entrega o mesmo acesso por um link, instalado em 2 toques, sem loja. Este guia explica como funciona, o que muda para o aluno e para a academia, e onde estão os limites.",
   "secoes": [
