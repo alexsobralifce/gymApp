@@ -7,6 +7,14 @@ import { ARTIGOS, buscarArtigo, formatarData, type Artigo } from '../../lib/blog
 
 const SITE = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/+$/, '') ?? ''
 
+function faqEstruturado(a: Artigo) {
+  if (!a.faq?.length) return null
+  return {
+    '@type': 'FAQPage',
+    mainEntity: a.faq.map((f) => ({ '@type': 'Question', name: f.pergunta, acceptedAnswer: { '@type': 'Answer', text: f.resposta } })),
+  }
+}
+
 function dadosEstruturados(a: Artigo) {
   return {
     '@context': 'https://schema.org',
@@ -49,7 +57,7 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
     path: `/blog/${artigo.slug}`,
     noindex: artigo.tipo === 'curadoria',
     image: artigo.imagem?.url,
-    jsonLd: artigo.tipo === 'curadoria' ? undefined : { '@context': 'https://schema.org', '@graph': [dadosEstruturados(artigo), trilhaDePaginas([{ nome: 'Início', caminho: '/' }, { nome: 'Blog', caminho: '/blog' }, { nome: artigo.titulo, caminho: `/blog/${artigo.slug}` }])] },
+    jsonLd: artigo.tipo === 'curadoria' ? undefined : { '@context': 'https://schema.org', '@graph': [dadosEstruturados(artigo), ...(faqEstruturado(artigo) ? [faqEstruturado(artigo)] : []), trilhaDePaginas([{ nome: 'Início', caminho: '/' }, { nome: 'Blog', caminho: '/blog' }, { nome: artigo.titulo, caminho: `/blog/${artigo.slug}` }])] },
   })
   const relacionados = ARTIGOS.filter((a) => a.slug !== artigo.slug).slice(0, 3)
 
@@ -88,9 +96,20 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
           )}
           <p className="text-lg mb-8">{artigo.resumo}</p>
 
-          {artigo.secoes.map((s) => (
+          {artigo.secoes.length >= 5 && (
+            <nav aria-labelledby="sumario" className="rounded-xl border border-border bg-surface-card p-4 mb-8 text-sm">
+              <p id="sumario" className="font-semibold mb-2">Neste artigo</p>
+              <ol className="list-decimal pl-5 space-y-1">
+                {artigo.secoes.map((s, i) => (
+                  <li key={s.titulo}><a href={`#secao-${i + 1}`} className="text-primary hover:underline">{s.titulo}</a></li>
+                ))}
+              </ol>
+            </nav>
+          )}
+
+          {artigo.secoes.map((s, i) => (
             <section key={s.titulo} className="mb-8">
-              <h2 className="text-2xl font-bold mb-3">{s.titulo}</h2>
+              <h2 id={`secao-${i + 1}`} className="text-2xl font-bold mb-3 scroll-mt-20">{s.titulo}</h2>
               {s.imagem && (
                 <img src={s.imagem.url} alt={s.imagem.alt} width={1200} height={800} loading="lazy" className="mb-4 aspect-[3/2] w-full rounded-xl object-cover" />
               )}
@@ -102,8 +121,62 @@ function Conteudo({ artigo }: { artigo: Artigo }) {
                   {s.lista.map((i) => <li key={i}>{i}</li>)}
                 </ul>
               )}
+              {s.tabela && (
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full text-sm border-collapse">
+                    {s.tabela.legenda && <caption className="text-left text-xs text-muted-foreground mb-2">{s.tabela.legenda}</caption>}
+                    <thead>
+                      <tr>
+                        {s.tabela.colunas.map((c) => (
+                          <th key={c} scope="col" className="border border-border bg-surface-card px-3 py-2 text-left font-semibold">{c}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {s.tabela.linhas.map((linha) => (
+                        <tr key={linha[0]}>
+                          {linha.map((cel, j) =>
+                            j === 0 ? (
+                              <th key={j} scope="row" className="border border-border px-3 py-2 text-left font-medium">{cel}</th>
+                            ) : (
+                              <td key={j} className="border border-border px-3 py-2"><TextoComCitacoes texto={cel} /></td>
+                            ),
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {s.subsecoes?.map((sub) => (
+                <div key={sub.titulo} className="mt-5">
+                  <h3 className="text-xl font-semibold mb-2">{sub.titulo}</h3>
+                  {sub.paragrafos?.map((p) => (
+                    <p key={p} className="mb-3 leading-relaxed text-foreground/90"><TextoComCitacoes texto={p} /></p>
+                  ))}
+                  {sub.lista && (
+                    <ul className="list-disc pl-5 space-y-1.5 mb-3 text-foreground/90">
+                      {sub.lista.map((i) => <li key={i}>{i}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ))}
             </section>
           ))}
+
+          {artigo.faq && artigo.faq.length > 0 && (
+            <section aria-labelledby="faq" className="mb-8">
+              <h2 id="faq" className="text-2xl font-bold mb-3 scroll-mt-20">Perguntas frequentes</h2>
+              <div className="space-y-2">
+                {artigo.faq.map((f) => (
+                  <details key={f.pergunta} className="rounded-xl border border-border bg-surface-card p-4">
+                    <summary className="cursor-pointer font-semibold">{f.pergunta}</summary>
+                    <p className="mt-2 leading-relaxed text-foreground/90">{f.resposta}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
 
           {artigo.cta && (
             <div className="rounded-xl border border-border bg-surface-card p-5 mb-8 text-center">

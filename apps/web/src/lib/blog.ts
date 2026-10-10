@@ -4,11 +4,25 @@ export interface ImagemArtigo {
   alt: string
 }
 
+export interface SubsecaoArtigo {
+  titulo: string
+  paragrafos?: string[]
+  lista?: string[]
+}
+
+export interface TabelaArtigo {
+  legenda?: string
+  colunas: string[]
+  linhas: string[][]
+}
+
 export interface SecaoArtigo {
   titulo: string
   imagem?: ImagemArtigo
   paragrafos?: string[]
   lista?: string[]
+  tabela?: TabelaArtigo
+  subsecoes?: SubsecaoArtigo[]
 }
 
 export interface Artigo {
@@ -26,6 +40,10 @@ export interface Artigo {
   origem?: { veiculo: string; pais: string; titulo: string; url: string }
   resumo: string
   secoes: SecaoArtigo[]
+  /** Perguntas frequentes: renderizadas ao fim e publicadas como FAQPage no JSON-LD. */
+  faq?: Array<{ pergunta: string; resposta: string }>
+  /** Artigo escrito à mão no repositório: a sincronização com o banco não o apaga. */
+  manual?: boolean
   fontes: Array<{ titulo: string; url: string }>
   cta?: { texto: string; href: string }
 }

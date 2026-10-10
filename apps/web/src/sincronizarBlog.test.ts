@@ -19,6 +19,12 @@ describe('aplicarArtigos', () => {
     expect(readdirSync(dir).sort()).toEqual(['fica.json', 'novo-artigo.json'])
     expect(JSON.parse(readFileSync(path.join(dir, 'fica.json'), 'utf8'))).toEqual({ titulo: 'novo' })
   })
+  it('preserva artigo escrito à mão ("manual": true) mesmo fora do banco', () => {
+    writeFileSync(path.join(dir, 'autoral.json'), '{"titulo":"meu","manual":true}')
+    const r = aplicarArtigos(dir, { total: 1, artigos: [{ slug: 'novo-artigo', titulo: 'x' } as never] })
+    expect(r.removidos.sort()).toEqual(['fica', 'velho'])
+    expect(readdirSync(dir).sort()).toEqual(['autoral.json', 'novo-artigo.json'])
+  })
   it('banco vazio: não apaga nada', () => {
     expect(aplicarArtigos(dir, { total: 0, artigos: [] }).mantido).toBe(true)
     expect(readdirSync(dir).sort()).toEqual(['fica.json', 'velho.json'])

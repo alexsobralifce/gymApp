@@ -1,6 +1,15 @@
 // Materializa os artigos publicados (fonte da verdade: banco da API) em content/blog/*.json antes do build.
-import { readdirSync, writeFileSync, rmSync, mkdirSync, existsSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync, rmSync, mkdirSync, existsSync } from 'node:fs'
 import path from 'node:path'
+
+/** Artigo escrito à mão no repositório (`"manual": true`): não existe no banco e não pode ser apagado pela sincronização. */
+function ehManual(arquivo) {
+  try {
+    return JSON.parse(readFileSync(arquivo, 'utf8')).manual === true
+  } catch {
+    return false
+  }
+}
 
 /**
  * @param {string} dir pasta content/blog
@@ -18,7 +27,7 @@ export function aplicarArtigos(dir, resposta) {
     gravados.push(slug)
   }
   const removidos = existsSync(dir)
-    ? readdirSync(dir).filter((f) => f.endsWith('.json') && !gravados.includes(f.replace(/\.json$/, '')))
+    ? readdirSync(dir).filter((f) => f.endsWith('.json') && !gravados.includes(f.replace(/\.json$/, '')) && !ehManual(path.join(dir, f)))
     : []
   for (const f of removidos) rmSync(path.join(dir, f))
   return { gravados, removidos: removidos.map((f) => f.replace(/\.json$/, '')), mantido: false }
