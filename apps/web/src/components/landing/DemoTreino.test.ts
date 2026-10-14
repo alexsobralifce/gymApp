@@ -10,8 +10,9 @@ describe('DemoTreino — UX-011 demo interativa', () => {
     for (const nome of ['Supino Reto', 'Agachamento', 'Rosca Direta com Barra']) {
       expect(src).toContain(nome)
     }
-    // mídia via CDN do gifdotreino (mesmo padrão do sync-gifdotreino.ts)
-    expect(src).toContain('gifdotreino.com')
+    // WebP animado próprio (480px) em /demo, no lugar do GIF de ~3,7 MB do CDN de terceiros
+    expect(src).toContain('/demo/supino-reto-480.webp')
+    expect(src).not.toContain('gifdotreino.com')
   })
 
   it('deve registrar séries localmente, sem chamadas de rede', () => {

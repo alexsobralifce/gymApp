@@ -28,7 +28,7 @@ const DEMO_EXERCICIOS: DemoExercicio[] = [
     nome: 'Supino Reto',
     grupo_muscular: 'Peitoral',
     equipamento: 'Barra',
-    gif_url: 'https://www.gifdotreino.com/Exercicios/Peitoral/Supino%20Reto.gif',
+    gif_url: '/demo/supino-reto-480.webp',
     descricao:
       'Deitado no banco, você abaixa a barra até o peito e empurra de volta. O clássico para peitoral, ombros e tríceps.',
     dica: 'Inspire ao descer e expire ao subir. Mantenha os ombros "encaixados" no banco o tempo todo.',
@@ -41,7 +41,7 @@ const DEMO_EXERCICIOS: DemoExercicio[] = [
     nome: 'Agachamento',
     grupo_muscular: 'Pernas',
     equipamento: 'Peso Corporal',
-    gif_url: 'https://www.gifdotreino.com/Exercicios/Calistenia/Agachamento.gif',
+    gif_url: '/demo/agachamento-480.webp',
     descricao:
       'O movimento mais completo das pernas: quadríceps, glúteos e abdômen trabalhando juntos, usando só o peso do corpo.',
     dica: 'Joelhos acompanham a direção dos pés. Peito aberto, olhar à frente e desça como se fosse sentar.',
@@ -54,7 +54,7 @@ const DEMO_EXERCICIOS: DemoExercicio[] = [
     nome: 'Rosca Direta com Barra',
     grupo_muscular: 'Bíceps',
     equipamento: 'Barra',
-    gif_url: 'https://www.gifdotreino.com/Exercicios/B%C3%ADceps/Rosca%20Direta%20com%20Barra.gif',
+    gif_url: '/demo/rosca-direta-barra-480.webp',
     descricao:
       'O exercício essencial para bíceps: flexão controlada dos cotovelos segurando a barra, sem balanço do tronco.',
     dica: 'Nada de balanço: o movimento é só dos cotovelos. Desça devagar para sentir o bíceps trabalhar.',
