@@ -160,7 +160,6 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/evolucao', label: 'Evolução', icon: <ChartLineIcon className="h-5 w-5" /> },
         { to: '/clubes', label: 'Clubes', icon: <TrophyIcon className="h-5 w-5" /> },
         { to: '/parceiros', label: 'Parceiros', icon: <StarIcon className="h-5 w-5" /> },
-        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'PROFESSOR':
@@ -195,7 +194,6 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/exercicios/criar', label: 'Exercícios', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/academias', label: 'Academias', icon: <Building2Icon className="h-5 w-5" /> },
         { to: '/parceiros', label: 'Parceiros', icon: <StarIcon className="h-5 w-5" /> },
-        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'ACADEMIA':
@@ -213,7 +211,6 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/professores', label: 'Professores', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/alunos', label: 'Alunos', icon: <UsersIcon className="h-5 w-5" /> },
         { to: '/promocoes', label: 'Promoções', icon: <StarIcon className="h-5 w-5" /> },
-        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     case 'ROOT':
@@ -238,7 +235,6 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/feed', label: 'Feed Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/publicacoes', label: 'Publicações do Blog', icon: <BookOpenIcon className="h-5 w-5" /> },
-        { to: '/noticias', label: 'Notícias', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     default:
@@ -292,7 +288,6 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: '⭐', desc: 'Feedbacks recebidos' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos & Laudos' },
       { to: '/publicacoes', label: 'Publicações do Blog', icon: '✍️', desc: 'Publicar e despublicar' },
-      { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
       { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia do sistema' },
       { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados da conta' },
       { to: '/privacidade', label: 'Privacidade', icon: '🛡️', desc: 'Controle de dados' },
@@ -312,7 +307,6 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos e laudos' },
       { to: '/exercicios/criar', label: 'Exercícios', icon: '📖', desc: 'Biblioteca & Gifs' },
       { to: '/academias', label: 'Academias', icon: '🏢', desc: 'Vínculos de trabalho' },
-      { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
       { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados e CREF' },
     ]
   }
@@ -321,7 +315,6 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/treinos/criar', label: 'Criar Treino', icon: '➕', desc: 'Ficha padrão da academia' },
       { to: '/promocoes', label: 'Promoções', icon: '🎁', desc: 'Vitrine para seus alunos' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Avaliações de alunos' },
-      { to: '/noticias', label: 'Notícias', icon: '📰', desc: 'Artigos científicos' },
       { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia da academia' },
       { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados cadastrais' },
       { to: '/privacidade', label: 'Privacidade', icon: '🛡️', desc: 'Configurações' },

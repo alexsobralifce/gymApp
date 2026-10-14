@@ -1,5 +1,5 @@
 import { Queue, Worker, Job } from 'bullmq'
-import { Prisma, TreinoStatus, TreinoAtor } from '@prisma/client'
+import { TreinoStatus, TreinoAtor } from '@prisma/client'
 import { prisma } from '../../infrastructure/database/prisma.js'
 import { assertTransicaoValida } from '../../domain/entities/TreinoStateMachine.js'
 import { sendDualPush } from '../../infrastructure/push/sendDualPush.js'
@@ -11,7 +11,6 @@ import { handleFanoutPost } from '../../jobs/social/fanout-post.worker.js'
 import { handleNotifyFriends } from '../../jobs/social/notify-friends.worker.js'
 import { handleAwardBadges } from '../../jobs/social/award-badges.worker.js'
 import { handleUpdateXp } from '../../jobs/social/update-xp.worker.js'
-import { NoticiasService } from '../../application/usecases/noticias/NoticiasService.js'
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // import { verificarAssinaturasExpiradas } from '../../application/usecases/assinaturas/AssinaturaService.js'
 import { executarAgendada } from '../../application/usecases/blog/curadoria/CuradoriaService.js'
@@ -24,9 +23,7 @@ let inatividade30minQueue: Queue | null = null
 let treinoEmAbertoQueue: Queue | null = null
 let mensagemMotivaicionalQueue: Queue | null = null
 let correlacaoQueue: Queue | null = null
-let newsFetchQueue: Queue | null = null
 let curadoriaQueue: Queue | null = null
-let newsPushQueue: Queue | null = null
 let resumoDiarioQueue: Queue | null = null
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // let assinaturasQueue: Queue | null = null
@@ -35,9 +32,7 @@ let inatividade30minWorker: Worker | null = null
 let treinoEmAbertoWorker: Worker | null = null
 let mensagemMotivacionalWorker: Worker | null = null
 let correlacaoWorker: Worker | null = null
-let newsFetchWorker: Worker | null = null
 let curadoriaWorker: Worker | null = null
-let newsPushWorker: Worker | null = null
 let resumoDiarioWorker: Worker | null = null
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // let assinaturasWorker: Worker | null = null
@@ -52,8 +47,6 @@ let started = false
 const IDLE_MS = 10 * 60 * 1000
 const LONGO_MS = 60 * 60 * 1000
 const LEMBRETE_MS = 30 * 60 * 1000
-
-const NEWS_FETCH_QUERY = 'exercício físico%20endorfina%20bem estar%20felicidade%20atividade física'
 
 function execUrl(treinoId: string) {
   return `/treino/${treinoId}/execucao`
@@ -285,116 +278,14 @@ async function handleCorrelacaoDesempenho(job: Job<{ alunoId: string }>) {
   }
 }
 
-// ─── News engine (RSS fetch + push rotativo) ─────────────────────────────────
-
-async function handleNewsFetch(job: Job) {
-  try {
-    const result = await NoticiasService.fetchAndSyncNews()
-    job.log(`Fetched RSS news: ${result.inseridas} processed, total in DB: ${result.total}`)
-  } catch (err: any) {
-    job.log(`RSS fetch error: ${err?.message || err}`)
+// Notícias automáticas foram removidas (o blog cobre o conteúdo). Apaga os jobs repetidos que ficaram no Redis
+// das versões anteriores, senão as filas antigas acumulariam jobs sem ninguém para processá-los.
+async function limparFilasDeNoticias(conn: { url: string }) {
+  for (const nome of ['news-fetch', 'news-push']) {
+    const fila = new Queue(nome, { connection: conn })
+    await fila.obliterate({ force: true }).catch(() => {})
+    await fila.close()
   }
-}
-
-async function handleNewsPush(job: Job) {
-  const now = new Date()
-
-  // Only push during business hours (08:00-18:00 BRT = 11:00-21:00 UTC)
-  const horaUTC = now.getUTCHours()
-  if (horaUTC < 11 || horaUTC >= 21) {
-    return // skip outside business hours — worker runs every 30min, will retry in window
-  }
-
-  // Users with push tokens whose schedule is due
-  const usuarios = await prisma.usuario.findMany({
-    where: {
-      OR: [
-        { expo_push_token: { not: null } },
-        { web_push_subscription: { not: Prisma.DbNull } },
-      ],
-      proxima_noticia_em: { lte: now },
-    },
-    take: 20, // batch processing
-  })
-
-  for (const usuario of usuarios) {
-    // Só envia notícias frescas (últimos 30 dias), não reenvia antigas
-    const corteFrescor = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-
-    // Find fresh news not yet sent to this user
-    const enviadas = await prisma.noticiaEnviada.findMany({
-      where: { usuario_id: usuario.id },
-      select: { noticia_id: true },
-    })
-    const idsEnviados = enviadas.map((e) => e.noticia_id)
-
-    const noticia = await prisma.noticia.findFirst({
-      where: {
-        ...(idsEnviados.length > 0 ? { id: { notIn: idsEnviados } } : {}),
-        // só notícias recentes (últimos 30 dias ou sem data — recém-inseridas)
-        OR: [
-          { data_publicacao: { gte: corteFrescor } },
-          { data_publicacao: null }, // fallback para notícias sem pubDate (inseridas recentemente)
-        ],
-      },
-      orderBy: { data_publicacao: 'desc' },
-    })
-
-    // Se não há notícia fresca não enviada, pula este usuário (sem reenvio de antigas)
-    if (!noticia) {
-      // Agenda próximo check em 1-7 dias mesmo sem push
-      const dias = 1 + Math.floor(Math.random() * 7)
-      const proxima = new Date()
-      proxima.setDate(proxima.getDate() + dias)
-      proxima.setUTCHours(11, 0, 0, 0)
-      const randomMin = Math.floor(Math.random() * 600)
-      proxima.setUTCMinutes(randomMin)
-
-      await prisma.usuario.update({
-        where: { id: usuario.id },
-        data: { proxima_noticia_em: proxima },
-      })
-      continue
-    }
-
-    // UX-005: usuário pode desabilitar notícias/mensagens motivacionais — agenda
-    // o próximo check para não consultá-lo a cada 30min.
-    if (!(await podeEnviar(usuario.id, 'motivacional'))) {
-      const dias = 1 + Math.floor(Math.random() * 7)
-      const proxima = new Date()
-      proxima.setDate(proxima.getDate() + dias)
-      proxima.setUTCHours(11, 0, 0, 0)
-      const randomMin = Math.floor(Math.random() * 600)
-      proxima.setUTCMinutes(randomMin)
-
-      await prisma.usuario.update({
-        where: { id: usuario.id },
-        data: { proxima_noticia_em: proxima },
-      })
-      continue
-    }
-
-    await prisma.noticiaEnviada.create({
-      data: { usuario_id: usuario.id, noticia_id: noticia.id },
-    })
-
-    // Schedule next: in random 1-7 days, at random time between 08:00-18:00 BRT (11:00-21:00 UTC)
-    const dias = 1 + Math.floor(Math.random() * 7)
-    const proxima = new Date()
-    proxima.setDate(proxima.getDate() + dias)
-    proxima.setUTCHours(11, 0, 0, 0) // 08:00 BRT
-    const randomMin = Math.floor(Math.random() * 600) // 0-599 min → 08:00 to 17:59 BRT
-    proxima.setUTCMinutes(randomMin)
-
-    await prisma.usuario.update({
-      where: { id: usuario.id },
-      data: { proxima_noticia_em: proxima },
-    })
-
-    await sendDualPush(usuario, noticia.titulo, noticia.resumo, { url: noticia.url }).catch(() => {})
-  }
-
-  job.log(`News push: processed ${usuarios.length} users`)
 }
 
 // ─── Resumo diário (frequência RESUMO_DIARIO) ───────────────────────────────
@@ -549,7 +440,7 @@ export async function handleResumoDiario(_job: Job) {
 // ─── Agendamento de jobs recorrentes ─────────────────────────────────────────
 
 async function scheduleRecurringJobs() {
-  if (!inatividade30minQueue || !treinoEmAbertoQueue || !newsFetchQueue || !newsPushQueue || !resumoDiarioQueue /* || !assinaturasQueue */) return
+  if (!inatividade30minQueue || !treinoEmAbertoQueue || !resumoDiarioQueue /* || !assinaturasQueue */) return
 
   await inatividade30minQueue.add('check-inatividade', {}, {
     repeat: { every: 2 * 60 * 1000 },
@@ -558,16 +449,6 @@ async function scheduleRecurringJobs() {
 
   await treinoEmAbertoQueue.add('mark-em-aberto', {}, {
     repeat: { pattern: '30 23 * * *' },
-    removeOnComplete: true,
-  })
-
-  await newsFetchQueue.add('fetch-rss', {}, {
-    repeat: { every: 6 * 3600 * 1000 },
-    removeOnComplete: true,
-  })
-
-  await newsPushQueue.add('push-news', {}, {
-    repeat: { every: 30 * 60 * 1000 },
     removeOnComplete: true,
   })
 
@@ -630,14 +511,13 @@ export async function startWorkers() {
 
   connection = { url: env.REDIS_URL }
   iniciarAvisoBuscadores(connection)
+  await limparFilasDeNoticias(connection)
 
   inatividade30minQueue = new Queue('inatividade-30min', { connection })
   treinoEmAbertoQueue = new Queue('treino-em-aberto', { connection })
   mensagemMotivaicionalQueue = new Queue('mensagem-motivacional', { connection })
   correlacaoQueue = new Queue('correlacao-desempenho', { connection })
-  newsFetchQueue = new Queue('news-fetch', { connection })
   curadoriaQueue = new Queue('blog-curadoria', { connection })
-  newsPushQueue = new Queue('news-push', { connection })
   resumoDiarioQueue = new Queue('resumo-diario', { connection })
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
   // assinaturasQueue = new Queue('assinaturas-verificacao', { connection })
@@ -646,10 +526,8 @@ export async function startWorkers() {
   treinoEmAbertoWorker = new Worker('treino-em-aberto', handleTreinoEmAberto, { connection })
   mensagemMotivacionalWorker = new Worker('mensagem-motivacional', handleMensagemMotivacional, { connection })
   correlacaoWorker = new Worker('correlacao-desempenho', handleCorrelacaoDesempenho, { connection })
-  newsFetchWorker = new Worker('news-fetch', handleNewsFetch, { connection })
   curadoriaWorker = new Worker('blog-curadoria', async () => executarAgendada(), { connection })
   curadoriaWorker.on('failed', (job, err) => console.error('[Curadoria] Job failed:', job?.id, err.message))
-  newsPushWorker = new Worker('news-push', handleNewsPush, { connection })
   resumoDiarioWorker = new Worker('resumo-diario', handleResumoDiario, { connection })
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
   // assinaturasWorker = new Worker('assinaturas-verificacao', async () => {
@@ -668,8 +546,6 @@ export async function startWorkers() {
   socialBadgeWorker.on('failed', (job, err) => console.error('[Social Badge] Job failed after retries:', job?.id, err.message))
   socialLeaderboardWorker.on('failed', (job, err) => console.error('[Social Leaderboard] Job failed after retries:', job?.id, err.message))
 
-  newsFetchWorker.on('failed', (job, err) => console.error('[News Fetch] Job failed after retries:', job?.id, err.message))
-  newsPushWorker.on('failed', (job, err) => console.error('[News Push] Job failed after retries:', job?.id, err.message))
   resumoDiarioWorker.on('failed', (job, err) => console.error('[Resumo Diário] Job failed after retries:', job?.id, err.message))
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
   // assinaturasWorker.on('failed', (job, err) => console.error('[Assinaturas] Job failed after retries:', job?.id, err.message))
@@ -682,10 +558,10 @@ export async function stopWorkers() {
   started = false
 
   const workers = [inatividade30minWorker, treinoEmAbertoWorker, mensagemMotivacionalWorker, correlacaoWorker,
-    newsFetchWorker, curadoriaWorker, newsPushWorker, resumoDiarioWorker, /* assinaturasWorker, */
+    curadoriaWorker, resumoDiarioWorker, /* assinaturasWorker, */
     socialFanoutWorker, socialNotifyWorker, socialBadgeWorker, socialLeaderboardWorker]
   const queues = [inatividade30minQueue, treinoEmAbertoQueue, mensagemMotivaicionalQueue, correlacaoQueue,
-    newsFetchQueue, curadoriaQueue, newsPushQueue, resumoDiarioQueue, /* assinaturasQueue */]
+    curadoriaQueue, resumoDiarioQueue, /* assinaturasQueue */]
 
   await Promise.all([
     ...workers.map((w) => w?.close()),

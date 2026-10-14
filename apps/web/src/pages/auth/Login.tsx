@@ -53,6 +53,8 @@ export default function Login() {
     setVerifyError(null)
     setResendSuccess(false)
     setForgotMessage(null)
+    // O login leva ~1s; baixa em paralelo o chunk da tela inicial do aluno (a maioria dos usuários)
+    void import('../aluno/Dashboard')
     try {
       await login(email, senha)
       navigate('/', { replace: true })

@@ -1,5 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { traduzir } from './index'
+import { carregarEn } from './dicionario'
+
+beforeAll(() => carregarEn())
 
 describe('traduzir', () => {
   it('em português devolve o texto e aplica variáveis', () => {

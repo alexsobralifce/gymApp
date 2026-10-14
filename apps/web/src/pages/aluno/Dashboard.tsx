@@ -125,6 +125,9 @@ export default function AlunoDashboard() {
 
   async function carregarDados() {
     try {
+      // Retomada e evolução não dependem dos treinos: disparam junto, sem esperar a primeira rodada.
+      const retomadaPendente = api.getRetomada().catch(() => null)
+      void carregarEvolucao()
       const [tData, pData, nData] = await Promise.all([
         api.getAlunoTreinos(),
         api.getPerfilAluno(),
@@ -136,10 +139,8 @@ export default function AlunoDashboard() {
       if (nData.length > 0) {
         setModalNotificacao(nData[0])
       }
-      // UX-006: só verifica a retomada depois de os treinos carregarem
-      await verificarRetomada()
-      // Carrega resumo de evolução para o HeroEvolucao
-      carregarEvolucao()
+      // UX-006: a retomada só aparece depois de os treinos carregarem (a request já está em voo)
+      aplicarRetomada(await retomadaPendente)
       // Tour de benefícios na primeira visita
       if (!hasSeenFeatureTour()) {
         setShowTour(true)
@@ -175,18 +176,14 @@ export default function AlunoDashboard() {
   // UX-006: mostra o modal apenas para um NOVO episódio de ausência
   // (localStorage guarda o ultimoTreinoEm — ao treinar de novo e sumir de novo,
   // o valor muda e o modal reaparece).
-  async function verificarRetomada() {
-    try {
-      const r = await api.getRetomada()
-      if (!r.mostrarRetomada || !r.ultimoTreinoEm) return
-      const episodio = new Date(r.ultimoTreinoEm).toISOString()
-      const visto = localStorage.getItem('gymapp_retomada_vista')
-      if (visto !== episodio) {
-        setRetomadaEpisodio(episodio)
-        setShowRetomada(true)
-      }
-    } catch {
-      // best-effort: falha silenciosa não bloqueia o dashboard
+  function aplicarRetomada(r: Awaited<ReturnType<typeof api.getRetomada>> | null) {
+    // best-effort: sem resposta (falha silenciosa) não bloqueia o dashboard
+    if (!r || !r.mostrarRetomada || !r.ultimoTreinoEm) return
+    const episodio = new Date(r.ultimoTreinoEm).toISOString()
+    const visto = localStorage.getItem('gymapp_retomada_vista')
+    if (visto !== episodio) {
+      setRetomadaEpisodio(episodio)
+      setShowRetomada(true)
     }
   }
 

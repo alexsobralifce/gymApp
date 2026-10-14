@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { idiomaDoCaminho, LOCALE, type Idioma } from '../lib/i18n'
 import { useIdiomaStore } from './idioma'
-import { EN } from './en/index'
+import { carregarEn, dicionarioEn, useDicionarioStore } from './dicionario'
 import seoRoutes from '../../seo-routes.json'
 
 const PUBLICAS: string[] = seoRoutes.publicas
@@ -16,7 +16,8 @@ type Variaveis = Record<string, string | number | null | undefined>
  */
 export function traduzir(idioma: Idioma, texto: string | null | undefined, vars?: Variaveis): string {
   if (!texto) return ''
-  const base = idioma === 'en' ? (EN[texto] ?? texto) : texto
+  if (idioma === 'en') void carregarEn()
+  const base = idioma === 'en' ? (dicionarioEn()[texto] ?? texto) : texto
   if (!vars) return base
   return base.replace(/\{(\w+)\}/g, (_, nome: string) => (nome in vars ? String(vars[nome] ?? '') : `{${nome}}`))
 }
@@ -38,6 +39,7 @@ export function useT() {
   const caminho = useLocation().pathname
   const escolhido = useIdiomaStore((s) => s.escolhido)
   const detectado = useIdiomaStore((s) => s.detectado)
+  useDicionarioStore((s) => s.versao) // re-renderiza quando o dicionário EN termina de carregar
   const idioma = idiomaEfetivo(caminho, escolhido, detectado)
   return {
     idioma,

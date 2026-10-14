@@ -88,7 +88,10 @@ async function main() {
       // O <noscript> do index.html é só reserva para a casca; com o conteúdo real renderizado ele duplicaria o h1.
       const html =
         '<!doctype html>\n' +
-        (await page.evaluate(() => document.documentElement.outerHTML)).replace(/<noscript>[\s\S]*?<\/noscript>/g, '')
+        (await page.evaluate(() => document.documentElement.outerHTML))
+          .replace(/<noscript>[\s\S]*?<\/noscript>/g, '')
+          // Páginas em lazy: o React injeta <link rel="modulepreload"> com a origem do servidor local; vira caminho relativo.
+          .replaceAll(origem, '')
       const destino = rota === '/' ? path.join(DIST, 'index.html') : path.join(DIST, rota, 'index.html')
       await mkdir(path.dirname(destino), { recursive: true })
       await writeFile(destino, html)

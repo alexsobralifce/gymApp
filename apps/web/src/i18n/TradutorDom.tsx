@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useT } from './index'
-import { EN } from './en/index'
+import { carregarEn, dicionarioEn, useDicionarioStore } from './dicionario'
 
 const ATRIBUTOS = ['placeholder', 'title', 'aria-label', 'alt']
 const IGNORAR = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'PRE', 'INPUT'])
@@ -12,9 +12,12 @@ const IGNORAR = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'PRE', 'INPUT'])
  */
 export default function TradutorDom() {
   const { idioma } = useT()
+  const versao = useDicionarioStore((s) => s.versao)
 
   useEffect(() => {
     if (idioma !== 'en') return
+    void carregarEn()
+    const EN = dicionarioEn()
     const textos = new Map<Text, string>()
     const atributos = new Map<Element, Map<string, string>>()
 
@@ -86,7 +89,7 @@ export default function TradutorDom() {
       textos.forEach((original, no) => { if (no.isConnected) no.nodeValue = original })
       atributos.forEach((m, el) => m.forEach((v, a) => el.setAttribute(a, v)))
     }
-  }, [idioma])
+  }, [idioma, versao])
 
   return null
 }

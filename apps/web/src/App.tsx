@@ -10,24 +10,26 @@ import LoadingSpinner from './components/ui/LoadingSpinner'
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt'
 import NotificationPrompt from './components/ui/NotificationPrompt'
 import { OnboardingPermissionsModal } from './components/ui/OnboardingPermissionsModal'
-import Landing from './pages/Landing'
-import Login from './pages/auth/Login'
-import Register from './pages/auth/Register'
-import PoliticaPrivacidade from './pages/PoliticaPrivacidade'
-import QuemSomos from './pages/QuemSomos'
-import HomeEn from './pages/en/HomeEn'
-import FerramentasIndice from './pages/ferramentas/FerramentasIndice'
-import PaginaFerramenta from './pages/ferramentas/PaginaFerramenta'
-import { FERRAMENTAS, ORDEM } from './pages/ferramentas/conteudo'
+import { ORDEM, FERRAMENTAS } from './pages/ferramentas/conteudo'
 import { PAGINAS_SEO_EN } from './pages/seo/paginasSeoEn'
-import Planos from './pages/planos/Planos'
-import PaginaSeo from './pages/seo/PaginaSeo'
-import BlogLista from './pages/blog/BlogLista'
-import BlogArtigo from './pages/blog/BlogArtigo'
 import { PAGINAS_SEO } from './pages/seo/paginasSeo'
+import { ehModoApp } from './lib/modoApp'
+// Páginas públicas ficam fora do bundle inicial: quem usa o app logado não baixa landing, blog nem SEO.
+const Landing = lazy(() => import('./pages/Landing'))
+const Login = lazy(() => import('./pages/auth/Login'))
+const Register = lazy(() => import('./pages/auth/Register'))
+const PoliticaPrivacidade = lazy(() => import('./pages/PoliticaPrivacidade'))
+const QuemSomos = lazy(() => import('./pages/QuemSomos'))
+const HomeEn = lazy(() => import('./pages/en/HomeEn'))
+const FerramentasIndice = lazy(() => import('./pages/ferramentas/FerramentasIndice'))
+const PaginaFerramenta = lazy(() => import('./pages/ferramentas/PaginaFerramenta'))
+const Planos = lazy(() => import('./pages/planos/Planos'))
+const PaginaSeo = lazy(() => import('./pages/seo/PaginaSeo'))
+const BlogLista = lazy(() => import('./pages/blog/BlogLista'))
+const BlogArtigo = lazy(() => import('./pages/blog/BlogArtigo'))
+const GoogleCallback = lazy(() => import('./pages/auth/GoogleCallback'))
 const Checkout = lazy(() => import('./pages/billing/Checkout'))
 const OnboardingPlano = lazy(() => import('./pages/auth/OnboardingPlano'))
-import GoogleCallback from './pages/auth/GoogleCallback'
 const AlunoDashboard = lazy(() => import('./pages/aluno/Dashboard'))
 const AlunoTreinoInicio = lazy(() => import('./pages/aluno/TreinoInicio'))
 const AlunoTreinoExecucao = lazy(() => import('./pages/aluno/TreinoExecucao'))
@@ -67,7 +69,6 @@ const AlunoPreferenciasNotificacao = lazy(() => import('./pages/aluno/Preferenci
 const AlunoClubes = lazy(() => import('./pages/aluno/Clubes'))
 const Parceiros = lazy(() => import('./pages/aluno/Parceiros'))
 const WelcomeCards = lazy(() => import('./pages/aluno/WelcomeCards'))
-const Noticias = lazy(() => import('./pages/aluno/Noticias'))
 const ClubeFeed = lazy(() => import('./pages/aluno/ClubeFeed'))
 const AlterarSenha = lazy(() => import('./pages/auth/AlterarSenha'))
 const Avaliacoes = lazy(() => import('./pages/avaliacoes/Avaliacoes'))
@@ -87,10 +88,13 @@ export default function App() {
   const { t } = useT()
   useNotifications()
   useCapacitorTheme()
-  const { user, fetchUser } = useAuthStore()
+  const user = useAuthStore((s) => s.user)
+  const fetchUser = useAuthStore((s) => s.fetchUser)
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
   // const fetchLicenca = useSubscriptionStore((s) => s.fetchLicenca)
-  const [ready, setReady] = useState(false)
+  // Com usuário em cache (ou sem token para validar) a UI abre na hora; a revalidação roda em background.
+  const [ready, setReady] = useState(() => !!useAuthStore.getState().user || !localStorage.getItem('accessToken'))
+  const modoApp = ehModoApp()
   const local = useLocation()
 
   // Contagem anônima das páginas públicas (landing, blog, produto); ignora o root para não inflar os números
@@ -100,7 +104,7 @@ export default function App() {
   }, [ready, local.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetchUser().finally(() => setReady(true))
+    void fetchUser().finally(() => setReady(true))
   }, [])
 
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
@@ -129,27 +133,31 @@ export default function App() {
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
       <Route path="/quem-somos" element={<QuemSomos />} />
-      <Route path="/en" element={<HomeEn />} />
-      <Route path="/en/pricing" element={<Planos />} />
-      <Route path="/en/privacy-policy" element={<PoliticaPrivacidade />} />
-      <Route path="/en/about-us" element={<QuemSomos />} />
-      <Route path="/ferramentas" element={<FerramentasIndice idioma="pt" />} />
-      <Route path="/en/tools" element={<FerramentasIndice idioma="en" />} />
-      {ORDEM.flatMap((id) => (['pt', 'en'] as const).map((idioma) => (
-        <Route key={`${id}-${idioma}`} path={FERRAMENTAS[id][idioma].caminho} element={<PaginaFerramenta id={id} idioma={idioma} />} />
-      )))}
-      {PAGINAS_SEO_EN.map((p) => (
-        <Route key={p.caminho} path={p.caminho} element={<PaginaSeo dados={p} />} />
-      ))}
       <Route path="/planos" element={<Planos />} />
-      <Route path="/blog" element={<BlogLista />} />
-      <Route path="/blog/:slug" element={<BlogArtigo />} />
-      {PAGINAS_SEO.map((p) => (
-        <Route key={p.caminho} path={p.caminho} element={<PaginaSeo dados={p} />} />
-      ))}
+      {!modoApp && (
+        <>
+          <Route path="/en" element={<HomeEn />} />
+          <Route path="/en/pricing" element={<Planos />} />
+          <Route path="/en/privacy-policy" element={<PoliticaPrivacidade />} />
+          <Route path="/en/about-us" element={<QuemSomos />} />
+          <Route path="/ferramentas" element={<FerramentasIndice idioma="pt" />} />
+          <Route path="/en/tools" element={<FerramentasIndice idioma="en" />} />
+          {ORDEM.flatMap((id) => (['pt', 'en'] as const).map((idioma) => (
+            <Route key={`${id}-${idioma}`} path={FERRAMENTAS[id][idioma].caminho} element={<PaginaFerramenta id={id} idioma={idioma} />} />
+          )))}
+          {PAGINAS_SEO_EN.map((p) => (
+            <Route key={p.caminho} path={p.caminho} element={<PaginaSeo dados={p} />} />
+          ))}
+          <Route path="/blog" element={<BlogLista />} />
+          <Route path="/blog/:slug" element={<BlogArtigo />} />
+          {PAGINAS_SEO.map((p) => (
+            <Route key={p.caminho} path={p.caminho} element={<PaginaSeo dados={p} />} />
+          ))}
+        </>
+      )}
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
-      {!user && <Route index element={<Landing />} />}
+      {!user && <Route index element={modoApp ? <Navigate to="/login" replace /> : <Landing />} />}
 
       {user && (
         <Route element={<AppShell />}>
@@ -193,7 +201,6 @@ export default function App() {
           {/* <Route path="clubes" element={<PremiumWrapper feature="CLUBES" featureName="Clubes"><AlunoClubes /></PremiumWrapper>} /> */}
           <Route path="clubes/:id" element={<ClubeFeed />} />
           <Route path="parceiros" element={<Parceiros />} />
-          <Route path="noticias" element={<Noticias />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
@@ -239,7 +246,6 @@ export default function App() {
           <Route path="clubes/:id" element={<ClubeFeed />} />
           <Route path="notificacoes/preferencias" element={<AlunoPreferenciasNotificacao />} />
           <Route path="parceiros" element={<Parceiros />} />
-          <Route path="noticias" element={<Noticias />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
         </>
@@ -259,7 +265,6 @@ export default function App() {
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
-          <Route path="noticias" element={<Noticias />} />
           <Route path="meus-treinos" element={<AlunoMeusTreinos />} />
           <Route path="treinos" element={<ProfessorTreinos />} />
           <Route path="treinos/criar" element={<ProfessorCriarTreino />} />
@@ -293,7 +298,6 @@ export default function App() {
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />
-          <Route path="noticias" element={<Noticias />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       )}

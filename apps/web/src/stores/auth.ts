@@ -182,6 +182,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         saveStoredUser(null)
+        set({ user: null })
       }
       // On network error, keep tokens — session survives offline opens
     }

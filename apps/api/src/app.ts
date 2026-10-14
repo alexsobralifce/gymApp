@@ -31,7 +31,6 @@ import { feedRoutes } from './modules/social/feed/feed.routes.js'
 import { privacyRoutes } from './modules/social/privacy/privacy.routes.js'
 import { clubRoutes } from './modules/social/clubs/club.routes.js'
 import { uploadRoutes } from './modules/social/upload/upload.routes.js'
-import { noticiasRoutes } from './presentation/http/routes/noticias.routes.js'
 import { instagramRoutes } from './presentation/http/routes/instagram.routes.js'
 import { healthRoutes } from './presentation/http/routes/health.routes.js'
 import { billingRoutes, billingWebhookRoutes } from './presentation/http/routes/billing.routes.js'
@@ -192,7 +191,6 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(clubRoutes)
   await app.register(uploadRoutes)
   await app.register(instagramRoutes)
-  await app.register(noticiasRoutes, { prefix: '/noticias' })
   await app.register(billingRoutes, { prefix: '/billing' })
   await app.register(billingWebhookRoutes, { prefix: '/webhooks/billing' })
   // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.

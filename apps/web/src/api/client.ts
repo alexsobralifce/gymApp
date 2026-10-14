@@ -763,11 +763,6 @@ export const api = {
   listarAvaliacoesSistema: () =>
     api.get<{ avaliacoes: Array<{ id: string; nota: number; respostas: Record<string, number>; mensagem: string | null; criado_em: string; aluno: { nome: string; email: string } }> }>('/root/avaliacoes-sistema'),
 
-  // ─── Notícias ──────────────────────────────────────
-  getNoticias: (limit = 50, offset = 0) => api.get<any[]>(`/noticias?limit=${limit}&offset=${offset}`),
-  refreshNoticias: () =>
-    api.post<{ success: boolean; message: string; inseridas: number; total: number }>('/noticias/refresh', {}),
-
   // ─── UX-013: Histórico de desempenho por exercício ────────────────
   getHistoricoExercicio: (exercicioId: string, periodo: PeriodoHistorico = '90d') =>
     api.get<HistoricoExercicioResponse>(`/alunos/exercicios/${exercicioId}/historico?periodo=${periodo}`),
