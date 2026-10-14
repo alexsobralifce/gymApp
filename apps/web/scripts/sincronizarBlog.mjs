@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync, writeFileSync, rmSync, mkdirSync, existsSync } from 'node:fs'
 import path from 'node:path'
 
-/** Artigo escrito à mão no repositório (`"manual": true`): não existe no banco e não pode ser apagado pela sincronização. */
+/** Artigo escrito à mão no repositório (`"manual": true`): a sincronização não o apaga nem o sobrescreve, mesmo que o mesmo slug exista no banco. */
 function ehManual(arquivo) {
   try {
     return JSON.parse(readFileSync(arquivo, 'utf8')).manual === true
@@ -23,7 +23,9 @@ export function aplicarArtigos(dir, resposta) {
   const gravados = []
   for (const { slug, ...dados } of resposta.artigos) {
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) continue
-    writeFileSync(path.join(dir, `${slug}.json`), JSON.stringify(dados, null, 2) + '\n')
+    const arquivo = path.join(dir, `${slug}.json`)
+    if (ehManual(arquivo)) continue
+    writeFileSync(arquivo, JSON.stringify(dados, null, 2) + '\n')
     gravados.push(slug)
   }
   const removidos = existsSync(dir)

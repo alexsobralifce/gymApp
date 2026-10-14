@@ -125,5 +125,6 @@
       "pergunta": "Qual a melhor divisão de treino para iniciantes?",
       "resposta": "Treinos de corpo inteiro em 2 ou 3 dias por semana costumam ser suficientes e fáceis de manter. Divisões por grupo muscular ficam para quem já tem base e mais dias disponíveis."
     }
-  ]
+  ],
+  "manual": true
 }

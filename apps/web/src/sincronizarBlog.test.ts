@@ -25,6 +25,12 @@ describe('aplicarArtigos', () => {
     expect(r.removidos.sort()).toEqual(['fica', 'velho'])
     expect(readdirSync(dir).sort()).toEqual(['autoral.json', 'novo-artigo.json'])
   })
+  it('artigo manual vence o banco quando o mesmo slug existe nos dois', () => {
+    writeFileSync(path.join(dir, 'autoral.json'), '{"titulo":"meu","manual":true}')
+    const r = aplicarArtigos(dir, { total: 2, artigos: [{ slug: 'autoral', titulo: 'do banco' } as never, { slug: 'novo-artigo', titulo: 'x' } as never] })
+    expect(r.gravados).toEqual(['novo-artigo'])
+    expect(JSON.parse(readFileSync(path.join(dir, 'autoral.json'), 'utf8')).titulo).toBe('meu')
+  })
   it('banco vazio: não apaga nada', () => {
     expect(aplicarArtigos(dir, { total: 0, artigos: [] }).mantido).toBe(true)
     expect(readdirSync(dir).sort()).toEqual(['fica.json', 'velho.json'])
