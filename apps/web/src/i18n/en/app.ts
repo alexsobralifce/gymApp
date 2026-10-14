@@ -337,7 +337,7 @@ export const APP: Record<string, string> = {
   "Enviar arquivo": "Upload file",
   "Toque para escolher ou arraste o arquivo": "Tap to choose or drag the file",
   "PDF, foto da ficha (JPG, PNG, WEBP), Markdown ou texto · até 8 MB": "PDF, plan photo (JPG, PNG, WEBP), Markdown or text · up to 8 MB",
-  "O arquivo é lido na hora e não fica guardado. Você confere tudo antes de criar os treinos.": "The file is read right away and not stored. You review everything before the workouts are created.",
+  "O arquivo é enviado a um provedor de IA (OpenAI) apenas para leitura e não é guardado por nós. Evite fichas com dados de saúde do aluno. Você confere tudo antes de criar os treinos.": "The file is sent to an AI provider (OpenAI) only to be read and is not stored by us. Avoid plans with the student's health data. You review everything before the workouts are created.",
   "O arquivo deve ter no máximo 8 MB.": "The file must be at most 8 MB.",
   "Lendo o arquivo…": "Reading the file…",
   "Não encontrei exercícios nesse arquivo. Confira se a ficha está legível e tente de novo.": "I couldn't find exercises in this file. Check that the plan is legible and try again.",

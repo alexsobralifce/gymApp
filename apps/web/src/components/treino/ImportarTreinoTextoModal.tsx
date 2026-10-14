@@ -295,7 +295,7 @@ export default function ImportarTreinoTextoModal({
                       <span className="text-sm font-bold text-text">{arquivo ? arquivo.name : t('Toque para escolher ou arraste o arquivo')}</span>
                       <span className="text-xs text-text-muted">{t('PDF, foto da ficha (JPG, PNG, WEBP), Markdown ou texto · até 8 MB')}</span>
                     </button>
-                    <p className="text-xs text-text-muted">{t('O arquivo é lido na hora e não fica guardado. Você confere tudo antes de criar os treinos.')}</p>
+                    <p className="text-xs text-text-muted">{t('O arquivo é enviado a um provedor de IA (OpenAI) apenas para leitura e não é guardado por nós. Evite fichas com dados de saúde do aluno. Você confere tudo antes de criar os treinos.')}</p>
                   </div>
                 )}
                 {erro && <p role="alert" className="text-sm font-semibold text-destructive">{erro}</p>}
