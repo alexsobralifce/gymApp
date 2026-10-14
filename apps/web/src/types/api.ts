@@ -90,6 +90,12 @@ export interface Exercicio {
   dica?: string | null
   imagem_url?: string | null
   gif_url?: string | null
+  foco_x?: number | null
+  foco_y?: number | null
+  foco_larg?: number | null
+  foco_alt?: number | null
+  sexo_figura?: 'MASCULINO' | 'FEMININO' | null
+  variantes?: Partial<Record<'MASCULINO' | 'FEMININO', { gif_url: string; foco_x?: number | null; foco_y?: number | null; foco_larg?: number | null; foco_alt?: number | null }>> | null
   descricao_pt?: string | null
   passos_pt?: string[]
   musculo_alvo?: string | null
@@ -97,6 +103,41 @@ export interface Exercicio {
   nivel?: string | null
   grupo_muscular?: string | null
   equipamento?: string | null
+}
+
+export interface ExercicioCatalogo extends Exercicio {
+  usos: number
+}
+
+export interface GifRegras {
+  formatos: string[]
+  pesoMaxBytes: number
+  ladoMinPx: number
+  ladoMaxPx: number
+  proporcaoMax: number
+  quadrosMax: number
+  saidaPx: number
+}
+
+export interface GifPrevia {
+  original: { kb: number }
+  final: { kb: number; largura: number; altura: number; animado: boolean; quadros: number }
+  previa: string
+}
+
+export interface ExercicioInput {
+  nome: string
+  grupo_muscular: string | null
+  equipamento: string | null
+  nivel: string | null
+  musculo_alvo: string | null
+  musculos_secundarios: string[]
+  descricao_pt: string | null
+  dica: string | null
+  passos_pt: string[]
+  gif_url: string | null
+  imagem_url: string | null
+  sexo_figura: 'MASCULINO' | 'FEMININO' | null
 }
 
 export interface ExecucaoExercicio {

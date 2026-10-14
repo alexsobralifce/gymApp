@@ -51,6 +51,7 @@ const RootUsuarios = lazy(() => import('./pages/root/Usuarios'))
 const RootSocial = lazy(() => import('./pages/root/Social'))
 const RootPublicacoes = lazy(() => import('./pages/root/Publicacoes'))
 const RootAvaliacoesSistema = lazy(() => import('./pages/root/AvaliacoesSistema'))
+const RootExercicios = lazy(() => import('./pages/root/Exercicios'))
 const RootFinanceiro = lazy(() => import('./pages/root/Financeiro'))
 const AcademiaDashboard = lazy(() => import('./pages/academia/Dashboard'))
 const AcademiaProfessores = lazy(() => import('./pages/academia/Professores'))
@@ -262,6 +263,7 @@ export default function App() {
           <Route path="avaliacoes-sistema" element={<RootAvaliacoesSistema />} />
           <Route path="social" element={<RootSocial />} />
           <Route path="publicacoes" element={<RootPublicacoes />} />
+          <Route path="exercicios-catalogo" element={<RootExercicios />} />
           <Route path="dados" element={<AlunoDados />} />
           <Route path="privacidade" element={<AlunoPrivacidade />} />
           <Route path="alterar-senha" element={<AlterarSenha />} />

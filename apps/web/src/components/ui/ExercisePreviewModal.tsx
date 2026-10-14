@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import MidiaExercicio from './MidiaExercicio'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import type { Exercicio } from '../../types/api'
-import { resolveMediaUrl } from '../../lib/media'
-import { XIcon, DumbbellIcon, PlusIcon, ChartLineIcon } from '../icons/Icon'
+import { XIcon, PlusIcon, ChartLineIcon } from '../icons/Icon'
 import { useAuthStore } from '../../stores/auth'
 
 import { useT } from '../../i18n'
@@ -22,13 +22,7 @@ export default function ExercisePreviewModal({
   onToggleAdd,
 }: ExercisePreviewModalProps) {
   const { t } = useT()
-  const [imgFailed, setImgFailed] = useState(false)
   const user = useAuthStore((s) => s.user)
-
-  // Reset img error state when exercise changes
-  useEffect(() => {
-    setImgFailed(false)
-  }, [exercicio?.id])
 
   // Close on Escape
   useEffect(() => {
@@ -41,11 +35,6 @@ export default function ExercisePreviewModal({
   }, [isOpen, onClose])
 
   if (!isOpen || !exercicio) return null
-
-  // Prefer GIF for preview modal, fallback to imagem_url
-  const mediaSrc = !imgFailed
-    ? (exercicio.gif_url ? resolveMediaUrl(exercicio.gif_url) : resolveMediaUrl(exercicio.imagem_url))
-    : null
 
   // Parse steps if available
   const passos: string[] = Array.isArray(exercicio.passos_pt) && exercicio.passos_pt.length > 0
@@ -98,25 +87,12 @@ export default function ExercisePreviewModal({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-text">
           {/* GIF Animado com moldura estética */}
-          <div className="relative w-full aspect-square max-h-64 sm:max-h-72 rounded-2xl bg-surface-input/50 border border-surface-input overflow-hidden flex items-center justify-center shadow-inner">
-            {mediaSrc ? (
-              <img
-                src={mediaSrc}
-                alt={t('Execução de {nome}', { nome: exercicio.nome })}
-                className="w-full h-full object-contain"
-                loading="eager"
-                onError={() => setImgFailed(true)}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center p-6 text-center text-text-muted">
-                <DumbbellIcon className="w-16 h-16 opacity-30 mb-2" />
-                <span className="text-xs font-semibold">{t('Demonstração visual do exercício')}</span>
-              </div>
-            )}
+          <div className="relative flex justify-center rounded-2xl bg-surface-input/50 border border-surface-input p-2 shadow-inner">
+            <MidiaExercicio exercicio={exercicio} alturaMaxVh={55} ampliavel prioridade />
 
             {/* Badge de Equipamento sobre o GIF */}
             {exercicio.equipamento && (
-              <div className="absolute top-2.5 right-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-white shadow-sm">
+              <div className="absolute top-3.5 right-3.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-white shadow-sm">
                 ⚙️ {exercicio.equipamento}
               </div>
             )}

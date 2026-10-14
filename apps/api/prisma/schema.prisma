@@ -211,6 +211,15 @@ model Exercicio {
   descricao_pt            String?
   gif_url                 String?
   musculo_alvo            String?
+  /// Enquadramento da figura no GIF (frações 0–1 do quadro quadrado): canto superior esquerdo, largura e altura do recorte
+  foco_x                  Float?
+  foco_y                  Float?
+  foco_larg               Float?
+  foco_alt                Float?
+  /// Sexo da figura que aparece no GIF principal (null = não informado)
+  sexo_figura             Sexo?
+  /// Versões alternativas por sexo: { MASCULINO?: Midia, FEMININO?: Midia }, Midia = { gif_url, foco_x, foco_y, foco_larg, foco_alt }
+  variantes               Json?
   musculos_secundarios    String[]
   passos_pt               String[]
   execucoes               ExecucaoExercicio[]

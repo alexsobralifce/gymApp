@@ -22,6 +22,7 @@ import { treinoRoutes } from './presentation/http/routes/treino.routes.js'
 import { planosRoutes } from './presentation/http/routes/planos.routes.js'
 import { rootRoutes } from './presentation/http/routes/root.routes.js'
 import { blogRoutes, blogAdminRoutes } from './presentation/http/routes/blog.routes.js'
+import { rootExerciciosRoutes } from './presentation/http/routes/rootExercicios.routes.js'
 import { usoRoutes } from './presentation/http/routes/uso.routes.js'
 import { internoRoutes } from './presentation/http/routes/interno.routes.js'
 import { avaliacaoRoutes } from './presentation/http/routes/avaliacao.routes.js'
@@ -174,6 +175,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(rootRoutes, { prefix: '/root' })
   await app.register(blogAdminRoutes, { prefix: '/root/blog' })
   await app.register(usoRoutes, { prefix: '/root/uso' })
+  await app.register(rootExerciciosRoutes, { prefix: '/root/exercicios' })
   await app.register(internoRoutes, { prefix: '/interno' })
   await app.register(blogRoutes, { prefix: '/blog' })
   await app.register(academiaRoutes, { prefix: '/academias' })

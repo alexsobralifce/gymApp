@@ -1,3 +1,4 @@
+import MidiaExercicio from '../../components/ui/MidiaExercicio'
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
@@ -361,23 +362,16 @@ export default function BibliotecaPlanos() {
                       <div className="space-y-2">
                         {sessao.exercicios?.map((exItem: PlanoSessaoExercicio) => {
                           const ex = exItem.exercicio
-                          const mediaUrl = ex?.gif_url || ex?.imagem_url
                           return (
                             <div
                               key={exItem.id}
                               className="flex items-center justify-between p-3 rounded-xl bg-surface-input/50 border border-surface-input gap-3"
                             >
                               <div className="flex items-center gap-3">
-                                {mediaUrl ? (
-                                  <img
-                                    src={mediaUrl}
-                                    alt={ex?.nome}
-                                    className="w-12 h-12 rounded-lg object-cover bg-surface border border-surface-input shrink-0"
-                                  />
+                                {ex ? (
+                                  <MidiaExercicio exercicio={ex} formato="quadro" className="h-24 w-24 shrink-0 border border-surface-input" />
                                 ) : (
-                                  <div className="w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-xl shrink-0">
-                                    💪
-                                  </div>
+                                  <div className="w-24 h-24 rounded-lg bg-surface flex items-center justify-center text-3xl shrink-0">💪</div>
                                 )}
                                 <div>
                                   <p className="text-xs font-bold text-text leading-tight">{ex?.nome}</p>

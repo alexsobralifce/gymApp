@@ -235,6 +235,7 @@ function getNavItems(role: string, isAdmin: boolean): NavEntry[] {
         { to: '/feed', label: 'Feed Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/social', label: 'Moderação Social', icon: <MessageCircleIcon className="h-5 w-5" /> },
         { to: '/publicacoes', label: 'Publicações do Blog', icon: <BookOpenIcon className="h-5 w-5" /> },
+        { to: '/exercicios-catalogo', label: 'Catálogo de GIFs', icon: <BookOpenIcon className="h-5 w-5" /> },
         { to: '/documentacao', label: 'Documentação', icon: <BookOpenIcon className="h-5 w-5" /> },
       ]
     default:
@@ -288,6 +289,7 @@ function getRoleMoreItems(role: string, isAdmin: boolean) {
       { to: '/avaliacoes-sistema', label: 'Avaliações do App', icon: '⭐', desc: 'Feedbacks recebidos' },
       { to: '/avaliacoes', label: 'Avaliação Física', icon: '📏', desc: 'Protocolos & Laudos' },
       { to: '/publicacoes', label: 'Publicações do Blog', icon: '✍️', desc: 'Publicar e despublicar' },
+      { to: '/exercicios-catalogo', label: 'Catálogo de GIFs', icon: '🎞️', desc: 'Editar, apagar e adicionar' },
       { to: '/documentacao', label: 'Documentação', icon: '📚', desc: 'Guia do sistema' },
       { to: '/dados', label: 'Meu Perfil', icon: '👤', desc: 'Dados da conta' },
       { to: '/privacidade', label: 'Privacidade', icon: '🛡️', desc: 'Controle de dados' },

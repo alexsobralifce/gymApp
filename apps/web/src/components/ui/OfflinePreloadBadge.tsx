@@ -7,18 +7,21 @@ import {
 import { CheckIcon } from '../icons/Icon'
 
 import { useT } from '../../i18n'
+import { useSexoAluno } from '../../hooks/useSexoAluno'
+import type { ExercicioComVariantes } from '../../lib/midiaPorSexo'
 interface OfflinePreloadBadgeProps {
-  exercicios?: Array<{ exercicio?: { gif_url?: string | null; imagem_url?: string | null } }>
+  exercicios?: Array<{ exercicio?: ExercicioComVariantes }>
   gifUrls?: string[]
   className?: string
 }
 
 export function OfflinePreloadBadge({ exercicios, gifUrls, className = '' }: OfflinePreloadBadgeProps) {
   const { t } = useT()
+  const sexoAluno = useSexoAluno()
   const [, startTransition] = useTransition()
   const [progress, setProgress] = useState<PreloadProgress | null>(null)
 
-  const urls = gifUrls || (exercicios ? extractWorkoutGifUrls(exercicios) : [])
+  const urls = gifUrls || (exercicios ? extractWorkoutGifUrls(exercicios, sexoAluno) : [])
 
   const urlsJoined = urls.join(',')
 

@@ -5,6 +5,7 @@
  */
 
 import { resolveMediaUrl } from './media'
+import { midiaPorSexo, type ExercicioComVariantes, type SexoAluno } from './midiaPorSexo'
 
 export const GIF_CACHE_NAME = 'gymapp-workout-gifs-v1'
 
@@ -31,11 +32,11 @@ export function isMobileDevice(): boolean {
 /**
  * Normaliza e filtra lista de URLs de GIFs válidos
  */
-export function extractWorkoutGifUrls(exercicios: Array<{ exercicio?: { gif_url?: string | null; imagem_url?: string | null } }>): string[] {
+export function extractWorkoutGifUrls(exercicios: Array<{ exercicio?: ExercicioComVariantes }>, sexo?: SexoAluno | null): string[] {
   const rawUrls: string[] = []
 
   for (const item of exercicios) {
-    const ex = item.exercicio
+    const ex = item.exercicio && midiaPorSexo(item.exercicio, sexo)
     if (!ex) continue
     const src = ex.gif_url || ex.imagem_url
     if (src) {

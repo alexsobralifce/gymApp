@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, useDeferredValue } f
 import { useParams, useNavigate, useBlocker } from 'react-router-dom'
 import { KeepAwake } from '@capgo/capacitor-keep-awake'
 import { useTrainingStore } from '../../stores/training'
-import { DumbbellIcon, CheckIcon, ChevronLeftIcon, XIcon } from '../../components/icons/Icon'
+import { CheckIcon, ChevronLeftIcon, XIcon } from '../../components/icons/Icon'
 import { RepeatIcon, CloudOffIcon, GaugeIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
 import { useCoachMark, CoachMarkOverlay } from '../../components/ui/CoachMark'
 import ConfirmModal from '../../components/ui/ConfirmModal'
@@ -10,9 +10,9 @@ import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import { useIncompleteWorkoutReminder } from '../../hooks/useIncompleteWorkoutReminder'
 import { useToast } from '../../components/ui/Toast'
 import type { UltimaCarga, PerfilAluno, Exercicio, TreinoExercicio } from '../../types/api'
-import { resolveMediaUrl } from '../../lib/media'
 import { calcularGastoCalorico, MET_MUSCULACAO_LEVE_MODERADO, MET_MUSCULACAO_VIGOROSO } from '../../lib/gastoCalorico'
 import { api } from '../../api/client'
+import MidiaExercicio from '../../components/ui/MidiaExercicio'
 import { WorkoutMethodBadge } from '../../components/ui/WorkoutMethodBadge'
 
 import { useT } from '../../i18n'
@@ -44,43 +44,6 @@ const SESSAO_LONGA_SEGUNDOS = 90 * 60
 const DESCANSO_LONGO_SEGUNDOS = 5 * 60
 const RPE_ALTO_MIN = 9
 const RPE_ALTO_LIMITE_SETES = 2
-
-function ExerciseGif({
-  gifSrc,
-  alt,
-  className,
-  onClick
-}: {
-  gifSrc?: string | null
-  alt: string
-  className: string
-  onClick?: () => void
-}) {
-  const [imgFailed, setImgFailed] = useState(false)
-  const resolvedUrl = !imgFailed ? resolveMediaUrl(gifSrc) : null
-
-  if (!resolvedUrl) {
-    return (
-      <div
-        className={`rounded-lg bg-surface-input flex items-center justify-center text-text-muted ${className}`}
-        onClick={onClick}
-      >
-        <DumbbellIcon className="h-6 w-6 opacity-30" />
-      </div>
-    )
-  }
-  return (
-    <img
-      src={resolvedUrl}
-      alt={alt}
-      onClick={onClick}
-      loading="lazy"
-      decoding="async"
-      onError={() => setImgFailed(true)}
-      className={className}
-    />
-  )
-}
 
 function CircularTimer({ seconds, maxSeconds = 3600, label }: { seconds: number; maxSeconds?: number; label?: string }) {
   const radius = 40
@@ -793,12 +756,14 @@ export default function AlunoTreinoExecucao() {
               )}
 
               <div className="flex items-center gap-3 p-3 bg-surface-input/20">
-                <ExerciseGif
-                  gifSrc={exDetail.gif_url || exDetail.imagem_url}
-                  alt={exDetail.nome}
+                <button
+                  type="button"
                   onClick={() => setPreviewExercicio(exDetail)}
-                  className="h-12 w-12 rounded-xl object-cover border border-border bg-black shrink-0 cursor-pointer active:scale-95 transition-transform"
-                />
+                  aria-label={t('Ver {nome} em detalhe', { nome: exDetail.nome })}
+                  className="shrink-0 cursor-pointer active:scale-95 transition-transform"
+                >
+                  <MidiaExercicio exercicio={exDetail} formato="quadro" className="h-24 w-24 border border-border" prioridade={ex.ordem <= 2} />
+                </button>
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setPreviewExercicio(exDetail)}>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
@@ -1178,12 +1143,8 @@ export default function AlunoTreinoExecucao() {
             <button onClick={() => setPreviewExercicio(null)} className="self-end text-white/70 hover:text-white text-2xl mb-3 px-2 cursor-pointer">✕</button>
             <div className="w-full rounded-2xl bg-surface-card border border-border overflow-hidden shadow-2xl">
               {(previewExercicio.gif_url || previewExercicio.imagem_url) && (
-                <div className="bg-black flex items-center justify-center p-4">
-                  <img
-                    src={previewExercicio.gif_url || previewExercicio.imagem_url}
-                    alt={previewExercicio.nome}
-                    className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
-                  />
+                <div className="bg-black flex items-center justify-center p-3">
+                  <MidiaExercicio exercicio={previewExercicio} alturaMaxVh={60} ampliavel prioridade />
                 </div>
               )}
               <div className="p-4">

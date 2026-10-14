@@ -1,3 +1,4 @@
+import MidiaExercicio from '../../components/ui/MidiaExercicio'
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client'
@@ -9,8 +10,8 @@ import EmptyState from '../../components/ui/EmptyState'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { OfflinePreloadBadge } from '../../components/ui/OfflinePreloadBadge'
 import { preloadWorkoutGifs, extractWorkoutGifUrls } from '../../lib/offlineGifPreloader'
+import { carregarSexoAluno } from '../../hooks/useSexoAluno'
 import { formatExerciseStep } from '../../lib/exerciseFormatter'
-import { resolveMediaUrl } from '../../lib/media'
 
 import { useT } from '../../i18n'
 import { localeAtual } from '../../i18n'
@@ -55,10 +56,11 @@ export default function AlunoMeusTreinos() {
       setTreinos(disponiveis)
 
       // Extrair URLs de GIFs de todos os treinos carregados e iniciar pré-carga
+      const sexoAluno = await carregarSexoAluno()
       const allUrls: string[] = []
       for (const tr of disponiveis) {
         if (tr.exercicios) {
-          allUrls.push(...extractWorkoutGifUrls(tr.exercicios))
+          allUrls.push(...extractWorkoutGifUrls(tr.exercicios, sexoAluno))
         }
       }
       const uniqueUrls = [...new Set(allUrls)]
@@ -365,25 +367,8 @@ export default function AlunoMeusTreinos() {
               onClick={() => setSelectedExercicio(ex.exercicio)}
               className="flex gap-4 p-3.5 bg-surface rounded-2xl border border-surface-input items-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] select-none group"
             >
-              {/* GIF animado real ou imagem estática com lazy loading e prioridade */}
-              {ex.exercicio.gif_url ? (
-                <img
-                  src={ex.exercicio.gif_url}
-                  alt={ex.exercicio.nome}
-                  loading="lazy"
-                  {...(ex.ordem <= 3 ? { fetchPriority: 'high' as any } : {})}
-                  className="w-16 h-16 rounded-xl border border-surface-input shrink-0 object-cover bg-black"
-                />
-              ) : ex.exercicio.imagem_url ? (
-                <img
-                  src={ex.exercicio.imagem_url}
-                  alt={ex.exercicio.nome}
-                  loading="lazy"
-                  className="w-16 h-16 rounded-xl border border-surface-input shrink-0 object-cover bg-surface-input"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-xl border border-surface-input shrink-0 bg-surface-input flex items-center justify-center text-2xl">💪</div>
-              )}
+              {/* Figura ampliada (recortada para a pessoa ocupar o quadro) */}
+              <MidiaExercicio exercicio={ex.exercicio} formato="quadro" className="h-28 w-28 shrink-0 border border-surface-input" prioridade={ex.ordem <= 3} />
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-text leading-tight truncate group-hover:text-primary transition-colors">
@@ -522,26 +507,9 @@ export default function AlunoMeusTreinos() {
 
             {/* GIF em destaque */}
             <div className="relative bg-black rounded-t-3xl sm:rounded-t-3xl overflow-hidden">
-              {resolveMediaUrl(selectedExercicio.gif_url || selectedExercicio.imagem_url) ? (
-                <img
-                  src={resolveMediaUrl(selectedExercicio.gif_url || selectedExercicio.imagem_url)!}
-                  alt={selectedExercicio.nome}
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => {
-                    // Se falhar o GIF, tenta thumbnail ou remove a imagem quebrada
-                    const target = e.currentTarget
-                    if (selectedExercicio.imagem_url && target.src !== resolveMediaUrl(selectedExercicio.imagem_url)) {
-                      target.src = resolveMediaUrl(selectedExercicio.imagem_url)!
-                    } else {
-                      target.style.display = 'none'
-                    }
-                  }}
-                  className="w-full h-64 sm:h-72 object-contain animate-gif-enter"
-                />
-              ) : (
-                <div className="w-full h-64 flex items-center justify-center text-5xl">💪</div>
-              )}
+              <div className="flex justify-center p-3">
+                <MidiaExercicio exercicio={selectedExercicio} alturaMaxVh={55} ampliavel prioridade />
+              </div>
               <button
                 onClick={() => setSelectedExercicio(null)}
                 className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold transition-all"

@@ -1,4 +1,4 @@
-import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus, ExecucaoCuradoria, ResumoSite, ResumoApp, UsuariosUsoResposta, ImportacaoTreinoPreview } from '../types/api'
+import type { AuthTokens, User, Treino, ExecucaoExercicio, MedidaCorporal, CorrelacaoResponse, EvolucaoMensal, SessaoExecucaoDetalhada, Academia, Exercicio, ProfessorDashboard, RootPainel, VinculoPendente, Vinculo, AcademiaDashboard, MuralResponse, SocialComment, Amizade, AmizadePendente, PrivacidadeSettings, Clube, LeaderboardEntry, PlanoBiblioteca, ClubesResponse, CreateClubeInput, ClubeDetalhe, MembroClube, UltimaCarga, Promocao, PromocaoInput, PromocaoVitrine, ResumoAcessos, ArtigoBlogAdmin, BlogStatus, ExecucaoCuradoria, ResumoSite, ResumoApp, UsuariosUsoResposta, ImportacaoTreinoPreview, ExercicioCatalogo, ExercicioInput, GifRegras, GifPrevia } from '../types/api'
 import { getApiBaseUrl } from '../lib/media'
 import { debugLog } from '../lib/debug'
 
@@ -386,6 +386,20 @@ export const api = {
 
   getAlunoMedidas: (alunoId: string) =>
     api.get<MedidaCorporal[]>(`/professores/alunos/${alunoId}/medidas`),
+
+  // ─── Catálogo de exercícios/GIFs (ROOT) ────────────
+  rootListarExercicios: () => api.get<ExercicioCatalogo[]>('/root/exercicios'),
+  rootCriarExercicio: (body: ExercicioInput) => api.post<ExercicioCatalogo>('/root/exercicios', body),
+  rootAtualizarExercicio: (id: string, body: ExercicioInput) => api.put<ExercicioCatalogo>(`/root/exercicios/${id}`, body),
+  rootRemoverExercicio: (id: string) => api.delete<void>(`/root/exercicios/${id}`),
+  rootRegrasGif: () => api.get<GifRegras>('/root/exercicios/regras-gif'),
+  rootPreviaGif: (formData: FormData) => api.post<GifPrevia>('/root/exercicios/gif-previa', formData, true),
+  rootUploadVarianteGif: (id: string, sexo: 'MASCULINO' | 'FEMININO', formData: FormData) =>
+    api.post<{ variantes: NonNullable<ExercicioCatalogo['variantes']> }>(`/root/exercicios/${id}/gif-variante/${sexo}`, formData, true),
+  rootRemoverVarianteGif: (id: string, sexo: 'MASCULINO' | 'FEMININO') =>
+    api.delete<{ variantes: NonNullable<ExercicioCatalogo['variantes']> }>(`/root/exercicios/${id}/gif-variante/${sexo}`),
+  rootUploadGifExercicio: (id: string, formData: FormData) =>
+    api.post<{ gifUrl: string }>(`/root/exercicios/${id}/gif`, formData, true),
 
   // ─── Exercícios ────────────────────────────────────
   getExercicios: (params?: { grupo_muscular?: string; equipamento?: string; nivel?: string; busca?: string }) => {
