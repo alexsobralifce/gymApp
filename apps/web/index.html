@@ -1,7 +1,17 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
-    <script defer src="https://umami-production-8dd4.up.railway.app/script.js" data-website-id="71683743-01bb-499f-98dd-8f22b876a120"></script>
+    <script>
+      // Analytics (Umami) carrega só depois da página pronta e sem bloquear: se o servidor
+      // de analytics estiver lento ou fora do ar, o app não espera por ele.
+      window.addEventListener('load', function () {
+        var s = document.createElement('script')
+        s.async = true
+        s.src = 'https://umami-production-8dd4.up.railway.app/script.js'
+        s.setAttribute('data-website-id', '71683743-01bb-499f-98dd-8f22b876a120')
+        document.head.appendChild(s)
+      })
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" id="meta-color-scheme" />

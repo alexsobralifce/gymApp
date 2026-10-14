@@ -102,7 +102,12 @@ async function refreshTokens(): Promise<boolean> {
         body: JSON.stringify({ refreshToken }),
       })
 
-      if (!res.ok) return false
+      // Só 400/401/403/404 significam "este refresh token não vale mais" (desconecta).
+      // 5xx (deploy/reinício), 429 e afins são falhas do servidor: mantém a sessão.
+      if (!res.ok) {
+        if ([400, 401, 403, 404, 422].includes(res.status)) return false
+        throw new ApiError(0, 'Servidor indisponível, tente novamente')
+      }
 
       const tokens: AuthTokens = await res.json()
       localStorage.setItem('accessToken', tokens.accessToken)

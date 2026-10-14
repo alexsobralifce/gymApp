@@ -70,4 +70,28 @@ describe('api client — single-flight refresh', () => {
     expect(localStorage.getItem('accessToken')).toBe('old-access')
     expect(localStorage.getItem('refreshToken')).toBe('old-refresh')
   })
+
+  it.each([500, 502, 503, 429])('mantém a sessão quando o refresh responde %i (servidor, não token)', async (status) => {
+    global.fetch = vi.fn(async (input: any) => {
+      const url = String(input)
+      if (url.includes(REFRESH_PATH)) return new Response('erro do servidor', { status })
+      return new Response(JSON.stringify({ message: 'nao autorizado' }), { status: 401 })
+    })
+
+    await expect(api.get('/alunos/treinos')).rejects.toMatchObject({ status: 0 })
+    expect(localStorage.getItem('accessToken')).toBe('old-access')
+    expect(localStorage.getItem('refreshToken')).toBe('old-refresh')
+  })
+
+  it.each([401, 403])('desconecta quando o servidor recusa o refresh token (%i)', async (status) => {
+    global.fetch = vi.fn(async (input: any) => {
+      const url = String(input)
+      if (url.includes(REFRESH_PATH)) return new Response(JSON.stringify({ message: 'inválido' }), { status })
+      return new Response(JSON.stringify({ message: 'nao autorizado' }), { status: 401 })
+    })
+
+    await expect(api.get('/alunos/treinos')).rejects.toMatchObject({ status: 401 })
+    expect(localStorage.getItem('accessToken')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+  })
 })
