@@ -48,8 +48,8 @@ function seoPlugin(siteUrl: string): Plugin {
       ].join('\n')
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots })
       if (!base) return
-      const hoje = new Date().toISOString().slice(0, 10)
       const url = (caminho: string) => `${base}${caminho === '/' ? '' : caminho}`
+      // lastmod só onde há data real (artigos do blog): páginas fixas não ganham a data do build, que o Google aprende a ignorar.
       // hreflang: cada URL lista as duas versões (inclusive ela mesma) e o x-default em português.
       const alternativas = (caminho: string) => {
         const par = PARES_IDIOMA.find((p) => p.pt === caminho || p.en === caminho)
@@ -59,7 +59,7 @@ function seoPlugin(siteUrl: string): Plugin {
           .join('')
       }
       const urls = ROTAS_PUBLICAS.filter((r) => r.indexavel).map(
-        (r) => `  <url><loc>${url(r.caminho)}</loc>${alternativas(r.caminho)}<lastmod>${r.lastmod ?? hoje}</lastmod></url>`,
+        (r) => `  <url><loc>${url(r.caminho)}</loc>${alternativas(r.caminho)}${r.lastmod ? `<lastmod>${r.lastmod}</lastmod>` : ''}</url>`,
       ).join('\n')
       this.emitFile({
         type: 'asset',
