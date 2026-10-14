@@ -104,6 +104,17 @@ export function similaridade(consulta: string, nomeCatalogo: string): number {
   return Math.max(porPalavras, (porPalavras + porBigramas) / 2, porBigramas * 0.9)
 }
 
+/** Fração das palavras da frase escrita que aparecem no nome do catálogo (0 a 1). */
+export function coberturaDaConsulta(consulta: string, nomeCatalogo: string): number {
+  const tc = tokens(consulta)
+  if (!tc.length) return 0
+  const setN = new Set(tokens(nomeCatalogo))
+  return tc.filter((t) => setN.has(t)).length / tc.length
+}
+
+/** Abaixo disso, o nome do catálogo explica menos da metade do que a pessoa escreveu (ex.: "Flexão" para "Flexão de quadril em pé com caneleira"). */
+export const COBERTURA_MINIMA = 0.5
+
 export function casarExercicio(
   consultas: string[],
   catalogo: ExercicioCatalogo[],
@@ -122,6 +133,9 @@ export function casarExercicio(
     .map((c) => ({ ...c, nota: Math.round(c.nota * 100) / 100 }))
   const melhor = pontuados[0]
   if (!melhor || melhor.nota < NOTA_DUVIDA) return { status: 'nao_encontrado', exercicioId: null, candidatos }
+  // Nome curto do catálogo contido numa frase longa pontua alto sem ser o mesmo exercício: não vira palpite pré-selecionado.
+  const cobertura = Math.max(...textos.map((t) => coberturaDaConsulta(t, melhor.nome)))
+  if (cobertura < COBERTURA_MINIMA && melhor.nota < NOTA_OK) return { status: 'nao_encontrado', exercicioId: null, candidatos }
   // Empate apertado entre o 1º e o 2º deixa de ser certeza: vira dúvida para a pessoa escolher.
   const segundo = pontuados[1]
   const empatado = segundo !== undefined && melhor.nota - segundo.nota < 0.03 && segundo.nome !== melhor.nome

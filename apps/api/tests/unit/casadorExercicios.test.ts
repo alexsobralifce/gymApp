@@ -50,3 +50,19 @@ describe('casarExercicio', () => {
     expect(casarExercicio(['xyz', 'leg press 45'], catalogo).exercicioId).toBe('6')
   })
 })
+
+describe('nome curto do catálogo dentro de uma frase longa', () => {
+  const cat = [
+    { id: '1', nome: 'Flexão', grupo_muscular: null, equipamento: null, imagem_url: null, gif_url: null },
+    { id: '2', nome: 'Abdução de Quadril em Pé', grupo_muscular: null, equipamento: null, imagem_url: null, gif_url: null },
+  ]
+  it('não pré-seleciona "Flexão" (de braço) para "Flexão de quadril em pé com caneleira"', () => {
+    const r = casarExercicio(['Flexão de Quadril em Pé com Caneleira'], cat)
+    expect(r.status).toBe('nao_encontrado')
+    expect(r.exercicioId).toBeNull()
+    expect(r.candidatos.length).toBeGreaterThan(0)
+  })
+  it('mantém o casamento exato de um nome curto', () => {
+    expect(casarExercicio(['Flexão'], cat)).toMatchObject({ status: 'ok', exercicioId: '1' })
+  })
+})

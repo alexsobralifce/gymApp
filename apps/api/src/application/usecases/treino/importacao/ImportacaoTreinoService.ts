@@ -68,6 +68,10 @@ function clienteJev(deps: Deps): ClienteJev | null {
   return env.TYPESAFE_API_KEY ? criarClienteJev(env.TYPESAFE_API_KEY) : null
 }
 
+/** Quantos candidatos o Jev enxerga por dúvida, e quantos sobram na lista que a pessoa vê. */
+const CANDIDATOS_PARA_JEV = 12
+const CANDIDATOS_NA_TELA = 5
+
 async function montarPrevia(interpretado: TreinoInterpretadoT, deps: Deps): Promise<ImportacaoPrevia> {
   const catalogo = deps.catalogo ?? (await carregarCatalogo())
   const jev = clienteJev(deps)
@@ -75,7 +79,7 @@ async function montarPrevia(interpretado: TreinoInterpretadoT, deps: Deps): Prom
   const treinos: TreinoPrevia[] = []
   for (const t of interpretado.treinos) {
     let exercicios = t.exercicios.map((e): ExercicioPrevia => {
-      const m = casarExercicio([e.nomeProvavel, e.textoOriginal], catalogo)
+      const m = casarExercicio([e.nomeProvavel, e.textoOriginal], catalogo, CANDIDATOS_PARA_JEV)
       return {
         textoOriginal: e.textoOriginal,
         nomeProvavel: e.nomeProvavel,
@@ -95,6 +99,7 @@ async function montarPrevia(interpretado: TreinoInterpretadoT, deps: Deps): Prom
         console.warn('[importacao-treino] Jev indisponível, mantendo o casamento por texto:', e instanceof Error ? e.message : e)
       }
     }
+    exercicios = exercicios.map((e) => ({ ...e, candidatos: e.candidatos.slice(0, CANDIDATOS_NA_TELA) }))
     treinos.push({
       rotulo: t.rotulo.trim(),
       diasSemana: [...new Set(t.diasSemana)].sort((a, b) => a - b),
