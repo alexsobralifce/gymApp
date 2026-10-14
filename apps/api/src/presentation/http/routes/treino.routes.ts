@@ -23,7 +23,8 @@ import {
   substituirExercicio,
   criarTreinoSemanaRetorno,
 } from '../../../application/usecases/treino/TreinoService.js'
-import { gerarPrevia } from '../../../application/usecases/treino/importacao/ImportacaoTreinoService.js'
+import { gerarPrevia, gerarPreviaDeArquivo } from '../../../application/usecases/treino/importacao/ImportacaoTreinoService.js'
+import { MAX_BYTES_ARQUIVO } from '../../../application/usecases/treino/importacao/extratorDocumento.js'
 
 export async function treinoRoutes(app: FastifyInstance) {
   const prehandlerProfessor = [app.authenticate, app.requireRole(Role.PROFESSOR, Role.ROOT)]
@@ -217,6 +218,22 @@ export async function treinoRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const { texto } = z.object({ texto: z.string().trim().min(10).max(8000) }).parse(request.body)
       return reply.status(200).send(await gerarPrevia(texto))
+    },
+  )
+
+  /** POST /treinos/importar-arquivo — lê PDF, foto ou Markdown de uma ficha e devolve a prévia (não grava nada; o arquivo não é guardado) */
+  app.post(
+    '/importar-arquivo',
+    {
+      preHandler: [app.authenticate, app.requireRole(Role.ALUNO, Role.PROFESSOR, Role.ACADEMIA, Role.ROOT)],
+      config: { rateLimit: { max: 6, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
+      const data = await request.file({ limits: { fileSize: MAX_BYTES_ARQUIVO } })
+      if (!data) return reply.status(400).send({ message: 'Nenhum arquivo enviado.' })
+      const buffer = await data.toBuffer()
+      if (data.file.truncated) return reply.status(400).send({ message: 'O arquivo deve ter no máximo 8 MB.' })
+      return reply.status(200).send(await gerarPreviaDeArquivo(buffer, data.filename))
     },
   )
 

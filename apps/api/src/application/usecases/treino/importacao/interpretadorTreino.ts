@@ -1,7 +1,7 @@
 // Pede à OpenAI que transforme o texto livre de uma ficha de treino em uma lista estruturada, dia a dia.
 import { z } from 'zod'
 import { ValidationError } from '../../../../domain/errors/AppError.js'
-import type { ClienteIA, SchemaIA } from '../../../../infrastructure/ia/openai.js'
+import type { AnexoIA, ClienteIA, SchemaIA } from '../../../../infrastructure/ia/openai.js'
 
 export const TreinoInterpretado = z.object({
   treinos: z.array(
@@ -77,17 +77,41 @@ Regras:
 - "observacao": o que sobrar de útil (faixa de repetições, até a falha, drop-set, descanso, cadência). Sem nada, null.
 - Ignore saudações, comentários soltos e linhas que não sejam exercícios. Não dê conselho médico nem altere a prescrição.`
 
+const PEDIDO_ANEXO = 'Leia a ficha de treino do arquivo anexo e devolva os treinos conforme as regras.'
+
 export async function interpretarTexto(
   texto: string,
   { cliente, modelo }: { cliente: ClienteIA; modelo: string },
 ): Promise<TreinoInterpretadoT> {
-  const resposta = await cliente.gerar({ modelo, sistema: SISTEMA, usuario: texto, schema: SCHEMA_IMPORTACAO })
+  return interpretar({ cliente, modelo, usuario: texto })
+}
+
+/** Foto ou PDF escaneado: o modelo lê o próprio arquivo, sem passar por extração de texto. */
+export async function interpretarAnexo(
+  anexo: AnexoIA,
+  { cliente, modelo }: { cliente: ClienteIA; modelo: string },
+): Promise<TreinoInterpretadoT> {
+  return interpretar({ cliente, modelo, usuario: PEDIDO_ANEXO, anexos: [anexo] })
+}
+
+async function interpretar({
+  cliente,
+  modelo,
+  usuario,
+  anexos,
+}: {
+  cliente: ClienteIA
+  modelo: string
+  usuario: string
+  anexos?: AnexoIA[]
+}): Promise<TreinoInterpretadoT> {
+  const resposta = await cliente.gerar({ modelo, sistema: SISTEMA, usuario, schema: SCHEMA_IMPORTACAO, anexos })
   if (resposta.recusa) throw new ValidationError('Não foi possível ler esse texto. Revise e tente de novo.')
   if (resposta.fim === 'length') throw new ValidationError('O texto é grande demais. Envie menos treinos por vez.')
   try {
     return TreinoInterpretado.parse(JSON.parse(resposta.texto ?? ''))
   } catch {
-    throw new ValidationError('Não consegui entender o texto. Tente separar os treinos por dia, um exercício por linha.')
+    throw new ValidationError('Não consegui entender o conteúdo. Tente separar os treinos por dia, um exercício por linha.')
   }
 }
 

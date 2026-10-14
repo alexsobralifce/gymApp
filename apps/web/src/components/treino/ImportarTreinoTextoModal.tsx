@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import type { Exercicio, ImportacaoTreinoPreview, StatusCasamentoExercicio } from '../../types/api'
 import ExerciseLibraryDrawer from '../ui/ExerciseLibraryDrawer'
@@ -6,6 +6,8 @@ import { XIcon } from '../icons/Icon'
 
 import { useT } from '../../i18n'
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const ACEITA_ARQUIVO = '.pdf,.md,.markdown,.txt,image/jpeg,image/png,image/webp'
+const MAX_BYTES_ARQUIVO = 8 * 1024 * 1024
 const EXEMPLO = `Segunda - Peito e tríceps
 Supino reto c/ barra 4x10
 Supino inclinado halteres 3x12
@@ -96,6 +98,9 @@ export default function ImportarTreinoTextoModal({
 }: Props) {
   const { t } = useT()
   const [texto, setTexto] = useState('')
+  const [modo, setModo] = useState<'texto' | 'arquivo'>('texto')
+  const [arquivo, setArquivo] = useState<File | null>(null)
+  const inputArquivo = useRef<HTMLInputElement>(null)
   const [lendo, setLendo] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [treinos, setTreinos] = useState<TreinoEditavel[] | null>(null)
@@ -124,9 +129,13 @@ export default function ImportarTreinoTextoModal({
     setErro(null)
     setLendo(true)
     try {
-      const prev = await api.importarTreinoTexto(texto)
+      const prev = modo === 'arquivo' && arquivo ? await api.importarTreinoArquivo(arquivo) : await api.importarTreinoTexto(texto)
       if (prev.treinos.length === 0) {
-        setErro(t('Não encontrei exercícios nesse texto. Escreva um exercício por linha, separando os treinos por dia.'))
+        setErro(
+          modo === 'arquivo'
+            ? t('Não encontrei exercícios nesse arquivo. Confira se a ficha está legível e tente de novo.')
+            : t('Não encontrei exercícios nesse texto. Escreva um exercício por linha, separando os treinos por dia.'),
+        )
         return
       }
       setTreinos(paraEditavel(prev))
@@ -135,6 +144,15 @@ export default function ImportarTreinoTextoModal({
     } finally {
       setLendo(false)
     }
+  }
+
+  function escolherArquivo(f: File | null) {
+    setErro(null)
+    if (f && f.size > MAX_BYTES_ARQUIVO) {
+      setErro(t('O arquivo deve ter no máximo 8 MB.'))
+      return
+    }
+    setArquivo(f)
   }
 
   function atualizarTreino(tr: number, parcial: Partial<TreinoEditavel>) {
@@ -228,18 +246,58 @@ export default function ImportarTreinoTextoModal({
           <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
             {!treinos ? (
               <>
-                <label htmlFor="importar-texto" className="block text-sm font-bold text-text">
-                  {t('Texto dos treinos')}
-                </label>
-                <textarea
-                  id="importar-texto"
-                  value={texto}
-                  onChange={(e) => setTexto(e.target.value)}
-                  placeholder={EXEMPLO}
-                  rows={12}
-                  maxLength={8000}
-                  className="input-base resize-y font-mono"
-                />
+                <div role="tablist" aria-label={t('Como enviar a ficha')} className="grid grid-cols-2 gap-1 rounded-xl bg-surface-input p-1">
+                  {(['texto', 'arquivo'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      role="tab"
+                      aria-selected={modo === m}
+                      onClick={() => { setModo(m); setErro(null) }}
+                      className={`min-h-11 rounded-lg text-sm font-bold cursor-pointer ${modo === m ? 'bg-surface-card text-text shadow' : 'text-text-muted hover:text-text'}`}
+                    >
+                      {m === 'texto' ? t('Colar texto') : t('Enviar arquivo')}
+                    </button>
+                  ))}
+                </div>
+                {modo === 'texto' ? (
+                  <>
+                    <label htmlFor="importar-texto" className="block text-sm font-bold text-text">
+                      {t('Texto dos treinos')}
+                    </label>
+                    <textarea
+                      id="importar-texto"
+                      value={texto}
+                      onChange={(e) => setTexto(e.target.value)}
+                      placeholder={EXEMPLO}
+                      rows={12}
+                      maxLength={8000}
+                      className="input-base resize-y font-mono"
+                    />
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      ref={inputArquivo}
+                      id="importar-arquivo"
+                      type="file"
+                      accept={ACEITA_ARQUIVO}
+                      className="sr-only"
+                      onChange={(e) => escolherArquivo(e.target.files?.[0] ?? null)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => inputArquivo.current?.click()}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => { e.preventDefault(); escolherArquivo(e.dataTransfer.files?.[0] ?? null) }}
+                      className="flex min-h-40 w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-surface-input bg-surface p-4 text-center cursor-pointer hover:border-primary"
+                    >
+                      <span className="text-sm font-bold text-text">{arquivo ? arquivo.name : t('Toque para escolher ou arraste o arquivo')}</span>
+                      <span className="text-xs text-text-muted">{t('PDF, foto da ficha (JPG, PNG, WEBP), Markdown ou texto · até 8 MB')}</span>
+                    </button>
+                    <p className="text-xs text-text-muted">{t('O arquivo é lido na hora e não fica guardado. Você confere tudo antes de criar os treinos.')}</p>
+                  </div>
+                )}
                 {erro && <p role="alert" className="text-sm font-semibold text-destructive">{erro}</p>}
               </>
             ) : (
@@ -352,9 +410,9 @@ export default function ImportarTreinoTextoModal({
                     className="min-h-11 rounded-xl border border-surface-input bg-surface px-5 text-sm font-semibold text-text-muted hover:text-text cursor-pointer">
                     {t('Cancelar')}
                   </button>
-                  <button type="button" onClick={reconhecer} disabled={lendo || texto.trim().length < 10}
+                  <button type="button" onClick={reconhecer} disabled={lendo || (modo === 'arquivo' ? !arquivo : texto.trim().length < 10)}
                     className="min-h-11 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground disabled:opacity-50 cursor-pointer active:scale-95 transition-all">
-                    {lendo ? t('Lendo o texto…') : t('Reconhecer treinos')}
+                    {lendo ? (modo === 'arquivo' ? t('Lendo o arquivo…') : t('Lendo o texto…')) : t('Reconhecer treinos')}
                   </button>
                 </>
               )}

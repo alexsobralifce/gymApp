@@ -274,6 +274,12 @@ export const api = {
   importarTreinoTexto: (texto: string) =>
     api.post<ImportacaoTreinoPreview>('/treinos/importar-texto', { texto }),
 
+  importarTreinoArquivo: (arquivo: File) => {
+    const formData = new FormData()
+    formData.append('arquivo', arquivo)
+    return api.post<ImportacaoTreinoPreview>('/treinos/importar-arquivo', formData, true)
+  },
+
   criarTreinoAutogestao: (data: {
     nome: string
     diasSemana: number[]

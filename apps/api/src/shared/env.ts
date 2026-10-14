@@ -39,6 +39,8 @@ const envSchema = z.object({
   CURADORIA_MODELO: z.string().optional().default('gpt-5.4-mini'),
   // Importação de treino por texto (usa a mesma chave OPENAI_API_KEY).
   IMPORTACAO_TREINO_MODELO: z.string().optional().default('gpt-5.4-mini'),
+  // Jev (TypeSafe): segunda opinião no casamento de exercícios da importação. Sem chave, vale só o casamento por texto.
+  TYPESAFE_API_KEY: z.string().optional().default(''),
   CURADORIA_UTILIDADE_MIN: z.coerce.number().int().min(1).max(5).optional().default(3),
   // Imagens de capa geradas por IA para as Leituras da semana.
   CURADORIA_MODELO_IMAGEM: z.string().optional().default('gpt-image-1-mini'),
