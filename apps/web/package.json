@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/sincronizar-blog.mjs && tsc -b && vite build && node scripts/prerender.mjs",
+    "build": "node scripts/sincronizar-blog.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/css-critico.mjs",
     "lint": "oxlint",
     "test": "vitest run src",
     "test:e2e": "playwright test",
@@ -39,6 +39,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-is": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.3",
+    "beasties": "^0.5.5",
     "happy-dom": "^20.11.1",
     "oxlint": "^1.71.0",
     "sharp": "^0.35.3",
