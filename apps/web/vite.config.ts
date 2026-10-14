@@ -9,7 +9,7 @@ const ROTAS_PRIVADAS = [
   '/login', '/auth/', '/billing/', '/onboarding/', '/welcome', '/meus-treinos', '/treino/', '/treinos',
   '/dados', '/medidas', '/evolucao', '/feed', '/amizades', '/clubes', '/privacidade', '/alterar-senha',
   '/notificacoes/', '/exercicios/', '/alunos/', '/fichas', '/academias', '/avaliacoes', '/usuarios',
-  '/vinculos', '/financeiro', '/social', '/biblioteca-planos', '/documentacao', '/parceiros', '/noticias',
+  '/vinculos', '/financeiro', '/social', '/biblioteca-planos', '/documentacao', '/parceiros',
 ]
 
 /** Gera robots.txt, sitemap.xml e as tags dependentes do domínio (defina VITE_SITE_URL no build). */

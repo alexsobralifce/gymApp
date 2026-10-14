@@ -1,16 +1,17 @@
 {
   "titulo": "Como montar uma ficha de treino para aluno: passo a passo",
-  "descricao": "Aprenda a montar uma ficha de treino em 6 passos: avaliação inicial, frequência, escolha e ordem dos exercícios, progressão de carga e revisão.",
+  "descricao": "Monte uma ficha de treino em 6 passos: avaliação, frequência, divisão, ordem dos exercícios, séries, descanso e progressão, com base em OMS e ACSM.",
   "categoria": "Personal trainer",
   "autor": "Equipe ENDORFINAPP",
   "publicadoEm": "2026-10-05",
-  "atualizadoEm": "2026-10-05",
+  "atualizadoEm": "2026-10-14",
   "resumo": "Uma boa ficha começa antes do primeiro exercício: com o objetivo, o histórico e a rotina do aluno. Veja um passo a passo simples para montar, enviar e ajustar a ficha ao longo do tempo.",
   "secoes": [
     {
       "titulo": "1. Comece pela avaliação inicial",
       "paragrafos": [
-        "Antes de escolher exercícios, entenda quem é o aluno. Perguntas simples já mudam a ficha inteira, e um questionário de prontidão para atividade física, como o PAR-Q, ajuda a identificar quem deve ser liberado por um profissional de saúde antes de começar."
+        "Antes de escolher exercícios, entenda quem é o aluno. Perguntas simples já mudam a ficha inteira, e um questionário de prontidão para atividade física, como o PAR-Q, ajuda a identificar quem deve ser liberado por um profissional de saúde antes de começar.",
+        "Vale registrar as respostas por escrito, em vez de confiar na memória. Esse registro vira a linha de base da ficha: daqui a algumas semanas, é com ele que você mostra ao aluno o quanto avançou. Combine também metas realistas. Um objetivo claro e mensurável, como treinar 3 vezes por semana durante 8 semanas, motiva mais do que uma promessa vaga de \"ficar em forma\"."
       ],
       "lista": [
         "Objetivo principal: ganho de massa, emagrecimento, saúde, desempenho.",
@@ -28,13 +29,15 @@
       "titulo": "2. Defina a frequência semanal",
       "paragrafos": [
         "A Organização Mundial da Saúde recomenda que adultos façam atividades de fortalecimento muscular que envolvam os principais grupos musculares em 2 ou mais dias por semana [1]. Para iniciantes, o posicionamento do Colégio Americano de Medicina do Esporte (ACSM) sugere de 2 a 3 dias por semana, com treinos que trabalhem o corpo inteiro [2].",
-        "Na prática, a melhor frequência é a que o aluno consegue manter. Uma ficha de 5 dias que ele só cumpre 2 vezes rende menos que uma de 3 dias cumprida sempre."
+        "Na prática, a melhor frequência é a que o aluno consegue manter. Uma ficha de 5 dias que ele só cumpre 2 vezes rende menos que uma de 3 dias cumprida sempre.",
+        "Conforme o aluno ganha experiência, a frequência pode subir. O posicionamento do ACSM descreve que praticantes intermediários costumam treinar de 3 a 4 dias por semana, enquanto os avançados treinam de 4 a 5 dias [2]. Aumente aos poucos e só depois de o aluno cumprir a frequência atual por várias semanas seguidas."
       ]
     },
     {
       "titulo": "3. Escolha uma divisão de treino compatível",
       "paragrafos": [
-        "A divisão organiza os grupos musculares ao longo da semana. Para quem está começando, treinos de corpo inteiro em 2 ou 3 dias costumam bastar. Com mais experiência e mais dias disponíveis, divisões como superiores e inferiores ou Push, Pull e Legs distribuem melhor o volume."
+        "A divisão organiza os grupos musculares ao longo da semana. Para quem está começando, treinos de corpo inteiro em 2 ou 3 dias costumam bastar. Com mais experiência e mais dias disponíveis, divisões como superiores e inferiores ou Push, Pull e Legs distribuem melhor o volume.",
+        "Não existe divisão perfeita, existe a que cabe na agenda e na recuperação do aluno. Ao trocar de divisão, mude uma variável por vez e observe a resposta por algumas semanas antes de mexer em outra. Se o aluno falta no dia das pernas, por exemplo, talvez o problema não seja o treino em si, e sim o dia da semana escolhido."
       ],
       "lista": [
         "Corpo inteiro (2 a 3 dias): simples e indicado para iniciantes.",
@@ -46,21 +49,38 @@
       "titulo": "4. Selecione e ordene os exercícios",
       "paragrafos": [
         "Priorize exercícios que envolvem várias articulações, como agachamento, remada e supino, e depois complemente com exercícios para grupos menores. O ACSM recomenda realizar os exercícios de grandes grupos musculares antes dos de pequenos grupos, para que o aluno os execute com mais energia [2].",
-        "Considere as restrições do aluno: se há dor no ombro, por exemplo, substitua movimentos que a agravam por alternativas mais confortáveis. Para iniciantes, máquinas costumam facilitar a aprendizagem do movimento."
+        "Considere as restrições do aluno: se há dor no ombro, por exemplo, substitua movimentos que a agravam por alternativas mais confortáveis. Para iniciantes, máquinas costumam facilitar a aprendizagem do movimento.",
+        "A ordem importa tanto quanto a escolha. Além de colocar os grandes grupos primeiro, o ACSM cita estratégias como alternar membros superiores e inferiores ou usar exercícios opostos, como empurrar e puxar, para que o aluno descanse um grupo enquanto trabalha o outro [2]. Evite também trocar todos os exercícios a cada sessão: o aluno precisa repetir um movimento algumas vezes para aprendê-lo e para que a progressão de carga faça sentido."
       ]
     },
     {
       "titulo": "5. Defina séries, repetições e carga",
       "paragrafos": [
         "Para iniciantes, o ACSM sugere trabalhar com cerca de 8 a 12 repetições por série e carga que permita completar as repetições com boa técnica [2]. Comece com poucas séries por exercício e aumente conforme o aluno se adapta.",
-        "A carga sugerida na ficha é um ponto de partida. Nas primeiras semanas, ajuste conforme a execução real do aluno."
+        "A carga sugerida na ficha é um ponto de partida. Nas primeiras semanas, ajuste conforme a execução real do aluno.",
+        "Quanto ao volume, o ACSM indica que iniciantes obtêm bons resultados com 1 a 3 séries por exercício, e que o volume pode aumentar gradualmente com a experiência [2]. Já o descanso entre as séries costuma ser maior nos exercícios principais, com cargas mais altas, e menor nos complementares. O posicionamento sugere de 2 a 3 minutos para os primeiros e de 1 a 2 minutos para os demais [2].",
+        "Anote o descanso na própria ficha. Sem essa informação, o aluno tende a encurtar ou a estender o intervalo conforme o cansaço, e fica difícil comparar uma semana com a outra."
       ]
     },
     {
       "titulo": "6. Planeje a progressão e revise",
       "paragrafos": [
-        "A ficha precisa evoluir. Uma regra prática, descrita no posicionamento do ACSM, é aumentar a carga em cerca de 2% a 10% quando o aluno consegue fazer 1 a 2 repetições além da meta com a carga atual [2].",
-        "Combine revisões periódicas, por exemplo a cada 4 a 8 semanas, olhando o que o aluno registrou: cargas, repetições, faltas e como se sentiu. Trocar a ficha sem olhar esses dados é chute."
+        "A ficha precisa evoluir. Uma regra prática, descrita no posicionamento do ACSM, é aumentar a carga em cerca de 2% a 10% quando o aluno consegue fazer 1 a 2 repetições além da meta com a carga atual em duas sessões seguidas [2].",
+        "Combine revisões periódicas, por exemplo a cada 4 a 8 semanas, olhando o que o aluno registrou: cargas, repetições, faltas e como se sentiu. Trocar a ficha sem olhar esses dados é chute.",
+        "Se o aluno não progride por várias semanas, investigue antes de aumentar a carga: sono, alimentação, estresse e frequência real costumam explicar mais do que a ficha. E quando ele relatar dor persistente, não force a progressão. Ajuste o exercício e, se necessário, encaminhe para um profissional de saúde."
+      ]
+    },
+    {
+      "titulo": "Erros comuns ao montar a ficha",
+      "paragrafos": [
+        "Alguns deslizes se repetem em quase toda carteira de alunos. Conhecê-los ajuda a revisar uma ficha antes de entregá-la."
+      ],
+      "lista": [
+        "Copiar a ficha de outro aluno sem adaptar objetivo, experiência e restrições.",
+        "Exagerar no volume logo no início, o que gera dor excessiva e desistência.",
+        "Ignorar o descanso e a recuperação entre as sessões do mesmo grupo muscular.",
+        "Não registrar cargas e repetições, o que impede de provar a evolução.",
+        "Deixar a ficha parada por meses, sem revisão nem progressão."
       ]
     },
     {
@@ -87,5 +107,23 @@
   "imagem": {
     "url": "/blog-img/ficha-de-treino-tablet.webp",
     "alt": "Personal trainer sorrindo e mostrando a ficha de treino em um tablet enquanto um aluno treina ao fundo"
-  }
+  },
+  "faq": [
+    {
+      "pergunta": "Quantos exercícios deve ter uma ficha de treino?",
+      "resposta": "Não há número fixo. Para quem começa, de 6 a 10 exercícios por sessão, cobrindo os principais grupos musculares, costuma caber em 45 a 60 minutos. O importante é que o aluno consiga executar tudo com boa técnica."
+    },
+    {
+      "pergunta": "Com que frequência devo trocar a ficha do aluno?",
+      "resposta": "Uma revisão a cada 4 a 8 semanas é um bom ponto de partida. Revise antes se o aluno estagnar, sentir dor ou perder a motivação, e olhe sempre o histórico de cargas antes de decidir."
+    },
+    {
+      "pergunta": "Preciso de avaliação médica antes de montar a ficha?",
+      "resposta": "Um questionário de prontidão, como o PAR-Q, ajuda a identificar quem deve ser liberado por um profissional de saúde antes de começar. Em caso de dúvida ou de condição de saúde, peça a liberação médica."
+    },
+    {
+      "pergunta": "Qual a melhor divisão de treino para iniciantes?",
+      "resposta": "Treinos de corpo inteiro em 2 ou 3 dias por semana costumam ser suficientes e fáceis de manter. Divisões por grupo muscular ficam para quem já tem base e mais dias disponíveis."
+    }
+  ]
 }

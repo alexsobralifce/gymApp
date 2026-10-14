@@ -4,7 +4,7 @@
   "categoria": "Personal trainer",
   "autor": "Equipe ENDORFINAPP",
   "publicadoEm": "2026-10-10",
-  "atualizadoEm": "2026-10-10",
+  "atualizadoEm": "2026-10-14",
   "imagem": {
     "url": "/blog-img/app-personal-treino-telas.webp",
     "alt": "Três telas do aplicativo ENDORFINAPP no celular: execução do treino com cargas e descanso, avaliação do treino com percepção de esforço e tela de treino concluído para compartilhar"
@@ -15,7 +15,8 @@
     {
       "titulo": "A planilha ainda serve? Sim, até certo ponto",
       "paragrafos": [
-        "Planilha e PDF têm vantagens reais: custo zero, controle total e nenhuma curva de aprendizado. Para quem atende poucos alunos e muda a ficha de vez em quando, resolvem. O problema aparece com o volume: cada aluno vira um arquivo, cada ajuste vira uma nova versão e a versão certa passa a depender de quem lembrou de reenviar."
+        "Planilha e PDF têm vantagens reais: custo zero, controle total e nenhuma curva de aprendizado. Para quem atende poucos alunos e muda a ficha de vez em quando, resolvem. O problema aparece com o volume: cada aluno vira um arquivo, cada ajuste vira uma nova versão e a versão certa passa a depender de quem lembrou de reenviar.",
+        "Existe ainda um efeito menos visível: a planilha depende de você para tudo. Se o aluno perde o arquivo, quer ver a carga da semana passada ou pergunta o que fazer no dia seguinte, a resposta passa por você. Isso funciona com 5 alunos e se torna um gargalo com 30."
       ],
       "subsecoes": [
         {
@@ -44,6 +45,10 @@
         "Os pagamentos e renovações vivem em outro lugar, sem relação com o treino.",
         "Um aluno some e você só percebe semanas depois.",
         "Você quer crescer a carteira sem crescer a carga de trabalho administrativo."
+      ],
+      "paragrafos": [
+        "Não existe um número mágico de alunos para migrar. O que pesa são os sinais de que o controle manual começou a custar mais do que rende. Se você se reconhece em três ou mais dos itens abaixo, vale testar um aplicativo.",
+        "Um bom teste: pergunte-se quanto tempo levaria para mostrar, agora, a evolução de carga de um aluno específico nos últimos dois meses. Se a resposta for \"procurar nos arquivos\", o histórico já está escapando do seu controle."
       ]
     },
     {
@@ -102,13 +107,15 @@
         ]
       },
       "paragrafos": [
-        "A conclusão não é que o PWA vence em tudo. Notificações e integração profunda com o aparelho favorecem o app nativo. Para a maioria dos personais, porém, o essencial é a ficha atualizada, o histórico e a facilidade de acesso, e nisso o PWA entrega com menos atrito."
+        "A conclusão não é que o PWA vence em tudo. Notificações e integração profunda com o aparelho favorecem o app nativo. Para a maioria dos personais, porém, o essencial é a ficha atualizada, o histórico e a facilidade de acesso, e nisso o PWA entrega com menos atrito.",
+        "Ao ler a tabela, lembre que \"custo zero\" não significa custo nenhum. A planilha cobra em horas de trabalho e em retrabalho, e o aplicativo cobra em mensalidade. A pergunta certa é qual dos dois sai mais caro para a sua rotina."
       ]
     },
     {
       "titulo": "O que um aplicativo para personal trainer precisa ter",
       "paragrafos": [
-        "Antes de escolher, defina o que você vai usar todo dia. Um aplicativo com dezenas de recursos que você não abre vira mais uma planilha esquecida."
+        "Antes de escolher, defina o que você vai usar todo dia. Um aplicativo com dezenas de recursos que você não abre vira mais uma planilha esquecida.",
+        "Uma dica prática é testar o fluxo completo com um aluno antes de assinar: montar a ficha, enviar, o aluno executar e você ver o registro. Se algum desses passos exigir muitas etapas ou explicação, ele também vai travar a sua carteira inteira."
       ],
       "subsecoes": [
         {
@@ -145,7 +152,8 @@
       "titulo": "Por que um PWA costuma bastar para o aluno",
       "paragrafos": [
         "O maior risco de qualquer aplicativo é o aluno não usar. Retenção de apps nativos no dia 30 fica entre 1,2% e 5% na maioria das categorias, segundo levantamento de mercado [2]. São médias gerais, mas indicam que baixar não garante usar.",
-        "Um PWA tira etapas do caminho: o aluno recebe um link, instala em 2 toques e abre a ficha do dia. No Android, o navegador oferece a instalação. No iPhone, ele toca em Compartilhar e em \"Adicionar à Tela de Início\", e as notificações só funcionam com o app instalado [1]."
+        "Um PWA tira etapas do caminho: o aluno recebe um link, instala em 2 toques e abre a ficha do dia. No Android, o navegador oferece a instalação. No iPhone, ele toca em Compartilhar e em \"Adicionar à Tela de Início\", e as notificações só funcionam com o app instalado [1].",
+        "Para o personal, o ganho aparece no suporte. Menos etapas de instalação significam menos mensagens do tipo \"não consegui baixar\" e menos tempo explicando o aplicativo, e mais tempo no treino em si. Vale lembrar, porém, que as limitações do iPhone com notificações exigem alinhar a expectativa do aluno desde o convite [1]."
       ]
     },
     {
@@ -175,6 +183,17 @@
             "Corrija o que travou, migre o restante da carteira em lotes e mantenha a planilha como arquivo de consulta, sem apagar nada de imediato."
           ]
         }
+      ],
+      "paragrafos": [
+        "Migrar não precisa ser um projeto. Dividir a mudança em etapas curtas reduz o risco e deixa você corrigir o rumo antes de envolver todos os alunos. O roteiro abaixo cabe em uma semana de rotina normal."
+      ]
+    },
+    {
+      "titulo": "Como calcular se compensa migrar",
+      "paragrafos": [
+        "Uma conta simples ajuda a decidir sem achismo. Estime quantas horas por semana você gasta montando, formatando e reenviando fichas, multiplique pelo valor da sua hora de atendimento e compare com a mensalidade do aplicativo. Se o tempo recuperado vale mais do que o custo, a migração já se paga.",
+        "Some a isso o que é difícil de medir em reais: alunos que treinam com a ficha certa, evolução que você consegue mostrar e menos faltas não percebidas. Esses ganhos aparecem na retenção, e reter um aluno costuma custar menos do que conquistar um novo.",
+        "Por fim, considere o risco de ficar parado. Uma carteira que cresce com planilhas exige cada vez mais do seu tempo, e o limite é você mesmo. Migrar cedo, com poucos alunos, é bem mais fácil do que migrar no meio de uma carteira cheia."
       ]
     },
     {
@@ -209,6 +228,14 @@
     {
       "pergunta": "Perco o histórico dos meus alunos ao migrar?",
       "resposta": "Não precisa perder. Mantenha a planilha como arquivo de consulta e transfira o essencial (exercícios e cargas atuais) para o novo sistema."
+    },
+    {
+      "pergunta": "O aplicativo substitui o acompanhamento presencial?",
+      "resposta": "Não. Ele organiza fichas, histórico e comunicação, mas a correção de técnica e a motivação continuam sendo trabalho seu. O aplicativo libera tempo para você dedicar a isso."
+    },
+    {
+      "pergunta": "E se o aluno não quiser instalar nada?",
+      "resposta": "Com um PWA ele pode abrir a ficha direto pelo link, sem passar por loja de aplicativos, e instalar depois se quiser. Isso reduz bastante a resistência inicial."
     }
   ],
   "fontes": [

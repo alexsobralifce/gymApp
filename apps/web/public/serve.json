@@ -4,11 +4,11 @@
   ],
   "rewrites": [
     {
-      "source": "/{login,auth,academias,alterar-senha,alunos,amizades,avaliacoes,avaliacoes-sistema,beneficios,biblioteca-planos,billing,clubes,dados,documentacao,evolucao,exercicios,feed,fichas,financeiro,medidas,meus-treinos,mural,noticias,notificacoes,onboarding,parceiros,paywall,privacidade,professores,promocoes,social,publicacoes,treino,treinos,usuarios,vinculos,welcome}",
+      "source": "/{login,auth,academias,alterar-senha,alunos,amizades,avaliacoes,avaliacoes-sistema,beneficios,biblioteca-planos,billing,clubes,dados,documentacao,evolucao,exercicios,feed,fichas,financeiro,medidas,meus-treinos,mural,notificacoes,onboarding,parceiros,paywall,privacidade,professores,promocoes,social,publicacoes,treino,treinos,usuarios,vinculos,welcome}",
       "destination": "/index.html"
     },
     {
-      "source": "/{login,auth,academias,alterar-senha,alunos,amizades,avaliacoes,avaliacoes-sistema,beneficios,biblioteca-planos,billing,clubes,dados,documentacao,evolucao,exercicios,feed,fichas,financeiro,medidas,meus-treinos,mural,noticias,notificacoes,onboarding,parceiros,paywall,privacidade,professores,promocoes,social,treino,treinos,usuarios,vinculos,welcome}/**",
+      "source": "/{login,auth,academias,alterar-senha,alunos,amizades,avaliacoes,avaliacoes-sistema,beneficios,biblioteca-planos,billing,clubes,dados,documentacao,evolucao,exercicios,feed,fichas,financeiro,medidas,meus-treinos,mural,notificacoes,onboarding,parceiros,paywall,privacidade,professores,promocoes,social,treino,treinos,usuarios,vinculos,welcome}/**",
       "destination": "/index.html"
     }
   ],
