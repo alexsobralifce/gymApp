@@ -46,6 +46,8 @@ test.describe('E2E autenticado', () => {
         localStorage.setItem('gymapp_onboarding_seen', 'true')
         localStorage.setItem('gymapp_onboarding_permissions_done', 'true')
         localStorage.setItem('gymapp_first_workout_done', 'true')
+        // Tour de funcionalidades do dashboard: usuário que já viu não o vê de novo.
+        localStorage.setItem('gymapp_benefits_tour_seen', 'true')
         // Headless Chromium não concede a permissão de notificação (fica 'denied'),
         // o que faria o NotificationPrompt cobrir a tela. Fake 'granted' deixa o
         // subscribeAndSave falhar silenciosamente e esconde o prompt.

@@ -5,11 +5,12 @@ import { useNotifications } from './hooks/useNotifications'
 import { useCapacitorTheme } from './hooks/useCapacitorTheme'
 // DESATIVADO: cobrança — acesso livre. Reativar: descomentar.
 // import { useSubscriptionStore } from './stores/subscription'
-import AppShell from './components/layout/AppShell'
+// Carregados sob demanda: AppShell e NotificationPrompt só existem para usuário logado.
+const AppShell = lazy(() => import('./components/layout/AppShell'))
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt'
-import NotificationPrompt from './components/ui/NotificationPrompt'
-import { OnboardingPermissionsModal } from './components/ui/OnboardingPermissionsModal'
+const NotificationPrompt = lazy(() => import('./components/ui/NotificationPrompt'))
+const OnboardingPermissionsModal = lazy(() => import('./components/ui/OnboardingPermissionsModal').then((m) => ({ default: m.OnboardingPermissionsModal })))
 import { ORDEM, FERRAMENTAS } from './pages/ferramentas/conteudo'
 import { PAGINAS_SEO_EN } from './pages/seo/paginasSeoEn'
 import { PAGINAS_SEO } from './pages/seo/paginasSeo'
@@ -307,9 +308,9 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>
-    <OnboardingPermissionsModal />
+    <Suspense fallback={null}><OnboardingPermissionsModal /></Suspense>
     <PWAInstallPrompt />
-    {user && <NotificationPrompt />}
+    {user && <Suspense fallback={null}><NotificationPrompt /></Suspense>}
     </>
   )
 }
