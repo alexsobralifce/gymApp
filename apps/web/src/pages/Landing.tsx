@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSeo } from '../lib/seo'
 import { dadosDoSite } from '../lib/dadosEstruturados'
 import { ARTIGOS } from '../lib/blog'
+import { ehModoApp } from '../lib/modoApp'
 import { Link } from 'react-router-dom'
 import {
   Dumbbell, Users, Shield, TrendingUp,
@@ -77,6 +78,9 @@ const FAQS = [
   },
 ]
 
+// No app instalado o /blog não é roteado, então o link some (ehModoApp).
+const mostrarBlog = ARTIGOS.length > 0 && !ehModoApp()
+
 export default function Landing() {
   useSeo({
     title: 'ENDORFINAPP — App de treino para personal, academia e aluno',
@@ -114,7 +118,7 @@ export default function Landing() {
               <Link to="/planos" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
                 Planos
               </Link>
-              {ARTIGOS.length > 0 && (
+              {mostrarBlog && (
                 <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
                   Blog
                 </Link>
@@ -170,7 +174,7 @@ export default function Landing() {
             >
               Planos
             </Link>
-            {ARTIGOS.length > 0 && (
+            {mostrarBlog && (
               <Link
                 to="/blog"
                 className="block py-3 text-sm text-muted-foreground hover:text-foreground border-b border-border last:border-0"
@@ -508,7 +512,7 @@ export default function Landing() {
       </section>
 
       {/* ─── BLOG ─── */}
-      {ARTIGOS.length > 0 && (
+      {mostrarBlog && (
         <section className="py-20 border-t border-border" aria-labelledby="blog-landing">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-10">
@@ -518,7 +522,7 @@ export default function Landing() {
               </h2>
             </div>
             <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {[...ARTIGOS.filter((a) => a.tipo !== 'curadoria'), ...ARTIGOS.filter((a) => a.tipo === 'curadoria')].slice(0, 3).map((a) => (
+              {ARTIGOS.slice(0, 3).map((a) => (
                 <li key={a.slug} className="overflow-hidden rounded-xl border border-border bg-background hover:border-primary/30 transition-all duration-300">
                   <Link to={`/blog/${a.slug}`} className="block">
                     {a.imagem && <img src={a.imagem.url} alt={a.imagem.alt} width={1200} height={800} loading="lazy" className="aspect-[3/2] w-full object-cover" />}
@@ -635,7 +639,7 @@ export default function Landing() {
               ] },
               { title: 'Links', links: [
                 { label: 'Planos', href: '/planos' },
-                ...(ARTIGOS.length > 0 ? [{ label: 'Blog', href: '/blog' }] : []),
+                ...(mostrarBlog ? [{ label: 'Blog', href: '/blog' }] : []),
                 { label: 'Entrar', href: '/login' },
                 { label: 'Criar Conta', href: '/register' },
                 { label: 'Ferramentas', href: '/ferramentas' },

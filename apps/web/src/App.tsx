@@ -159,7 +159,7 @@ export default function App() {
       )}
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
-      {!user && <Route index element={modoApp ? <Navigate to="/login" replace /> : <Landing />} />}
+      {!user && <Route index element={<Landing />} />}
 
       {user && (
         <Route element={<AppShell />}>
