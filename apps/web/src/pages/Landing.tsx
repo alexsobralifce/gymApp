@@ -645,7 +645,7 @@ export default function Landing() {
                 { label: 'Ferramentas', href: '/ferramentas' },
                 { label: 'Quem somos', href: '/quem-somos' },
                 { label: 'English', href: '/en' },
-                { label: 'Termos de Uso', href: '/politica-privacidade' },
+                { label: 'Termos de Uso', href: '/termos-de-uso' },
                 { label: 'Privacidade', href: '/politica-privacidade' },
                 { label: 'Suporte', href: `mailto:${EMAIL_SUPORTE}` },
               ] },

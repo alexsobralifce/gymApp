@@ -20,6 +20,7 @@ const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/auth/Login'))
 const Register = lazy(() => import('./pages/auth/Register'))
 const PoliticaPrivacidade = lazy(() => import('./pages/PoliticaPrivacidade'))
+const TermosDeUso = lazy(() => import('./pages/TermosDeUso'))
 const QuemSomos = lazy(() => import('./pages/QuemSomos'))
 const HomeEn = lazy(() => import('./pages/en/HomeEn'))
 const FerramentasIndice = lazy(() => import('./pages/ferramentas/FerramentasIndice'))
@@ -134,6 +135,7 @@ export default function App() {
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+      <Route path="/termos-de-uso" element={<TermosDeUso />} />
       <Route path="/quem-somos" element={<QuemSomos />} />
       <Route path="/planos" element={<Planos />} />
       {!modoApp && (
