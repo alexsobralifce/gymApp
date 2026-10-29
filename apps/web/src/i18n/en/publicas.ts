@@ -167,7 +167,7 @@ export const PUBLICAS_EN: Record<string, string> = {
   "Revogar o consentimento": "Withdraw consent",
   "Serviços adicionais": "Additional services",
   "Sob consulta": "On request",
-  "Solicitar a exclusão da conta e dos dados associados (pelo e-mail abaixo ou diretamente pelo aplicativo)": "Request deletion of your account and associated data (through the email below or directly in the app)",
+  "Solicitar a exclusão da conta e dos dados associados (pelo e-mail abaixo; passo a passo na página Exclusão de Dados)": "Request deletion of your account and associated data (by the email below; step-by-step on the Data Deletion page)",
   "Solicitar a portabilidade dos dados": "Request data portability",
   "Sou Academia": "I'm a Gym",
   "Sou Personal Trainer": "I'm a Personal Trainer",

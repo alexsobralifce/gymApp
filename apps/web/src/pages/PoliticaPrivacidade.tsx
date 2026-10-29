@@ -112,7 +112,7 @@ export default function PoliticaPrivacidade() {
               <li>{t('Anonimizar, bloquear ou eliminar dados desnecessários')}</li>
               <li>{t('Revogar o consentimento')}</li>
               <li>{t('Solicitar a portabilidade dos dados')}</li>
-              <li>{t('Solicitar a exclusão da conta e dos dados associados (pelo e-mail abaixo ou diretamente pelo aplicativo)')}</li>
+              <li>{t('Solicitar a exclusão da conta e dos dados associados (pelo e-mail abaixo; passo a passo na página Exclusão de Dados)')}</li>
             </ul>
             <p className="mt-2">
               {t('Controles práticos estão disponíveis na página Privacidade do aplicativo (menu Meu Perfil) e no cadastro. Para solicitações adicionais, fale conosco pelo e-mail abaixo.')}
