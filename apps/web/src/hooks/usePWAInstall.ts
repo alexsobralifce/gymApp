@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react'
+import { navegadorIOS, deveReexibir, dispensar, lerEstado, type EstadoAviso, type NavegadorIOS } from '../lib/pwaInstall'
+
+const CHAVE_AVISO = 'gymapp_pwa_prompt_v2'
+const CHAVE_AVISO_ANTIGA = 'gymapp_pwa_prompt_dismissed'
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -11,10 +15,11 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isIOS, setIsIOS] = useState(false)
+  const [navegador, setNavegador] = useState<NavegadorIOS | null>(null)
+  const isIOS = navegador !== null
   const [isStandalone, setIsStandalone] = useState(false)
   const [isInstallable, setIsInstallable] = useState(false)
-  const [isDismissed, setIsDismissed] = useState(false)
+  const [estado, setEstado] = useState<EstadoAviso>({ dispensas: 0, ultimaDispensa: null })
 
   useEffect(() => {
     // Check if already installed / standalone
@@ -26,14 +31,15 @@ export function usePWAInstall() {
     setIsStandalone(isAppMode)
 
     // Check if iOS
-    const userAgent = window.navigator.userAgent.toLowerCase()
-    const isIosDevice = /iphone|ipad|ipod/.test(userAgent)
-    setIsIOS(isIosDevice)
+    setNavegador(navegadorIOS(window.navigator.userAgent))
 
-    // Check if dismissed previously
-    const dismissed = localStorage.getItem('gymapp_pwa_prompt_dismissed')
-    if (dismissed === 'true') {
-      setIsDismissed(true)
+    // Aviso dispensado antes (e quantas vezes), lido do navegador
+    try {
+      const raw = localStorage.getItem(CHAVE_AVISO)
+      const antiga = localStorage.getItem(CHAVE_AVISO_ANTIGA) === 'true'
+      setEstado(lerEstado(raw, antiga))
+    } catch {
+      // sem acesso ao armazenamento: o aviso aparece normalmente
     }
 
     // Android / Chrome: Listen for beforeinstallprompt
@@ -74,8 +80,13 @@ export function usePWAInstall() {
   }
 
   const dismissPrompt = () => {
-    localStorage.setItem('gymapp_pwa_prompt_dismissed', 'true')
-    setIsDismissed(true)
+    const proximo = dispensar(estado, Date.now())
+    setEstado(proximo)
+    try {
+      localStorage.setItem(CHAVE_AVISO, JSON.stringify(proximo))
+    } catch {
+      // sem armazenamento, o aviso reaparece na próxima visita
+    }
   }
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
@@ -83,13 +94,15 @@ export function usePWAInstall() {
   // Show prompt if:
   // 1. It's mobile
   // 2. Not already installed (standalone)
-  // 3. Not dismissed by user
+  // 3. Dismissal rules allow it (regras em lib/pwaInstall)
   // 4. Either has deferredPrompt (Android) OR is iOS (manual install)
-  const shouldShowPrompt = isMobile && !isStandalone && !isDismissed && (!!deferredPrompt || isIOS)
+  const shouldShowPrompt =
+    isMobile && !isStandalone && deveReexibir(estado, Date.now()) && (!!deferredPrompt || isIOS)
 
   return {
     shouldShowPrompt,
     isIOS,
+    navegador,
     isStandalone,
     isInstallable,
     promptInstall,
