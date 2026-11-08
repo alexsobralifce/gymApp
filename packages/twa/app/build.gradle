@@ -50,23 +50,31 @@ def twaManifest = [
     orientation: 'portrait',
 ]
 
+// Credenciais de assinatura ficam fora do Git, em packages/twa/keystore.properties.
+// Modelo: storeFile, storePassword, keyAlias, keyPassword (ver README, seção 2).
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     compileSdkVersion 36
     namespace "com.endorfinapp.app"
     signingConfigs {
         release {
-            storeFile file('../keystore/endorfinapp-release.keystore')
-            storePassword 'endorfinapp2026'
-            keyAlias 'endorfinapp'
-            keyPassword 'endorfinapp2026'
+            storeFile file(keystoreProperties.getProperty('storeFile', '../keystore/endorfinapp-release.keystore'))
+            storePassword keystoreProperties.getProperty('storePassword', '')
+            keyAlias keystoreProperties.getProperty('keyAlias', 'endorfinapp')
+            keyPassword keystoreProperties.getProperty('keyPassword', '')
         }
     }
     defaultConfig {
         applicationId "com.endorfinapp.app"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 36
-        versionCode 13
-        versionName "1.1.7"
+        versionCode 15
+        versionName "1.1.9"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -84,7 +92,7 @@ android {
             // The URL the Web Manifest for the Progressive Web App that the TWA points to. This
             // is used by Chrome OS and Meta Quest to open the Web version of the PWA instead of
             // the TWA, as it will probably give a better user experience for non-mobile devices.
-            resValue "string", "webManifestUrl", 'http://localhost:5173/manifest.json'
+            resValue "string", "webManifestUrl", 'https://endorfinapp.com.br/manifest.json'
         
 
         

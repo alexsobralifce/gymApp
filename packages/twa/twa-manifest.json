@@ -13,32 +13,32 @@
   "backgroundColor": "#0B1220",
   "enableNotifications": true,
   "startUrl": "/?source=twa",
-  "iconUrl": "http://localhost:5173/icon-512.png",
-  "maskableIconUrl": "http://localhost:5173/icon-maskable-512.png",
-  "monochromeIconUrl": "http://localhost:5173/icon-512.png",
+  "iconUrl": "https://endorfinapp.com.br/icon-512.png",
+  "maskableIconUrl": "https://endorfinapp.com.br/icon-maskable-512.png",
+  "monochromeIconUrl": "https://endorfinapp.com.br/icon-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./keystore/endorfinapp-release.keystore",
     "alias": "endorfinapp"
   },
-  "appVersionName": "1.1.7",
-  "appVersionCode": 13,
+  "appVersionName": "1.1.9",
+  "appVersionCode": 15,
   "shortcuts": [
     {
       "name": "Meus Treinos",
       "shortName": "Treinos",
       "url": "https://endorfinapp.com/aluno/treinos",
-      "chosenIconUrl": "http://localhost:5173/icon-192.png"
+      "chosenIconUrl": "https://endorfinapp.com.br/icon-192.png"
     },
     {
       "name": "Medidas & Avalia\u00e7\u00f5es",
       "shortName": "Medidas",
       "url": "https://endorfinapp.com/aluno/medidas",
-      "chosenIconUrl": "http://localhost:5173/icon-192.png"
+      "chosenIconUrl": "https://endorfinapp.com.br/icon-192.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "http://localhost:5173/manifest.json",
+  "webManifestUrl": "https://endorfinapp.com.br/manifest.json",
   "fallbackType": "customtabs",
   "features": {
     "locationDelegation": {
@@ -54,7 +54,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "minSdkVersion": 23,
+  "minSdkVersion": 24,
   "orientation": "portrait",
   "fingerprints": [],
   "additionalTrustedOrigins": [],

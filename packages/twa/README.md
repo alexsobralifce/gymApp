@@ -23,7 +23,8 @@ O keystore oficial foi gerado com RSA de 4096 bits e validade até 2054:
 
 - **Arquivo**: `packages/twa/keystore/endorfinapp-release.keystore`
 - **Alias**: `endorfinapp`
-- **Senha da Chave / Store**: `endorfinapp2026`
+- **Senhas**: não ficam no repositório. Estão em `packages/twa/keystore.properties`, que é local e está no `.gitignore`. Esse arquivo precisa ser criado em cada máquina de build, com as chaves `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Peça as senhas ao responsável pelo projeto.
+- **Keystore fora do Git**: o arquivo `.keystore` também fica no `.gitignore`. Ele deve ser guardado em local seguro e copiado manualmente para a pasta `packages/twa/keystore/`.
 - **Fingerprint SHA-256 (Produção)**:
   `B0:74:2C:44:9A:9B:BB:74:5E:DE:85:9B:45:36:90:83:CC:70:E7:15:2A:6C:A7:C3:57:C0:22:1E:E0:9A:57:63`
 - **Fingerprint SHA-256 (Debug Local)**:
@@ -61,7 +62,7 @@ O keystore oficial foi gerado com RSA de 4096 bits e validade até 2054:
    ```bash
    bubblewrap build
    ```
-   *Quando solicitado, confirme a senha do keystore (`endorfinapp2026`).*
+   *A senha é lida de `keystore.properties`, sem pedido interativo.*
 
 4. O arquivo final `app-release-signed.aab` será gerado na raiz da pasta `packages/twa/`.
 
