@@ -12,13 +12,15 @@ interface EndorfinappIconProps {
 }
 
 /**
- * viewBox apertado ao desenho (o símbolo ocupa x 10..180 / y 10..110 no espaço
- * original 220x120). Antes era "0 0 220 120", o que deixava o símbolo ~7%
- * à esquerda do centro com sobra à direita.
+ * Marca A (pulso quente): só o traço ECG em azul, com um ponto laranja no
+ * último pico. O raio foi removido. viewBox apertado ao desenho: o traço ocupa
+ * x 6..136 / y 22..98, e o ponto (r=8) cabe nessa mesma área.
  */
-const VIEW_BOX = '4 4 180 112'
-const VIEW_W = 180
-const VIEW_H = 112
+const VIEW_BOX = '4 18 136 84'
+const VIEW_W = 136
+const VIEW_H = 84
+/** Ponto laranja da marca (acento quente, secundário). */
+const ACCENT_COLOR = '#F97316'
 
 /** Abaixo disso o glow (blur) vira borrão e prejudica a legibilidade. */
 const GLOW_MIN_SIZE = 40
@@ -85,13 +87,9 @@ export function EndorfinappIcon({
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Símbolo do Raio Elétrico */}
-        <path
-          d="M 165 10 L 120 62 H 142 L 128 110 L 180 48 H 156 Z"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
       </g>
+      {/* Ponto de pulso em laranja (acento quente da marca A) */}
+      <circle cx="132" cy="60" r="8" fill={ACCENT_COLOR} stroke="none" filter={enableGlow ? `url(#${glowFilterId})` : undefined} />
     </svg>
   )
 }
