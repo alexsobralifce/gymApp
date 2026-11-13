@@ -2,9 +2,8 @@ import { useState } from 'react'
 import {
   HeartIcon,
   MessageCircleIcon,
-  MoreVerticalIcon,
+  XIcon,
   Edit2Icon,
-  TrashIcon,
   InstagramIcon,
 } from '../../components/icons/Icon'
 import type { SocialPost, SocialComment } from '../../types/api'
@@ -101,7 +100,6 @@ export default function PostCard({
   const [avatarErro, setAvatarErro] = useState(false)
 
   // Estados dos modais de ação
-  const [menuOpen, setMenuOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -193,73 +191,56 @@ export default function PostCard({
           {t(badge.label)}
         </span>
 
-        {/* Menu de Ações (Apenas Autor ou Root) */}
+        {/* Ações do autor ou root: compartilhar, editar e excluir */}
         {isAuthor && (
-          <div className="relative">
+          <div className="flex shrink-0 items-start gap-1">
             <button
               type="button"
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-input transition-colors cursor-pointer"
-              title={t('Opções da postagem')}
+              onClick={() => setShareModalOpen(true)}
+              className="flex w-16 flex-col items-center gap-1 rounded-lg py-1 text-pink-500 hover:bg-pink-500/10 transition-colors cursor-pointer"
+              title={t('Compartilhar Stories')}
             >
-              <MoreVerticalIcon className="h-4 w-4" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-pink-500/15">
+                <InstagramIcon className="h-4 w-4" />
+              </span>
+              <span className="text-[10px] font-semibold leading-none">{t('Compartilhar')}</span>
             </button>
 
-            {menuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-20"
-                  onClick={() => setMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-1 z-30 w-52 rounded-xl bg-surface-card border border-surface-input p-1.5 shadow-xl animate-modal-pop space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      setShareModalOpen(true)
-                    }}
-                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
-                  >
-                    <InstagramIcon className="h-3.5 w-3.5 text-pink-500" />
-                    <span>{t('Compartilhar Stories')}</span>
-                  </button>
-
-                  {podeEditar ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false)
-                        setEditModalOpen(true)
-                      }}
-                      className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-text hover:bg-surface-input transition-colors cursor-pointer text-left"
-                    >
-                      <Edit2Icon className="h-3.5 w-3.5 text-primary" />
-                      <span>{t('Editar Post')}</span>
-                    </button>
-                  ) : (
-                    <div
-                      className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-text-muted/50 cursor-not-allowed text-left select-none"
-                      title={t('O prazo de 24 horas para editar esta postagem expirou')}
-                    >
-                      <Edit2Icon className="h-3.5 w-3.5 opacity-40" />
-                      <span>{t('Editar indisponível (+24h)')}</span>
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      setDeleteConfirmOpen(true)
-                    }}
-                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left"
-                  >
-                    <TrashIcon className="h-3.5 w-3.5" />
-                    <span>{t('Excluir Post')}</span>
-                  </button>
-                </div>
-              </>
+            {podeEditar ? (
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(true)}
+                className="flex w-16 flex-col items-center gap-1 rounded-lg py-1 text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                title={t('Editar Post')}
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15">
+                  <Edit2Icon className="h-4 w-4" />
+                </span>
+                <span className="text-[10px] font-semibold leading-none">{t('Editar')}</span>
+              </button>
+            ) : (
+              <span
+                className="flex w-16 flex-col items-center gap-1 py-1 text-text-muted/40 cursor-not-allowed select-none"
+                title={t('O prazo de 24 horas para editar esta postagem expirou')}
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-input">
+                  <Edit2Icon className="h-4 w-4 opacity-40" />
+                </span>
+                <span className="text-[10px] font-semibold leading-none">{t('Editar')}</span>
+              </span>
             )}
+
+            <button
+              type="button"
+              onClick={() => setDeleteConfirmOpen(true)}
+              className="flex w-16 flex-col items-center gap-1 rounded-lg py-1 text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+              title={t('Excluir Post')}
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-destructive/15">
+                <XIcon className="h-4 w-4" />
+              </span>
+              <span className="text-[10px] font-semibold leading-none">{t('Excluir')}</span>
+            </button>
           </div>
         )}
       </div>
