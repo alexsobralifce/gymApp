@@ -1,4 +1,5 @@
 import path from 'path'
+import { lerObjetoOuFalha } from '../../../infrastructure/storage/objectStorage.js'
 import fs from 'fs/promises'
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
@@ -216,9 +217,8 @@ export async function avaliacaoRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Nome de arquivo ou ID inválido' })
     }
 
-    const filePath = path.join(getAvaliacoesFotosDir(avaliacaoId), filename)
     try {
-      const buffer = await fs.readFile(filePath)
+      const buffer = await lerObjetoOuFalha(`uploads/avaliacoes/${avaliacaoId}/${filename}`)
       const ext = path.extname(filename).toLowerCase()
       return reply
         .header('Content-Type', MIME_MAP[ext] || 'image/jpeg')

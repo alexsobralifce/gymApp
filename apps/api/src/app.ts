@@ -3,13 +3,11 @@ import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyJwt from '@fastify/jwt'
 import fastifyRateLimit from '@fastify/rate-limit'
-import fastifyStatic from '@fastify/static'
 import fastifyMultipart from '@fastify/multipart'
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
-import path from 'path'
-import { fileURLToPath } from 'url'
 import { env } from './shared/env.js'
+import { arquivosRoutes } from './presentation/http/routes/arquivos.routes.js'
 
 // Routes
 import { authRoutes } from './presentation/http/routes/auth.routes.js'
@@ -133,15 +131,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   })
 
-  // ─── Static Files (Exercise Assets) ─────────────────────────────────────
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = path.dirname(__filename)
-  const publicPath = path.join(__dirname, '..', 'public')
-  await app.register(fastifyStatic, {
-    root: publicPath,
-    prefix: '/',
-    decorateReply: false,
-  })
+  // ─── Arquivos públicos (uploads e mídia dos exercícios) ─────────────────
+  // Lidos pelo storage (bucket S3 em produção, pasta public/ em desenvolvimento)
+  await app.register(arquivosRoutes)
 
   // ─── JWT ────────────────────────────────────────────────────────────────
   await app.register(fastifyJwt, {

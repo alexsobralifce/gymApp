@@ -1,4 +1,5 @@
 import path from 'path'
+import { salvarObjeto } from '../../../infrastructure/storage/objectStorage.js'
 import fs from 'fs/promises'
 import sharp, { type Metadata } from 'sharp'
 import { prisma } from '../../../infrastructure/database/prisma.js'
@@ -74,8 +75,7 @@ export async function salvarLogoAcademia(academiaId: string, buffer: Buffer): Pr
 
   const png = await processarLogo(buffer)
   const filename = `${academiaId}_${Date.now()}.png`
-  await ensureDir(getLogosDir())
-  await fs.writeFile(path.join(getLogosDir(), filename), png)
+  await salvarObjeto(`uploads/logos/${filename}`, png, 'image/png')
 
   const logoUrl = `${env.API_BASE_URL}/uploads/logos/${filename}`
   await prisma.academia.update({ where: { id: academiaId }, data: { logo_url: logoUrl } })

@@ -1,0 +1,7 @@
+api.endorfinapp.com.br {
+  reverse_proxy api:3333
+}
+
+www.endorfinapp.com.br, endorfinapp.com.br {
+  reverse_proxy web:80
+}

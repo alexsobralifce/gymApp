@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { salvarObjeto, lerObjetoOuFalha } from '../../../infrastructure/storage/objectStorage.js'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import path from 'path'
@@ -66,11 +67,7 @@ export async function uploadRoutes(app: FastifyInstance) {
 
     const filename = `${Date.now()}${ext}`
 
-    const uploadDir = getFeedDir(year, month)
-    await ensureDir(uploadDir)
-
-    const filePath = path.join(uploadDir, filename)
-    await fs.writeFile(filePath, buffer)
+    await salvarObjeto(`uploads/feed/${year}/${month}/${filename}`, buffer)
 
     const url = `${env.API_BASE_URL}/uploads/feed/${year}/${month}/${filename}`
 
@@ -84,9 +81,8 @@ export async function uploadRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Nome de arquivo inválido' })
     }
 
-    const filePath = path.join(getAvatarsDir(), filename)
     try {
-      const buffer = await fs.readFile(filePath)
+      const buffer = await lerObjetoOuFalha(`uploads/avatars/${filename}`)
       const ext = path.extname(filename).toLowerCase()
       return reply
         .header('Content-Type', MIME_MAP[ext] || 'image/jpeg')
@@ -106,7 +102,7 @@ export async function uploadRoutes(app: FastifyInstance) {
     }
 
     try {
-      const buffer = await fs.readFile(path.join(getLogosDir(), filename))
+      const buffer = await lerObjetoOuFalha(`uploads/logos/${filename}`)
       return reply
         .header('Content-Type', 'image/png')
         .header('Cache-Control', 'public, max-age=86400')
@@ -118,7 +114,7 @@ export async function uploadRoutes(app: FastifyInstance) {
   })
 
   /** GET /uploads/blog/:filename e /uploads/promocoes/:filename — imagens do blog e das promoções (WebP) */
-  for (const [pasta, dir] of [['blog', getBlogDir], ['promocoes', getPromocoesDir]] as const) {
+  for (const pasta of ['blog', 'promocoes'] as const) {
     app.get(`/uploads/${pasta}/:filename`, async (request, reply) => {
       const { filename } = z.object({ filename: z.string() }).parse(request.params)
       if (!safeFilename(filename)) {
@@ -126,7 +122,7 @@ export async function uploadRoutes(app: FastifyInstance) {
       }
 
       try {
-        const buffer = await fs.readFile(path.join(dir(), filename))
+        const buffer = await lerObjetoOuFalha(`uploads/${pasta}/${filename}`)
         const ext = path.extname(filename).toLowerCase()
         return reply
           .header('Content-Type', MIME_MAP[ext] || 'image/webp')
@@ -151,9 +147,8 @@ export async function uploadRoutes(app: FastifyInstance) {
       return reply.status(400).send({ message: 'Nome de arquivo inválido' })
     }
 
-    const filePath = path.join(getFeedDir(year, month), filename)
     try {
-      const buffer = await fs.readFile(filePath)
+      const buffer = await lerObjetoOuFalha(`uploads/feed/${year}/${month}/${filename}`)
       const ext = path.extname(filename).toLowerCase()
       return reply
         .header('Content-Type', MIME_MAP[ext] || 'image/jpeg')

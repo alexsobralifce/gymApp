@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyRequest } from 'fastify'
+import { salvarObjeto } from '../../../infrastructure/storage/objectStorage.js'
 import { z } from 'zod'
 import path from 'path'
 import fs from 'fs/promises'
@@ -153,8 +154,7 @@ export async function rootExerciciosRoutes(app: FastifyInstance) {
     const r = await processarGif(await lerArquivo(request))
 
     const filename = `${id}_${Date.now()}.webp`
-    await ensureDir(getExerciciosGifsDir())
-    await fs.writeFile(path.join(getExerciciosGifsDir(), filename), r.buffer)
+    await salvarObjeto(`uploads/exercicios/${filename}`, r.buffer, 'image/webp')
 
     const gifUrl = `${env.API_BASE_URL}/uploads/exercicios/${filename}`
     const foco = await medirEnquadramento(r.buffer)
@@ -174,8 +174,7 @@ export async function rootExerciciosRoutes(app: FastifyInstance) {
 
     const r = await processarGif(await lerArquivo(request))
     const filename = `${id}_${sexo.toLowerCase()}_${Date.now()}.webp`
-    await ensureDir(getExerciciosGifsDir())
-    await fs.writeFile(path.join(getExerciciosGifsDir(), filename), r.buffer)
+    await salvarObjeto(`uploads/exercicios/${filename}`, r.buffer, 'image/webp')
 
     const foco = await medirEnquadramento(r.buffer)
     const variantes = lerVariantes(atual.variantes)

@@ -1,4 +1,5 @@
 import path from 'path'
+import { salvarObjeto } from '../../../infrastructure/storage/objectStorage.js'
 import fs from 'fs/promises'
 import sharp from 'sharp'
 import { PromocaoEvento, PromocaoTipo, type Promocao } from '@prisma/client'
@@ -110,8 +111,7 @@ export async function salvarImagemPromocao(academiaId: string, id: string, buffe
   }
 
   const filename = `${id}_${Date.now()}.webp`
-  await ensureDir(getPromocoesDir())
-  await fs.writeFile(path.join(getPromocoesDir(), filename), saida)
+  await salvarObjeto(`uploads/promocoes/${filename}`, saida, 'image/webp')
 
   const url = `${env.API_BASE_URL}/uploads/promocoes/${filename}`
   await prisma.promocao.update({ where: { id }, data: { imagem_url: url } })

@@ -1,4 +1,5 @@
 import path from 'path'
+import { salvarObjeto } from '../../../infrastructure/storage/objectStorage.js'
 import fs from 'fs/promises'
 import { prisma } from '../../../infrastructure/database/prisma.js'
 import { NotFoundError, AppError, ValidationError } from '../../../domain/errors/AppError.js'
@@ -47,11 +48,7 @@ export class AvaliacaoFotoService {
     }
 
     const filename = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`
-    const uploadDir = getAvaliacoesFotosDir(avaliacaoId)
-    await ensureDir(uploadDir)
-
-    const filePath = path.join(uploadDir, filename)
-    await fs.writeFile(filePath, buffer)
+    await salvarObjeto(`uploads/avaliacoes/${avaliacaoId}/${filename}`, buffer)
 
     const url = `${env.API_BASE_URL}/uploads/avaliacoes/${avaliacaoId}/${filename}`
 

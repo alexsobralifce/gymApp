@@ -1,4 +1,5 @@
 import path from 'path'
+import { salvarObjeto } from '../../../infrastructure/storage/objectStorage.js'
 import fs from 'fs/promises'
 import sharp from 'sharp'
 import { BlogStatus } from '@prisma/client'
@@ -56,8 +57,7 @@ export async function gerarImagemIA(prompt: string, { apiKey = env.OPENAI_API_KE
 
 async function gravarArquivo(slug: string, webp: Buffer): Promise<string> {
   const nome = `${slug}-${Date.now()}.webp`
-  await ensureDir(getBlogDir())
-  await fs.writeFile(path.join(getBlogDir(), nome), webp)
+  await salvarObjeto(`uploads/blog/${nome}`, webp, 'image/webp')
   return `${PREFIXO_URL()}${nome}`
 }
 

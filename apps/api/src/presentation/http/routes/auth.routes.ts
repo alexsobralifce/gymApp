@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { salvarObjeto } from '../../../infrastructure/storage/objectStorage.js'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
@@ -283,11 +284,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     const filename = `${request.currentUser.sub}_${Date.now()}${ext}`
 
-    const uploadDir = getAvatarsDir()
-    await ensureDir(uploadDir)
-
-    const filePath = path.join(uploadDir, filename)
-    await fs.writeFile(filePath, buffer)
+    await salvarObjeto(`uploads/avatars/${filename}`, buffer)
 
     // URL absoluta da API — o frontend roda em outro domínio no Railway
     const fotoUrl = `${env.API_BASE_URL}/uploads/avatars/${filename}`
