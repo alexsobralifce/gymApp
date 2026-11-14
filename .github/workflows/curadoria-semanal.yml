@@ -1,6 +1,6 @@
 name: Curadoria semanal do blog
 
-# Agendador PRINCIPAL. O robô roda dentro da API (Railway); este workflow só pede para ele começar.
+# Agendador PRINCIPAL. O robô roda dentro da API (Contabo, api.endorfinapp.com.br); este workflow só pede para ele começar.
 # Toda segunda às 08h (Brasília) a API escreve 2 "Leituras da semana". Se este workflow falhar, a própria
 # API tenta de novo às 10h (reserva) e pula se a semana já foi atendida. Acompanhe no painel root
 # (Publicações do Blog > Robô de curadoria).
@@ -31,7 +31,7 @@ jobs:
         run: |
           if [ -z "$CURADORIA_TOKEN" ]; then echo "Segredo CURADORIA_TOKEN não configurado no GitHub."; exit 1; fi
           resposta=$(curl --fail-with-body --silent --show-error --retry 3 --retry-delay 10 --max-time 60 \
-            -X POST "https://api-production-3360.up.railway.app/blog/curadoria/agendada" \
+            -X POST "https://api.endorfinapp.com.br/blog/curadoria/agendada" \
             -H "Content-Type: application/json" \
             -H "x-curadoria-token: $CURADORIA_TOKEN" \
             -d "{\"modo\":\"$MODO\",\"quantidade\":$QUANTIDADE}")
