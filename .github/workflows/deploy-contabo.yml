@@ -17,10 +17,11 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.CONTABO_HOST }}
-          username: root
+          username: ubuntu
           key: ${{ secrets.CONTABO_SSH_KEY }}
           script_stop: true
           script: |
+            sudo bash -s <<'REMOTE'
             set -e
             cd /srv/gymapp/src
             git fetch origin main
@@ -29,3 +30,4 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d
             docker image prune -f
             docker compose -f docker-compose.prod.yml ps
+            REMOTE
