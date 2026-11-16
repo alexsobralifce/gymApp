@@ -31,6 +31,9 @@ services:
     volumes:
       - ../data/uploads:/app/apps/api/public/uploads
       - ../data/exercises:/app/apps/api/public/exercises
+    networks:
+      - default
+      - edge
 
   web:
     build:
@@ -45,21 +48,13 @@ services:
         VITE_POSTHOG_KEY: ${VITE_POSTHOG_KEY:-}
         VITE_POSTHOG_HOST: ${VITE_POSTHOG_HOST:-}
     restart: always
+    networks:
+      - default
+      - edge
 
-  caddy:
-    image: caddy:2-alpine
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - api
-      - web
-
-volumes:
-  caddy_data:
-  caddy_config:
+# Portas 80 e 443 ficam com o edge-caddy (projeto /srv/edge), que encaminha
+# o tráfego para src-web-1 e src-api-1 pela rede externa "edge".
+networks:
+  edge:
+    external: true
+    name: edge
