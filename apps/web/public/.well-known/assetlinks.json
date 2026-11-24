@@ -1,13 +1,19 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.endorfinapp.app",
       "sha256_cert_fingerprints": [
         "B0:74:2C:44:9A:9B:BB:74:5E:DE:85:9B:45:36:90:83:CC:70:E7:15:2A:6C:A7:C3:57:C0:22:1E:E0:9A:57:63",
         "E2:F8:81:22:18:40:D7:4E:42:0D:97:C8:01:DB:14:49:D0:15:F0:EE:E9:30:DF:2F:4C:B1:5A:5A:19:8E:A1:9C",
-        "88:B4:F5:5D:FA:6B:27:4A:58:5B:6D:77:28:91:AC:5A:C1:CC:40:9B:D7:46:8A:04:41:4D:B8:BE:AD:34:24:CE"
+        "88:B4:F5:5D:FA:6B:27:4A:58:5B:6D:77:28:91:AC:5A:C1:CC:40:9B:D7:46:8A:04:41:4D:B8:BE:AD:34:24:CE",
+        "E3:3B:21:57:4D:E8:06:83:94:70:E3:5E:FD:E0:21:91:28:F8:E3:79:1A:62:77:59:54:B2:60:7D:F6:9A:36:A4",
+        "C8:35:92:4D:C0:B5:1B:69:5C:85:F5:C7:A7:A5:87:28:75:69:29:36:2B:25:A3:69:EB:FA:F7:4B:3F:68:E2:E4",
+        "2A:7B:88:2D:CF:D7:03:5D:77:0A:A1:BF:F0:01:E4:D9:85:1F:30:73:AC:78:75:D6:C2:68:BA:59:27:69:3C:67"
       ]
     }
   }
